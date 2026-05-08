@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "agent": {
+    "lifecycle": "READY",
+    "role": "Lead AI Engineer",
+    "loadedSkills": [
+      "coding-standards",
+      "verification-protocol",
+      "state-management"
+    ],
+    "lastInitializedAt": "2026-05-08T06:55:36.120Z"
+  },
+  "session": {
+    "id": "session-2026-05-08T06-54-54-611Z",
+    "startedAt": "2026-05-08T06:54:54.611Z",
+    "updatedAt": "2026-05-08T06:55:36.123Z",
+    "currentTask": "Kato Agentic Workspace v4.0 migration"
+  },
+  "controlPlane": {
+    "bootloader": "CLINE.md",
+    "router": "knowledge/wiki/AGENTS.md",
+    "index": "knowledge/wiki/index.md"
+  },
+  "dataPlane": {
+    "statePath": "knowledge/workspace/state.json",
+    "manager": "kato-state-manager",
+    "checksum": "5fe91593936ad66948b2bc646585d3ce12fc2d5063b522e4fe7d87d55d8dd218"
+  },
+  "notes": [
+    "Initialized by kato-state-manager. Agent must read AGENTS.md before READY."
+  ]
+}

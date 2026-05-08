@@ -13,6 +13,8 @@ import MemoryCompressor from './memory-compressor.js';
 import { Message } from './memory.js';
 import 'dotenv/config';
 
+type FunctionToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
+
 const SYSTEM_PROMPT_TEMPLATE = `Bạn là {AGENT_NAME}, hệ thống Tác tử Điều phối (Orchestrator Agent).
 Hoạt động theo Hiến pháp Kato v2.2.
 
@@ -226,7 +228,11 @@ export class LLMCore {
   /**
    * Thực thi công cụ được yêu cầu bởi LLM
    */
-  private executeToolCall(toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall): any {
+  private isFunctionToolCall(toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall): toolCall is FunctionToolCall {
+    return toolCall.type === 'function';
+  }
+
+  private executeToolCall(toolCall: FunctionToolCall): any {
     try {
       const functionName = toolCall.function.name;
       const args = JSON.parse(toolCall.function.arguments);
@@ -444,6 +450,11 @@ export class LLMCore {
             messages.push(choice.message);
 
             for (const toolCall of choice.message.tool_calls) {
+              if (!this.isFunctionToolCall(toolCall)) {
+                console.warn(`⚠️ Unsupported non-function tool call skipped: ${toolCall.type}`);
+                continue;
+              }
+
               const toolResult = this.executeToolCall(toolCall);
               
               messages.push({

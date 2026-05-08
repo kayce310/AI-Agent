@@ -21,6 +21,7 @@ Trung tâm điều phối tất cả SOP và kỹ năng của hệ thống Kato.
 | [[coding-standards]] | Tiêu chuẩn viết code, module hóa, MCP compatibility | Khi code bất kỳ file nào |
 | [[verification-protocol]] | Quy trình kiểm chứng, testing, validation | Trước khi tuyên bố hoàn thành |
 | [[communication-protocol]] | Ultra-Terse Mode, Caveman communication | Mọi giao tiếp với user |
+| [[state-management]] | Data Plane an toàn, atomic writes, state.json | Khi đọc/ghi trạng thái workspace |
 
 ### 🧠 Quản trị Tri thức
 

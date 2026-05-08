@@ -9,7 +9,10 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "state": "tsx src/scripts/kato-state-manager.ts",
+    "state:init": "tsx src/scripts/kato-state-manager.ts init",
+    "state:read": "tsx src/scripts/kato-state-manager.ts read"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

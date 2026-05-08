@@ -1,3 +1,29 @@
+# [2026-05-08 13:54] - Kato Agentic Workspace v4.0 Migration
+
+## Changes
+- Added: [[../skills/state-management]] - Data Plane SOP for `state.json` and `kato-state-manager`.
+- Added: `src/core/state-manager.ts` - Safe state manager with atomic writes, lock, backup, checksum, structured errors.
+- Added: `src/scripts/kato-state-manager.ts` - CLI wrapper for state operations.
+- Added: [[../projects/ovap-x1]] - Project profile restored for OVAP-X1 context routing.
+- Updated: [[../AGENTS]] - Router v4.0 with `UNINITIALIZED` lifecycle and state management routing.
+- Updated: [[../index]] and [[../skills/_INDEX]] - Registered state-management skill and v4.0 status.
+- Updated: `CLINE.md` - Minimal Control Plane bootloader.
+
+## Verification Notes
+- `npm run state:init -- "Kato Agentic Workspace v4.0 migration"` passed and created `knowledge/workspace/state.json`.
+- `npm run state -- ready "Lead AI Engineer" coding-standards verification-protocol state-management` passed and moved lifecycle to `READY`.
+- `npm run state -- bad-command` returned Structured Error JSON with `UNKNOWN_COMMAND`.
+- `npm run build && npm run state:read` passed after adding OpenAI function-tool-call type narrowing in `src/core/llm.ts`.
+
+## Anti-Patterns Learned
+- ❌ Letting bootloader grow into full SOP causes context bloat.
+- ✅ Keep Control Plane minimal and route to Knowledge Graph skills on demand.
+- ❌ Editing JSON state manually risks corruption.
+- ✅ Use a Data Plane tool with atomic write, lock, backup, checksum.
+
+## Next Steps
+- [ ] Consider exposing `KatoStateManager` as a true MCP server/tool if needed.
+
 # Changelog Hệ thống Kato
 
 Nhật ký Tiến hóa của hệ thống. TẤT CẢ các thay đổi cốt lõi phải được ghi lại tại đây.

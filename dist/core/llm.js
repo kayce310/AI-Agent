@@ -208,6 +208,9 @@ export class LLMCore {
     /**
      * Thực thi công cụ được yêu cầu bởi LLM
      */
+    isFunctionToolCall(toolCall) {
+        return toolCall.type === 'function';
+    }
     executeToolCall(toolCall) {
         try {
             const functionName = toolCall.function.name;
@@ -388,6 +391,10 @@ export class LLMCore {
                     if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
                         messages.push(choice.message);
                         for (const toolCall of choice.message.tool_calls) {
+                            if (!this.isFunctionToolCall(toolCall)) {
+                                console.warn(`⚠️ Unsupported non-function tool call skipped: ${toolCall.type}`);
+                                continue;
+                            }
                             const toolResult = this.executeToolCall(toolCall);
                             messages.push({
                                 role: 'tool',

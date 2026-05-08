@@ -29,6 +29,7 @@ export declare class LLMCore {
     /**
      * Thực thi công cụ được yêu cầu bởi LLM
      */
+    private isFunctionToolCall;
     private executeToolCall;
     /**
      * Gọi LLM với Agent Loop và Tool Calling

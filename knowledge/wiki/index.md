@@ -1,4 +1,4 @@
-# 📚 Kato Knowledge Base Index
+# 📚 Kato Knowledge Base Index v4.0
 
 Trung tâm bản đồ tri thức của hệ thống Kato Agent
 
@@ -37,6 +37,7 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 | [[skills/coding-standards]] | Module hóa, MCP, fail-fast |
 | [[skills/verification-protocol]] | Kiểm chứng, testing, validation |
 | [[skills/communication-protocol]] | Ultra-Terse Mode, không fluff |
+| [[skills/state-management]] | Data Plane an toàn, state.json, atomic write |
 
 ### 🧠 Quản trị Tri thức
 | Skill | Mô tả |
@@ -72,6 +73,12 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 
 ---
 
+## 🛩️ Project Profiles
+
+- [[projects/ovap-x1]] - Hồ sơ dự án OVAP-X1 Flight Control
+
+---
+
 ## 📄 Raw Knowledge Base (Bất biến - Chỉ ĐỌC)
 
 ### Control Algorithms
@@ -89,10 +96,10 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 
 ## 📊 Trạng thái Hệ thống
 
-- **Phiên bản**: v3.0 (Agentic Workspace)
-- **CLINE.md**: Bootloader (20 dòng)
-- **Skills**: 10 modular SOPs
-- **Triết lý**: Zero Waste Token, Modular Skills
+- **Phiên bản**: v4.0 (Agentic Workspace)
+- **CLINE.md**: Bootloader siêu nén / Control Plane
+- **Skills**: Modular SOPs + Data Plane state manager
+- **Triết lý**: Zero Waste Token, Control/Data Plane separation
 
 ---
 #system #knowledge-base #index #agentic-workspace
