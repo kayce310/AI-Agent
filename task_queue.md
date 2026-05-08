@@ -10,13 +10,13 @@
 - ✅ Giữ trạng thái lịch sử các task đã xử lý
 
 ### 2. Chức năng Điều khiển
-- [ ] `enqueue(task)` - Thêm task vào cuối hàng đợi
-- [ ] `start()` - Bắt đầu xử lý hàng đợi
-- [ ] `pause()` - Tạm dừng xử lý sau khi task hiện tại kết thúc
-- [ ] `resume()` - Tiếp tục xử lý từ vị trí đã dừng
-- [ ] `cancel(taskId)` - Hủy task cụ thể khỏi hàng đợi
-- [ ] `clear()` - Xóa toàn bộ hàng đợi
-- [ ] `getStatus()` - Lấy trạng thái hiện tại của hệ thống
+- [x] `enqueue(task)` - Thêm task vào cuối hàng đợi
+- [x] `start()` - Bắt đầu xử lý hàng đợi
+- [x] `pause()` - Tạm dừng xử lý sau khi task hiện tại kết thúc
+- [x] `resume()` - Tiếp tục xử lý từ vị trí đã dừng
+- [x] `cancel(taskId)` - Hủy task cụ thể khỏi hàng đợi
+- [x] `clear()` - Xóa toàn bộ hàng đợi
+- [x] `getStatus()` - Lấy trạng thái hiện tại của hệ thống
 
 ### 3. Trạng thái Hệ thống
 ```

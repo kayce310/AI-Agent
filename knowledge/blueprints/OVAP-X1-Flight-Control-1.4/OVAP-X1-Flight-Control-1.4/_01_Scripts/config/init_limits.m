@@ -7,8 +7,9 @@ function limits = init_limits()
     limits.a_max = [7.0; 7.0; 2.5];      % Gia tốc tối đa (m/s^2)
     
     % --- 2. Giới hạn Quay (Rotational) ---
-    limits.w_max     = [1.0; 1.0; 0.4];  % Tốc độ góc tối đa (rad/s)
-    limits.alpha_max = [0.7; 0.7; 0.2];  % Gia tốc góc tối đa (rad/s^2)
+    % Tăng giới hạn yaw (Z) cho parametric missions (orbit cần yaw xoay nhanh)
+    limits.w_max     = [1.0; 1.0; 2.0];  % Tốc độ góc tối đa (rad/s) - Yaw tăng từ 0.4→2.0
+    limits.alpha_max = [0.7; 0.7; 1.0];  % Gia tốc góc tối đa (rad/s^2) - Yaw tăng từ 0.2→1.0
     
     % --- 3. Giới hạn Nỗ lực Điều khiển (Control Effort) ---
     limits.max_torque = [10.0; 10.0; 8.0]; % Mô-men xoắn tối đa PID được phép xuất (N.m)

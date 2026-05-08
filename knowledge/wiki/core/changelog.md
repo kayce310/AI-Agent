@@ -82,6 +82,26 @@ Nhật ký Tiến hóa của hệ thống. TẤT CẢ các thay đổi cốt lõ
 
 ---
 
+## [2026-05-08 13:37] - OVAP-X1 v1.4 Visualization Stabilization
+
+### Changes
+- Fixed: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/modules/visualization/visualize_3d.m]] - Removed `drawnow('nocancel')` and replaced with version-compatible `drawnow`.
+- Updated: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/main_sim.m]] - Stopped passing noise payload into `visualize_3d`.
+- Updated: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/modules/visualization/data_logger.m]] - Restored `plot_multi` dashboard logger and removed `hist.noise` dependency.
+- Added: [[../troubleshooting/matlab-drawnow-nocancel-unsupported]] - MATLAB UI compatibility troubleshooting note.
+
+### Anti-Patterns Learned
+- ❌ Assumed `drawnow('nocancel')` is supported across MATLAB versions.
+- ✅ Use broadly compatible `drawnow`/`drawnow limitrate` unless the target MATLAB version is confirmed.
+- ❌ Overwrote `data_logger.m` with an incompatible stub during noise-removal work.
+- ✅ Before editing key MATLAB modules, inspect current mode signatures (`init`, `log`, `plot_multi`) and patch minimally.
+
+### Next Steps
+- [ ] User reruns OVAP-X1 v1.4 benchmark and validates 3D Play/Pause UI.
+- [ ] If another MATLAB-version UI incompatibility appears, add a dedicated troubleshooting entry.
+
+---
+
 > 📌 QUY TẮC: Mọi thay đổi sau này **BẮT BUỘC** được ghi vào file này trước khi tuyên bố hoàn thành Task.
 
 #core #changelog #evolution

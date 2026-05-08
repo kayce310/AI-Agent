@@ -48,7 +48,7 @@ command2
 
 | Lỗi | Mô tả | File |
 |-----|-------|------|
-| *Chưa có lỗi nào* | - | - |
+| MATLAB `drawnow('nocancel')` unsupported | UI callback báo `Unknown command option` trên một số phiên bản MATLAB | [[matlab-drawnow-nocancel-unsupported]] |
 
 ---
 

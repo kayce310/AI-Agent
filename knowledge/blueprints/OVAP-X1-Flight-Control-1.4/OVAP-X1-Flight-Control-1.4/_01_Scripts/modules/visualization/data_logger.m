@@ -46,7 +46,7 @@ function out = data_logger(mode, varargin)
         end
 
         set(groot, 'DefaultAxesFontSize', 12);
-        set(groot, 'DefaultTextFontSize', 12); % Áp dụng cho title, label
+        set(groot, 'DefaultTextFontSize', 12);
         set(groot, 'DefaultLegendFontSize', 12);
         
         hFig = figure('Name', 'OVAP-X1 Interactive Dashboard', 'Color', 'w', 'Units', 'normalized', 'Position', [0.05 0.05 0.9 0.85]);
@@ -55,14 +55,12 @@ function out = data_logger(mode, varargin)
         % --- MODULE 1: POSITION (X, Y, Z) ---
         if ismember('pos', active_plots)
             tabPos = uitab('Parent', tgroup, 'Title', '1. Position');
-            % [SỬA]: Đổi nhãn từ 'Down Z' thành 'Altitude Z' để trực quan hơn
             labels = {'North X (m)', 'East Y (m)', 'Altitude Z (m)'}; 
             
             for row = 1:3
                 ax = axes('Parent', tabPos, 'Position', [0.08 1.0-row*0.3 0.88 0.22]); 
                 hold(ax, 'on'); grid(ax, 'on'); ylabel(ax, labels{row});
                 
-                % [SỬA]: Tạo hệ số đảo dấu. Nếu là trục Z (row 3) thì nhân -1
                 sign_mod = 1;
                 if row == 3
                     sign_mod = -1;
@@ -86,12 +84,22 @@ function out = data_logger(mode, varargin)
         if ismember('att', active_plots)
             tabAtt = uitab('Parent', tgroup, 'Title', '2. Attitude');
             labels = {'Roll (deg)', 'Pitch (deg)', 'Yaw (deg)'};
+            
+            smooth_att = cell(1, num_tests);
+            for i = 1:num_tests
+                raw_att = histories{i}.x(7:9, 1:end_idx);
+                smooth_att{i} = stitch_euler_history(raw_att);
+            end
+            
             for row = 1:3
                 ax = axes('Parent', tabAtt, 'Position', [0.08 1.0-row*0.3 0.88 0.22]); hold(ax, 'on'); grid(ax, 'on'); ylabel(ax, labels{row});
+                
                 for i = 1:num_tests
-                    plot(ax, t, rad2deg(histories{i}.x(row+6, 1:end_idx)), 'Color', color_map(i,:), 'LineWidth', 1.5, 'DisplayName', active_tests{i}.name);
+                    plot(ax, t, rad2deg(smooth_att{i}(row, :)), 'Color', color_map(i,:), 'LineWidth', 1.5, 'DisplayName', active_tests{i}.name);
                 end
+                
                 plot(ax, t, rad2deg(histories{1}.euler_des(row, 1:end_idx)), 'k--', 'LineWidth', 1.2, 'DisplayName', 'Setpoint');
+                
                 if row == 3, xlabel(ax, 'Time (s)'); end
                 add_y_margin(ax); 
                 setup_interactive_legend(ax);
@@ -102,7 +110,6 @@ function out = data_logger(mode, varargin)
         if ismember('act', active_plots)
             for i = 1:num_tests
                 test_name = active_tests{i}.name;
-                % Tạo tab riêng cho từng bộ phân bổ/điều khiển
                 tabAct = uitab('Parent', tgroup, 'Title', ['3. Actuators (', test_name, ')']);
                 h_data = histories{i}; 
                 
@@ -137,7 +144,6 @@ function out = data_logger(mode, varargin)
         if ismember('servo', active_plots)
             for i = 1:num_tests
                 test_name = active_tests{i}.name;
-                % Tạo tab riêng cho từng bộ phân bổ/điều khiển
                 tabServo = uitab('Parent', tgroup, 'Title', ['4. Servo (', test_name, ')']);
                 h_data = histories{i};
                 
@@ -177,20 +183,17 @@ end
 %% ================= HÀM HỖ TRỢ (HELPER FUNCTIONS) =================
 
 function setup_interactive_legend(ax)
-    % Cấu hình Legend thông minh: Click vào nhãn để ẩn/hiện nét vẽ tương ứng
     hL = legend(ax, 'Location', 'bestoutside', 'Interpreter', 'none');
     set(hL, 'ItemHitFcn', @cb_toggle_line);
 end
 
 function cb_toggle_line(~, evnt)
-    % Xử lý ẩn/hiện nét vẽ và TỰ ĐỘNG SCALE lại trục Y để nhìn rõ dữ liệu còn lại
     if strcmp(evnt.Peer.Visible, 'on')
         evnt.Peer.Visible = 'off';
     else
         evnt.Peer.Visible = 'on';
     end
     
-    % Tự động Scale lại trục Y dựa trên các nét vẽ còn hiển thị
     ax = evnt.Peer.Parent;
     lines = findobj(ax, 'Type', 'line', 'Visible', 'on');
     if ~isempty(lines)
@@ -216,4 +219,32 @@ end
 
 function val = if_else(condition, true_val, false_val)
     if condition, val = true_val; else, val = false_val; end
+end
+
+function euler_stitched = stitch_euler_history(euler_history)
+    N = size(euler_history, 2);
+    euler_stitched = euler_history;
+    is_flipped = false;
+
+    for i = 2:N
+        delta_roll = euler_history(1, i) - euler_history(1, i-1);
+        delta_yaw  = euler_history(3, i) - euler_history(3, i-1);
+        
+        d_roll_raw = atan2(sin(delta_roll), cos(delta_roll));
+        d_yaw_raw  = atan2(sin(delta_yaw), cos(delta_yaw));
+
+        if abs(d_roll_raw) > 1.5 && abs(d_yaw_raw) > 1.5
+            is_flipped = ~is_flipped;
+        end
+
+        if is_flipped
+            euler_stitched(2, i) = sign(euler_history(2, i)) * pi - euler_history(2, i);
+            euler_stitched(1, i) = euler_history(1, i) - sign(euler_history(1, i)) * pi;
+            euler_stitched(3, i) = euler_history(3, i) - sign(euler_history(3, i)) * pi;
+        end
+    end
+
+    euler_stitched(1, :) = unwrap(euler_stitched(1, :));
+    euler_stitched(2, :) = unwrap(euler_stitched(2, :));
+    euler_stitched(3, :) = unwrap(euler_stitched(3, :));
 end

@@ -29,17 +29,31 @@ SIM_MODE = 1;
 % 1: Quỹ đạo mượt (Smooth Trajectory) - Bật mode này để bay thực tế
 PLANNER_MODE = 1; 
 
-% --- C. CẤU HÌNH XUẤT HÌNH ẢNH 3D DIGITAL TWIN ---
+% --- C. CHỌN QUỸ ĐẠO NHIỆM VỤ (MISSION TYPE) ---
+% 0: Waypoint tĩnh (Giữ nguyên cấu hình cũ)
+% 1: QUỸ ĐẠO MẮT BÃO (ORBIT WITH CENTER-FOCUS YAW) - Spiral Ascent
+% 2: CUA NGANG (STRAFING / CRAB WALK)
+% 3: BAY THẲNG + ROLL DAO ĐỘNG (±90 DEG)
+% 4: LƯỢN SÓNG 3D (3D CORKSCREW / HELIX WAVE)
+MISSION_TYPE = 1;  
+
+% Tùy chỉnh thông số quỹ đạo
+mission_params.v_forward = 2.0;  % Vận tốc tiến (m/s)
+mission_params.radius    = 5.0;  % Biên độ (m)
+mission_params.omega     = 0.4;  % Tần số góc (rad/s)
+mission_params.z_base    = -5.0; % Độ cao (m)
+
+% --- D. CẤU HÌNH XUẤT HÌNH ẢNH 3D DIGITAL TWIN ---
 % 0: Tắt 3D.  
 % 1: Xem 3D của cấu hình Test số 1 (Analytical). 
 % 2: Xem 3D của cấu hình Test số 2 (WPIN).
 VISUALIZE_TEST_IDX = 1; 
 
-% --- D. CẤU HÌNH MÔI TRƯỜNG ---
+% --- E. CẤU HÌNH MÔI TRƯỜNG ---
 % [0: TẮT NHIỄU TUYỆT ĐỐI] | [1: BẬT NHIỄU]
-USE_NOISE = 1; 
+USE_NOISE = 0; 
 
-% --- E. DANH SÁCH CÁC CẤU HÌNH SO SÁNH (A/B TESTING) ---
+% --- F. DANH SÁCH CÁC CẤU HÌNH SO SÁNH (A/B TESTING) ---
 active_tests = {
     struct('name', 'PID + Analytical', 'controller', 'pid', 'allocator', 'analytical');
     % struct('name', 'PID + WPIN',        'controller', 'pid', 'allocator', 'wpin');
@@ -93,7 +107,7 @@ for i_test = 1:num_tests
             % =============================================================
             % [MODE 1] BAY TỰ ĐỘNG (CLOSED-LOOP)
             % =============================================================
-            raw_target = mission_manager(t);
+            raw_target = mission_manager(t, MISSION_TYPE, mission_params);
             [setpoints, traj_state] = trajectory_planner(raw_target, dt, traj_limits, traj_state, PLANNER_MODE, sys);
             [act_cmd, ctrl_state] = flight_main(state_est, setpoints, sys, ctrl_state, active_params, current_config, act_phys);
             
@@ -143,8 +157,7 @@ for i_test = 1:num_tests
             x_true = x_true + (dt/6)*(k1 + 2*k2 + 2*k3 + k4);
         end
         
-        % Tìm dòng này trong main_sim.m (khoảng dòng 123):
-            hist = data_logger('log', k, x_true, act_phys, act_cmd, setpoints, hist);
+        hist = data_logger('log', k, x_true, act_phys, act_cmd, setpoints, hist);
         t = t + dt;
     end
     histories{i_test} = hist;

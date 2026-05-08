@@ -31,10 +31,10 @@ PLANNER_MODE = 1;
 
 % --- C. CHỌN QUỸ ĐẠO NHIỆM VỤ (MISSION TYPE) ---
 % 0: Waypoint tĩnh (Giữ nguyên cấu hình cũ)
-% 1: QUỸ ĐẠO MẮT BÃO (ORBIT WITH CENTER-FOCUS YAW)
+% 1: QUỸ ĐẠO MẮT BÃO (ORBIT WITH CENTER-FOCUS YAW) - SPIRAL ASCENT
 % 2: CUA NGANG (STRAFING / CRAB WALK)
 % 3: BAY THẲNG + ROLL DAO ĐỘNG (±90 DEG)
-MISSION_TYPE = 0; 
+MISSION_TYPE = 1;  % ← ĐÃ SỬA TỪ 0 → 1 ĐỂ TEST SPIRAL ASCENT
 
 % Tùy chỉnh thông số quỹ đạo
 mission_params.v_forward = 5.0;  % Vận tốc tiến (m/s)

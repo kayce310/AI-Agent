@@ -41,8 +41,10 @@ function [setpoint, traj_state] = trajectory_planner(target, dt, constraints, tr
     % 3. [MODE 1]: 1ST-ORDER KINEMATIC SMOOTHING
     % =====================================================================
     % Hệ số P của quỹ đạo (Độ gắt khi kéo về đích)
-    k_pos_smooth = 1.0; 
-    k_att_smooth = 0.5; 
+    % Tăng cao cho quỹ đạo parametric (orbit, strafe, roll, corkscrew)
+    % để bám sát setpoint thay đổi liên tục
+    k_pos_smooth = 3.0; 
+    k_att_smooth = 3.0; 
 
     % --- A. Quy hoạch Vị trí (XYZ) ---
     for i = 1:3

@@ -20,16 +20,26 @@ function target = mission_manager(t, mission_type, params)
     switch mission_type
         case 1
             % -------------------------------------------------------------
-            % [LOẠI 1]: QUỸ ĐẠO MẮT BÃO (ORBIT WITH CENTER-FOCUS YAW)
-            % Bay vòng tròn nhưng mũi (Yaw) luôn chĩa vào tâm (0,0).
+            % [LOẠI 1]: QUỸ ĐẠO MẮT BÃO XOẮN ỐC (SPIRAL ASCENT ORBIT)
+            % Bay xoắn ốc mở rộng: bán kính & độ cao tăng dần theo thời gian.
+            % Mũi (Yaw) luôn chĩa vào tâm. Roll = Pitch = 0.
             % -------------------------------------------------------------
-            target.pos(1) = params.radius * cos(params.omega * t_flight);
-            target.pos(2) = params.radius * sin(params.omega * t_flight);
-            target.pos(3) = params.z_base;
+            % Bán kính tăng dần: từ params.radius → 3*params.radius
+            radius_scale = 1 + 0.02 * t_flight;
+            current_radius = params.radius * min(radius_scale, 3.0);
             
-            % Ép Yaw chĩa vào tâm: Vector từ Current_Pos đến (0,0)
-            % Hướng ngược lại với vector vị trí (vị trí là ra xa tâm)
+            % Độ cao tăng dần: từ z_base bay lên (z_base âm, càng ngày càng gần 0)
+            ascend_rate = 0.3;
+            current_z = params.z_base + ascend_rate * t_flight;
+            current_z = min(current_z, -2.0);
+            
+            target.pos(1) = current_radius * cos(params.omega * t_flight);
+            target.pos(2) = current_radius * sin(params.omega * t_flight);
+            target.pos(3) = current_z;
+            
+            % Ép Yaw chĩa vào tâm
             target.euler(3) = atan2(-target.pos(2), -target.pos(1));
+            % Roll = Pitch = 0 (mặc định)
 
         case 2
             % -------------------------------------------------------------

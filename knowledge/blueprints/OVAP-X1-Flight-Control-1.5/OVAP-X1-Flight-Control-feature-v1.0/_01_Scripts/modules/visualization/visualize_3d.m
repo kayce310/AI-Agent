@@ -2,14 +2,18 @@ function visualize_3d(hist, sys, t_arr)
 % File Name: visualize_3d.m
 % Position: Root > modules > visualization > visualize_3d.m
 % Description: Interactive 3D Digital Twin with Deadband Camera Tracking
+% Integration: v1.4 (performance) + v1.5 (features) - Hybrid v2.0
     %% ================= PARAMETERS =================
+    % ROLLBACK: Nền sáng mặc định dễ nhìn
     UI_BG_COLOR     = [0.94 0.94 0.94]; 
     AXES_BG_COLOR   = [1 1 1];          
     PANEL_BG_COLOR  = [0.9 0.9 0.9];
+    TEXT_COLOR      = [0 0 0];
+    ACCENT_COLOR    = [0.10 0.35 0.70];
     TRAIL_COLOR     = 'b';              
     TRAIL_WIDTH     = 1.5;
     THRUST_SCALE    = 0.05;
-    PLAY_SPEED_INIT = 2;
+    PLAY_SPEED_INIT = 25;
     
     pos_n = hist.x(1, :); pos_e = hist.x(2, :); pos_d = hist.x(3, :); pos_alt = -pos_d;
     
@@ -20,9 +24,20 @@ function visualize_3d(hist, sys, t_arr)
     
     %% ================= SETUP FIGURE & AXES =================
     hFig = figure('Name', 'OVAP-X1 Digital Twin', 'Color', UI_BG_COLOR, ...
-        'Units', 'normalized', 'Position', [0.1 0.1 0.8 0.8], 'MenuBar', 'figure', 'ToolBar', 'figure'); 
+        'Units', 'normalized', 'Position', [0.1 0.1 0.8 0.8], 'MenuBar', 'none', 'ToolBar', 'figure'); 
+    % TRẢ LẠI LAYOUT CŨ: 22% HUD TRÁI + 75% MAIN 3D
     ax = axes('Parent', hFig, 'Color', AXES_BG_COLOR, 'XColor', 'k', 'YColor', 'k', 'ZColor', 'k', ...
         'Units', 'normalized', 'Position', [0.25 0.15 0.7 0.85]); 
+
+    % HUD Panel bên trái
+    hInfo = uicontrol('Parent', hFig, 'Style', 'text', 'String', '', 'Units', 'normalized', ...
+        'Position', [0.01 0.15 0.22 0.80], ...
+        'BackgroundColor', PANEL_BG_COLOR, ...
+        'ForegroundColor', TEXT_COLOR, ...
+        'HorizontalAlignment', 'left', ...
+        'FontName', 'Consolas', ...
+        'FontSize', 9, ...
+        'FontWeight', 'bold');
     
     hold(ax, 'on'); grid(ax, 'on'); view(ax, 3);
     xlabel(ax, 'East (m)'); ylabel(ax, 'North (m)'); zlabel(ax, 'Alt (m)'); 
@@ -40,21 +55,16 @@ function visualize_3d(hist, sys, t_arr)
     hBody = patch('Parent', ax, 'Vertices', v_fuse, 'Faces', f_fuse, 'FaceColor', [0.55 0.55 0.58], 'EdgeColor', 'none', 'FaceLighting', 'gouraud');
     
     % --- THÊM MŨI ĐỎ (NOSE CONE) ĐỂ NHẬN BIẾT PHÍA TRƯỚC ---
-    % Tạo một hình nón nhỏ. Trong hệ tọa độ của nón, trục Z là chiều cao.
-    % Chúng ta sẽ xoay nó để chỉ về phía trước (trục X)
     R_nose = 0.02; L_nose = 0.05;
     [v_nose, f_nose] = create_cylinder(R_nose, L_nose, 1, 16);
-    % Vót nhọn đầu nón (phần có X dương lớn nhất)
     max_x = max(v_nose(:,1));
     is_front = v_nose(:,1) > 0;
-    v_nose(is_front, 2:3) = 0; % Kéo các điểm phía trước về trục X để tạo chóp
+    v_nose(is_front, 2:3) = 0;
     
-    % Dịch chuyển mũi nón ra phía trước thân máy bay
-    nose_offset = L_cyl/2 + R_fuse*2.0; % Tính toán vị trí phần mép trước của fuselage
+    nose_offset = L_cyl/2 + R_fuse*2.0;
     v_nose(:,1) = v_nose(:,1) + nose_offset;
     
     hNose = patch('Parent', ax, 'Vertices', v_nose, 'Faces', f_nose, 'FaceColor', [0.8 0.1 0.1], 'EdgeColor', 'none', 'FaceLighting', 'gouraud');
-    % -------------------------------------------------------
 
     hArms = struct('Boom', [], 'UBracket', [], 'ShaftX', [], 'MotorTop', [], 'MotorBot', [], 'MotorMid', [], 'PropTop', [], 'PropBot', [], 'ThrustVec', [], 'v_boom_base', [], 'v_u_base', []);
     
@@ -97,7 +107,7 @@ function visualize_3d(hist, sys, t_arr)
     
     %% ================= UI CONTROLS =================
     % Đặt mặc định khởi động vào luôn Mode 3 (Follow View) để xem cho rõ
-    gui.idx = 1; gui.playing = false; gui.speed = PLAY_SPEED_INIT; gui.view_mode = 3; 
+    gui.idx = 1; gui.playing = false; gui.speed = PLAY_SPEED_INIT; gui.view_mode = 3;
     
     hPanel = uipanel('Parent', hFig, 'BackgroundColor', PANEL_BG_COLOR, 'Units', 'normalized', 'Position', [0.02 0.02 0.96 0.10]);
     
@@ -115,8 +125,6 @@ function visualize_3d(hist, sys, t_arr)
     
     uicontrol('Parent', hPanel, 'Style', 'edit', 'String', num2str(PLAY_SPEED_INIT), 'Units', 'normalized', 'Position', [0.90 0.3 0.05 0.4], 'Callback', @(s,~) set_speed(s), 'BackgroundColor', 'w');
     
-    hInfo = uicontrol('Parent', hFig, 'Style', 'text', 'String', '', 'Units', 'normalized', ...
-        'Position', [0.01 0.15 0.22 0.80], 'BackgroundColor', 'w', 'HorizontalAlignment', 'left', 'FontName', 'Consolas', 'FontSize', 10, 'FontWeight', 'bold');
         
     %% ================= CORE UPDATE FUNCTION =================
     function update_frame(k)
@@ -130,61 +138,61 @@ function visualize_3d(hist, sys, t_arr)
             % [MODE 2]: Cố định UAV tại tâm, không vẽ mặt đất
             pos_draw = [0, 0, 0]; 
             set(hGround, 'Visible', 'off'); set(hTrail, 'Visible', 'off');
-            xlim(ax, [-1 1]); ylim(ax, [-1 1]); zlim(ax, [-1 1]);
+            % Bounds đã được set trong callback, không cần làm gì thêm
             
         elseif gui.view_mode == 3
-            % [MODE 3 TÍNH NĂNG MỚI]: FOLLOW VIEW (ISO / FIT)
+            % [MODE 3]: SMART FOLLOW VIEW - CẢI TIẾN (PHÓNG TO HƠN)
             set(hGround, 'Visible', 'on'); set(hTrail, 'Visible', 'on');
             
-            % Khóa chặt camera vào UAV (Span 1.5m để phóng to hết cỡ vào UAV)
-            span = 1.5; 
-            cx = pos_draw(1); cy = pos_draw(2); cz = pos_draw(3);
-            
-            xlim(ax, [cx - span, cx + span]);
-            ylim(ax, [cy - span, cy + span]);
-            zlim(ax, [cz - span, cz + span]);
-            
-            % Khóa góc nhìn về chuẩn Isometric (Giống Simscape)
-            view(ax, 37.5, 30); 
-            
-            % Rải lưới Ground chạy theo máy bay
-            grid_step = 0.5;
-            [Xg, Yg] = meshgrid(cx-span : grid_step : cx+span, cy-span : grid_step : cy+span);
-            set(hGround, 'XData', Xg, 'YData', Yg, 'ZData', zeros(size(Xg)));
-            
-        else
-            % [MODE 1]: WORLD VIEW (Deadband Tracking cũ của bạn)
-            set(hGround, 'Visible', 'on'); set(hTrail, 'Visible', 'on');
-            
+            % ✅ DEADBAND CAMERA: CHỈ DI CHUYỂN KHI UAV RA NGOÀI 70% KHUNG NHÌN
             xl = xlim(ax); yl = ylim(ax); zl = zlim(ax);
             cx = mean(xl); cy = mean(yl); cz = mean(zl);
             span = max([(xl(2)-xl(1))/2, (yl(2)-yl(1))/2, (zl(2)-zl(1))/2]);
             
-            if span < 1.5, span = 1.5; end           
+            % Mặc định span 3.0m (PHÓNG TO để không bao giờ bị cắt vật thể)
+            if span < 1.0, span = 1.0; end           
             if span > max_span, span = max_span; end 
             
-            margin = 1.5; 
-            box_lim = max(0, span - margin);
+            % Deadband 30% cạnh khung (responsive hơn, 70% vùng an toàn)
+            deadband = 0.7 * span;
             
-            if pos_draw(1) > cx + box_lim, cx = pos_draw(1) - box_lim; end
-            if pos_draw(1) < cx - box_lim, cx = pos_draw(1) + box_lim; end
-            if pos_draw(2) > cy + box_lim, cy = pos_draw(2) - box_lim; end
-            if pos_draw(2) < cy - box_lim, cy = pos_draw(2) + box_lim; end
-            if pos_draw(3) > cz + box_lim, cz = pos_draw(3) - box_lim; end
-            if pos_draw(3) < cz - box_lim, cz = pos_draw(3) + box_lim; end
+            if pos_draw(1) > cx + deadband, cx = pos_draw(1) - deadband; end
+            if pos_draw(1) < cx - deadband, cx = pos_draw(1) + deadband; end
+            if pos_draw(2) > cy + deadband, cy = pos_draw(2) - deadband; end
+            if pos_draw(2) < cy - deadband, cy = pos_draw(2) + deadband; end
+            if pos_draw(3) > cz + deadband, cz = pos_draw(3) - deadband; end
+            if pos_draw(3) < cz - deadband, cz = pos_draw(3) + deadband; end
             
-            xlim(ax, [cx - span, cx + span]);
-            ylim(ax, [cy - span, cy + span]);
-            zlim(ax, [cz - span, cz + span]);
+            % ✅ KHÔNG BAO GIỜ GỌI xlim(), ylim(), zlim() MỖI FRAME!
+            % Chỉ thay đổi khi thật sự cần di chuyển
+            new_xl = [cx - span, cx + span];
+            new_yl = [cy - span, cy + span];
+            new_zl = [cz - span, cz + span];
             
-            grid_step = max(1, span/5);
-            [Xg, Yg] = meshgrid(cx-span : grid_step : cx+span, cy-span : grid_step : cy+span);
-            set(hGround, 'XData', Xg, 'YData', Yg, 'ZData', zeros(size(Xg)));
+            if max(abs(new_xl - xl)) > 0.01 || max(abs(new_yl - yl)) > 0.01 || max(abs(new_zl - zl)) > 0.01
+                xlim(ax, new_xl);
+                ylim(ax, new_yl);
+                zlim(ax, new_zl);
+                
+                % Cập nhật ground grid khi khung thay đổi
+                grid_step = max(0.5, span/5);
+                [Xg, Yg] = meshgrid(cx-span : grid_step : cx+span, cy-span : grid_step : cy+span);
+                set(hGround, 'XData', Xg, 'YData', Yg, 'ZData', zeros(size(Xg)));
+            end
+            
+        elseif gui.view_mode == 1
+            % [MODE 1]: FULL TRAJECTORY VIEW
+            % ✅ KHÔNG BAO GIỜ DI CHUYỂN CAMERA. FIX GIỚI HẠN TOÀN BỘ CHUYẾN BAY
+            set(hGround, 'Visible', 'on'); set(hTrail, 'Visible', 'on');
+            % Bounds đã được set trong callback, không cần làm gì thêm
+            
+        else
+            set(hGround, 'Visible', 'on'); set(hTrail, 'Visible', 'on');
         end
         
         % Cập nhật Meshes
         set(hBody, 'Vertices', transform_mesh(v_fuse, R_b2e, pos_draw, T_NED2ENU));
-        set(hNose, 'Vertices', transform_mesh(v_nose, R_b2e, pos_draw, T_NED2ENU)); % Cập nhật mũi đỏ
+        set(hNose, 'Vertices', transform_mesh(v_nose, R_b2e, pos_draw, T_NED2ENU));
         set(hTrail, 'XData', pos_e(1:k), 'YData', pos_n(1:k), 'ZData', pos_alt(1:k));
         
         alphas = hist.u_phys_alpha(:, k); betas = hist.u_phys_beta(:, k); thrusts = hist.u_phys_thrust(:, k);
@@ -219,41 +227,80 @@ function visualize_3d(hist, sys, t_arr)
         
         v_body = hist.x(4:6, k); speed = norm(v_body); v_z = -v_body(3); 
         
-        txt = sprintf(['--- FLIGHT DATA ---\n', ...
-            'TIME : %.2f s\n', ...
-            'ALT  : %.2f m\n', ...
-            'SPEED: %.2f m/s\n', ...
-            'Vz   : %+.2f m/s\n\n', ...
-            '--- ATTITUDE ---\n', ...
-            'ROLL : %5.1f°\n', ...
-            'PITCH: %5.1f°\n', ...
-            'YAW  : %5.1f°\n\n', ...
-            '--- SERVO ANGLES ---\n', ...
-            'M1(FR) α:%+5.1f° β:%+5.1f°\n', ...
-            'M2(RL) α:%+5.1f° β:%+5.1f°\n', ...
-            'M3(FL) α:%+5.1f° β:%+5.1f°\n', ...
-            'M4(RR) α:%+5.1f° β:%+5.1f°'], ...
-            t_arr(k), pos_alt(k), speed, v_z, ...
-            rad2deg(hist.x(7,k)), rad2deg(hist.x(8,k)), rad2deg(hist.x(9,k)), ...
-            rad2deg(alphas(1)), rad2deg(betas(1)), ...
-            rad2deg(alphas(2)), rad2deg(betas(2)), ...
-            rad2deg(alphas(3)), rad2deg(betas(3)), ...
-            rad2deg(alphas(4)), rad2deg(betas(4)));
-        set(hInfo, 'String', txt); 
-        
-        if ~gui.playing
-            drawnow;
-        end
+    % ✅ HUD THEO DESIGN.md
+    sp_x = hist.pos_des(1, k);
+    sp_y = hist.pos_des(2, k);
+    sp_z = -hist.pos_des(3, k);
+    sp_roll = rad2deg(hist.euler_des(1, k));
+    sp_pitch = rad2deg(hist.euler_des(2, k));
+    sp_yaw = rad2deg(hist.euler_des(3, k));
+    
+    txt = sprintf([...
+        '--- FLIGHT DATA ---\n', ...
+        'TIME  : %7.2f s\n', ...
+        'POS X : %+5.1f => %-5.1f m\n', ...
+        'POS Y : %+5.1f => %-5.1f m\n', ...
+        'POS Z : %+5.1f => %-5.1f m\n', ...
+        'Vz    : %+7.2f m/s\n', ...
+        '\n--- ATTITUDE ---\n', ...
+        'ROLL  : %+5.1f => %-5.1f°\n', ...
+        'PITCH : %+5.1f => %-5.1f°\n', ...
+        'YAW   : %+5.1f => %-5.1f°\n', ...
+        '\n--- SERVO ANGLES ---\n', ...
+        'M1 α:%+5.1f° β:%+5.1f°\n', ...
+        'M2 α:%+5.1f° β:%+5.1f°\n', ...
+        'M3 α:%+5.1f° β:%+5.1f°\n', ...
+        'M4 α:%+5.1f° β:%+5.1f°'], ...
+        t_arr(k), ...
+        pos_n(k), sp_x, ...
+        pos_e(k), sp_y, ...
+        pos_alt(k), sp_z, ...
+        v_z, ...
+        rad2deg(hist.x(7,k)), sp_roll, ...
+        rad2deg(hist.x(8,k)), sp_pitch, ...
+        rad2deg(hist.x(9,k)), sp_yaw, ...
+        rad2deg(alphas(1)), rad2deg(betas(1)), ...
+        rad2deg(alphas(2)), rad2deg(betas(2)), ...
+        rad2deg(alphas(3)), rad2deg(betas(3)), ...
+        rad2deg(alphas(4)), rad2deg(betas(4)));
+    set(hInfo, 'String', txt); 
+    
+    % ✅ LUÔN GỌI drawnow limitrate + pause 1ms để xử lý UI event
+    drawnow limitrate;
+    pause(0.001);
     end
     %% ================= CALLBACKS =================
     function cb_mode(src, ~)
         gui.view_mode = get(src, 'Value'); 
+        
+        % [FIX]: Ép MATLAB không tự động mở rộng bounds khi objects nằm ngoài
+        set(ax, 'XLimMode', 'manual', 'YLimMode', 'manual', 'ZLimMode', 'manual');
+        
         if gui.view_mode == 1
-            % Khi vừa chuyển sang World View, bung khung hiển thị bằng Max Span
+            % Mode 1: Full trajectory view - set bounds TOÀN BỘ quỹ đạo
+            xlim(ax, [-max_xy max_xy]);
+            ylim(ax, [-max_xy max_xy]);
+            zlim(ax, [0 max_z]);
+            
+            grid_step = max(1, max_xy/5);
+            [Xg, Yg] = meshgrid(-max_xy : grid_step : max_xy, -max_xy : grid_step : max_xy);
+            set(hGround, 'XData', Xg, 'YData', Yg, 'ZData', zeros(size(Xg)));
+            
+        elseif gui.view_mode == 2
+            % Mode 2: Lab View - fixed zoom 1.5m, UAV ở tâm
+            xlim(ax, [-1 1]); ylim(ax, [-1 1]); zlim(ax, [-1 1]);
+            
+        elseif gui.view_mode == 3
+            % Mode 3: Follow View - reset bounds về span 1.5m quanh UAV
+            span = 1.5;
             cx = pos_e(gui.idx); cy = pos_n(gui.idx); cz = pos_alt(gui.idx);
-            xlim(ax, [cx - max_span, cx + max_span]);
-            ylim(ax, [cy - max_span, cy + max_span]);
-            zlim(ax, [cz - max_span, cz + max_span]);
+            xlim(ax, [cx - span, cx + span]);
+            ylim(ax, [cy - span, cy + span]);
+            zlim(ax, [cz - span, cz + span]);
+            
+            grid_step = max(0.5, span/5);
+            [Xg, Yg] = meshgrid(cx-span : grid_step : cx+span, cy-span : grid_step : cy+span);
+            set(hGround, 'XData', Xg, 'YData', Yg, 'ZData', zeros(size(Xg)));
         end
         update_frame(gui.idx); 
     end
@@ -283,11 +330,7 @@ function visualize_3d(hist, sys, t_arr)
             update_frame(gui.idx); 
             
             time_left = 0.02 - toc; 
-            if time_left > 0
-                pause(time_left); 
-            else
-                drawnow; % Đảm bảo MATLAB nhận sự kiện (click nút Pause)
-            end
+            pause(max(0.001, time_left)); 
         end
         
         if isvalid(hFig) && gui.idx >= length(t_arr)
