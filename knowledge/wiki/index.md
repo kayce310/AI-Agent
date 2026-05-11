@@ -76,6 +76,7 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 ## 🛩️ Project Profiles
 
 - [[projects/ovap-x1]] - Hồ sơ dự án OVAP-X1 Flight Control
+- [[projects/9router]] - 9Router AI Router & Token Saver
 
 ---
 

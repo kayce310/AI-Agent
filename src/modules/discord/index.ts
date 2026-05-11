@@ -82,7 +82,7 @@ export class DiscordBridge {
   }
 
   public async start(): Promise<void> {
-    const token = process.env.DISCORD_TOKEN;
+    const token = process.env.DISCORD_BOT_TOKEN;
 
     if (!token) {
       throw new Error('DISCORD_TOKEN không được tìm thấy trong file .env');

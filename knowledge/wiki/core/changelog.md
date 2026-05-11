@@ -1,133 +1,24 @@
-# [2026-05-08 13:54] - Kato Agentic Workspace v4.0 Migration
+# [2026-05-11 23:31] - Install 9router (AI Router & Token Saver)
 
 ## Changes
-- Added: [[../skills/state-management]] - Data Plane SOP for `state.json` and `kato-state-manager`.
-- Added: `src/core/state-manager.ts` - Safe state manager with atomic writes, lock, backup, checksum, structured errors.
-- Added: `src/scripts/kato-state-manager.ts` - CLI wrapper for state operations.
-- Added: [[../projects/ovap-x1]] - Project profile restored for OVAP-X1 context routing.
-- Updated: [[../AGENTS]] - Router v4.0 with `UNINITIALIZED` lifecycle and state management routing.
-- Updated: [[../index]] and [[../skills/_INDEX]] - Registered state-management skill and v4.0 status.
-- Updated: `CLINE.md` - Minimal Control Plane bootloader.
+- Added: [[../projects/9router]] - Project profile for 9router v0.4.29.
+- Added: `9router/` directory - Cloned from https://github.com/decolua/9router.
+- Added: `.env` config for 9router (copied from .env.example).
+- Added: Node dependencies installed (568 packages).
+- Verified: `npm run dev` starts at http://localhost:20128 (Next.js 16.2.6, webpack).
+- Verified: Dashboard loads ✓, DB driver better-sqlite3 ✓.
 
-## Verification Notes
-- `npm run state:init -- "Kato Agentic Workspace v4.0 migration"` passed and created `knowledge/workspace/state.json`.
-- `npm run state -- ready "Lead AI Engineer" coding-standards verification-protocol state-management` passed and moved lifecycle to `READY`.
-- `npm run state -- bad-command` returned Structured Error JSON with `UNKNOWN_COMMAND`.
-- `npm run build && npm run state:read` passed after adding OpenAI function-tool-call type narrowing in `src/core/llm.ts`.
+## Integration Notes
+- Port: 20128 (dashboard + API tại `http://localhost:20128/v1`)
+- 9Router RTK Token Saver bổ trợ Zero Waste Token của Kato: nén tool_output runtime thay vì chỉ tối ưu layer kiến trúc.
+- 9Router Caveman Mode tương thích với [[../skills/communication-protocol]] Ultra-Terse Mode.
+- Có thể dùng 9Router làm endpoint proxy cho các AI tools (Cline, Claude Code...) qua OpenAI-compatible API.
 
 ## Anti-Patterns Learned
-- ❌ Letting bootloader grow into full SOP causes context bloat.
-- ✅ Keep Control Plane minimal and route to Knowledge Graph skills on demand.
-- ❌ Editing JSON state manually risks corruption.
-- ✅ Use a Data Plane tool with atomic write, lock, backup, checksum.
+- ❌ Chạy build Next.js trên Windows gặp EPERM do symlink folder (`Application Data`).
+- ✅ Dùng `npm run dev` thay vì build để test, tránh lỗi filesystem Windows.
 
-## Next Steps
-- [ ] Consider exposing `KatoStateManager` as a true MCP server/tool if needed.
-
-# Changelog Hệ thống Kato
-
-Nhật ký Tiến hóa của hệ thống. TẤT CẢ các thay đổi cốt lõi phải được ghi lại tại đây.
-
----
-
-## 📅 28/04/2026 - 19:54 UTC+7
-
-### ✅ Đã triển khai:
-1. **[[Task Queue System]]** v1.0
-   - Hàng đợi FIFO xử lý tuần tự
-   - Hỗ trợ Pause/Resume an toàn giữa các task
-   - Event Emitter lifecycle đầy đủ
-   - Không block Event Loop
-
-2. **[[Hiến pháp Kato]] v2.2**
-   - Định nghĩa [[Framework 6 Lớp]] kiến trúc
-   - Quy tắc Graph Weaving & Wiki Links
-   - Nguyên tắc Zero Waste Token
-   - Quy trình Đóng gói Bộ nhớ
-
-3. **[[Knowledge Base Index]]**
-   - Cấu trúc thư mục wiki chuẩn
-   - Index trung tâm bản đồ tri thức
-   - Đã liên kết các module lõi
-
-4. **Khởi tạo Cognitive Assimilation SOP**
-   - Tạo không gian `blueprints/` tiếp nhận bí kíp thô
-   - Tạo thư viện `prompts/` chuẩn hóa
-   - Bổ sung Quy tắc Đồng hóa Kỹ năng vào Hiến pháp
-
-### 🧬 Trạng thái hệ thống:
-- Tổng số file code lõi: 6
-- Module hoạt động: 4
-- Version hệ thống: Alpha 0.1
-- Lần khởi tạo đầu tiên hoàn thành
-
----
-
-## 📅 07/05/2026 - 11:51 UTC+7
-
-### ✅ Refactor v3.0 - Agentic Workspace
-
-**Triết lý**: Zero Waste Token, Modular SOP, Không hardcode
-
-#### 1. Bootloader Refactoring
-- **Updated**: [[CLINE.md]] từ 194 dòng → 20 dòng
-- Chỉ còn vai trò "trạm mồi", dẫn đường đến `knowledge/wiki/`
-- Loại bỏ tất cả thông tin đặc thù dự án
-
-#### 2. Router Layer (Tầng 1)
-- **Added**: [[AGENTS.md]] - Định tuyến vai trò, anti-patterns
-- Bản đồ định tuyến theo tình huống
-- Quy trình khởi động 3 bước
-
-#### 3. Modular Skill Migration (9 SOPs)
-- **Added**: [[skills/coding-standards]] - Module hóa, MCP, fail-fast
-- **Added**: [[skills/verification-protocol]] - Kiểm chứng, testing
-- **Added**: [[skills/communication-protocol]] - Ultra-Terse Mode
-- **Added**: [[skills/knowledge-management]] - SSOT, differential processing
-- **Added**: [[skills/obsidian-formatting]] - Wiki-links, graph weaving
-- **Added**: [[skills/big-data-processing]] - Chunking, orchestrator-worker
-- **Added**: [[skills/automation-directives]] - O(1) query, self-learning
-- **Added**: [[skills/security-sandbox]] - Docker isolation
-- **Added**: [[skills/evolution-protocol]] - Changelog, memory commit
-
-#### 4. Infrastructure Updates
-- **Updated**: [[index.md]] - Bản đồ định tuyến mới
-- **Added**: [[skills/_INDEX.md]] - Danh mục kỹ năng
-- **Added**: [[workspace/state.md]] - Theo dõi trạng thái phiên
-
-### 🧬 Trạng thái hệ thống:
-- **CLINE.md**: 20 dòng (giảm 89%)
-- **Skills**: 10 modular SOPs
-- **Phiên bản**: v3.0 (Agentic Workspace)
-- **Token tiết kiệm**: ~85% khi chỉ tải skill cần thiết
-
-### ⚠️ Anti-Patterns Learned
-- ❌ Nhồi nhét mọi SOP vào 1 file → ✅ Modular skills
-- ❌ Hardcode cho vấn đề cụ thể → ✅ Workflow tổng quát
-- ❌ Agent phải nhớ mọi thứ → ✅ Agent tự tra cứu khi cần
-
----
-
-## [2026-05-08 13:37] - OVAP-X1 v1.4 Visualization Stabilization
-
-### Changes
-- Fixed: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/modules/visualization/visualize_3d.m]] - Removed `drawnow('nocancel')` and replaced with version-compatible `drawnow`.
-- Updated: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/main_sim.m]] - Stopped passing noise payload into `visualize_3d`.
-- Updated: [[../../blueprints/OVAP-X1-Flight-Control-1.4/OVAP-X1-Flight-Control-1.4/_01_Scripts/modules/visualization/data_logger.m]] - Restored `plot_multi` dashboard logger and removed `hist.noise` dependency.
-- Added: [[../troubleshooting/matlab-drawnow-nocancel-unsupported]] - MATLAB UI compatibility troubleshooting note.
-
-### Anti-Patterns Learned
-- ❌ Assumed `drawnow('nocancel')` is supported across MATLAB versions.
-- ✅ Use broadly compatible `drawnow`/`drawnow limitrate` unless the target MATLAB version is confirmed.
-- ❌ Overwrote `data_logger.m` with an incompatible stub during noise-removal work.
-- ✅ Before editing key MATLAB modules, inspect current mode signatures (`init`, `log`, `plot_multi`) and patch minimally.
-
-### Next Steps
-- [ ] User reruns OVAP-X1 v1.4 benchmark and validates 3D Play/Pause UI.
-- [ ] If another MATLAB-version UI incompatibility appears, add a dedicated troubleshooting entry.
-
----
-
-> 📌 QUY TẮC: Mọi thay đổi sau này **BẮT BUỘC** được ghi vào file này trước khi tuyên bố hoàn thành Task.
-
-#core #changelog #evolution
+## Verification Notes
+- `cmd /c "cd /d d:\AI-Agent\9router && npm install"` passed (568 packages, 4 moderate vulns).
+- `npx next dev --webpack --port 20128` started successfully, dashboard accessible at localhost:20128.
+- Login page renders, API POST /api/auth/login returns 401 (expected - chưa config credentials).

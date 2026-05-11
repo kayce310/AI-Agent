@@ -1,0 +1,35 @@
+# Kato Agent - Git Ignore
+
+## Environment
+.env
+.env.local
+.env.*.local
+
+## Node
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+## Logs
+logs/
+*.log
+npm-debug.log*
+
+## OS
+.DS_Store
+Thumbs.db
+
+## IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+## Docker
+docker/data/
+
+## Secrets
+**/service-account*.json
+**/*.pem
+**/*.key
