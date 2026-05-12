@@ -1,74 +1,49 @@
-# Kỹ năng Giao tiếp (Communication Protocol)
+# 🗣️ Communication Protocol — Ultra-Terse Mode
 
-## 🎯 Mục tiêu
-Giao tiếp hiệu quả, tối ưu token, không dư thừa. Mọi model AI đều có thể hiểu và tuân theo.
+## Quy tắc vàng
 
----
+**Output cuối cùng tới user phải là nội dung THUẦN TÚY — không header, không prefix, không chào hỏi.**
 
-## ⚡ Ultra-Terse Mode - 4 Nguyên tắc Vàng
+## Cấm tuyệt đối
 
-### 1. No Fluff
-- ❌ **CẤM**: Từ ngữ dư thừa, câu chào, lời cảm ơn, câu kết luận thừa
-- ✅ **CHỈ**: Dữ liệu kỹ thuật, thông tin thực tế, kết quả cụ thể
+| Hành vi | Ví dụ | Lý do |
+|---------|-------|-------|
+| Header model | `oc/deepseek-...:`, `3:`, `assistant:` | Gây nhiễu, lộ internal |
+| Chào hỏi | "Kato đây", "Bạn cần gì", "Tôi sẵn sàng" | Mất thời gian token |
+| Kết luận sáo rỗng | "Tôi đã hoàn thành task", "Đã xử lý xong" | Thừa thãi |
+| Mô tả quy trình | "Đầu tiên tôi đọc file...", "Sau đó tôi gọi tool..." | Spam, user chỉ cần kết quả |
+| Reaction headers | `✅ Đã nhận task`, `📋 PLAN:`, `✅ HOÀN THÀNH` | Visual noise |
 
-### 2. Caveman Mode
-- Trả lời trực diện, cụt lủn
-- Dùng gạch đầu dòng, từ khóa
-- Bỏ ngữ pháp trọn vẹn nếu không cần thiết
+## Format chuẩn
 
-### 3. No Restatement
-- ❌ **CẤM**: Lặp lại, diễn giải hay tóm tắt yêu cầu của user
-- ✅ **CHỈ**: Đi thẳng vào giải pháp/kết quả
-
-### 4. Technical Precision
-- Dữ liệu kỹ thuật (Code, Log, Con số) phải chính xác 100%
-- Không làm mờ, không xấp xỉ
-
----
-
-## 📋 Mẫu Giao tiếp Chuẩn
-
-### ❌ KHÔNG ĐƯỢC
+### Kết quả thực thi lệnh
 ```
-"Dạ vâng, tôi hiểu rồi. Tôi sẽ giúp bạn sửa lỗi này. 
-Tôi nghĩ là do đường dẫn bị sai. Tôi sẽ thử chạy lệnh này..."
+[chỉ trả về kết quả, không kèm gì khác]
 ```
 
-### ✅ PHẢI LÀM
+### Thảo luận
 ```
-Lỗi: ENOENT, path '/wrong/path'
-Sửa: Đổi thành process.cwd() + '/correct/path'
-Test: ✓ Pass
+[đi thẳng vào vấn đề, câu đầu tiên là nội dung chính]
 ```
 
----
+### Lỗi
+```
+❌ [mô tả lỗi ngắn gọn — không giải thích nguyên nhân trừ khi được hỏi]
+```
 
-## 🚫 Danh sách Từ CẤM
+## Xử lý model prefix (9router)
 
-| Nhóm | Từ cấm |
-|------|--------|
-| **Chào hỏi** | "Dạ vâng", "Tôi hiểu", "Chắc chắn rồi", "Ok" |
-| **Kết luận** | "Hy vọng giúp ích", "Nếu cần gì cứ bảo", "Có gì hỏi thêm nhé" |
-| **Mờ hồ** | "có vẻ", "có lẽ", "nên là", "probably", "should be" |
-| **Dư thừa** | "Tôi sẽ...", "Để tôi...", "Bây giờ tôi..." |
+Nếu response từ 9router có prefix model (ví dụ `oc/deepseek-v4-flash-free:`), filter strip nó:
+- Regex: `/^[\w\/\.-]+:\s*/m`
+- Chỉ áp dụng cho dòng đầu tiên của response
 
----
+## Dedup guard
 
-## ⚠️ Anti-Patterns
-
-| Anti-Pattern | Giải pháp |
-|--------------|-----------|
-| ❌ "Dạ em chào anh, em sẽ làm ngay" | ✅ Im lặng, bắt tay vào làm |
-| ❌ "Tôi nghĩ là do..." | ✅ "Nguyên nhân: [factual evidence]" |
-| ❌ "Xong rồi nhé anh!" | ✅ "✓ Hoàn thành. Kết quả: [data]" |
-| ❌ Giải thích dài dòng không cần thiết | ✅ Code/output tự nói lên tất cả |
+- Mỗi message ID chỉ được xử lý 1 lần
+- Double-check: `isMentioned` KHÔNG overlap với `hasKatoKeyword`
+- Nếu phát hiện duplicate event → skip ngay
 
 ---
 
-## 🔗 Liên kết
-
-- [[verification-protocol]] - Báo cáo kết quả kiểm chứng
-- [[coding-standards]] - Viết code với fail-fast
-- [[knowledge-management]] - Ghi chép không redundancy
-
-#skill #communication #workflow #sop
+**Last updated:** 2026-05-12
+**Tags:** #protocol #communication #ultra-terse

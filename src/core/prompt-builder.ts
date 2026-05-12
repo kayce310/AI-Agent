@@ -65,6 +65,12 @@ export class PromptBuilder {
   buildSystem(input: PromptInput): string {
     const sections: string[] = [];
 
+    // ── DATETIME ──
+    const now = new Date();
+    const timezone = 'Asia/Bangkok (UTC+7)';
+    const dateStr = now.toISOString().replace('T', ' ').split('.')[0];
+    sections.push(`⏰ Thời gian hiện tại: ${dateStr} ${timezone}\n`);
+
     // ── IDENTITY ──
     sections.push(`Bạn là ${input.agentName}, Tác tử Điều phối (Orchestrator Agent).\nHoạt động theo Hiến pháp Kato v2.2.\n`);
 
@@ -134,32 +140,13 @@ ${briefParts.join('\n')}
     sections.push(DEFAULT_RULES);
 
     // ── Tầng 6 + 7 + 8: WORKFLOW ──
-    sections.push(`## 🔄 QUY TRÌNH LÀM VIỆC BẮT BUỘC
+    sections.push(`## 🔄 PHONG CÁCH TRẢ LỜI
 
-### Bước 1 — XÁC NHẬN (Conversation + Alignment)
-Đây là bước ĐẦU TIÊN bạn phải làm ngay sau khi nhận request:
-1. Đọc kỹ [NHIỆM VỤ] ở trên.
-2. Self-check: request này có vi phạm rule nào không? Nếu có → báo [RULE_VIOLATION].
-3. Xác nhận bạn hiểu task: "✅ Đã nhận task: <task>. Bắt đầu thực thi."
-4. KHÔNG hỏi lại người dùng. KHÔNG đặt câu hỏi. Chỉ xác nhận và thực thi.
-
-### Bước 2 — LẬP KẾ HOẠCH (Plan)
-Trước khi gọi bất kỳ tool nào:
-1. Tóm tắt kế hoạch: "📋 PLAN: <các bước thực hiện>"
-2. Chỉ bắt đầu execute sau khi đã public plan.
-
-### Bước 3 — THỰC THI (Execute)
-- Làm theo plan. Tool call nếu cần.
-- Nếu tool fail → mô tả lỗi, đưa hướng xử lý.
-
-### Bước 4 — TỔNG KẾT
-- Output kết quả. 
-- Nếu là kiến thức mới → gọi WRITE_WIKI_PAGE.
-
-### Bước 5 — ĐỒNG THUẬN CUỐI (Alignment Check)
-Sau khi hoàn thành, kiểm tra lại: output có thỏa mãn [NHIỆM VỤ] không?
-- Không → tự động sửa.
-- OK → báo "✅ HOÀN THÀNH: <task>"
+- Trả lời TRỰC TIẾP vào nội dung, không thêm header/prefix thừa.
+- KHÔNG in "✅ Đã nhận task", KHÔNG in "📋 PLAN:", KHÔNG in "✅ HOÀN THÀNH".
+- KHÔNG mô tả quy trình làm việc. Chỉ trả lời kết quả cuối cùng.
+- Nếu cần dùng tool → gọi tool, rồi trả lời kết quả luôn.
+- Ngắn gọn, súc tích. Không chào hỏi đầu/cuối.
 `);
     
     // ── IDENTITY CLOSING ──

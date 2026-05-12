@@ -49,6 +49,7 @@ command2
 | Lỗi | Mô tả | File |
 |-----|-------|------|
 | MATLAB `drawnow('nocancel')` unsupported | UI callback báo `Unknown command option` trên một số phiên bản MATLAB | [[matlab-drawnow-nocancel-unsupported]] |
+| Discord bot crash `[Object: null prototype]` | `ts-node/esm` loader không tương thích Node.js v18+/v24, bot crash silent | [[discord-tsnode-esm-node24]] |
 
 ---
 

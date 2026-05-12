@@ -4,6 +4,9 @@
  * 
  * Tương thích 100%: OpenAI, Claude, Gemini, DeepSeek, Llama, Local AI
  * Hoạt động qua bất kỳ Proxy nào: LiteLLM, OpenRouter, Ollama, Local Server
+ * 
+ * Sử dụng TOOLS_DEFINITION + executeToolCall từ tools.ts (shared)
+ * cho tất cả tool execution. Giữ lại singleton local fallback trong LLMCore.
  */
 
 import OpenAI from 'openai';
@@ -11,6 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import MemoryCompressor from './memory-compressor.js';
 import { Message } from './memory.js';
+import { TOOLS_DEFINITION as SHARED_TOOLS, executeToolCall } from './tools.js';
 import 'dotenv/config';
 
 type FunctionToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
@@ -62,103 +66,12 @@ Quy tắc hoạt động cốt lõi:
 5. QUAN TRỌNG: BẠN ĐÃ CÓ TOÀN BỘ LỊCH SỬ HỘI THOẠI. ĐỪNG BAO GIỜ NÓI BẠN KHÔNG NHỚ GÌ.
 6. IDENTITY: Bạn là {AGENT_NAME}. Khi user tag {MENTION_PREFIX} đó là họ đang gọi bạn.`;
 
-const TOOLS_DEFINITION: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'list_directory',
-      description: 'Liệt kê các file và thư mục trong một đường dẫn',
-      parameters: {
-        type: 'object',
-        properties: {
-          path: {
-            type: 'string',
-            description: 'Đường dẫn thư mục cần liệt kê'
-          }
-        },
-        required: ['path']
-      }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'read_file',
-      description: 'Đọc nội dung của một file văn bản',
-      parameters: {
-        type: 'object',
-        properties: {
-          path: {
-            type: 'string',
-            description: 'Đường dẫn file cần đọc'
-          }
-        },
-        required: ['path']
-      }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'process_new_raw_data',
-      description: 'Xử lý tự động các file dữ liệu mới trong thư mục knowledge/raw/',
-      parameters: {
-        type: 'object',
-        properties: {},
-        required: []
-      }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'write_wiki_page',
-      description: 'Tạo hoặc cập nhật một trang wiki trong thư mục knowledge/wiki/',
-      parameters: {
-        type: 'object',
-        properties: {
-          path: {
-            type: 'string',
-            description: 'Đường dẫn file wiki cần tạo'
-          },
-          content: {
-            type: 'string',
-            description: 'Nội dung markdown của trang wiki'
-          },
-          tags: {
-            type: 'string',
-            description: 'Các tag gắn ở cuối file, cách nhau bởi dấu cách'
-          }
-        },
-        required: ['path', 'content']
-      }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'search_knowledge_graph',
-      description: 'Tìm kiếm cực nhanh trong cơ sở tri thức Obsidian, tìm backlinks, tag và liên kết',
-      parameters: {
-        type: 'object',
-        properties: {
-          keyword: {
-            type: 'string',
-            description: 'Từ khóa cần tìm kiếm, có thể là tên trang, tag hoặc thuật ngữ'
-          }
-        },
-        required: ['keyword']
-      }
-    }
-  }
-];
-
 export class LLMCore {
   private client: OpenAI;
   private modelIndex: number = 0;
   private memoryCompressor: MemoryCompressor;
   private basePath: string = process.cwd();
-  
+
   private readonly FALLBACK_MODELS = [
     "anthropic/claude-3-haiku",
     "meta-llama/llama-3-8b-instruct",
@@ -196,7 +109,7 @@ export class LLMCore {
    */
   private getProcessedFiles(): Set<string> {
     const logPath = path.join(this.basePath, 'knowledge/wiki/processed_log.md');
-    
+
     if (!fs.existsSync(logPath)) {
       fs.writeFileSync(logPath, '# 📋 Processed Raw Files Log\n\nDanh sách các file trong raw/ đã được xử lý và chuyển đổi thành wiki:\n\n---\n\n', 'utf8');
       return new Set();
@@ -204,7 +117,7 @@ export class LLMCore {
 
     const content = fs.readFileSync(logPath, 'utf8');
     const processed = new Set<string>();
-    
+
     // Tìm tất cả các dòng - [x] filename
     const regex = /- \[x\] (.+)/g;
     let match;
@@ -227,55 +140,33 @@ export class LLMCore {
 
   /**
    * Thực thi công cụ được yêu cầu bởi LLM
+   * Dùng shared executeToolCall từ tools.ts + fallback local cho các tool đặc thù
    */
-  private isFunctionToolCall(toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall): toolCall is FunctionToolCall {
-    return toolCall.type === 'function';
-  }
-
-  private executeToolCall(toolCall: FunctionToolCall): any {
+  private executeToolCallLocal(toolCall: FunctionToolCall): any {
     try {
       const functionName = toolCall.function.name;
       const args = JSON.parse(toolCall.function.arguments);
 
-      console.log(`🔧 Executing tool ${functionName} with args:`, args);
+      console.log(`🔧 LLMCore executing tool ${functionName} with args:`, args);
 
       if (args.path && !this.isPathSafe(args.path)) {
         return { error: `Đường dẫn ${args.path} không được phép truy cập` };
       }
 
-      if (functionName === 'list_directory') {
-        if (!fs.existsSync(args.path)) {
-          return { error: `Thư mục ${args.path} không tồn tại` };
-        }
-        return fs.readdirSync(args.path, { withFileTypes: true }).map(item => ({
-          name: item.name,
-          type: item.isDirectory() ? 'directory' : 'file'
-        }));
-      }
-
-      if (functionName === 'read_file') {
-        if (!fs.existsSync(args.path)) {
-          return { error: `File ${args.path} không tồn tại` };
-        }
-        if (!fs.statSync(args.path).isFile()) {
-          return { error: `${args.path} không phải là file` };
-        }
-        return { content: fs.readFileSync(args.path, 'utf8') };
-      }
-
+      // process_new_raw_data là tool đặc thù chỉ có ở LLMCore
       if (functionName === 'process_new_raw_data') {
         const rawPath = path.join(this.basePath, 'knowledge/raw/');
         const processed = this.getProcessedFiles();
-        
+
         const allFiles: string[] = [];
-        
+
         // Quét toàn bộ thư mục raw
         function scanDir(dir: string, prefix: string = '') {
           const items = fs.readdirSync(dir, { withFileTypes: true });
           for (const item of items) {
             const fullPath = path.join(dir, item.name);
             const relativePath = prefix + item.name;
-            
+
             if (item.isDirectory()) {
               scanDir(fullPath, relativePath + '/');
             } else {
@@ -283,14 +174,14 @@ export class LLMCore {
             }
           }
         }
-        
+
         if (fs.existsSync(rawPath)) {
           scanDir(rawPath);
         }
 
         // Tìm các file mới chưa được xử lý
         const newFiles = allFiles.filter(f => !processed.has(f));
-        
+
         return {
           total_files: allFiles.length,
           processed_files: processed.size,
@@ -299,103 +190,11 @@ export class LLMCore {
         };
       }
 
-      if (functionName === 'write_wiki_page') {
-        const fullPath = path.join(this.basePath, 'knowledge/wiki/', args.path);
-        
-        // Tạo thư mục nếu chưa tồn tại
-        const dirPath = path.dirname(fullPath);
-        fs.mkdirSync(dirPath, { recursive: true });
-        
-        // Ghi nội dung file
-        let content = args.content;
-        
-        // Thêm tag vào cuối file
-        if (args.tags) {
-          content += `\n\n---\n#${args.tags.split(' ').join(' #')}`;
-        }
-        
-        fs.writeFileSync(fullPath, content, 'utf8');
-        
-        // Cập nhật processed log nếu là file từ raw
-        if (args.source_file) {
-          this.markFileProcessed(args.source_file);
-        }
-        
-        return { success: true, path: args.path };
-      }
-
-      if (functionName === 'search_knowledge_graph') {
-        const wikiPath = path.join(this.basePath, 'knowledge/wiki/');
-        const keyword = args.keyword.toLowerCase();
-        const results: any[] = [];
-
-        // Quét toàn bộ file markdown trong wiki
-        function scanWikiDir(dir: string, prefix: string = '') {
-          const items = fs.readdirSync(dir, { withFileTypes: true });
-          
-          for (const item of items) {
-            const fullPath = path.join(dir, item.name);
-            const relativePath = prefix + item.name;
-            
-            if (item.isDirectory()) {
-              scanWikiDir(fullPath, relativePath + '/');
-            } else if (item.name.endsWith('.md')) {
-              const content = fs.readFileSync(fullPath, 'utf8').toLowerCase();
-              
-              // Ưu tiên các liên kết Obsidian [[keyword]]
-              if (content.includes(`[[${keyword}]]`)) {
-                results.push({
-                  path: relativePath,
-                  match_type: 'backlink',
-                  priority: 10
-                });
-                continue;
-              }
-              
-              // Ưu tiên các tag #keyword
-              if (content.includes(`#${keyword}`)) {
-                results.push({
-                  path: relativePath,
-                  match_type: 'tag',
-                  priority: 8
-                });
-                continue;
-              }
-              
-              // Tìm các nội dung chứa từ khóa
-              const regex = new RegExp(`(.{0,100}${keyword}.{0,100})`, 'i');
-              const match = content.match(regex);
-              
-              if (match) {
-                results.push({
-                  path: relativePath,
-                  match_type: 'content',
-                  context: match[0].trim(),
-                  priority: 5
-                });
-              }
-            }
-          }
-        }
-
-        if (fs.existsSync(wikiPath)) {
-          scanWikiDir(wikiPath);
-        }
-
-        // Sắp xếp theo ưu tiên
-        results.sort((a, b) => b.priority - a.priority);
-
-        return {
-          keyword: args.keyword,
-          total_results: results.length,
-          results: results.slice(0, 15)
-        };
-      }
-
-      return { error: `Công cụ ${functionName} không tồn tại` };
+      // Các tool còn lại dùng shared executeToolCall
+      return executeToolCall(toolCall);
 
     } catch (error: any) {
-      console.error(`❌ Tool execution error:`, error.message);
+      console.error(`❌ LLMCore tool execution error:`, error.message);
       return { error: error.message };
     }
   }
@@ -419,11 +218,28 @@ export class LLMCore {
       { role: 'user', content: `CONTEXT HISTORY:\n${compressedContext}\n\nUSER QUESTION: ${history[history.length - 1].content}` }
     ];
 
+    // Dùng SHARED_TOOLS + thêm process_new_raw_data
+    const tools = [
+      ...SHARED_TOOLS,
+      {
+        type: 'function',
+        function: {
+          name: 'process_new_raw_data',
+          description: 'Xử lý tự động các file dữ liệu mới trong thư mục knowledge/raw/',
+          parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+          }
+        }
+      }
+    ];
+
     // Automatic Model Fallback System - Thử từng model theo thứ tự ưu tiên đến khi thành công
     for (let attempt = 0; attempt < this.FALLBACK_MODELS.length; attempt++) {
       try {
         const model = this.FALLBACK_MODELS[this.modelIndex];
-        
+
         console.log(`📤 Attempt ${attempt+1}: Trying model ${model}`);
 
         // Agent Loop - Thực thi đến khi không còn công cụ cần gọi
@@ -433,7 +249,7 @@ export class LLMCore {
             messages,
             temperature: 0.7,
             max_tokens: 1024,
-            tools: TOOLS_DEFINITION,
+            tools,
             tool_choice: 'auto'
           });
 
@@ -450,13 +266,13 @@ export class LLMCore {
             messages.push(choice.message);
 
             for (const toolCall of choice.message.tool_calls) {
-              if (!this.isFunctionToolCall(toolCall)) {
+              if (!(toolCall.type === 'function')) {
                 console.warn(`⚠️ Unsupported non-function tool call skipped: ${toolCall.type}`);
                 continue;
               }
 
-              const toolResult = this.executeToolCall(toolCall);
-              
+              const toolResult = this.executeToolCallLocal(toolCall as FunctionToolCall);
+
               messages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
@@ -472,7 +288,7 @@ export class LLMCore {
 
       } catch (error: any) {
         console.error(`❌ LLM Error with model ${this.FALLBACK_MODELS[this.modelIndex]}:`);
-        
+
         if (error.name === 'TimeoutError') {
           console.error(`   ⏱️ Timeout: Server không phản hồi trong thời gian cho phép`);
         } else if (error.status === 429) {

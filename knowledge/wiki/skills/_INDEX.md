@@ -55,6 +55,12 @@ Trung tâm điều phối tất cả SOP và kỹ năng của hệ thống Kato.
 |-------|-------|---------|
 | [[evolution-protocol]] | Changelog, memory commit, state management | Sau mỗi phiên làm việc |
 
+### 🚀 Deployment & Khởi động
+
+| Skill | Mô tả | Trigger |
+|-------|-------|---------|
+| [[module-discord]] | Khởi động Discord Bot qua kato-boot.bat | Khi user yêu cầu start Discord |
+
 ---
 
 ## 🔗 Liên kết

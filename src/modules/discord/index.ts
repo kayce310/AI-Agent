@@ -18,6 +18,7 @@ export class DiscordBridge {
   private client: Client;
   private engine: Engine;
   private currentModel: string = '';
+  private processingMessages: Set<string> = new Set(); // messageId dedup guard
 
   constructor(engine?: Engine) {
     this.client = new Client({
@@ -56,7 +57,8 @@ export class DiscordBridge {
   }
 
   private registerEventHandlers(): void {
-    this.client.once('ready', () => {
+    // NOTE: 'ready' đã deprecated trong discord.js v14, dùng 'clientReady' thay thế
+    this.client.once('clientReady', () => {
       console.log(`✅ Kato Discord Bot đã sẵn sàng`);
     });
 
@@ -81,12 +83,18 @@ export class DiscordBridge {
         return;
       }
 
-      // Phản hồi khi được tag hoặc nhắc tên
-      if (
-        message.content.toLowerCase().includes('kato') ||
-        message.mentions.has(this.client.user!)
-      ) {
-        console.log(`✅ Discord -> Engine: forwarding message`);
+      // Phản hồi khi được tag hoặc nhắc tên (chỉ 1 trigger/1 message)
+      const isMentioned = message.mentions.has(this.client.user!);
+      const hasKatoKeyword = !isMentioned && message.content.toLowerCase().includes('kato');
+      if (isMentioned || hasKatoKeyword) {
+        // Dedup guard: chống multiple instance hoặc rapid-fire duplicate events
+        if (this.processingMessages.has(message.id)) {
+          console.log(`⚠️ Duplicate event for message ${message.id}, skipping`);
+          return;
+        }
+        this.processingMessages.add(message.id);
+
+        console.log(`✅ Discord -> Engine: forwarding message (id: ${message.id})`);
 
         const channelId = message.channelId;
 
@@ -124,17 +132,14 @@ export class DiscordBridge {
           timestamp: Date.now()
         });
 
-        // Edit final response
+        // Edit final response — KHÔNG prefix model header
         try {
-          if (response.providerUsed !== 'none') {
-            await initialMsg.edit(`**${response.modelUsed}**:\n${response.content}`);
-          } else {
-            await initialMsg.edit(response.content);
-          }
+          await initialMsg.edit(response.content);
         } catch {}
 
         // Cleanup status tracking
         this.statusMessage.delete(channelId);
+        this.processingMessages.delete(message.id); // cleanup dedup guard
         console.log(`✅ Discord <- Engine: response sent (model: ${response.modelUsed})`);
       }
     });

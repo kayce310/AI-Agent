@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "errors": [],
+  "rules": [
+    {
+      "id": "rate-limit-cooldown",
+      "pattern": "rate limit|429|Too Many Requests",
+      "action": "add_cooldown",
+      "value": 12,
+      "threshold": 3,
+      "description": "Rate limit xảy ra 3 lần → tăng cooldown từ 6h lên 12h",
+      "active": false
+    },
+    {
+      "id": "provider-down-fallback",
+      "pattern": "connect ETIMEDOUT|ECONNREFUSED|ENOTFOUND|network error",
+      "action": "use_fallback",
+      "value": "openai/gpt-3.5-turbo",
+      "threshold": 2,
+      "description": "Provider down 2 lần → tự động chuyển sang GPT-3.5 fallback",
+      "active": false
+    },
+    {
+      "id": "tool-execution-retry",
+      "pattern": "Error executing|tool_call|function_call",
+      "action": "retry_less",
+      "value": 1,
+      "threshold": 5,
+      "description": "Tool execution lỗi 5 lần → giảm số lần retry xuống 1",
+      "active": false
+    },
+    {
+      "id": "parse-error-skip",
+      "pattern": "Invalid API response|JSON parse|format|missing field",
+      "action": "skip_model",
+      "value": "",
+      "threshold": 3,
+      "description": "Parse error 3 lần → skip model đó tự động (bao gồm missing field name)",
+      "active": false
+    }
+  ],
+  "modelPerformance": {},
+  "meta": {
+    "lastUpdated": "2026-05-12T16:49:00.000Z",
+    "totalErrorsTracked": 0,
+    "activeRules": 0
+  }
+}

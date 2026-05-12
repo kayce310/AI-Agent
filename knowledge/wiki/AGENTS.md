@@ -20,6 +20,8 @@
 | **Giao tiếp** | Tuân thủ protocol | [[skills/communication-protocol]] |
 | **Kiểm chứng** | Chạy verification | [[skills/verification-protocol]] |
 | **Quản lý trạng thái** | Dùng Data Plane an toàn | [[skills/state-management]] |
+| **Khởi động Discord** | Start bot qua kato-boot.bat | [[skills/module-discord]] |
+| **Kiến trúc Core** | Tra cứu core architecture | [[core/_INDEX]] |
 
 ---
 
