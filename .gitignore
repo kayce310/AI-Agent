@@ -1,23 +1,7 @@
-# Node
 node_modules/
-npm-debug.log*
-package-lock.json
-
-# Environment
-.env
-.env.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-*.vsix
-
-# Build
 dist/
-build/
-
-# Exclude v4.0 (legacy reference, already on GitHub)
-AI-Agent-v4.0/
+.env
+*.log
+knowledge/workspace/state.json.bak.*
+docker/9router/
+C:\Users\Khang\AppData\Local\Temp\9router\

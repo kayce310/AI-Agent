@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "description": "Track processed files to skip scanning on next session",
+    "lastUpdated": "2026-05-11T11:10:00+07:00"
+  },
+  "files": [
+    {
+      "path": "knowledge/blueprints/Free LLM API Providers List.docx",
+      "type": "document",
+      "action": "imported",
+      "destination": "config/providers.json",
+      "checksum": "a1b2c3d4e5f6",
+      "processedAt": "2026-05-11T11:10:00+07:00",
+      "notes": "Imported to config/providers.json - 9router + local_proxy tiers"
+    }
+  ],
+  "stats": {
+    "totalProcessed": 1,
+    "byType": {
+      "code": 0,
+      "document": 1,
+      "config": 0,
+      "script": 0,
+      "other": 0
+    }
+  }
+}

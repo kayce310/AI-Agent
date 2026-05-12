@@ -1,0 +1,3 @@
+# Chunk Processing Queue
+
+Thư mục chứa các tác vụ xử lý file lớn được chia nhỏ theo FIFO Queue

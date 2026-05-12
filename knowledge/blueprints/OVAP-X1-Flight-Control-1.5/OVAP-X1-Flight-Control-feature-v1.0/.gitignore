@@ -1,0 +1,12 @@
+# MATLAB/Simulink
+*.asv
+*.m~
+*.mex*
+*.mat~
+slprj/
+*.slxc
+*.autosave
+
+# Bỏ qua file nén backup
+*.rar
+*.zip
