@@ -5,26 +5,26 @@
       "modelId": "tracer",
       "errorType": "TOOL_EXECUTION",
       "errorMessage": "boom",
-      "stackTrace": "Error: boom\n    at <anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:128:15)\n    at Tracer.trace (E:\\Test\\AI-Agent\\src\\core\\tracer.ts:128:28)\n    at <anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:127:20)\n    at waitForActual (node:assert:632:21)\n    at strict.rejects (node:assert:769:31)\n    at TestContext.<anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:126:18)\n    at Test.runInAsyncScope (node:async_hooks:228:14)\n    at Test.run (node:internal/test_runner/test:1118:25)\n    at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)\n    at Test.postRun (node:internal/test_runner/test:1247:19)",
+      "stackTrace": "Error: boom\n    at E:/Test/AI-Agent/tests/tracer.test.ts:128:15\n    at Tracer.trace (E:/Test/AI-Agent/src/core/tracer.ts:128:28)\n    at E:/Test/AI-Agent/tests/tracer.test.ts:127:20\n    at waitForActual (node:assert:632:21)\n    at strict.rejects (node:assert:769:31)\n    at TestContext.<anonymous> (E:/Test/AI-Agent/tests/tracer.test.ts:126:18)\n    at Test.runInAsyncScope (node:async_hooks:228:14)\n    at Test.run (node:internal/test_runner/test:1118:25)\n    at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)\n    at Test.postRun (node:internal/test_runner/test:1247:19)",
       "sessionId": "tracer",
       "contextSnippet": "",
       "fingerprint": "a72dfb4c8e68",
-      "timestamp": "2026-05-15T17:01:57.874Z"
+      "timestamp": "2026-05-15T18:03:51.703Z"
     }
   ],
   "rules": [],
   "modelPerformance": {
     "gpt-4": {
-      "totalCalls": 2,
+      "totalCalls": 1,
       "failedCalls": 0,
       "lastFailure": null,
-      "avgResponseTime": 2.5,
+      "avgResponseTime": 0,
       "errorTypes": {}
     },
     "tracer": {
       "totalCalls": 0,
       "failedCalls": 1,
-      "lastFailure": "2026-05-15T17:01:57.874Z",
+      "lastFailure": "2026-05-15T18:03:51.703Z",
       "avgResponseTime": 0,
       "errorTypes": {
         "TOOL_EXECUTION": 1
@@ -39,7 +39,7 @@
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-15T17:01:57.874Z",
+    "lastUpdated": "2026-05-15T18:03:51.703Z",
     "totalErrorsTracked": 1,
     "activeRules": 0
   }

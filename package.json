@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start:discord": "npx tsx src/scripts/start-discord.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
@@ -19,6 +20,7 @@
     "@types/node": "^25.8.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.6"
   }
 }
