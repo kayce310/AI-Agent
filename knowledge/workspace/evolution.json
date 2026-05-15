@@ -20,6 +20,36 @@
       "contextSnippet": "<@1483642147382231150>  xong chưa?",
       "fingerprint": "075989e98978",
       "timestamp": "2026-05-15T09:19:48.228Z"
+    },
+    {
+      "modelId": "SYSTEM",
+      "errorType": "SECONDARY_WORKSPACE_CONFLICT",
+      "errorMessage": "Kato ghi processed-files.json vào `knowledge/wiki/knowledge/workspace/processed-files.json` thay vì `knowledge/workspace/processed-files.json` (CLINE.md violation). Fix: merge entry (Tai-lieu-he-thong.pdf) vào CLINE's file + xoá secondary workspace.",
+      "stackTrace": "Audit 2026-05-15: Get-ChildItem phát hiện 2 processed-files.json. Kato's (702 bytes, 1 entry) vs CLINE's (4710 bytes, 20 entries). Root cause: Kato dùng path tương đối theo workspace của nó thay vì từ gốc repo.",
+      "sessionId": "audit-2026-05-15",
+      "contextSnippet": "CLINE.md Line 17 quy định `knowledge/workspace/processed-files.json` nhưng Kato ghi vào `knowledge/wiki/knowledge/workspace/processed-files.json`. Cùng bug chain với nested wiki (2026-05-14) và role-architecture confusion (CLINE vs Cline IDE).",
+      "fingerprint": "secondary-workspace-conflict-001",
+      "timestamp": "2026-05-15T19:17:00.000Z"
+    },
+    {
+      "modelId": "SYSTEM",
+      "errorType": "CLINE_MD_STALE_REFERENCE",
+      "errorMessage": "CLINE.md Line 9 ghi `state.md` nhưng thực tế là `state.json`. Đã fix đồng bộ.",
+      "stackTrace": "Audit 2026-05-15: So sánh CLINE.md Line 9 vs thực tế file system.",
+      "sessionId": "audit-2026-05-15",
+      "contextSnippet": "Line 9: 'Dùng kato-state-manager để đọc/ghi knowledge/workspace/state.md' — state.md không tồn tại.",
+      "fingerprint": "cline-md-stale-ref-001",
+      "timestamp": "2026-05-15T19:17:00.000Z"
+    },
+    {
+      "modelId": "SYSTEM",
+      "errorType": "NESTED_WIKI_RESIDUAL",
+      "errorMessage": "agent-errors.md còn sót trong `knowledge/wiki/knowledge/wiki/core/` sau lần fix 2026-05-14 16:59. Xoá sạch.",
+      "stackTrace": "Audit 2026-05-15: Kato dùng `knowledge/wiki/knowledge/` thay vì `knowledge/wiki/` làm base.",
+      "sessionId": "audit-2026-05-15",
+      "contextSnippet": "Fix một phần ở 2026-05-14: xoá knowledge/wiki/knowledge/wiki/ (stubs + state.json) nhưng sót agent-errors.md.",
+      "fingerprint": "nested-wiki-residual-001",
+      "timestamp": "2026-05-15T19:17:00.000Z"
     }
   ],
   "rules": [
@@ -81,8 +111,8 @@
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-15T09:19:48.228Z",
-    "totalErrorsTracked": 2,
+    "lastUpdated": "2026-05-15T19:17:00.000Z",
+    "totalErrorsTracked": 5,
     "activeRules": 0
   }
 }

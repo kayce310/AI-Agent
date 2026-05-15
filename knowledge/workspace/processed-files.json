@@ -6,6 +6,15 @@
   },
   "files": [
     {
+      "path": "knowledge/blueprints/Tai-lieu-he-thong-AI-Agent.pdf",
+      "type": "document",
+      "action": "archived",
+      "destination": "knowledge/wiki/blueprints/ai-agent-architecture-system-design.md",
+      "checksum": "",
+      "processedAt": "2026-05-15T09:30:00+07:00",
+      "notes": "Archived to wiki as summary (merged from Kato's secondary workspace)"
+    },
+    {
       "path": "knowledge/blueprints/Free LLM API Providers List.docx",
       "type": "document",
       "action": "imported",
@@ -149,10 +158,10 @@
     }
   ],
   "stats": {
-    "totalProcessed": 20,
+    "totalProcessed": 21,
     "byType": {
       "code": 0,
-      "document": 14,
+      "document": 15,
       "config": 2,
       "script": 0,
       "other": 4

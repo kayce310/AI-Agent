@@ -1,26 +1,92 @@
-# [2026-05-15 17:08] — Workspace Path Conflict: Kato vs CLINE dùng processed-files.json khác nhau
+# [2026-05-15 19:38] — Checkpoint & Anti-Overflow Protocol v1.0
 
-## Phát hiện
-Kato và CLINE mỗi bên dùng một `processed-files.json` khác nhau:
+## Context
+Context window model 264k thường bị overflow khi rebuild project lớn → mất toàn bộ state, CLINE mới không biết đã làm gì. `state.json` chỉ lưu session metadata, không lưu step-by-step progress. `task_progress` hiện tại chỉ là checklist trong tool call, không tồn tại qua các phiên.
 
-| Agent | Path processed-files.json | Path output |
-|-------|--------------------------|-------------|
-| **Kato** | `knowledge/wiki/knowledge/workspace/processed-files.json` | `knowledge/wiki/blueprints/` |
-| **CLINE** | `knowledge/workspace/processed-files.json` | `knowledge/raw-md/` |
+## Giải pháp: 3 lớp Anti-Overflow
 
-Hậu quả:
-- Không đồng bộ — Kato biết file đã xử lý, CLINE không biết
-- `state-manager.ts` dùng `knowledge/workspace/` làm PROJECT_ROOT → không nhìn thấy entry của Kato
-- Kato trả lời path dựa trên workspace của nó, CLINE tìm không thấy
+### Lớp 1 — Prevent (Token Budget Monitoring)
+- `checkpoint.json.context.tokenBudget`: total=264000, warning=200k, critical=240k
+- Mỗi tool call: đọc checkpoint → kiểm tra currentEstimateUsage
+- >200k: rút gọn mô tả, giảm verbose
+- >240k: DỪNG tool call → chạy emergency script → git commit
 
-## Bug liên quan
-1. `knowledge/wiki/knowledge/workspace/processed-files.json` — file "thật" Kato dùng, có entry `Tai-lieu-he-thong-AI-Agent.pdf → knowledge/wiki/blueprints/ai-agent-architecture-system-design.md`
-2. `knowledge/workspace/processed-files.json` — CLINE nhìn vào, tổng processed=20, không có entry nào chứa "Tai"
-3. `matlab_kill.bat` — Kato tạo ở `knowledge/wiki/scripts/` nhưng trả lời `scripts/` (thiếu prefix)
-4. `ai-agent-architecture.md` — Kato tạo ở `knowledge/wiki/blueprints/` nhưng CLINE tìm ở `knowledge/wiki/` (sai path)
+### Lớp 2 — Checkpoint (Step-by-Step State Machine)
+- File mới: `knowledge/workspace/checkpoint.json` — progress, completedSteps, pendingSteps, filesModified, session tracking
+- Mỗi tool call PHẢI kèm `task_progress` parameters + JSON update checkpoint.json
+- CLINE.md thêm 6 luật Checkpoint bắt buộc
 
-## Cần fix
-Đồng bộ hóa workspace path giữa Kato và CLINE thành một source of truth duy nhất.
+### Lớp 3 — Resume (Bootloader tự động khi overflow)
+- File mới: `RESUME.md` — 5 bước recovery: đọc checkpoint → xác định vị trí → git check → khôi phục context → tiếp tục
+- Emergency script: `scripts/checkpoint-emergency.mjs` — update checkpoint + git commit + evolution.json log
+- Resume detection: khi khởi động, kiểm tra RESUME.md tồn tại → đã overflow → resume protocol
+
+## Files affected
+| File | Change |
+|------|--------|
+| `knowledge/workspace/checkpoint.json` | **NEW** — Checkpoint state machine (session, progress, tokenBudget, dependencies, resumeInstructions) |
+| `RESUME.md` | **NEW** — Resume Bootloader: 5 bước recovery + token warning rules |
+| `scripts/checkpoint-emergency.mjs` | **NEW** — Emergency script: save state + git add+commit + evolution.json |
+| `CLINE.md` | **UPDATE** — Thêm 6 luật Checkpoint & Anti-Overflow + Resume Procedure |
+
+## Rules mới trong CLINE.md
+1. Checkpoint bắt buộc — mỗi tool call PHẢI kèm task_progress
+2. JSON update checkpoint.json sau mỗi tool call
+3. Token budget: >200k warning, >240k critical → emergency
+4. Resume Detection: RESUME.md tồn tại → overflow trước đó
+5. Emergency-save: khi critical threshold hoặc tool call fail
+6. Git commit milestone: mỗi step hoàn thành → commit ngay
+
+---
+
+# [2026-05-15 19:17] — Full Audit: Workspace Path Conflict + CLINE.md Violations + Nested Wiki
+
+## Phát hiện (sau audit toàn diện)
+Quét toàn bộ cây thư mục phát hiện **4 vấn đề**, không chỉ 1:
+
+### 1. Duplicate processed-files.json (🔴 Critical)
+| File | Path | Entries |
+|------|------|---------|
+| **CLINE's** | `knowledge/workspace/processed-files.json` | 20 entries |
+| **Kato's** | `knowledge/wiki/knowledge/workspace/processed-files.json` | 1 entry (Tai-lieu-he-thong.pdf) |
+
+Hậu quả: Kato ghi vào file của nó, CLINE không biết → mỗi bên 1 source of truth.
+
+### 2. CLINE.md Line 9 sai (🟡 Medium)
+`knowledge/workspace/state.md` — **state.md không tồn tại**, thực tế là `state.json`.
+
+### 3. CLINE.md Line 17 vi phạm (🔴 Critical)
+Luật Blueprint quy định `knowledge/workspace/processed-files.json`, nhưng Kato ghi vào `knowledge/wiki/knowledge/workspace/processed-files.json`. Kato không tuân thủ CLINE.md.
+
+### 4. Nested wiki chưa dọn (🟡 Medium)
+`knowledge/wiki/knowledge/wiki/core/agent-errors.md` — nested wiki từ bug cũ (đã fix một phần ở 2026-05-14 16:59 nhưng còn sót).
+
+## Bug chain history (lớp tiến hóa)
+| Phiên | Bug | Trạng thái |
+|-------|-----|-----------|
+| 2026-05-14 16:59 | Nested wiki `knowledge/wiki/knowledge/wiki/` — **đã fix một phần, còn sót agent-errors.md** | ⏳ Chưa hoàn tất |
+| 2026-05-15 16:54 | Thiếu addProcessedFile() trong extract_pdf_to_md — **đã fix** | ✅ Hoàn tất |
+| 2026-05-15 17:08 | Workspace path conflict Kato vs CLINE — **đang fix** | 🔄 In progress |
+| 2026-05-15 19:07 | CLINE.md Line 9 sai (`state.md` → `state.json`) — **chưa fix** | ❌ Pending |
+| 2026-05-15 19:07 | CLINE.md Line 17 Kato không tuân thủ — **chưa fix** | ❌ Pending |
+
+## Fix đã thực thi ✅
+| Bước | Action | Status |
+|------|--------|--------|
+| 1 | Fix CLINE.md — state.md → state.json + thêm Luật Workspace Path Consistency | ✅ Done |
+| 2 | Dọn nested wiki — xoá `knowledge/wiki/knowledge/wiki/` (agent-errors.md) | ✅ Done |
+| 3 | Merge processed-files.json — Kato's 1 entry vào CLINE's 20 entries → 21. Xoá secondary `knowledge/wiki/knowledge/workspace/` | ✅ Done |
+| 4 | Lưu lỗi vào evolution.json — 3 SYSTEM errors (SecondaryWorkspaceConflict, CLINE_MD_STALE_REFERENCE, NESTED_WIKI_RESIDUAL) | ✅ Done |
+| 5 | Verify — 7/7 checks pass. Chỉ còn 1 processed-files.json duy nhất | ✅ Done |
+
+## Bug chain history (sau fix)
+| Phiên | Bug | Trạng thái |
+|-------|-----|-----------|
+| 2026-05-14 16:59 | Nested wiki `knowledge/wiki/knowledge/wiki/` | ✅ Đã dọn sạch (agent-errors.md xoá) |
+| 2026-05-15 16:54 | Thiếu addProcessedFile() trong pipeline parse | ✅ Hoàn tất |
+| 2026-05-15 17:08 | Workspace path conflict Kato vs CLINE (2 processed-files.json) | ✅ Merged + secondary xoá |
+| 2026-05-15 19:07 | CLINE.md Line 9 sai `state.md` → `state.json` | ✅ Fixed |
+| 2026-05-15 19:07 | CLINE.md Line 17 Kato vi phạm | ✅ Fixed + thêm guard rule |
 
 ---
 
