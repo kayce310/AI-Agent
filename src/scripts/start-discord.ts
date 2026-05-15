@@ -10,34 +10,42 @@ import Engine from '../core/engine.js';
 const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
 
 function checkPidLock(): void {
-  if (fs.existsSync(PID_FILE)) {
-    const oldPid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
-    if (!isNaN(oldPid)) {
+  // Atomic lock: only one process can create the file at a time
+  try {
+    const fd = fs.openSync(PID_FILE, 'wx');
+    fs.writeSync(fd, String(process.pid));
+    fs.closeSync(fd);
+    console.log(`🔒 PID lock acquired: ${process.pid}`);
+  } catch {
+    // File already exists — another instance is running or crashed
+    try {
+      const oldPid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
+      // Check if process actually exists
       try {
-        // Windows: taskkill ngay lập tức (SIGTERM không hoạt động tốt trên Windows)
-        console.log(`🔄 Kill instance cũ (PID ${oldPid})`);
-        execSync(`taskkill /F /PID ${oldPid} 2>nul || true`, { stdio: 'ignore', timeout: 5000 });
+        process.kill(oldPid, 0);
+        // Process alive → exit gracefully (double-click guard)
+        console.log(`⚠️ Another instance running (PID ${oldPid}). Exiting.`);
+        process.exit(0);
       } catch {
-        // Process không còn tồn tại, bỏ qua
+        // Stale PID file — overwrite it
+        console.log(`♻️ Stale lock (PID ${oldPid}). Replacing...`);
+        fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
+        console.log(`🔒 PID lock acquired: ${process.pid}`);
       }
+    } catch {
+      // Can't read PID file — overwrite
+      fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
+      console.log(`🔒 PID lock acquired: ${process.pid}`);
     }
   }
 
-  fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
-  console.log(`🔒 PID lock acquired: ${process.pid}`);
-
-  // Xoá PID file khi process tắt
-  process.on('exit', () => {
+  // Cleanup on exit
+  const cleanup = () => {
     try { fs.unlinkSync(PID_FILE); } catch {}
-  });
-  process.on('SIGINT', () => {
-    try { fs.unlinkSync(PID_FILE); } catch {}
-    process.exit(0);
-  });
-  process.on('SIGTERM', () => {
-    try { fs.unlinkSync(PID_FILE); } catch {}
-    process.exit(0);
-  });
+  };
+  process.on('exit', cleanup);
+  process.on('SIGINT', () => { cleanup(); process.exit(0); });
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
 }
 
 async function start() {

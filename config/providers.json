@@ -1,20 +1,20 @@
 {
-  "providers": [
-    {
-      "name": "9router",
-      "type": "proxy",
-      "tier": 1,
-      "label": "9Router (Single-Point — Model Selection Delegated)",
-      "baseUrl": "http://localhost:20128/v1",
-      "apiKey": "local-proxy-key",
-      "models": [
-        {
-          "id": "4",
-          "maxTokens": 8192,
-          "tier": 1,
-          "label": "9Router Combo 4 (Multi-Model Fallback)"
-        }
-      ]
-    }
-  ]
+    "providers":  [
+                      {
+                          "name":  "9router",
+                          "type":  "proxy",
+                          "tier":  1,
+                          "label":  "9Router (Single-Point — Model Selection Delegated)",
+                          "baseUrl":  "http://localhost:20128/v1",
+                          "apiKey":  "local-proxy-key",
+                          "models":  [
+                                         {
+                                             "id":  "3",
+                                             "maxTokens":  8192,
+                                             "tier":  1,
+                                             "label":  "9Router Combo 3"
+                                         }
+                                     ]
+                      }
+                  ]
 }

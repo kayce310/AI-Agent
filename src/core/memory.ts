@@ -13,9 +13,13 @@ import path from 'path';
 import 'dotenv/config';
 
 export interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
+  /** DeepSeek thinking mode: reasoning_content phải được preserve */
+  reasoning_content?: string;
+  /** Tool call ID (cho tool messages) */
+  tool_call_id?: string;
 }
 
 export class MemoryCore {

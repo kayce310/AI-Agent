@@ -1,7 +1,15 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Resolve project root from script location (src/core/state-manager.ts → ../../)
+// NOT from process.cwd(), to prevent creating duplicate state.json
+// when agent runs commands from a different directory
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 
 export type AgentLifecycle = 'UNINITIALIZED' | 'INITIALIZING' | 'READY' | 'ERROR';
 
@@ -19,7 +27,7 @@ export interface KatoWorkspaceState {
     updatedAt: string;
     currentTask: string | null;
   };
-  modelCooldowns?: Record<string, string>; // modelId -> ISO timestamp when cooldown ends
+  modelCooldowns?: Record<string, string>;
   controlPlane: {
     bootloader: 'CLINE.md';
     router: 'knowledge/wiki/AGENTS.md';
@@ -71,8 +79,10 @@ export interface StructuredStateSuccess<T> {
 
 export type StructuredStateResult<T> = StructuredStateSuccess<T> | StructuredStateError;
 
-const DEFAULT_STATE_PATH = path.resolve('knowledge/workspace/state.json');
-const DEFAULT_PROCESSED_FILES_PATH = path.resolve('knowledge/workspace/processed-files.json');
+// Resolve paths relative to PROJECT_ROOT (script location), NOT process.cwd()
+// This prevents duplicate state.json when agent runs from wrong CWD
+const DEFAULT_STATE_PATH = path.join(PROJECT_ROOT, 'knowledge/workspace/state.json');
+const DEFAULT_PROCESSED_FILES_PATH = path.join(PROJECT_ROOT, 'knowledge/workspace/processed-files.json');
 const LOCK_SUFFIX = '.lock';
 const TMP_SUFFIX = '.tmp';
 const BACKUP_SUFFIX = '.bak.1';
@@ -84,10 +94,6 @@ export class KatoStateManager {
     private readonly processedFilesPath = DEFAULT_PROCESSED_FILES_PATH
   ) {}
 
-  /**
-   * Scan blueprints directory for new (untracked) files
-   * Returns list of files that haven't been processed yet
-   */
   async scanBlueprint(): Promise<StructuredStateResult<{
     newFiles: string[];
     alreadyProcessed: string[];
@@ -95,8 +101,6 @@ export class KatoStateManager {
   }>> {
     try {
       const { execSync } = await import('node:child_process');
-      
-      // Get untracked files from git
       const gitOutput = execSync('git status --porcelain', { encoding: 'utf8' });
       const untrackedFiles = gitOutput
         .split('\n')
@@ -104,7 +108,6 @@ export class KatoStateManager {
         .map(line => line.substring(3).trim())
         .filter(path => path.startsWith('knowledge/blueprints/'));
 
-      // Get already processed files
       const processedState = await this.readProcessedFiles();
       const processedPaths = new Set(processedState.files.map(f => f.path));
 
@@ -124,31 +127,20 @@ export class KatoStateManager {
     }
   }
 
-  /**
-   * Mark a file as processed in the tracking system
-   */
   async markFileProcessed(file: ProcessedFile): Promise<StructuredStateResult<ProcessedFilesState>> {
     try {
       const state = await this.readProcessedFiles();
-      
-      // Remove existing entry if present (update)
       state.files = state.files.filter(f => f.path !== file.path);
       state.files.push(file);
-      
-      // Update stats
       state.stats.totalProcessed = state.files.length;
       state.stats.byType[file.type] = (state.stats.byType[file.type] || 0) + 1;
       state.meta.lastUpdated = new Date().toISOString();
-
       return this.writeProcessedFiles(state);
     } catch (error) {
       return this.error('MARK_PROCESSED_FAILED', 'Unable to mark file as processed', this.normalizeError(error));
     }
   }
 
-  /**
-   * Get classification type based on file extension
-   */
   classifyFile(filePath: string): ProcessedFile['type'] {
     const ext = path.extname(filePath).toLowerCase();
     const codeExts = ['.ts', '.js', '.m', '.py', '.java', '.cpp', '.c', '.cs', '.go', '.rs'];

@@ -1,6 +1,27 @@
 {
   "version": "1.0",
-  "errors": [],
+  "errors": [
+    {
+      "modelId": "3",
+      "errorType": "PROVIDER_DOWN",
+      "errorMessage": "Connection error.",
+      "stackTrace": "Error: Connection error.\n    at OpenAI.makeRequest (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:792:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OpenAIBackedProvider.invoke (E:\\Test\\AI-Agent\\src\\core\\provider-registry.ts:48:22)\n    at async Engine.process (E:\\Test\\AI-Agent\\src\\core\\engine.ts:158:26)\n    at async Client.<anonymous> (E:\\Test\\AI-Agent\\src\\modules\\discord\\index.ts:126:26)",
+      "sessionId": "1503299844402577479",
+      "contextSnippet": "thông tin trong tháng 5/2026 <@1483642147382231150> nguồn tin cậy hơn như fanpage chính thức",
+      "fingerprint": "0b57a8aee3af",
+      "timestamp": "2026-05-13T06:36:17.332Z"
+    },
+    {
+      "modelId": "4",
+      "errorType": "PROVIDER_DOWN",
+      "errorMessage": "400 No active credentials for provider: deepseek",
+      "stackTrace": "Error: 400 No active credentials for provider: deepseek\n    at APIError.generate (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\core\\error.ts:73:14)\n    at OpenAI.makeStatusError (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:591:28)\n    at OpenAI.makeRequest (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:872:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OpenAIBackedProvider.invoke (E:\\Test\\AI-Agent\\src\\core\\provider-registry.ts:48:22)\n    at async Engine.process (E:\\Test\\AI-Agent\\src\\core\\engine.ts:159:26)\n    at async Client.<anonymous> (E:\\Test\\AI-Agent\\src\\modules\\discord\\index.ts:126:26)",
+      "sessionId": "1503299844402577479",
+      "contextSnippet": "<@1483642147382231150>  xong chưa?",
+      "fingerprint": "075989e98978",
+      "timestamp": "2026-05-15T09:19:48.228Z"
+    }
+  ],
   "rules": [
     {
       "id": "rate-limit-cooldown",
@@ -39,10 +60,29 @@
       "active": false
     }
   ],
-  "modelPerformance": {},
+  "modelPerformance": {
+    "3": {
+      "totalCalls": 2,
+      "failedCalls": 1,
+      "lastFailure": "2026-05-13T06:36:17.332Z",
+      "avgResponseTime": 0,
+      "errorTypes": {
+        "PROVIDER_DOWN": 1
+      }
+    },
+    "4": {
+      "totalCalls": 30,
+      "failedCalls": 1,
+      "lastFailure": "2026-05-15T09:19:48.228Z",
+      "avgResponseTime": 0,
+      "errorTypes": {
+        "PROVIDER_DOWN": 1
+      }
+    }
+  },
   "meta": {
-    "lastUpdated": "2026-05-12T16:49:00.000Z",
-    "totalErrorsTracked": 0,
+    "lastUpdated": "2026-05-15T09:19:48.228Z",
+    "totalErrorsTracked": 2,
     "activeRules": 0
   }
 }

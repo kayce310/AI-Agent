@@ -1,3 +1,116 @@
+# v0.4.44 (2026-05-15)
+
+## Features
+- Add Blackbox provider with `bb` alias (#1143)
+- Add Xiaomi token plan provider
+- Enhance model select modal UX + modal traffic lights (#1111)
+- Default Usage dashboard period to Today (#1141)
+
+## Fixes
+- Fix Cowork model selection and Windows CLI packaging (#1129)
+- Update provider name retrieval for compatibility provider (#1135)
+- Update JWT_SECRET handling
+
+# v0.4.41 (2026-05-14)
+
+## Features
+- Add jcode CLI tool integration with auto-configuration (#1047)
+- Redesign CLI Tools dashboard: grid layout (1/2/3 cols) + dedicated detail page per tool
+- Add drag-and-drop reordering for combo models (#1108)
+- Add Today period option to Usage & Analytics (#1063)
+- Add DeepSeek V4 Pro effort aliases (#950)
+
+## Fixes
+- fix(autostart): work on nvm + npm 9/10, actually register with launchctl (#1104, fixes #1082)
+- Fix Ollama usage not tracked/shown in UI (#1102)
+- fix(opencode): preserve DeepSeek reasoning content (#1099, fixes #1093)
+- Fix TUI input lag (replace enquirer with native readline, persistent raw mode)
+- fix(ui): show API key row actions on mobile (#1112)
+
+## Improvements
+- Sync DeepSeek TUI card style with other CLI tools (badges, layout, manual config modal)
+- Add official logos for Amp CLI, jcode, Qwen Code (replace generic icons)
+- Resize deepseek-tui icon 1024→128 with padding for visual consistency
+
+# v0.4.39 (2026-05-14)
+
+## Fixes
+- fix(docker): restore `/app/server.js` (v0.4.38 regression)
+
+# v0.4.38 (2026-05-13)
+
+## Features
+- Add DeepSeek TUI as CLI tool in dashboard (#1088)
+
+## Fixes
+- Fix broken Docker image in v0.4.36/v0.4.37 (#1096, #1097)
+
+## Improvements
+- Clean Docker tags + clearer pulls badge
+
+# v0.4.37 (2026-05-13)
+
+## Improvements
+- Security hardening — upgrade recommended
+
+# v0.4.36 (2026-05-13)
+
+## Features
+- Add MiniMax TTS provider support (#1043)
+- Docker images now published on both Docker Hub (`decolua/9router`) and GHCR — pull from your preferred registry
+
+## Improvements
+- Replace browser confirm dialogs with custom ConfirmModal (#1060)
+
+## Fixes
+- Fix Docker `Cannot find module 'next'` error in standalone build
+- Restore /app/server.js in Docker standalone build (#1064, #1067)
+- Fix CLI TUI menu arrow-key escape sequences leaking (^[[A^[[B)
+- Switch macOS/Linux tray to systray2 fork (fixes Kaspersky AV false-positive) (#1080)
+- Fix zoom controls contrast in topology view (#1066)
+
+# v0.4.33 (2026-05-12)
+
+## Improvements
+- Windows: replace systray (Go binary, AV flagged) with native PowerShell NotifyIcon
+- Auto-cleanup legacy `tray_windows.exe` on install/startup
+
+# v0.4.31 (2026-05-12)
+
+## Features
+- OIDC dashboard login: Authentik/Keycloak/Google/Okta SSO with password-only, OIDC-only, or both modes (#1020)
+- Linux/arm64 Docker image support (#979)
+- Codex GPT 5.5 image support (#991)
+- Done button in ModelSelectModal during combo creation (#1031)
+- CLI: reset auth mode to password (emergency OIDC lockout recovery)
+
+## Fixes
+- DATA_DIR: graceful fallback to ~/.9router on EACCES/EPERM (#1005)
+- React hooks: variable declaration order & lazy initialization (#1017)
+
+## Improvements
+- Profile page: OIDC settings card collapsed by default to reduce clutter
+- Header: user pill only shown when logged in via OIDC
+
+# v0.4.30 (2026-05-11)
+
+## Features
+- MCP stdio→SSE bridge: expose local stdio MCP plugins over SSE (api/mcp/[plugin]/sse, /message)
+- Dynamic Linux cert resolution + NSS DB injection (Debian/Arch/Fedora/openSUSE, Chrome/Chromium/Firefox incl. snap) (#1010)
+- Cowork tool: expanded settings UI & API
+- GitBook docs (DocsContent, DocsLayout)
+
+## Fixes
+- OAuth callback postMessage scoped to expected origins (CWE-1385) (#998)
+- Re-enable TLS verification on DNS-bypass fetch (CWE-295) (#998)
+- Normalize `developer` role → `system` for OpenAI-format providers (Deepseek, Groq, …) (#1011, closes #773)
+- Respect `PORT` env in internal model-test fetch (#1014)
+- Dropdown text readability in dark theme on usage page (#997)
+
+## Improvements
+- Refactor Claude CLI spoof headers into shared constant
+- Tool deduper utility in open-sse handlers
+
 # v0.4.29 (2026-05-10)
 
 ## Features

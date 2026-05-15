@@ -1,0 +1,3244 @@
+{
+  "updated": "2026-05-15T09:38:07.273Z",
+  "skills": [
+    {
+      "name": "_INDEX",
+      "displayName": "_INDEX.md",
+      "relativePath": "_INDEX.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:27.069Z",
+      "size": 60966,
+      "tags": [
+        "expect",
+        "require",
+        "snippet",
+        "skill",
+        "index",
+        "workflow",
+        "sop"
+      ],
+      "summary": "| Skill | Mô tả | Trigger |"
+    },
+    {
+      "name": "accessibility",
+      "displayName": "accessibility.md",
+      "relativePath": "accessibility.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.374Z",
+      "size": 12243,
+      "tags": [
+        "999",
+        "fff",
+        "333",
+        "005fcc",
+        "modal-focus-trap",
+        "skip-link",
+        "dragging-movements",
+        "form-labels",
+        "error-handling",
+        "aria-tabs",
+        "live-regions-and-notifications",
+        "screen-reader-commands"
+      ],
+      "summary": "> **Nguồn:** [addyosmani/web-quality-skills](addyosmani/web-quality-skills/accessibility) > **Commit:** `fed9617` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "adev-writing-guide",
+      "displayName": "adev-writing-guide.md",
+      "relativePath": "adev-writing-guide.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.379Z",
+      "size": 6825,
+      "tags": [
+        "small",
+        "medium"
+      ],
+      "summary": "> **Nguồn:** [angular/angular](angular/angular/adev-writing-guide) > **Commit:** `4c9afb6` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "agents-sdk",
+      "displayName": "agents-sdk.md",
+      "relativePath": "agents-sdk.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.385Z",
+      "size": 11976,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/agents-sdk) > **Commit:** `0397d7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-architecture-clean",
+      "displayName": "android-architecture-clean.md",
+      "relativePath": "android-architecture-clean.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.400Z",
+      "size": 3382,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-architecture-clean) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-compose-foundations",
+      "displayName": "android-compose-foundations.md",
+      "relativePath": "android-compose-foundations.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.407Z",
+      "size": 3359,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-compose-foundations) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-coroutines-flow",
+      "displayName": "android-coroutines-flow.md",
+      "relativePath": "android-coroutines-flow.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.413Z",
+      "size": 4061,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-coroutines-flow) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-di-hilt",
+      "displayName": "android-di-hilt.md",
+      "relativePath": "android-di-hilt.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.423Z",
+      "size": 3951,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-di-hilt) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-gradle-build-logic",
+      "displayName": "android-gradle-build-logic.md",
+      "relativePath": "android-gradle-build-logic.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.429Z",
+      "size": 3359,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-gradle-build-logic) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-kotlin-core",
+      "displayName": "android-kotlin-core.md",
+      "relativePath": "android-kotlin-core.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.440Z",
+      "size": 3294,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-kotlin-core) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-networking-retrofit-okhttp",
+      "displayName": "android-networking-retrofit-okhttp.md",
+      "relativePath": "android-networking-retrofit-okhttp.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.446Z",
+      "size": 3298,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-networking-retrofit-okhttp) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "android-testing-unit",
+      "displayName": "android-testing-unit.md",
+      "relativePath": "android-testing-unit.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.454Z",
+      "size": 3232,
+      "tags": [],
+      "summary": "> **Nguồn:** [krutikJain/android-agent-skills](krutikJain/android-agent-skills/android-testing-unit) > **Commit:** `c5bf673` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "angular-developer",
+      "displayName": "angular-developer.md",
+      "relativePath": "angular-developer.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.454Z",
+      "size": 9583,
+      "tags": [],
+      "summary": "> **Nguồn:** [angular/skills](angular/skills/angular-developer) > **Commit:** `fbda5f9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "aspnet-core",
+      "displayName": "aspnet-core.md",
+      "relativePath": "aspnet-core.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.463Z",
+      "size": 5360,
+      "tags": [],
+      "summary": "> **Nguồn:** [openai/skills](openai/skills/aspnet-core) > **Commit:** `e940b8a` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "aspnet-minimal-api-openapi",
+      "displayName": "aspnet-minimal-api-openapi.md",
+      "relativePath": "aspnet-minimal-api-openapi.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.523Z",
+      "size": 1915,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/aspnet-minimal-api-openapi) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "astro",
+      "displayName": "astro.md",
+      "relativePath": "astro.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.531Z",
+      "size": 3877,
+      "tags": [],
+      "summary": "> **Nguồn:** [astrolicious/agent-skills](astrolicious/agent-skills/astro) > **Commit:** `cb4839f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "automation-directives",
+      "displayName": "automation-directives.md",
+      "relativePath": "automation-directives.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.979Z",
+      "size": 3128,
+      "tags": [
+        "skill",
+        "automation",
+        "workflow",
+        "sop"
+      ],
+      "summary": "Thiết kế hệ thống automation thông minh, tự học, tự cải thiện.\r"
+    },
+    {
+      "name": "azure-ai",
+      "displayName": "azure-ai.md",
+      "relativePath": "azure-ai.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.539Z",
+      "size": 3151,
+      "tags": [],
+      "summary": "> **Nguồn:** [microsoft/github-copilot-for-azure](microsoft/github-copilot-for-azure/azure-ai) > **Commit:** `d01826f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "azure-cost",
+      "displayName": "azure-cost.md",
+      "relativePath": "azure-cost.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.546Z",
+      "size": 7284,
+      "tags": [],
+      "summary": "> **Nguồn:** [microsoft/github-copilot-for-azure](microsoft/github-copilot-for-azure/azure-cost) > **Commit:** `d01826f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "azure-deploy",
+      "displayName": "azure-deploy.md",
+      "relativePath": "azure-deploy.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.551Z",
+      "size": 6085,
+      "tags": [
+        "container-apps--acr--pre-deploy-rbac-health-check"
+      ],
+      "summary": "> **Nguồn:** [microsoft/github-copilot-for-azure](microsoft/github-copilot-for-azure/azure-deploy) > **Commit:** `771a666` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "azure-diagnostics",
+      "displayName": "azure-diagnostics.md",
+      "relativePath": "azure-diagnostics.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.559Z",
+      "size": 5123,
+      "tags": [],
+      "summary": "> **Nguồn:** [microsoft/github-copilot-for-azure](microsoft/github-copilot-for-azure/azure-diagnostics) > **Commit:** `070bf64` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "bash-defensive-patterns",
+      "displayName": "bash-defensive-patterns.md",
+      "relativePath": "bash-defensive-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.567Z",
+      "size": 10569,
+      "tags": [
+        "missing_deps"
+      ],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/bash-defensive-patterns) > **Commit:** `ece811f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "best-practices",
+      "displayName": "best-practices.md",
+      "relativePath": "best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.575Z",
+      "size": 6394,
+      "tags": [],
+      "summary": "> **Nguồn:** [better-auth/skills](better-auth/skills/best-practices) > **Commit:** `6a16369` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "big-data-processing",
+      "displayName": "big-data-processing.md",
+      "relativePath": "big-data-processing.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.979Z",
+      "size": 2383,
+      "tags": [
+        "skill",
+        "bigdata",
+        "processing",
+        "workflow"
+      ],
+      "summary": "Xử lý file > 50KB mà không làm tràn bộ nhớ ngữ cảnh (context window).\r"
+    },
+    {
+      "name": "building-native-ui",
+      "displayName": "building-native-ui.md",
+      "relativePath": "building-native-ui.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.581Z",
+      "size": 10446,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/building-native-ui) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "bun",
+      "displayName": "bun.md",
+      "relativePath": "bun.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.585Z",
+      "size": 9815,
+      "tags": [],
+      "summary": "> **Nguồn:** [midudev/autoskills](midudev/autoskills/bun) > **Commit:** `ed5c578` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "chrome-extension-development",
+      "displayName": "chrome-extension-development.md",
+      "relativePath": "chrome-extension-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.596Z",
+      "size": 3273,
+      "tags": [],
+      "summary": "> **Nguồn:** [mindrally/skills](mindrally/skills/chrome-extension-development) > **Commit:** `47f47c1` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-android",
+      "displayName": "clerk-android.md",
+      "relativePath": "clerk-android.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.612Z",
+      "size": 8364,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-android) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-astro-patterns",
+      "displayName": "clerk-astro-patterns.md",
+      "relativePath": "clerk-astro-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.617Z",
+      "size": 3163,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-astro-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-backend-api",
+      "displayName": "clerk-backend-api.md",
+      "relativePath": "clerk-backend-api.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.626Z",
+      "size": 16081,
+      "tags": [
+        "options-context",
+        "api-specs-context"
+      ],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-backend-api) > **Commit:** `9d32bf4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-chrome-extension-patterns",
+      "displayName": "clerk-chrome-extension-patterns.md",
+      "relativePath": "clerk-chrome-extension-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.636Z",
+      "size": 11357,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-chrome-extension-patterns) > **Commit:** `9d32bf4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-custom-ui",
+      "displayName": "clerk-custom-ui.md",
+      "relativePath": "clerk-custom-ui.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.643Z",
+      "size": 6403,
+      "tags": [
+        "0000ff"
+      ],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-custom-ui) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-expo-patterns",
+      "displayName": "clerk-expo-patterns.md",
+      "relativePath": "clerk-expo-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.648Z",
+      "size": 4645,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-expo-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-nextjs-patterns",
+      "displayName": "clerk-nextjs-patterns.md",
+      "relativePath": "clerk-nextjs-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.656Z",
+      "size": 6792,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-nextjs-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-nuxt-patterns",
+      "displayName": "clerk-nuxt-patterns.md",
+      "relativePath": "clerk-nuxt-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.664Z",
+      "size": 3091,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-nuxt-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-orgs",
+      "displayName": "clerk-orgs.md",
+      "relativePath": "clerk-orgs.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.672Z",
+      "size": 16300,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-orgs) > **Commit:** `9d32bf4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-react-patterns",
+      "displayName": "clerk-react-patterns.md",
+      "relativePath": "clerk-react-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.686Z",
+      "size": 4007,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-react-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-react-router-patterns",
+      "displayName": "clerk-react-router-patterns.md",
+      "relativePath": "clerk-react-router-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.694Z",
+      "size": 4427,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-react-router-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-setup",
+      "displayName": "clerk-setup.md",
+      "relativePath": "clerk-setup.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.703Z",
+      "size": 9861,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-setup) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-swift",
+      "displayName": "clerk-swift.md",
+      "relativePath": "clerk-swift.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.711Z",
+      "size": 11906,
+      "tags": [
+        "add-associated-domain-capability"
+      ],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-swift) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-tanstack-patterns",
+      "displayName": "clerk-tanstack-patterns.md",
+      "relativePath": "clerk-tanstack-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.718Z",
+      "size": 3394,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-tanstack-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-testing",
+      "displayName": "clerk-testing.md",
+      "relativePath": "clerk-testing.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.724Z",
+      "size": 1898,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-testing) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-vue-patterns",
+      "displayName": "clerk-vue-patterns.md",
+      "relativePath": "clerk-vue-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.735Z",
+      "size": 2668,
+      "tags": [
+        "app"
+      ],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-vue-patterns) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk-webhooks",
+      "displayName": "clerk-webhooks.md",
+      "relativePath": "clerk-webhooks.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.742Z",
+      "size": 12365,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk-webhooks) > **Commit:** `43d2211` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "clerk",
+      "displayName": "clerk.md",
+      "relativePath": "clerk.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.603Z",
+      "size": 5004,
+      "tags": [],
+      "summary": "> **Nguồn:** [clerk/skills](clerk/skills/clerk) > **Commit:** `9d32bf4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "cloudflare-deploy",
+      "displayName": "cloudflare-deploy.md",
+      "relativePath": "cloudflare-deploy.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.756Z",
+      "size": 7404,
+      "tags": [],
+      "summary": "> **Nguồn:** [openai/skills](openai/skills/cloudflare-deploy) > **Commit:** `e940b8a` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "cloudflare",
+      "displayName": "cloudflare.md",
+      "relativePath": "cloudflare.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.749Z",
+      "size": 8545,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/cloudflare) > **Commit:** `7c449de` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "coding-standards",
+      "displayName": "coding-standards.md",
+      "relativePath": "coding-standards.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.980Z",
+      "size": 2200,
+      "tags": [
+        "skill",
+        "coding",
+        "standards",
+        "workflow"
+      ],
+      "summary": "Đảm bảo codebase luôn maintainable, modular và tương thích với các hệ thống mở rộng.\r"
+    },
+    {
+      "name": "communication-protocol",
+      "displayName": "communication-protocol.md",
+      "relativePath": "communication-protocol.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-12T08:27:07.763Z",
+      "size": 1669,
+      "tags": [
+        "protocol",
+        "communication",
+        "ultra-terse"
+      ],
+      "summary": "**Output cuối cùng tới user phải là nội dung THUẦN TÚY — không header, không prefix, không chào hỏi.**\r"
+    },
+    {
+      "name": "composition-patterns-ref-AGENTS",
+      "displayName": "composition-patterns-ref/composition-patterns-ref-AGENTS.md",
+      "relativePath": "composition-patterns-ref\\composition-patterns-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:25.772Z",
+      "size": 23684,
+      "tags": [
+        "1-component-architecture",
+        "11-avoid-boolean-prop-proliferation",
+        "12-use-compound-components",
+        "2-state-management",
+        "21-decouple-state-management-from-ui",
+        "22-define-generic-context-interfaces-for-dependency-injection",
+        "23-lift-state-into-provider-components",
+        "3-implementation-patterns",
+        "31-create-explicit-component-variants",
+        "32-prefer-composing-children-over-render-props",
+        "4-react-19-apis",
+        "41-react-19-api-changes"
+      ],
+      "summary": "> Sub-skill của [[composition-patterns]] > Nguồn: vercel-labs/agent-skills/composition-patterns"
+    },
+    {
+      "name": "composition-patterns-ref-README",
+      "displayName": "composition-patterns-ref/composition-patterns-ref-README.md",
+      "relativePath": "composition-patterns-ref\\composition-patterns-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:25.772Z",
+      "size": 2311,
+      "tags": [],
+      "summary": "> Sub-skill của [[composition-patterns]] > Nguồn: vercel-labs/agent-skills/composition-patterns"
+    },
+    {
+      "name": "composition-patterns",
+      "displayName": "composition-patterns.md",
+      "relativePath": "composition-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.764Z",
+      "size": 2738,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel-labs/agent-skills](vercel-labs/agent-skills/composition-patterns) > **Commit:** `ce3e64e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "containerize-aspnetcore",
+      "displayName": "containerize-aspnetcore.md",
+      "relativePath": "containerize-aspnetcore.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.780Z",
+      "size": 12935,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/containerize-aspnetcore) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "core-data-expert",
+      "displayName": "core-data-expert.md",
+      "relativePath": "core-data-expert.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.788Z",
+      "size": 4871,
+      "tags": [],
+      "summary": "> **Nguồn:** [avdlee/core-data-agent-skill](avdlee/core-data-agent-skill/core-data-expert) > **Commit:** `855ca7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-async",
+      "displayName": "csharp-async.md",
+      "relativePath": "csharp-async.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.792Z",
+      "size": 2038,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-async) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-docs",
+      "displayName": "csharp-docs.md",
+      "relativePath": "csharp-docs.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.798Z",
+      "size": 4201,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-docs) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-mstest",
+      "displayName": "csharp-mstest.md",
+      "relativePath": "csharp-mstest.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.807Z",
+      "size": 13995,
+      "tags": [
+        "123",
+        "12345"
+      ],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-mstest) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-nunit",
+      "displayName": "csharp-nunit.md",
+      "relativePath": "csharp-nunit.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.815Z",
+      "size": 2993,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-nunit) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-tunit",
+      "displayName": "csharp-tunit.md",
+      "relativePath": "csharp-tunit.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.823Z",
+      "size": 5297,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-tunit) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "csharp-xunit",
+      "displayName": "csharp-xunit.md",
+      "relativePath": "csharp-xunit.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.831Z",
+      "size": 2857,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/csharp-xunit) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "dart-best-practices",
+      "displayName": "dart-best-practices.md",
+      "relativePath": "dart-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.835Z",
+      "size": 1880,
+      "tags": [],
+      "summary": "> **Nguồn:** [kevmoo/dash_skills](kevmoo/dash_skills/dart-best-practices) > **Commit:** `e56fe5d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-deploy",
+      "displayName": "deno-deploy.md",
+      "relativePath": "deno-deploy.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.842Z",
+      "size": 18765,
+      "tags": [],
+      "summary": "> **Nguồn:** [denoland/skills](denoland/skills/deno-deploy) > **Commit:** `1a4267f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-expert",
+      "displayName": "deno-expert.md",
+      "relativePath": "deno-expert.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.847Z",
+      "size": 8551,
+      "tags": [],
+      "summary": "> **Nguồn:** [denoland/skills](denoland/skills/deno-expert) > **Commit:** `1a4267f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-frontend",
+      "displayName": "deno-frontend.md",
+      "relativePath": "deno-frontend.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.857Z",
+      "size": 25021,
+      "tags": [],
+      "summary": "> **Nguồn:** [denoland/skills](denoland/skills/deno-frontend) > **Commit:** `1a4267f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-guidance",
+      "displayName": "deno-guidance.md",
+      "relativePath": "deno-guidance.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.864Z",
+      "size": 7538,
+      "tags": [],
+      "summary": "> **Nguồn:** [denoland/skills](denoland/skills/deno-guidance) > **Commit:** `1a4267f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-sandbox",
+      "displayName": "deno-sandbox.md",
+      "relativePath": "deno-sandbox.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.868Z",
+      "size": 10607,
+      "tags": [],
+      "summary": "> **Nguồn:** [denoland/skills](denoland/skills/deno-sandbox) > **Commit:** `1a4267f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deno-typescript",
+      "displayName": "deno-typescript.md",
+      "relativePath": "deno-typescript.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.876Z",
+      "size": 7529,
+      "tags": [],
+      "summary": "> **Nguồn:** [mindrally/skills](mindrally/skills/deno-typescript) > **Commit:** `47f47c1` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "deploy-to-vercel",
+      "displayName": "deploy-to-vercel.md",
+      "relativePath": "deploy-to-vercel.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.884Z",
+      "size": 11469,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel-labs/agent-skills](vercel-labs/agent-skills/deploy-to-vercel) > **Commit:** `ce3e64e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "design-mobile-apps",
+      "displayName": "design-mobile-apps.md",
+      "relativePath": "design-mobile-apps.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.900Z",
+      "size": 19104,
+      "tags": [],
+      "summary": "> **Nguồn:** [sleekdotdesign/agent-skills](sleekdotdesign/agent-skills/design-mobile-apps) > **Commit:** `a6799c7` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "django-expert",
+      "displayName": "django-expert.md",
+      "relativePath": "django-expert.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.908Z",
+      "size": 8915,
+      "tags": [],
+      "summary": "> **Nguồn:** [vintasoftware/django-ai-plugins](vintasoftware/django-ai-plugins/django-expert) > **Commit:** `4f5e94b` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "django-patterns",
+      "displayName": "django-patterns.md",
+      "relativePath": "django-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.916Z",
+      "size": 20777,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/django-patterns) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "django-security",
+      "displayName": "django-security.md",
+      "relativePath": "django-security.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.924Z",
+      "size": 14685,
+      "tags": [
+        "124"
+      ],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/django-security) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "dotnet-best-practices",
+      "displayName": "dotnet-best-practices.md",
+      "relativePath": "dotnet-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.932Z",
+      "size": 3397,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/dotnet-best-practices) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "dotnet-design-pattern-review",
+      "displayName": "dotnet-design-pattern-review.md",
+      "relativePath": "dotnet-design-pattern-review.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.940Z",
+      "size": 3433,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/dotnet-design-pattern-review) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "dotnet-upgrade",
+      "displayName": "dotnet-upgrade.md",
+      "relativePath": "dotnet-upgrade.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.948Z",
+      "size": 7201,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/dotnet-upgrade) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "drizzle",
+      "displayName": "drizzle.md",
+      "relativePath": "drizzle.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.954Z",
+      "size": 10259,
+      "tags": [],
+      "summary": "> **Nguồn:** [bobmatnyc/claude-mpm-skills](bobmatnyc/claude-mpm-skills/drizzle) > **Commit:** `fe13e4b` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "durable-objects",
+      "displayName": "durable-objects.md",
+      "relativePath": "durable-objects.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.972Z",
+      "size": 5703,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/durable-objects) > **Commit:** `0397d7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "elevenlabs-music",
+      "displayName": "elevenlabs-music.md",
+      "relativePath": "elevenlabs-music.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.974Z",
+      "size": 4891,
+      "tags": [],
+      "summary": "> **Nguồn:** [inferen-sh/skills](inferen-sh/skills/elevenlabs-music) > **Commit:** `d5e75fd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "elevenlabs-tts",
+      "displayName": "elevenlabs-tts.md",
+      "relativePath": "elevenlabs-tts.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.982Z",
+      "size": 5210,
+      "tags": [],
+      "summary": "> **Nguồn:** [inferen-sh/skills](inferen-sh/skills/elevenlabs-tts) > **Commit:** `d5e75fd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "emailAndPassword",
+      "displayName": "emailAndPassword.md",
+      "relativePath": "emailAndPassword.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.990Z",
+      "size": 5969,
+      "tags": [],
+      "summary": "> **Nguồn:** [better-auth/skills](better-auth/skills/emailAndPassword) > **Commit:** `6a16369` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "evolution-protocol",
+      "displayName": "evolution-protocol.md",
+      "relativePath": "evolution-protocol.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.980Z",
+      "size": 2584,
+      "tags": [
+        "X",
+        "skill",
+        "evolution",
+        "workflow",
+        "sop"
+      ],
+      "summary": "Đảm bảo hệ thống ngày càng thông minh hơn sau mỗi phiên làm việc. Không chỉ tiêu hao token, phải để lại tài sản.\r"
+    },
+    {
+      "name": "expo-api-routes",
+      "displayName": "expo-api-routes.md",
+      "relativePath": "expo-api-routes.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:25.998Z",
+      "size": 8795,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/expo-api-routes) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "expo-cicd-workflows",
+      "displayName": "expo-cicd-workflows.md",
+      "relativePath": "expo-cicd-workflows.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.006Z",
+      "size": 3329,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/expo-cicd-workflows) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "expo-deployment",
+      "displayName": "expo-deployment.md",
+      "relativePath": "expo-deployment.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.014Z",
+      "size": 3444,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/expo-deployment) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "expo-dev-client",
+      "displayName": "expo-dev-client.md",
+      "relativePath": "expo-dev-client.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.022Z",
+      "size": 3355,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/expo-dev-client) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "expo-tailwind-setup",
+      "displayName": "expo-tailwind-setup.md",
+      "relativePath": "expo-tailwind-setup.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.030Z",
+      "size": 11981,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/expo-tailwind-setup) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "fastapi-python",
+      "displayName": "fastapi-python.md",
+      "relativePath": "fastapi-python.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.038Z",
+      "size": 2502,
+      "tags": [],
+      "summary": "> **Nguồn:** [mindrally/skills](mindrally/skills/fastapi-python) > **Commit:** `47f47c1` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "fastapi-templates",
+      "displayName": "fastapi-templates.md",
+      "relativePath": "fastapi-templates.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.046Z",
+      "size": 14904,
+      "tags": [],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/fastapi-templates) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "flask-api-development",
+      "displayName": "flask-api-development.md",
+      "relativePath": "flask-api-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.054Z",
+      "size": 3181,
+      "tags": [
+        "overview",
+        "when-to-use",
+        "quick-start",
+        "reference-guides",
+        "best-practices"
+      ],
+      "summary": "> **Nguồn:** [aj-geddes/useful-ai-prompts](aj-geddes/useful-ai-prompts/flask-api-development) > **Commit:** `3f5182c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "fluentui-blazor",
+      "displayName": "fluentui-blazor.md",
+      "relativePath": "fluentui-blazor.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.059Z",
+      "size": 7189,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/fluentui-blazor) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "flutter-animations",
+      "displayName": "flutter-animations.md",
+      "relativePath": "flutter-animations.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.065Z",
+      "size": 6773,
+      "tags": [],
+      "summary": "> **Nguồn:** [madteacher/mad-agents-skills](madteacher/mad-agents-skills/flutter-animations) > **Commit:** `2fb67e3` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "flutter-expert",
+      "displayName": "flutter-expert.md",
+      "relativePath": "flutter-expert.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.081Z",
+      "size": 5335,
+      "tags": [],
+      "summary": "> **Nguồn:** [jeffallan/claude-skills](jeffallan/claude-skills/flutter-expert) > **Commit:** `efebc44` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "flutter-testing",
+      "displayName": "flutter-testing.md",
+      "relativePath": "flutter-testing.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.089Z",
+      "size": 6248,
+      "tags": [],
+      "summary": "> **Nguồn:** [madteacher/mad-agents-skills](madteacher/mad-agents-skills/flutter-testing) > **Commit:** `2fb67e3` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "frontend-design",
+      "displayName": "frontend-design.md",
+      "relativePath": "frontend-design.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.094Z",
+      "size": 4225,
+      "tags": [],
+      "summary": "> **Nguồn:** [anthropics/skills](anthropics/skills/frontend-design) > **Commit:** `2c7ec5e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "generating-sorbet-inline",
+      "displayName": "generating-sorbet-inline.md",
+      "relativePath": "generating-sorbet-inline.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.110Z",
+      "size": 5596,
+      "tags": [],
+      "summary": "> **Nguồn:** [DmitryPogrebnoy/ruby-agent-skills](DmitryPogrebnoy/ruby-agent-skills/generating-sorbet-inline) > **Commit:** `cb2e355` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "generating-sorbet",
+      "displayName": "generating-sorbet.md",
+      "relativePath": "generating-sorbet.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.102Z",
+      "size": 5529,
+      "tags": [],
+      "summary": "> **Nguồn:** [DmitryPogrebnoy/ruby-agent-skills](DmitryPogrebnoy/ruby-agent-skills/generating-sorbet) > **Commit:** `cb2e355` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "golang-patterns",
+      "displayName": "golang-patterns.md",
+      "relativePath": "golang-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.118Z",
+      "size": 14101,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/golang-patterns) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "golang-testing",
+      "displayName": "golang-testing.md",
+      "relativePath": "golang-testing.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.126Z",
+      "size": 16314,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/golang-testing) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-core",
+      "displayName": "gsap-core.md",
+      "relativePath": "gsap-core.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.142Z",
+      "size": 14464,
+      "tags": [],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-core) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-frameworks",
+      "displayName": "gsap-frameworks.md",
+      "relativePath": "gsap-frameworks.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.149Z",
+      "size": 10477,
+      "tags": [],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-frameworks) > **Commit:** `aed9cfd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-performance",
+      "displayName": "gsap-performance.md",
+      "relativePath": "gsap-performance.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.152Z",
+      "size": 4122,
+      "tags": [
+        "id",
+        "container"
+      ],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-performance) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-plugins",
+      "displayName": "gsap-plugins.md",
+      "relativePath": "gsap-plugins.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.160Z",
+      "size": 21458,
+      "tags": [
+        "section",
+        "container",
+        "area",
+        "path",
+        "lightning",
+        "diamond",
+        "originalId"
+      ],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-plugins) > **Commit:** `aed9cfd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-react",
+      "displayName": "gsap-react.md",
+      "relativePath": "gsap-react.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.168Z",
+      "size": 6438,
+      "tags": [],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-react) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-scrolltrigger",
+      "displayName": "gsap-scrolltrigger.md",
+      "relativePath": "gsap-scrolltrigger.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.175Z",
+      "size": 18285,
+      "tags": [
+        "id"
+      ],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-scrolltrigger) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-timeline",
+      "displayName": "gsap-timeline.md",
+      "relativePath": "gsap-timeline.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.182Z",
+      "size": 4307,
+      "tags": [],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-timeline) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "gsap-utils",
+      "displayName": "gsap-utils.md",
+      "relativePath": "gsap-utils.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.188Z",
+      "size": 12085,
+      "tags": [
+        "ff0000",
+        "0000ff",
+        "6fb936"
+      ],
+      "summary": "> **Nguồn:** [greensock/gsap-skills](greensock/gsap-skills/gsap-utils) > **Commit:** `03d9f0c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "hono",
+      "displayName": "hono.md",
+      "relativePath": "hono.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.196Z",
+      "size": 13380,
+      "tags": [],
+      "summary": "> **Nguồn:** [yusukebe/hono-skill](yusukebe/hono-skill/hono) > **Commit:** `0d2e8dc` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "instantdb",
+      "displayName": "instantdb.md",
+      "relativePath": "instantdb.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.204Z",
+      "size": 12788,
+      "tags": [],
+      "summary": "> **Nguồn:** [instantdb/skills](instantdb/skills/instantdb) > **Commit:** `7f3d1d1` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "java-coding-standards",
+      "displayName": "java-coding-standards.md",
+      "relativePath": "java-coding-standards.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.212Z",
+      "size": 3987,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/java-coding-standards) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "java-docs",
+      "displayName": "java-docs.md",
+      "relativePath": "java-docs.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.227Z",
+      "size": 1545,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/java-docs) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "java-springboot",
+      "displayName": "java-springboot.md",
+      "relativePath": "java-springboot.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.233Z",
+      "size": 4294,
+      "tags": [],
+      "summary": "> **Nguồn:** [github/awesome-copilot](github/awesome-copilot/java-springboot) > **Commit:** `8fbf6c4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "knowledge-management",
+      "displayName": "knowledge-management.md",
+      "relativePath": "knowledge-management.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.980Z",
+      "size": 2472,
+      "tags": [
+        "skill",
+        "knowledge",
+        "workflow",
+        "sop"
+      ],
+      "summary": "Quản lý knowledge base hiệu quả,Zero Waste Token, không redundancy.\r"
+    },
+    {
+      "name": "kotlin-tooling-agp9-migration",
+      "displayName": "kotlin-tooling-agp9-migration.md",
+      "relativePath": "kotlin-tooling-agp9-migration.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.242Z",
+      "size": 21388,
+      "tags": [],
+      "summary": "> **Nguồn:** [Kotlin/kotlin-agent-skills](Kotlin/kotlin-agent-skills/kotlin-tooling-agp9-migration) > **Commit:** `c88c997` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "kotlin-tooling-cocoapods-spm-migration",
+      "displayName": "kotlin-tooling-cocoapods-spm-migration.md",
+      "relativePath": "kotlin-tooling-cocoapods-spm-migration.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.249Z",
+      "size": 32758,
+      "tags": [
+        "N"
+      ],
+      "summary": "> **Nguồn:** [Kotlin/kotlin-agent-skills](Kotlin/kotlin-agent-skills/kotlin-tooling-cocoapods-spm-migration) > **Commit:** `7429a68` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "laravel-patterns",
+      "displayName": "laravel-patterns.md",
+      "relativePath": "laravel-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.255Z",
+      "size": 10654,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/laravel-patterns) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "laravel-specialist",
+      "displayName": "laravel-specialist.md",
+      "relativePath": "laravel-specialist.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.260Z",
+      "size": 7731,
+      "tags": [],
+      "summary": "> **Nguồn:** [jeffallan/claude-skills](jeffallan/claude-skills/laravel-specialist) > **Commit:** `efebc44` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "machine-learning",
+      "displayName": "machine-learning.md",
+      "relativePath": "machine-learning.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.265Z",
+      "size": 1321,
+      "tags": [],
+      "summary": "> **Nguồn:** [pluginagentmarketplace/custom-plugin-python](pluginagentmarketplace/custom-plugin-python/machine-learning) > **Commit:** `4415517` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "migrate-to-vinext",
+      "displayName": "migrate-to-vinext.md",
+      "relativePath": "migrate-to-vinext.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.277Z",
+      "size": 9933,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/vinext](cloudflare/vinext/migrate-to-vinext) > **Commit:** `cc966ad` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "minimal-api-file-upload",
+      "displayName": "minimal-api-file-upload.md",
+      "relativePath": "minimal-api-file-upload.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.283Z",
+      "size": 10725,
+      "tags": [],
+      "summary": "> **Nguồn:** [dotnet/skills](dotnet/skills/minimal-api-file-upload) > **Commit:** `59c795c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "module-discord",
+      "displayName": "module-discord.md",
+      "relativePath": "module-discord.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-12T09:39:22.255Z",
+      "size": 3019,
+      "tags": [],
+      "summary": "- `kato-boot.bat` — Script bootstrapper, chạy qua cmd (không qua PowerShell).\r"
+    },
+    {
+      "name": "native-data-fetching",
+      "displayName": "native-data-fetching.md",
+      "relativePath": "native-data-fetching.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.291Z",
+      "size": 11584,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/native-data-fetching) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "neon-postgres",
+      "displayName": "neon-postgres.md",
+      "relativePath": "neon-postgres.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.299Z",
+      "size": 7317,
+      "tags": [],
+      "summary": "> **Nguồn:** [neondatabase/agent-skills](neondatabase/agent-skills/neon-postgres) > **Commit:** `38c7da8` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "nestjs-best-practices-ref-AGENTS",
+      "displayName": "nestjs-best-practices-ref/nestjs-best-practices-ref-AGENTS.md",
+      "relativePath": "nestjs-best-practices-ref\\nestjs-best-practices-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.307Z",
+      "size": 169133,
+      "tags": [
+        "Tags: 'b', 'i', 'em', 'strong', 'a', 'p', 'br'",
+        "'b', 'i', 'em', 'strong', 'a', 'p', 'br'"
+      ],
+      "summary": "> Sub-skill của [[nestjs-best-practices]] > Nguồn: kadajett/agent-nestjs-skills/nestjs-best-practices"
+    },
+    {
+      "name": "nestjs-best-practices-ref-README",
+      "displayName": "nestjs-best-practices-ref/nestjs-best-practices-ref-README.md",
+      "relativePath": "nestjs-best-practices-ref\\nestjs-best-practices-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.307Z",
+      "size": 4773,
+      "tags": [],
+      "summary": "> Sub-skill của [[nestjs-best-practices]] > Nguồn: kadajett/agent-nestjs-skills/nestjs-best-practices"
+    },
+    {
+      "name": "nestjs-best-practices",
+      "displayName": "nestjs-best-practices.md",
+      "relativePath": "nestjs-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.307Z",
+      "size": 4580,
+      "tags": [],
+      "summary": "> **Nguồn:** [kadajett/agent-nestjs-skills](kadajett/agent-nestjs-skills/nestjs-best-practices) > **Commit:** `f9effec` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "next-best-practices-ref-async-patterns",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-async-patterns.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-async-patterns.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 1867,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-bundling",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-bundling.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-bundling.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 4746,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-data-patterns",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-data-patterns.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-data-patterns.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 7099,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-debug-tricks",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-debug-tricks.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-debug-tricks.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 3172,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-directives",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-directives.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-directives.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 1661,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-error-handling",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-error-handling.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-error-handling.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 5079,
+      "tags": [
+        "behavior"
+      ],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-file-conventions",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-file-conventions.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-file-conventions.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 3722,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-font",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-font.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-font.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 5547,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-functions",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-functions.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-functions.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 4607,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-hydration-error",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-hydration-error.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-hydration-error.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 2009,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-image",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-image.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-image.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 4162,
+      "tags": [
+        "e0e0e0"
+      ],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-metadata",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-metadata.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-metadata.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 7551,
+      "tags": [
+        "000000",
+        "metadata-file-conventions",
+        "1a1a1a",
+        "333"
+      ],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-parallel-routes",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-parallel-routes.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-parallel-routes.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 7575,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-route-handlers",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-route-handlers.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-route-handlers.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.329Z",
+      "size": 3506,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-rsc-boundaries",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-rsc-boundaries.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-rsc-boundaries.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.329Z",
+      "size": 4584,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-runtime-selection",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-runtime-selection.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-runtime-selection.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.329Z",
+      "size": 1143,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-scripts",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-scripts.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-scripts.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.329Z",
+      "size": 3576,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-self-hosting",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-self-hosting.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-self-hosting.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.329Z",
+      "size": 8819,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices-ref-suspense-boundaries",
+      "displayName": "next-best-practices-ref/next-best-practices-ref-suspense-boundaries.md",
+      "relativePath": "next-best-practices-ref\\next-best-practices-ref-suspense-boundaries.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.332Z",
+      "size": 1554,
+      "tags": [],
+      "summary": "> Sub-skill của [[next-best-practices]] > Nguồn: vercel-labs/next-skills/next-best-practices"
+    },
+    {
+      "name": "next-best-practices",
+      "displayName": "next-best-practices.md",
+      "relativePath": "next-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.321Z",
+      "size": 4065,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel-labs/next-skills](vercel-labs/next-skills/next-best-practices) > **Commit:** `038954e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "next-cache-components",
+      "displayName": "next-cache-components.md",
+      "relativePath": "next-cache-components.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.337Z",
+      "size": 9492,
+      "tags": [
+        "tags: 'users'",
+        "'users'"
+      ],
+      "summary": "> **Nguồn:** [vercel-labs/next-skills](vercel-labs/next-skills/next-cache-components) > **Commit:** `038954e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "next-upgrade",
+      "displayName": "next-upgrade.md",
+      "relativePath": "next-upgrade.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.344Z",
+      "size": 2108,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel-labs/next-skills](vercel-labs/next-skills/next-upgrade) > **Commit:** `038954e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "nodejs-backend-patterns",
+      "displayName": "nodejs-backend-patterns.md",
+      "relativePath": "nodejs-backend-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.348Z",
+      "size": 16744,
+      "tags": [],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/nodejs-backend-patterns) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "nodejs-best-practices",
+      "displayName": "nodejs-best-practices.md",
+      "relativePath": "nodejs-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.355Z",
+      "size": 8816,
+      "tags": [],
+      "summary": "> **Nguồn:** [sickn33/antigravity-awesome-skills](sickn33/antigravity-awesome-skills/nodejs-best-practices) > **Commit:** `1930a07` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "nodejs-express-server",
+      "displayName": "nodejs-express-server.md",
+      "relativePath": "nodejs-express-server.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.366Z",
+      "size": 3202,
+      "tags": [
+        "overview",
+        "when-to-use",
+        "quick-start",
+        "reference-guides",
+        "best-practices"
+      ],
+      "summary": "> **Nguồn:** [aj-geddes/useful-ai-prompts](aj-geddes/useful-ai-prompts/nodejs-express-server) > **Commit:** `3f5182c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "nuxt-ref-GENERATION",
+      "displayName": "nuxt-ref/nuxt-ref-GENERATION.md",
+      "relativePath": "nuxt-ref\\nuxt-ref-GENERATION.md",
+      "generatedAt": "2026-01-28",
+      "lastModified": "2026-05-15T08:35:26.375Z",
+      "size": 210,
+      "tags": [],
+      "summary": "> Sub-skill của [[nuxt]] > Nguồn: antfu/skills/nuxt"
+    },
+    {
+      "name": "nuxt",
+      "displayName": "nuxt.md",
+      "relativePath": "nuxt.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.371Z",
+      "size": 3377,
+      "tags": [],
+      "summary": "> **Nguồn:** [antfu/skills](antfu/skills/nuxt) > **Commit:** `c35a558` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "obsidian-formatting",
+      "displayName": "obsidian-formatting.md",
+      "relativePath": "obsidian-formatting.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.980Z",
+      "size": 2434,
+      "tags": [
+        "category",
+        "tag",
+        "parent",
+        "skill",
+        "obsidian",
+        "formatting",
+        "workflow"
+      ],
+      "summary": "Chuẩn hóa định dạng markdown để tối ưu Graph Database và liên kết tri thức.\r"
+    },
+    {
+      "name": "organization",
+      "displayName": "organization.md",
+      "relativePath": "organization.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.383Z",
+      "size": 10947,
+      "tags": [],
+      "summary": "> **Nguồn:** [better-auth/skills](better-auth/skills/organization) > **Commit:** `6a16369` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "oxlint",
+      "displayName": "oxlint.md",
+      "relativePath": "oxlint.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.391Z",
+      "size": 7622,
+      "tags": [],
+      "summary": "> **Nguồn:** [delexw/claude-code-misc](delexw/claude-code-misc/oxlint) > **Commit:** `c729be0` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "pandas-data-analysis",
+      "displayName": "pandas-data-analysis.md",
+      "relativePath": "pandas-data-analysis.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.399Z",
+      "size": 6961,
+      "tags": [],
+      "summary": "> **Nguồn:** [pluginagentmarketplace/custom-plugin-python](pluginagentmarketplace/custom-plugin-python/pandas-data-analysis) > **Commit:** `4415517` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "pandas-pro",
+      "displayName": "pandas-pro.md",
+      "relativePath": "pandas-pro.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.404Z",
+      "size": 5069,
+      "tags": [],
+      "summary": "> **Nguồn:** [jeffallan/claude-skills](jeffallan/claude-skills/pandas-pro) > **Commit:** `efebc44` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "php-pro",
+      "displayName": "php-pro.md",
+      "relativePath": "php-pro.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.409Z",
+      "size": 5571,
+      "tags": [],
+      "summary": "> **Nguồn:** [jeffallan/claude-skills](jeffallan/claude-skills/php-pro) > **Commit:** `efebc44` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "playwright-best-practices-ref-LICENSE",
+      "displayName": "playwright-best-practices-ref/playwright-best-practices-ref-LICENSE.md",
+      "relativePath": "playwright-best-practices-ref\\playwright-best-practices-ref-LICENSE.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.424Z",
+      "size": 1222,
+      "tags": [],
+      "summary": "> Sub-skill của [[playwright-best-practices]] > Nguồn: currents-dev/playwright-best-practices-skill/playwright-best-practices"
+    },
+    {
+      "name": "playwright-best-practices-ref-README",
+      "displayName": "playwright-best-practices-ref/playwright-best-practices-ref-README.md",
+      "relativePath": "playwright-best-practices-ref\\playwright-best-practices-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.424Z",
+      "size": 10411,
+      "tags": [],
+      "summary": "> Sub-skill của [[playwright-best-practices]] > Nguồn: currents-dev/playwright-best-practices-skill/playwright-best-practices"
+    },
+    {
+      "name": "playwright-best-practices",
+      "displayName": "playwright-best-practices.md",
+      "relativePath": "playwright-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.421Z",
+      "size": 25567,
+      "tags": [],
+      "summary": "> **Nguồn:** [currents-dev/playwright-best-practices-skill](currents-dev/playwright-best-practices-skill/playwright-best-practices) > **Commit:** `ef329e7` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "pr_review",
+      "displayName": "pr_review.md",
+      "relativePath": "pr_review.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.432Z",
+      "size": 10681,
+      "tags": [],
+      "summary": "> **Nguồn:** [angular/angular](angular/angular/pr_review) > **Commit:** `c84642a` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "prisma-cli",
+      "displayName": "prisma-cli.md",
+      "relativePath": "prisma-cli.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.438Z",
+      "size": 5076,
+      "tags": [],
+      "summary": "> **Nguồn:** [prisma/skills](prisma/skills/prisma-cli) > **Commit:** `741a74f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "prisma-client-api",
+      "displayName": "prisma-client-api.md",
+      "relativePath": "prisma-client-api.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.442Z",
+      "size": 6217,
+      "tags": [],
+      "summary": "> **Nguồn:** [prisma/skills](prisma/skills/prisma-client-api) > **Commit:** `741a74f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "prisma-database-setup",
+      "displayName": "prisma-database-setup.md",
+      "relativePath": "prisma-database-setup.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.454Z",
+      "size": 5520,
+      "tags": [],
+      "summary": "> **Nguồn:** [prisma/skills](prisma/skills/prisma-database-setup) > **Commit:** `741a74f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "prisma-postgres",
+      "displayName": "prisma-postgres.md",
+      "relativePath": "prisma-postgres.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.461Z",
+      "size": 3575,
+      "tags": [],
+      "summary": "> **Nguồn:** [prisma/skills](prisma/skills/prisma-postgres) > **Commit:** `741a74f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "pydantic",
+      "displayName": "pydantic.md",
+      "relativePath": "pydantic.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.466Z",
+      "size": 31187,
+      "tags": [
+        "FF5733"
+      ],
+      "summary": "> **Nguồn:** [bobmatnyc/claude-mpm-skills](bobmatnyc/claude-mpm-skills/pydantic) > **Commit:** `fe13e4b` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "python-background-jobs",
+      "displayName": "python-background-jobs.md",
+      "relativePath": "python-background-jobs.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.477Z",
+      "size": 10251,
+      "tags": [],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/python-background-jobs) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "python-executor",
+      "displayName": "python-executor.md",
+      "relativePath": "python-executor.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.485Z",
+      "size": 5647,
+      "tags": [],
+      "summary": "> **Nguồn:** [inferen-sh/skills](inferen-sh/skills/python-executor) > **Commit:** `d5e75fd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "python-patterns",
+      "displayName": "python-patterns.md",
+      "relativePath": "python-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.488Z",
+      "size": 15185,
+      "tags": [],
+      "summary": "> **Nguồn:** [affaan-m/everything-claude-code](affaan-m/everything-claude-code/python-patterns) > **Commit:** `1a50145` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "python-testing-patterns",
+      "displayName": "python-testing-patterns.md",
+      "relativePath": "python-testing-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.493Z",
+      "size": 15372,
+      "tags": [
+        "123"
+      ],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/python-testing-patterns) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-background-jobs-ref-BACKENDS",
+      "displayName": "rails-background-jobs-ref/rails-background-jobs-ref-BACKENDS.md",
+      "relativePath": "rails-background-jobs-ref\\rails-background-jobs-ref-BACKENDS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.506Z",
+      "size": 1814,
+      "tags": [],
+      "summary": "> Sub-skill của [[rails-background-jobs]] > Nguồn: igmarin/rails-agent-skills/rails-background-jobs"
+    },
+    {
+      "name": "rails-background-jobs",
+      "displayName": "rails-background-jobs.md",
+      "relativePath": "rails-background-jobs.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.505Z",
+      "size": 5219,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-background-jobs) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-bug-triage-ref-BOUNDARY_GUIDE",
+      "displayName": "rails-bug-triage-ref/rails-bug-triage-ref-BOUNDARY_GUIDE.md",
+      "relativePath": "rails-bug-triage-ref\\rails-bug-triage-ref-BOUNDARY_GUIDE.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.515Z",
+      "size": 1436,
+      "tags": [],
+      "summary": "> Sub-skill của [[rails-bug-triage]] > Nguồn: igmarin/rails-agent-skills/rails-bug-triage"
+    },
+    {
+      "name": "rails-bug-triage",
+      "displayName": "rails-bug-triage.md",
+      "relativePath": "rails-bug-triage.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.515Z",
+      "size": 4075,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-bug-triage) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-code-review-ref-REVIEW_CHECKLIST",
+      "displayName": "rails-code-review-ref/rails-code-review-ref-REVIEW_CHECKLIST.md",
+      "relativePath": "rails-code-review-ref\\rails-code-review-ref-REVIEW_CHECKLIST.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.521Z",
+      "size": 3578,
+      "tags": [],
+      "summary": "> Sub-skill của [[rails-code-review]] > Nguồn: igmarin/rails-agent-skills/rails-code-review"
+    },
+    {
+      "name": "rails-code-review",
+      "displayName": "rails-code-review.md",
+      "relativePath": "rails-code-review.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.521Z",
+      "size": 7576,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-code-review) > **Commit:** `d22f227` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-guides",
+      "displayName": "rails-guides.md",
+      "relativePath": "rails-guides.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.523Z",
+      "size": 4525,
+      "tags": [],
+      "summary": "> **Nguồn:** [lucianghinda/superpowers-ruby](lucianghinda/superpowers-ruby/rails-guides) > **Commit:** `cb03f92` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-migration-safety-ref-PATTERNS",
+      "displayName": "rails-migration-safety-ref/rails-migration-safety-ref-PATTERNS.md",
+      "relativePath": "rails-migration-safety-ref\\rails-migration-safety-ref-PATTERNS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.531Z",
+      "size": 2328,
+      "tags": [],
+      "summary": "> Sub-skill của [[rails-migration-safety]] > Nguồn: igmarin/rails-agent-skills/rails-migration-safety"
+    },
+    {
+      "name": "rails-migration-safety",
+      "displayName": "rails-migration-safety.md",
+      "relativePath": "rails-migration-safety.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.531Z",
+      "size": 4299,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-migration-safety) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-security-review-ref-PITFALLS",
+      "displayName": "rails-security-review-ref/rails-security-review-ref-PITFALLS.md",
+      "relativePath": "rails-security-review-ref\\rails-security-review-ref-PITFALLS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.539Z",
+      "size": 947,
+      "tags": [],
+      "summary": "> Sub-skill của [[rails-security-review]] > Nguồn: igmarin/rails-agent-skills/rails-security-review"
+    },
+    {
+      "name": "rails-security-review",
+      "displayName": "rails-security-review.md",
+      "relativePath": "rails-security-review.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.539Z",
+      "size": 4409,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-security-review) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-stack-conventions",
+      "displayName": "rails-stack-conventions.md",
+      "relativePath": "rails-stack-conventions.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.547Z",
+      "size": 4601,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-stack-conventions) > **Commit:** `d22f227` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-tdd-slices",
+      "displayName": "rails-tdd-slices.md",
+      "relativePath": "rails-tdd-slices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.559Z",
+      "size": 5916,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rails-tdd-slices) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rails-upgrade-ref-CHANGELOG",
+      "displayName": "rails-upgrade-ref/rails-upgrade-ref-CHANGELOG.md",
+      "relativePath": "rails-upgrade-ref\\rails-upgrade-ref-CHANGELOG.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.566Z",
+      "size": 4189,
+      "tags": [
+        "1",
+        "16",
+        "41"
+      ],
+      "summary": "> Sub-skill của [[rails-upgrade]] > Nguồn: ombulabs/claude-code_rails-upgrade-skill/rails-upgrade"
+    },
+    {
+      "name": "rails-upgrade",
+      "displayName": "rails-upgrade.md",
+      "relativePath": "rails-upgrade.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.565Z",
+      "size": 26492,
+      "tags": [
+        "1",
+        "2"
+      ],
+      "summary": "> **Nguồn:** [ombulabs/claude-code_rails-upgrade-skill](ombulabs/claude-code_rails-upgrade-skill/rails-upgrade) > **Commit:** `bdecf62` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "react-best-practices-ref-AGENTS",
+      "displayName": "react-best-practices-ref/react-best-practices-ref-AGENTS.md",
+      "relativePath": "react-best-practices-ref\\react-best-practices-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.573Z",
+      "size": 112182,
+      "tags": [
+        "1-eliminating-waterfalls",
+        "11-check-cheap-conditions-before-async-flags",
+        "12-defer-await-until-needed",
+        "13-dependency-based-parallelization",
+        "14-prevent-waterfall-chains-in-api-routes",
+        "15-promiseall-for-independent-operations",
+        "16-strategic-suspense-boundaries",
+        "2-bundle-size-optimization",
+        "21-avoid-barrel-file-imports",
+        "22-conditional-module-loading",
+        "23-defer-non-critical-third-party-libraries",
+        "24-dynamic-imports-for-heavy-components",
+        "25-prefer-statically-analyzable-paths",
+        "26-preload-based-on-user-intent",
+        "3-server-side-performance",
+        "31-authenticate-server-actions-like-api-routes",
+        "32-avoid-duplicate-serialization-in-rsc-props",
+        "33-avoid-shared-module-state-for-request-data",
+        "34-cross-request-lru-caching",
+        "35-hoist-static-io-to-module-level",
+        "36-minimize-serialization-at-rsc-boundaries",
+        "37-parallel-data-fetching-with-component-composition",
+        "38-parallel-nested-data-fetching",
+        "39-per-request-deduplication-with-reactcache",
+        "310-use-after-for-non-blocking-operations",
+        "4-client-side-data-fetching",
+        "41-deduplicate-global-event-listeners",
+        "42-use-passive-event-listeners-for-scrolling-performance",
+        "43-use-swr-for-automatic-deduplication",
+        "44-version-and-minimize-localstorage-data",
+        "5-re-render-optimization",
+        "51-calculate-derived-state-during-rendering",
+        "52-defer-state-reads-to-usage-point",
+        "53-do-not-wrap-a-simple-expression-with-a-primitive-result-type-in-usememo",
+        "54-dont-define-components-inside-components",
+        "55-extract-default-non-primitive-parameter-value-from-memoized-component-to-constant",
+        "56-extract-to-memoized-components",
+        "57-narrow-effect-dependencies",
+        "58-put-interaction-logic-in-event-handlers",
+        "59-split-combined-hook-computations",
+        "510-subscribe-to-derived-state",
+        "511-use-functional-setstate-updates",
+        "512-use-lazy-state-initialization",
+        "513-use-transitions-for-non-urgent-updates",
+        "514-use-usedeferredvalue-for-expensive-derived-renders",
+        "515-use-useref-for-transient-values",
+        "6-rendering-performance",
+        "61-animate-svg-wrapper-instead-of-svg-element",
+        "62-css-content-visibility-for-long-lists",
+        "63-hoist-static-jsx-elements",
+        "64-optimize-svg-precision",
+        "65-prevent-hydration-mismatch-without-flickering",
+        "66-suppress-expected-hydration-mismatches",
+        "67-use-activity-component-for-showhide",
+        "68-use-defer-or-async-on-script-tags",
+        "69-use-explicit-conditional-rendering",
+        "610-use-react-dom-resource-hints",
+        "611-use-usetransition-over-manual-loading-states",
+        "7-javascript-performance",
+        "71-avoid-layout-thrashing",
+        "72-build-index-maps-for-repeated-lookups",
+        "73-cache-property-access-in-loops",
+        "74-cache-repeated-function-calls",
+        "75-cache-storage-api-calls",
+        "76-combine-multiple-array-iterations",
+        "77-defer-non-critical-work-with-requestidlecallback",
+        "78-early-length-check-for-array-comparisons",
+        "79-early-return-from-functions",
+        "710-hoist-regexp-creation",
+        "711-use-flatmap-to-map-and-filter-in-one-pass",
+        "712-use-loop-for-minmax-instead-of-sort",
+        "713-use-setmap-for-o1-lookups",
+        "714-use-tosorted-instead-of-sort-for-immutability",
+        "8-advanced-patterns",
+        "81-do-not-put-effect-events-in-dependency-arrays",
+        "82-initialize-app-once-not-per-mount",
+        "83-store-event-handlers-in-refs",
+        "84-useeffectevent-for-stable-callback-refs",
+        "1",
+        "should-this-code-move-to-an-event-handler",
+        "defer",
+        "resource-preloading-apis",
+        "effect-event-in-deps",
+        "initializing-the-application"
+      ],
+      "summary": "> Sub-skill của [[react-best-practices]] > Nguồn: vercel-labs/agent-skills/react-best-practices"
+    },
+    {
+      "name": "react-best-practices-ref-README",
+      "displayName": "react-best-practices-ref/react-best-practices-ref-README.md",
+      "relativePath": "react-best-practices-ref\\react-best-practices-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.573Z",
+      "size": 3594,
+      "tags": [],
+      "summary": "> Sub-skill của [[react-best-practices]] > Nguồn: vercel-labs/agent-skills/react-best-practices"
+    },
+    {
+      "name": "react-best-practices",
+      "displayName": "react-best-practices.md",
+      "relativePath": "react-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.573Z",
+      "size": 7098,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel-labs/agent-skills](vercel-labs/agent-skills/react-best-practices) > **Commit:** `ce3e64e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "react-hook-form-ref-AGENTS",
+      "displayName": "react-hook-form-ref/react-hook-form-ref-AGENTS.md",
+      "relativePath": "react-hook-form-ref\\react-hook-form-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.582Z",
+      "size": 10140,
+      "tags": [
+        "1-form-configuration",
+        "2-field-subscription",
+        "3-controlled-components",
+        "4-validation-patterns",
+        "5-field-arrays",
+        "6-state-management",
+        "7-integration-patterns",
+        "8-advanced-patterns"
+      ],
+      "summary": "> Sub-skill của [[react-hook-form]] > Nguồn: pproenca/dot-skills/react-hook-form"
+    },
+    {
+      "name": "react-hook-form-ref-README",
+      "displayName": "react-hook-form-ref/react-hook-form-ref-README.md",
+      "relativePath": "react-hook-form-ref\\react-hook-form-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.582Z",
+      "size": 3885,
+      "tags": [],
+      "summary": "> Sub-skill của [[react-hook-form]] > Nguồn: pproenca/dot-skills/react-hook-form"
+    },
+    {
+      "name": "react-hook-form",
+      "displayName": "react-hook-form.md",
+      "relativePath": "react-hook-form.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.582Z",
+      "size": 5694,
+      "tags": [],
+      "summary": "> **Nguồn:** [pproenca/dot-skills](pproenca/dot-skills/react-hook-form) > **Commit:** `89c72d2` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "react-three-fiber",
+      "displayName": "react-three-fiber.md",
+      "relativePath": "react-three-fiber.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.592Z",
+      "size": 5305,
+      "tags": [
+        "ffffff",
+        "000000",
+        "4488ff"
+      ],
+      "summary": "> **Nguồn:** [vercel-labs/json-render](vercel-labs/json-render/react-three-fiber) > **Commit:** `7e4d107` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "redis-development-ref-AGENTS",
+      "displayName": "redis-development-ref/redis-development-ref-AGENTS.md",
+      "relativePath": "redis-development-ref\\redis-development-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.599Z",
+      "size": 67304,
+      "tags": [
+        "1-data-structures--keys",
+        "11-choose-the-right-data-structure",
+        "12-use-consistent-key-naming-conventions",
+        "13-use-hash-field-expiration-for-per-field-ttl",
+        "14-use-incr-for-atomic-counters",
+        "15-use-transactions-for-atomic-multi-command-operations",
+        "2-memory--expiration",
+        "21-configure-memory-limits-and-eviction-policies",
+        "22-set-ttl-on-cache-keys",
+        "3-connection--performance",
+        "31-avoid-slow-commands-in-production",
+        "32-configure-connection-timeouts",
+        "33-use-client-side-caching-for-frequently-read-data",
+        "34-use-connection-pooling-or-multiplexing",
+        "35-use-pipelining-for-bulk-operations",
+        "4-json-documents",
+        "41-choose-json-vs-hash-vs-string-appropriately",
+        "42-use-json-paths-for-partial-updates",
+        "5-redis-query-engine",
+        "51-choose-the-correct-field-type",
+        "52-index-only-fields-you-query",
+        "53-manage-indexes-for-zero-downtime-updates",
+        "54-use-dialect-2-for-query-syntax",
+        "55-use-skipinitialscan-for-new-data-only-indexes",
+        "56-write-efficient-queries",
+        "6-vector-search--redisvl",
+        "61-choose-hnsw-vs-flat-based-on-requirements",
+        "62-configure-vector-indexes-properly",
+        "63-implement-rag-pattern-correctly",
+        "64-use-hybrid-search-for-better-results",
+        "7-semantic-caching",
+        "71-configure-semantic-cache-properly",
+        "72-use-langcache-for-llm-response-caching",
+        "8-streams--pub",
+        "81-choose-streams-vs-pubsub-appropriately",
+        "9-clustering--replication",
+        "91-use-hash-tags-for-multi-key-operations",
+        "92-use-read-replicas-for-read-heavy-workloads",
+        "10-security",
+        "101-always-use-authentication-in-production",
+        "102-secure-network-access",
+        "103-use-acls-for-fine-grained-access-control",
+        "11-observability",
+        "111-monitor-key-redis-metrics",
+        "112-use-observability-commands-for-debugging",
+        "documents",
+        "multikey-operations",
+        "hash-tags"
+      ],
+      "summary": "> Sub-skill của [[redis-development]] > Nguồn: redis/agent-skills/redis-development"
+    },
+    {
+      "name": "redis-development-ref-README",
+      "displayName": "redis-development-ref/redis-development-ref-README.md",
+      "relativePath": "redis-development-ref\\redis-development-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.599Z",
+      "size": 3294,
+      "tags": [],
+      "summary": "> Sub-skill của [[redis-development]] > Nguồn: redis/agent-skills/redis-development"
+    },
+    {
+      "name": "redis-development",
+      "displayName": "redis-development.md",
+      "relativePath": "redis-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.593Z",
+      "size": 4190,
+      "tags": [],
+      "summary": "> **Nguồn:** [redis/agent-skills](redis/agent-skills/redis-development) > **Commit:** `4eaff19` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "refactor-module",
+      "displayName": "refactor-module.md",
+      "relativePath": "refactor-module.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.609Z",
+      "size": 12807,
+      "tags": [],
+      "summary": "> **Nguồn:** [hashicorp/agent-skills](hashicorp/agent-skills/refactor-module) > **Commit:** `de4323a` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "reference-compiler-cli",
+      "displayName": "reference-compiler-cli.md",
+      "relativePath": "reference-compiler-cli.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.616Z",
+      "size": 5588,
+      "tags": [],
+      "summary": "> **Nguồn:** [angular/angular](angular/angular/reference-compiler-cli) > **Commit:** `a0d4563` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "reference-core",
+      "displayName": "reference-core.md",
+      "relativePath": "reference-core.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.621Z",
+      "size": 4828,
+      "tags": [],
+      "summary": "> **Nguồn:** [angular/angular](angular/angular/reference-core) > **Commit:** `a0d4563` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "reference-signal-forms",
+      "displayName": "reference-signal-forms.md",
+      "relativePath": "reference-signal-forms.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.627Z",
+      "size": 4543,
+      "tags": [],
+      "summary": "> **Nguồn:** [angular/angular](angular/angular/reference-signal-forms) > **Commit:** `a0d4563` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "remotion",
+      "displayName": "remotion.md",
+      "relativePath": "remotion.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.636Z",
+      "size": 10000,
+      "tags": [],
+      "summary": "> **Nguồn:** [remotion-dev/skills](remotion-dev/skills/remotion) > **Commit:** `8587710` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rspec-best-practices-ref-EXAMPLES",
+      "displayName": "rspec-best-practices-ref/rspec-best-practices-ref-EXAMPLES.md",
+      "relativePath": "rspec-best-practices-ref\\rspec-best-practices-ref-EXAMPLES.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.638Z",
+      "size": 5315,
+      "tags": [
+        "total_price",
+        "expired"
+      ],
+      "summary": "> Sub-skill của [[rspec-best-practices]] > Nguồn: igmarin/rails-agent-skills/rspec-best-practices"
+    },
+    {
+      "name": "rspec-best-practices",
+      "displayName": "rspec-best-practices.md",
+      "relativePath": "rspec-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.638Z",
+      "size": 6843,
+      "tags": [
+        "method"
+      ],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rspec-best-practices) > **Commit:** `96f35dd` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rspec-service-testing-ref-PATTERNS",
+      "displayName": "rspec-service-testing-ref/rspec-service-testing-ref-PATTERNS.md",
+      "relativePath": "rspec-service-testing-ref\\rspec-service-testing-ref-PATTERNS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.646Z",
+      "size": 960,
+      "tags": [],
+      "summary": "> Sub-skill của [[rspec-service-testing]] > Nguồn: igmarin/rails-agent-skills/rspec-service-testing"
+    },
+    {
+      "name": "rspec-service-testing",
+      "displayName": "rspec-service-testing.md",
+      "relativePath": "rspec-service-testing.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.646Z",
+      "size": 4921,
+      "tags": [],
+      "summary": "> **Nguồn:** [igmarin/rails-agent-skills](igmarin/rails-agent-skills/rspec-service-testing) > **Commit:** `d22f227` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "ruby-on-rails-best-practices",
+      "displayName": "ruby-on-rails-best-practices.md",
+      "relativePath": "ruby-on-rails-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.660Z",
+      "size": 7386,
+      "tags": [],
+      "summary": "> **Nguồn:** [sergiodxa/agent-skills](sergiodxa/agent-skills/ruby-on-rails-best-practices) > **Commit:** `40e21b4` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "ruby",
+      "displayName": "ruby.md",
+      "relativePath": "ruby.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.655Z",
+      "size": 5505,
+      "tags": [
+        "fetch"
+      ],
+      "summary": "> **Nguồn:** [lucianghinda/superpowers-ruby](lucianghinda/superpowers-ruby/ruby) > **Commit:** `cb03f92` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "rust-best-practices",
+      "displayName": "rust-best-practices.md",
+      "relativePath": "rust-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.665Z",
+      "size": 3942,
+      "tags": [
+        "42"
+      ],
+      "summary": "> **Nguồn:** [apollographql/skills](apollographql/skills/rust-best-practices) > **Commit:** `ad83e82` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "sandbox-sdk",
+      "displayName": "sandbox-sdk.md",
+      "relativePath": "sandbox-sdk.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.672Z",
+      "size": 5581,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/sandbox-sdk) > **Commit:** `0397d7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "scikit-learn",
+      "displayName": "scikit-learn.md",
+      "relativePath": "scikit-learn.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.682Z",
+      "size": 14881,
+      "tags": [],
+      "summary": "> **Nguồn:** [davila7/claude-code-templates](davila7/claude-code-templates/scikit-learn) > **Commit:** `e258eaa` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "security-sandbox",
+      "displayName": "security-sandbox.md",
+      "relativePath": "security-sandbox.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.981Z",
+      "size": 2283,
+      "tags": [
+        "skill",
+        "security",
+        "sandbox",
+        "workflow"
+      ],
+      "summary": "Đảm bảo an toàn khi thực thi code nguy hiểm hoặc tính toán phức tạp.\r"
+    },
+    {
+      "name": "senior-data-scientist",
+      "displayName": "senior-data-scientist.md",
+      "relativePath": "senior-data-scientist.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.688Z",
+      "size": 5333,
+      "tags": [],
+      "summary": "> **Nguồn:** [davila7/claude-code-templates](davila7/claude-code-templates/senior-data-scientist) > **Commit:** `e258eaa` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "seo",
+      "displayName": "seo.md",
+      "relativePath": "seo.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.693Z",
+      "size": 11099,
+      "tags": [],
+      "summary": "> **Nguồn:** [addyosmani/web-quality-skills](addyosmani/web-quality-skills/seo) > **Commit:** `fed9617` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "shadcn-ref-cli",
+      "displayName": "shadcn-ref/shadcn-ref-cli.md",
+      "relativePath": "shadcn-ref\\shadcn-ref-cli.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.699Z",
+      "size": 16767,
+      "tags": [
+        "updating-components"
+      ],
+      "summary": "> Sub-skill của [[shadcn]] > Nguồn: shadcn/ui/shadcn"
+    },
+    {
+      "name": "shadcn-ref-customization",
+      "displayName": "shadcn-ref/shadcn-ref-customization.md",
+      "relativePath": "shadcn-ref\\shadcn-ref-customization.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.705Z",
+      "size": 6358,
+      "tags": [
+        "updating-components"
+      ],
+      "summary": "> Sub-skill của [[shadcn]] > Nguồn: shadcn/ui/shadcn"
+    },
+    {
+      "name": "shadcn-ref-mcp",
+      "displayName": "shadcn-ref/shadcn-ref-mcp.md",
+      "relativePath": "shadcn-ref\\shadcn-ref-mcp.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.705Z",
+      "size": 2544,
+      "tags": [],
+      "summary": "> Sub-skill của [[shadcn]] > Nguồn: shadcn/ui/shadcn"
+    },
+    {
+      "name": "shadcn",
+      "displayName": "shadcn.md",
+      "relativePath": "shadcn.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.699Z",
+      "size": 17432,
+      "tags": [
+        "updating-components",
+        "critical-rules"
+      ],
+      "summary": "> **Nguồn:** [shadcn/ui](shadcn/ui/shadcn) > **Commit:** `b07070c` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "sqlalchemy-alembic-expert-best-practices-code-review",
+      "displayName": "sqlalchemy-alembic-expert-best-practices-code-review.md",
+      "relativePath": "sqlalchemy-alembic-expert-best-practices-code-review.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.716Z",
+      "size": 2689,
+      "tags": [],
+      "summary": "> **Nguồn:** [wispbit-ai/skills](wispbit-ai/skills/sqlalchemy-alembic-expert-best-practices-code-review) > **Commit:** `8b2c7d0` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "sqlalchemy",
+      "displayName": "sqlalchemy.md",
+      "relativePath": "sqlalchemy.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.710Z",
+      "size": 23414,
+      "tags": [
+        "mapped-column-derives-the-datatype-and-nullability-from-the-mapped-annotation"
+      ],
+      "summary": "> **Nguồn:** [bobmatnyc/claude-mpm-skills](bobmatnyc/claude-mpm-skills/sqlalchemy) > **Commit:** `fe13e4b` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "state-management",
+      "displayName": "state-management.md",
+      "relativePath": "state-management.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T06:55:26.476Z",
+      "size": 1565,
+      "tags": [
+        "skill",
+        "state",
+        "data-plane",
+        "workflow"
+      ],
+      "summary": "Tách Data Plane khỏi Control Plane. Agent không tự sửa JSON bằng tay; mọi thao tác trạng thái đi qua `kato-state-manager`.\r"
+    },
+    {
+      "name": "stripe-best-practices",
+      "displayName": "stripe-best-practices.md",
+      "relativePath": "stripe-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.721Z",
+      "size": 2244,
+      "tags": [],
+      "summary": "> **Nguồn:** [stripe/ai](stripe/ai/stripe-best-practices) > **Commit:** `f6e8ff3` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "supabase-postgres-best-practices",
+      "displayName": "supabase-postgres-best-practices.md",
+      "relativePath": "supabase-postgres-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.728Z",
+      "size": 2064,
+      "tags": [],
+      "summary": "> **Nguồn:** [supabase/agent-skills](supabase/agent-skills/supabase-postgres-best-practices) > **Commit:** `7a646f8` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "svelte-code-writer",
+      "displayName": "svelte-code-writer.md",
+      "relativePath": "svelte-code-writer.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.736Z",
+      "size": 1831,
+      "tags": [],
+      "summary": "> **Nguồn:** [sveltejs/ai-tools](sveltejs/ai-tools/svelte-code-writer) > **Commit:** `2ded135` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "svelte5-best-practices",
+      "displayName": "svelte5-best-practices.md",
+      "relativePath": "svelte5-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.744Z",
+      "size": 2496,
+      "tags": [
+        "snippet"
+      ],
+      "summary": "> **Nguồn:** [ejirocodes/agent-skills](ejirocodes/agent-skills/svelte5-best-practices) > **Commit:** `3a7d482` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "swift-concurrency",
+      "displayName": "swift-concurrency.md",
+      "relativePath": "swift-concurrency.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.744Z",
+      "size": 10215,
+      "tags": [],
+      "summary": "> **Nguồn:** [avdlee/swift-concurrency-agent-skill](avdlee/swift-concurrency-agent-skill/swift-concurrency) > **Commit:** `a73e4f9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "swift-testing-expert",
+      "displayName": "swift-testing-expert.md",
+      "relativePath": "swift-testing-expert.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.752Z",
+      "size": 4801,
+      "tags": [
+        "expect",
+        "require",
+        "available"
+      ],
+      "summary": "> **Nguồn:** [avdlee/swift-testing-agent-skill](avdlee/swift-testing-agent-skill/swift-testing-expert) > **Commit:** `8872b5e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "swiftui-expert-skill",
+      "displayName": "swiftui-expert-skill.md",
+      "relativePath": "swiftui-expert-skill.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.760Z",
+      "size": 11104,
+      "tags": [
+        "available"
+      ],
+      "summary": "> **Nguồn:** [avdlee/swiftui-agent-skill](avdlee/swiftui-agent-skill/swiftui-expert-skill) > **Commit:** `0066966` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "tailwind-css-patterns",
+      "displayName": "tailwind-css-patterns.md",
+      "relativePath": "tailwind-css-patterns.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.767Z",
+      "size": 6252,
+      "tags": [],
+      "summary": "> **Nguồn:** [giuseppe-trisciuoglio/developer-kit](giuseppe-trisciuoglio/developer-kit/tailwind-css-patterns) > **Commit:** `618b176` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "tailwind-v4-shadcn",
+      "displayName": "tailwind-v4-shadcn.md",
+      "relativePath": "tailwind-v4-shadcn.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.774Z",
+      "size": 14382,
+      "tags": [
+        "-before-you-start-read-this",
+        "quick-start-5-minutes---follow-this-exact-order",
+        "the-four-step-architecture-critical",
+        "dark-mode-setup",
+        "critical-rules-must-follow",
+        "semantic-color-tokens",
+        "common-issues--quick-fixes",
+        "file-templates",
+        "complete-setup-checklist",
+        "advanced-topics",
+        "dependencies",
+        "tailwind-v4-plugins",
+        "reference-documentation",
+        "when-to-load-references"
+      ],
+      "summary": "> **Nguồn:** [secondsky/claude-skills](secondsky/claude-skills/tailwind-v4-shadcn) > **Commit:** `b30de6b` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "tanstack-start",
+      "displayName": "tanstack-start.md",
+      "relativePath": "tanstack-start.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.783Z",
+      "size": 7014,
+      "tags": [],
+      "summary": "> **Nguồn:** [tanstack-skills/tanstack-skills](tanstack-skills/tanstack-skills/tanstack-start) > **Commit:** `6f5521e` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "tauri-v2-ref-README",
+      "displayName": "tauri-v2-ref/tauri-v2-ref-README.md",
+      "relativePath": "tauri-v2-ref\\tauri-v2-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.791Z",
+      "size": 7932,
+      "tags": [],
+      "summary": "> Sub-skill của [[tauri-v2]] > Nguồn: nodnarbnitram/claude-code-extensions/tauri-v2"
+    },
+    {
+      "name": "tauri-v2",
+      "displayName": "tauri-v2.md",
+      "relativePath": "tauri-v2.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.789Z",
+      "size": 16418,
+      "tags": [],
+      "summary": "> **Nguồn:** [nodnarbnitram/claude-code-extensions](nodnarbnitram/claude-code-extensions/tauri-v2) > **Commit:** `aabed46` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "terraform-module-library",
+      "displayName": "terraform-module-library.md",
+      "relativePath": "terraform-module-library.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.793Z",
+      "size": 5563,
+      "tags": [],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/terraform-module-library) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "terraform-stacks",
+      "displayName": "terraform-stacks.md",
+      "relativePath": "terraform-stacks.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.800Z",
+      "size": 16750,
+      "tags": [],
+      "summary": "> **Nguồn:** [hashicorp/agent-skills](hashicorp/agent-skills/terraform-stacks) > **Commit:** `de4323a` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "terraform-style-guide-ref-SECURITY",
+      "displayName": "terraform-style-guide-ref/terraform-style-guide-ref-SECURITY.md",
+      "relativePath": "terraform-style-guide-ref\\terraform-style-guide-ref-SECURITY.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.812Z",
+      "size": 5161,
+      "tags": [],
+      "summary": "> Sub-skill của [[terraform-style-guide]] > Nguồn: hashicorp/agent-skills/terraform-style-guide"
+    },
+    {
+      "name": "terraform-style-guide",
+      "displayName": "terraform-style-guide.md",
+      "relativePath": "terraform-style-guide.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.810Z",
+      "size": 6809,
+      "tags": [],
+      "summary": "> **Nguồn:** [hashicorp/agent-skills](hashicorp/agent-skills/terraform-style-guide) > **Commit:** `b129bb5` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "test-driven-development-ref-testing-anti-patterns",
+      "displayName": "test-driven-development-ref/test-driven-development-ref-testing-anti-patterns.md",
+      "relativePath": "test-driven-development-ref\\test-driven-development-ref-testing-anti-patterns.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.819Z",
+      "size": 8617,
+      "tags": [],
+      "summary": "> Sub-skill của [[test-driven-development]] > Nguồn: lucianghinda/superpowers-ruby/test-driven-development"
+    },
+    {
+      "name": "test-driven-development-ref-testing-strategy",
+      "displayName": "test-driven-development-ref/test-driven-development-ref-testing-strategy.md",
+      "relativePath": "test-driven-development-ref\\test-driven-development-ref-testing-strategy.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.819Z",
+      "size": 30565,
+      "tags": [
+        "charge_for",
+        "first_comment",
+        "method_name"
+      ],
+      "summary": "> Sub-skill của [[test-driven-development]] > Nguồn: lucianghinda/superpowers-ruby/test-driven-development"
+    },
+    {
+      "name": "test-driven-development",
+      "displayName": "test-driven-development.md",
+      "relativePath": "test-driven-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.816Z",
+      "size": 9914,
+      "tags": [
+        "ffcccc",
+        "ccffcc",
+        "ccccff"
+      ],
+      "summary": "> **Nguồn:** [lucianghinda/superpowers-ruby](lucianghinda/superpowers-ruby/test-driven-development) > **Commit:** `cb03f92` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-animation",
+      "displayName": "threejs-animation.md",
+      "relativePath": "threejs-animation.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.826Z",
+      "size": 12610,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-animation) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-fundamentals",
+      "displayName": "threejs-fundamentals.md",
+      "relativePath": "threejs-fundamentals.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.833Z",
+      "size": 11563,
+      "tags": [
+        "canvas",
+        "ff0000"
+      ],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-fundamentals) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-geometry",
+      "displayName": "threejs-geometry.md",
+      "relativePath": "threejs-geometry.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.838Z",
+      "size": 13873,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-geometry) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-interaction",
+      "displayName": "threejs-interaction.md",
+      "relativePath": "threejs-interaction.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.846Z",
+      "size": 16369,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-interaction) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-lighting",
+      "displayName": "threejs-lighting.md",
+      "relativePath": "threejs-lighting.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.854Z",
+      "size": 12118,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-lighting) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-loaders",
+      "displayName": "threejs-loaders.md",
+      "relativePath": "threejs-loaders.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.862Z",
+      "size": 14129,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-loaders) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-materials",
+      "displayName": "threejs-materials.md",
+      "relativePath": "threejs-materials.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.870Z",
+      "size": 13480,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-materials) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-postprocessing",
+      "displayName": "threejs-postprocessing.md",
+      "relativePath": "threejs-postprocessing.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.877Z",
+      "size": 14515,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-postprocessing) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-shaders",
+      "displayName": "threejs-shaders.md",
+      "relativePath": "threejs-shaders.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.883Z",
+      "size": 14126,
+      "tags": [
+        "include"
+      ],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-shaders) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "threejs-textures",
+      "displayName": "threejs-textures.md",
+      "relativePath": "threejs-textures.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.890Z",
+      "size": 13730,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudai-x/threejs-skills](cloudai-x/threejs-skills/threejs-textures) > **Commit:** `b1c6230` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "turborepo",
+      "displayName": "turborepo.md",
+      "relativePath": "turborepo.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.893Z",
+      "size": 27920,
+      "tags": [
+        "taskname",
+        "test",
+        "outputs",
+        "persistent",
+        "package-configurations",
+        "with",
+        "compilation-strategies",
+        "package-types",
+        "typescript-configuration",
+        "eslint-configuration",
+        "tags",
+        "rule-types",
+        "task",
+        "build"
+      ],
+      "summary": "> **Nguồn:** [vercel/turborepo](vercel/turborepo/turborepo) > **Commit:** `09900b9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "twoFactor",
+      "displayName": "twoFactor.md",
+      "relativePath": "twoFactor.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.904Z",
+      "size": 7495,
+      "tags": [],
+      "summary": "> **Nguồn:** [better-auth/skills](better-auth/skills/twoFactor) > **Commit:** `6a16369` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "typescript-advanced-types",
+      "displayName": "typescript-advanced-types.md",
+      "relativePath": "typescript-advanced-types.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.911Z",
+      "size": 16731,
+      "tags": [],
+      "summary": "> **Nguồn:** [wshobson/agents](wshobson/agents/typescript-advanced-types) > **Commit:** `87b81e9` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "ui-vibe-coding",
+      "displayName": "ui-vibe-coding.md",
+      "relativePath": "ui-vibe-coding.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.981Z",
+      "size": 543,
+      "tags": [
+        "skill",
+        "ui",
+        "design",
+        "vibe-coding"
+      ],
+      "summary": "✅ **Định nghĩa Nguồn Chân Lý Thiết kế**:\r - Mỗi khi được yêu cầu code Giao diện (UI/Frontend), BẮT BUỘC phải tìm xem có file `DESIGN.md` trong dự án không\r - Nếu có: Sử dụng nó làm Nguồn Chân Lý Tuyệt"
+    },
+    {
+      "name": "upgrade-stripe",
+      "displayName": "upgrade-stripe.md",
+      "relativePath": "upgrade-stripe.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.917Z",
+      "size": 5928,
+      "tags": [],
+      "summary": "> **Nguồn:** [stripe/ai](stripe/ai/upgrade-stripe) > **Commit:** `f6e8ff3` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "upgrading-expo",
+      "displayName": "upgrading-expo.md",
+      "relativePath": "upgrading-expo.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.922Z",
+      "size": 5748,
+      "tags": [],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/upgrading-expo) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "use-ai-sdk",
+      "displayName": "use-ai-sdk.md",
+      "relativePath": "use-ai-sdk.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.922Z",
+      "size": 4351,
+      "tags": [],
+      "summary": "> **Nguồn:** [vercel/ai](vercel/ai/use-ai-sdk) > **Commit:** `f943bb7` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "use-dom",
+      "displayName": "use-dom.md",
+      "relativePath": "use-dom.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.930Z",
+      "size": 9761,
+      "tags": [
+        "8884d8",
+        "f0f0f0",
+        "333"
+      ],
+      "summary": "> **Nguồn:** [expo/skills](expo/skills/use-dom) > **Commit:** `8f26555` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "verification-protocol",
+      "displayName": "verification-protocol.md",
+      "relativePath": "verification-protocol.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-08T00:52:35.981Z",
+      "size": 2090,
+      "tags": [
+        "skill",
+        "verification",
+        "testing",
+        "workflow"
+      ],
+      "summary": "Đảm bảo mọi tuyên bố hoàn thành đều được kiểm chứng thực tế, không dựa trên suy diễn.\r"
+    },
+    {
+      "name": "vite-ref-GENERATION",
+      "displayName": "vite-ref/vite-ref-GENERATION.md",
+      "relativePath": "vite-ref\\vite-ref-GENERATION.md",
+      "generatedAt": "2026-01-31",
+      "lastModified": "2026-05-15T08:35:26.938Z",
+      "size": 210,
+      "tags": [],
+      "summary": "> Sub-skill của [[vite]] > Nguồn: antfu/skills/vite"
+    },
+    {
+      "name": "vite",
+      "displayName": "vite.md",
+      "relativePath": "vite.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.938Z",
+      "size": 2307,
+      "tags": [],
+      "summary": "> **Nguồn:** [antfu/skills](antfu/skills/vite) > **Commit:** `c35a558` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "vitest-ref-GENERATION",
+      "displayName": "vitest-ref/vitest-ref-GENERATION.md",
+      "relativePath": "vitest-ref\\vitest-ref-GENERATION.md",
+      "generatedAt": "2026-01-28",
+      "lastModified": "2026-05-15T08:35:26.949Z",
+      "size": 216,
+      "tags": [],
+      "summary": "> Sub-skill của [[vitest]] > Nguồn: antfu/skills/vitest"
+    },
+    {
+      "name": "vitest",
+      "displayName": "vitest.md",
+      "relativePath": "vitest.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.949Z",
+      "size": 3155,
+      "tags": [],
+      "summary": "> **Nguồn:** [antfu/skills](antfu/skills/vitest) > **Commit:** `c35a558` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "vue-best-practices-ref-LICENSE",
+      "displayName": "vue-best-practices-ref/vue-best-practices-ref-LICENSE.md",
+      "relativePath": "vue-best-practices-ref\\vue-best-practices-ref-LICENSE.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.965Z",
+      "size": 1215,
+      "tags": [],
+      "summary": "> Sub-skill của [[vue-best-practices]] > Nguồn: antfu/skills/vue-best-practices"
+    },
+    {
+      "name": "vue-best-practices-ref-SYNC",
+      "displayName": "vue-best-practices-ref/vue-best-practices-ref-SYNC.md",
+      "relativePath": "vue-best-practices-ref\\vue-best-practices-ref-SYNC.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:26.966Z",
+      "size": 252,
+      "tags": [],
+      "summary": "> Sub-skill của [[vue-best-practices]] > Nguồn: antfu/skills/vue-best-practices"
+    },
+    {
+      "name": "vue-best-practices",
+      "displayName": "vue-best-practices.md",
+      "relativePath": "vue-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.961Z",
+      "size": 8621,
+      "tags": [],
+      "summary": "> **Nguồn:** [antfu/skills](antfu/skills/vue-best-practices) > **Commit:** `c35a558` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "vue-debug-guides",
+      "displayName": "vue-debug-guides.md",
+      "relativePath": "vue-debug-guides.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.972Z",
+      "size": 20955,
+      "tags": [],
+      "summary": "> **Nguồn:** [hyf0/vue-skills](hyf0/vue-skills/vue-debug-guides) > **Commit:** `c9d355f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "vue-pinia-best-practices",
+      "displayName": "vue-pinia-best-practices.md",
+      "relativePath": "vue-pinia-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.978Z",
+      "size": 1267,
+      "tags": [],
+      "summary": "> **Nguồn:** [vuejs-ai/skills](vuejs-ai/skills/vue-pinia-best-practices) > **Commit:** `c9d355f` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "vue-ref-GENERATION",
+      "displayName": "vue-ref/vue-ref-GENERATION.md",
+      "relativePath": "vue-ref\\vue-ref-GENERATION.md",
+      "generatedAt": "2026-01-31",
+      "lastModified": "2026-05-15T08:35:26.957Z",
+      "size": 207,
+      "tags": [],
+      "summary": "> Sub-skill của [[vue]] > Nguồn: antfu/skills/vue"
+    },
+    {
+      "name": "vue",
+      "displayName": "vue.md",
+      "relativePath": "vue.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.955Z",
+      "size": 2267,
+      "tags": [],
+      "summary": "> **Nguồn:** [antfu/skills](antfu/skills/vue) > **Commit:** `c35a558` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "web-perf",
+      "displayName": "web-perf.md",
+      "relativePath": "web-perf.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.985Z",
+      "size": 7957,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/web-perf) > **Commit:** `0397d7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wordpress-router",
+      "displayName": "wordpress-router.md",
+      "relativePath": "wordpress-router.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:26.993Z",
+      "size": 2033,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wordpress-router) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "workers-best-practices",
+      "displayName": "workers-best-practices.md",
+      "relativePath": "workers-best-practices.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.000Z",
+      "size": 6901,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/workers-best-practices) > **Commit:** `0397d7d` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-block-development",
+      "displayName": "wp-block-development.md",
+      "relativePath": "wp-block-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.006Z",
+      "size": 6282,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-block-development) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-block-themes",
+      "displayName": "wp-block-themes.md",
+      "relativePath": "wp-block-themes.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.017Z",
+      "size": 3861,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-block-themes) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-performance",
+      "displayName": "wp-performance.md",
+      "relativePath": "wp-performance.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.022Z",
+      "size": 5667,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-performance) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-plugin-development",
+      "displayName": "wp-plugin-development.md",
+      "relativePath": "wp-plugin-development.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.027Z",
+      "size": 3877,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-plugin-development) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-project-triage",
+      "displayName": "wp-project-triage.md",
+      "relativePath": "wp-project-triage.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.033Z",
+      "size": 1353,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-project-triage) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-rest-api",
+      "displayName": "wp-rest-api.md",
+      "relativePath": "wp-rest-api.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.044Z",
+      "size": 4673,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-rest-api) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wp-wpcli-and-ops",
+      "displayName": "wp-wpcli-and-ops.md",
+      "relativePath": "wp-wpcli-and-ops.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.049Z",
+      "size": 3891,
+      "tags": [],
+      "summary": "> **Nguồn:** [wordpress/agent-skills](wordpress/agent-skills/wp-wpcli-and-ops) > **Commit:** `c5c0697` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "wrangler",
+      "displayName": "wrangler.md",
+      "relativePath": "wrangler.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.057Z",
+      "size": 15456,
+      "tags": [],
+      "summary": "> **Nguồn:** [cloudflare/skills](cloudflare/skills/wrangler) > **Commit:** `0438a07` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "xcode-build-orchestrator",
+      "displayName": "xcode-build-orchestrator.md",
+      "relativePath": "xcode-build-orchestrator.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.061Z",
+      "size": 11356,
+      "tags": [],
+      "summary": "> **Nguồn:** [avdlee/xcode-build-optimization-agent-skill](avdlee/xcode-build-optimization-agent-skill/xcode-build-orchestrator) > **Commit:** `6bd7b59` > **Generated:** 2026-05-03"
+    },
+    {
+      "name": "zod-ref-AGENTS",
+      "displayName": "zod-ref/zod-ref-AGENTS.md",
+      "relativePath": "zod-ref\\zod-ref-AGENTS.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:27.069Z",
+      "size": 11676,
+      "tags": [
+        "1-schema-definition",
+        "2-parsing-",
+        "3-type-inference",
+        "4-error-handling",
+        "5-object-schemas",
+        "6-schema-composition",
+        "7-refinements-",
+        "8-performance-"
+      ],
+      "summary": "> Sub-skill của [[zod]] > Nguồn: pproenca/dot-skills/zod"
+    },
+    {
+      "name": "zod-ref-README",
+      "displayName": "zod-ref/zod-ref-README.md",
+      "relativePath": "zod-ref\\zod-ref-README.md",
+      "generatedAt": null,
+      "lastModified": "2026-05-15T08:35:27.069Z",
+      "size": 3242,
+      "tags": [],
+      "summary": "> Sub-skill của [[zod]] > Nguồn: pproenca/dot-skills/zod"
+    },
+    {
+      "name": "zod",
+      "displayName": "zod.md",
+      "relativePath": "zod.md",
+      "generatedAt": "2026-05-03",
+      "lastModified": "2026-05-15T08:35:27.069Z",
+      "size": 5340,
+      "tags": [],
+      "summary": "> **Nguồn:** [pproenca/dot-skills](pproenca/dot-skills/zod) > **Commit:** `89c72d2` > **Generated:** 2026-05-03"
+    }
+  ]
+}

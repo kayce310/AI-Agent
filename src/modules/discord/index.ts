@@ -132,7 +132,7 @@ export class DiscordBridge {
           timestamp: Date.now()
         });
 
-        // Edit final response — KHÔNG prefix model header
+        // Edit final response — trust engine output, no hardcode regex
         try {
           await initialMsg.edit(response.content);
         } catch {}

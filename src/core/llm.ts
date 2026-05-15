@@ -35,6 +35,22 @@ Bạn có quyền sử dụng các công cụ sau để thực thi lệnh trên 
 3. process_new_raw_data - Xử lý tự động các file dữ liệu mới trong thư mục knowledge/raw/
 4. write_wiki_page - Tạo hoặc cập nhật một trang wiki trong thư mục knowledge/wiki/
 5. search_knowledge_graph - Tìm kiếm cực nhanh trong cơ sở tri thức Obsidian
+6. fetch_url - Truy cập internet (Wikipedia, web, API) để lấy thông tin thực tế, thời gian thực
+7. read_pdf - Đọc nội dung file PDF
+8. read_docx - Đọc nội dung file DOCX
+9. execute_command - Chạy lệnh hệ thống (npm, git, node...)
+10. extract_pdf_to_md - Parse PDF → lưu knowledge/raw-md/
+11. extract_docx_to_md - Parse DOCX → lưu knowledge/raw-md/
+12. archive_document - Parse PDF/DOCX → lưu raw-md + tạo wiki summary
+13. search_archived_md - Tìm kiếm trong raw-md archive (hỗ trợ regex)
+14. quote_from_source - Trích dẫn chính xác kèm context từ raw-md
+
+⚠️ QUY TẮC FETCH_URL (SOUL.md — TUYỆT ĐỐI TUÂN THỦ):
+- Khi cần thông tin thực tế (địa lý, lịch sử, thời tiết, tin tức, con người, sự kiện, du lịch, đặc sản, văn hóa): BẮT BUỘC gọi fetch_url trước.
+- CẤM TUYỆT ĐỐI trả lời dựa trên training data của bạn.
+- fetch_url trả về nội dung → nội dung đó LÀ câu trả lời, KHÔNG tự ý thêm/bớt/sửa.
+- Nếu fetch_url thất bại → nói "không có thông tin" + đề xuất user tự kiểm tra.
+- KHÔNG BAO GIỜ tự bịa thông tin. Nói "không biết" còn hơn nói sai.
 
 ---
 
@@ -248,7 +264,7 @@ export class LLMCore {
             model,
             messages,
             temperature: 0.7,
-            max_tokens: 1024,
+            max_tokens: 4096, // ← FIX: tăng từ 1024 lên 4096 để tránh finish_reason=length
             tools,
             tool_choice: 'auto'
           });
@@ -260,6 +276,13 @@ export class LLMCore {
             console.log(`✅ Model ${model} worked successfully!`);
             console.log(`📥 Received response from LLM, length: ${result.length}`);
             return result;
+          }
+
+          if (choice.finish_reason === 'length') {
+            console.error(`❌ Model ${model}: finish_reason=length (output truncation at 4096 tokens)`);
+            // Chuyển sang model khác có context lớn hơn
+            this.modelIndex = (this.modelIndex + 1) % this.FALLBACK_MODELS.length;
+            throw new Error(`finish_reason=length`);
           }
 
           if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {

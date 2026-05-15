@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "meta": {
     "description": "Track processed files to skip scanning on next session",
-    "lastUpdated": "2026-05-11T11:10:00+07:00"
+    "lastUpdated": "2026-05-14T10:04:05.573Z"
   },
   "files": [
     {
@@ -13,16 +13,149 @@
       "checksum": "a1b2c3d4e5f6",
       "processedAt": "2026-05-11T11:10:00+07:00",
       "notes": "Imported to config/providers.json - 9router + local_proxy tiers"
+    },
+    {
+      "path": "knowledge/blueprints/9router-backup-2026-05-11T06-13-56-019Z.json",
+      "type": "config",
+      "processedAt": "2026-05-13T10:11:02+07:00",
+      "checksum": "",
+      "action": "archived"
+    },
+    {
+      "path": "knowledge/blueprints/9router-backup-2026-05-12T08-20-03-863Z.json",
+      "type": "config",
+      "processedAt": "2026-05-13T10:11:18+07:00",
+      "checksum": "",
+      "action": "archived"
+    },
+    {
+      "path": "knowledge/blueprints/.gitkeep",
+      "type": "other",
+      "processedAt": "2026-05-13T10:11:39+07:00",
+      "checksum": "",
+      "action": "archived"
+    },
+    {
+      "path": "knowledge/blueprints/awesome-design-raw.md",
+      "type": "document",
+      "processedAt": "2026-05-13T10:12:07+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/awesome-gpt-image-2.md",
+      "type": "document",
+      "processedAt": "2026-05-13T10:12:08+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/kato-ui-brief.md",
+      "type": "document",
+      "processedAt": "2026-05-13T10:12:09+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/placeholder.md",
+      "type": "document",
+      "processedAt": "2026-05-13T10:12:21+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/AD0758978.pdf",
+      "type": "document",
+      "processedAt": "2026-05-13T10:12:36+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/Báo cáo giai đoạn 1 OVAP-X1-1.pdf",
+      "type": "document",
+      "processedAt": "2026-05-13T10:13:00+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/Gilbert_Strang_Linear_Algebra_and_Its_Applicatio_230928_225121 (1).pdf",
+      "type": "document",
+      "processedAt": "2026-05-13T10:13:00+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/Introduction to aircraft flight mechanics (1).pdf",
+      "type": "document",
+      "processedAt": "2026-05-13T10:13:00+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/Space Vehicle Dynamics and Control.pdf",
+      "type": "document",
+      "processedAt": "2026-05-13T10:13:00+07:00",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/queue/.gitkeep",
+      "type": "other",
+      "processedAt": "2026-05-13T10:13:00+07:00",
+      "checksum": "",
+      "action": "archived"
+    },
+    {
+      "path": "knowledge/blueprints/73.04_05.pdf",
+      "type": "document",
+      "processedAt": "2026-05-14T10:02:43.969Z",
+      "checksum": "",
+      "action": "imported"
+    },
+    {
+      "path": "knowledge/blueprints/863363699-Kaggle-Course-Notes.pdf",
+      "type": "document",
+      "processedAt": "2026-05-14T10:03:04.875Z",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/CPlusPlusNotesForProfessionals.pdf",
+      "type": "document",
+      "processedAt": "2026-05-14T10:03:25.886Z",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/EKF.pdf",
+      "type": "document",
+      "processedAt": "2026-05-14T10:03:33.445Z",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/EpucorMainCorrectedVersion_jpegFIgs4.pdf",
+      "type": "document",
+      "processedAt": "2026-05-14T10:03:46.318Z",
+      "checksum": "",
+      "action": "reference_created"
+    },
+    {
+      "path": "knowledge/blueprints/OVAP-X1-Flight-Control-1.5/.gitignore",
+      "type": "other",
+      "processedAt": "2026-05-14T10:04:05.570Z",
+      "checksum": "",
+      "action": "archived"
     }
   ],
   "stats": {
-    "totalProcessed": 1,
+    "totalProcessed": 20,
     "byType": {
       "code": 0,
-      "document": 1,
-      "config": 0,
+      "document": 14,
+      "config": 2,
       "script": 0,
-      "other": 0
+      "other": 4
     }
   }
 }

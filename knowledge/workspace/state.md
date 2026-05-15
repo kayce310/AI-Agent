@@ -1,6 +1,8 @@
 # AI-Agent Workspace State
 
-> Last updated: 2026-05-12 15:30
+> Last updated: 2026-05-15 15:33
+>
+> ⚠️ **Session persistence note**: Xem `knowledge/blueprints/workspace-tracking.md` để biết task board + resume checklist khi mất kết nối.
 
 ## Current Session Context
 
@@ -45,6 +47,15 @@ src/index.ts                    ← Entry: init Engine → Adapter
 - Engine v5.3 giữ cascade logic như lớp dự phòng cuối (last resort).
 - **Không code thêm logic switch model vào Engine.** 9router là primary resolver.
 
+## 📊 Phase Active: Phase 2 — Wiki Integration (IN PROGRESS)
+
+| Sub-phase | Status |
+|-----------|--------|
+| Phase 2b: AutoSkills → Wiki Convert | ✅ HOÀN TẤT (217 skills) |
+| md-archiver + search_archived_md | ⬜ TODO |
+| Formula Extractor | ⬜ TODO |
+| Phase 2c: Wiki Integration completion | ⬜ TODO |
+
 ## Vấn đề đang xử lý / Ưu tiên cao nhất
 
 ### [🔥 CRITICAL] Kích hoạt MemoryCompressor (Local Ollama)
@@ -54,6 +65,15 @@ src/index.ts                    ← Entry: init Engine → Adapter
   - 🆕 ReAct loop: tái nén khi `currentMessages` > 10 messages
 - **Kỳ vọng**: 50k tokens → ~1,500 tokens/request (tương đương v4.0)
 - **Phụ thuộc**: Local Ollama phải chạy trên máy
+- **Status**: Cần verify compressor đang hoạt động, kiểm tra gọi `compressHistory()` trong ReAct loop
+
+### Phase 1: Document Processing — ĐANG HOẠT ĐỘNG
+- ✅ `document/` module: pdf-parser, docx-parser, parser factory, converter
+- ✅ 3 tools mới: `read_docx`, `extract_pdf_to_md`, `extract_docx_to_md`
+- ✅ CLI script: `scripts/convert-doc-to-md.mjs`
+- ✅ `knowledge/raw-md/` archive directory
+- ✅ Prompt builder updated (9 bước)
+- ✅ Changelog cập nhật
 
 ### Các mục khác đang tracked
 1. ⬜ Engine test suite chính thức (không chỉ CLI)
@@ -62,6 +82,9 @@ src/index.ts                    ← Entry: init Engine → Adapter
 4. ⬜ Error handling improvements (circuit breaker, retry logic)
 5. ⬜ Health check monitor cho Cache Efficiency
 6. ⬜ OpenRouter credits để dùng Claude model
+7. ⬜ Phase 2: Wiki Integration (md-archiver, search_archived_md)
+8. ⬜ Phase 2: Formula Extractor (formula-extractor.ts riêng)
+9. ⬜ Phase 3-5: Report Generator + DOCX Builder + Deploy
 
 ## Task Queue Status
 

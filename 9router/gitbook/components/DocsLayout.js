@@ -10,14 +10,14 @@ export default function DocsLayout({ children, headings = [], lang = DEFAULT_LAN
     <div className="min-h-screen flex flex-col bg-[#FCFBF9]">
       <DocsHeader lang={lang} />
       <div className="flex-1 flex">
-        {/* Desktop sidebar */}
         <div className="hidden lg:block">
           <DocsSidebar lang={lang} />
         </div>
-        
-        <div className="flex-1 flex">
+        <div className="flex-1 flex min-w-0">
           {children}
-          <DocsToc headings={headings} lang={lang} />
+          <div className="hidden lg:block">
+            <DocsToc headings={headings} lang={lang} />
+          </div>
         </div>
       </div>
     </div>

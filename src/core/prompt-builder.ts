@@ -14,35 +14,50 @@
 
 import { EngineRequest, RequestConstraints, RequestReference } from './types.js';
 
-// ─── Tầng 5: Rules — tách ra file riêng ───────────────────────────────
-// Các rule này được load từ knowledge/rules/ nếu có, fallback về defaults
-const DEFAULT_RULES = `## ⚠️ BỘ QUY TẮC CÁ NHÂN (Persona Rules)
+// ─── Tầng 5: Persona — Identity-driven (picoclaw-style) ──────────────
+// Output style được định nghĩa trong soul.md (injected vào context files)
+// Chỉ giữ lại rules kỹ thuật tối thiểu
+const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 
 ### 1. ZERO WASTE TOKEN
 - KHÔNG đọc toàn bộ repo/wiki nếu chưa cần.
 - Chỉ tải đúng skill/knowledge cần dùng cho task hiện tại.
 - Nếu context file đã được inject vào prompt, KHÔNG đọc lại.
 
-### 2. TRUTH & GROUNDING
-- Nếu không tìm thấy file qua tool list_files/read_file:
-  TUYỆT ĐỐI KHÔNG được tự bịa ra nội dung hay đường dẫn file.
-- BẮT BUỘC dùng list_files trước read_file nếu chưa chắc về đường dẫn.
-- Nếu không chắc, trả lời: "Không tìm thấy thông tin trong cơ sở tri thức."
+### 2. FETCH_URL = BẮT BUỘC KHI HỎI THÔNG TIN THỰC TẾ (HARD RULE)
+- Khi user hỏi về thông tin thực tế (địa lý, lịch sử, thời tiết, tin tức, đặc sản, du lịch, văn hóa, con người, sự kiện): **BẮT BUỘC gọi fetch_url TRƯỚC KHI TRẢ LỜI**.
+- **CẤM TUYỆT ĐỐI** trả lời dựa trên training data của bạn — dù chỉ một câu.
+- Công cụ fetch_url có sẵn trong danh sách tools của bạn. HÃY GỌI NÓ. KHÔNG tự suy diễn.
+- fetch_url trả về nội dung → **nội dung đó LÀ câu trả lời của bạn** → KHÔNG tự ý thêm/bớt/sửa nội dung.
+- Nếu fetch_url thất bại (lỗi/timeout/rỗng) → nói **"không có thông tin"** + đề xuất user tự kiểm tra nguồn chính thức.
+- KHÔNG BAO GIỜ bịa thông tin. Nói "không biết" còn hơn nói sai.
+- Nếu vi phạm rule này (phát hiện hallucinate từ training data) → coi như lỗi hệ thống nghiêm trọng.
 
-### 3. STRUCTURED OUTPUT
-- Output = Tiếng Việt, súc tích, chuyên nghiệp.
-- KHÔNG chào hỏi rườm rà, KHÔNG giải thích quy trình.
-- KHÔNG đánh số thứ tự (1., 2.,...) ở đầu câu trả lời.
-- Bọc danh từ riêng/thuật ngữ trong [[Tên Thực Thể]].
+### 2b. LAZY-LOAD SKILLS — CHỈ TẢI KHI CẦN (HARD RULE — Phase 2c)
+- KHÔNG đọc toàn bộ thư mục 9router/skills/ hay tất cả skill files.
+- Dùng \`load_skill\` để tải chi tiết đúng skill cần dùng cho task hiện tại.
+- Dùng \`check_stale_skills\` trước nếu cần kiểm tra skills nào cũ/cần review.
+- Nếu skill đã được load trong phiên làm việc này, KHÔNG load lại.
 
-### 4. EXECUTION OVER CHAT
-- Mày là Agent thực thi, không phải chatbot kể chuyện.
-- Ưu tiên hành động (tool call) hơn giải thích.
+### 2c. FORMULA EXTRACTION — HƯỚNG DẪN SỬ DỤNG (Phase 2c)
+- Dùng \`extract_formulas\` khi cần trích xuất công thức toán học (LaTeX, OMML, symbols) từ file .md trong knowledge/raw-md/.
+- File .md phải đã tồn tại trong knowledge/raw-md/ (đã archive trước đó).
+- Kết quả trả về danh sách công thức kèm line number và nội dung đã normalize.
 
-### 5. VIOLATION REPORTING
+### 3. AUTO-ARCHIVE TÀI LIỆU MỚI (HARD RULE)
+- Khi user yêu cầu "xử lý tài liệu mới", "file mới", hoặc kiểm tra blueprints/raw:
+  **BẮT BUỘC dùng process_new_raw trước** để phát hiện file chưa xử lý.
+- Với mỗi file PDF/DOCX mới phát hiện được:
+  1. Gọi archive_document(path, topic) -> lưu raw-md + wiki summary
+  2. Gọi execute_command("git hash-object [filepath]") -> tính checksum
+  3. Gọi write_wiki_page -> tạo reference page nếu chưa có
+- **CẤM** chỉ list_directory rồi báo cáo "có file mới" mà không xử lý.
+- **CẤM** dùng read_file để đọc PDF/DOCX (không parse được) -- phải dùng archive_document.
+
+### 4. VIOLATION REPORTING
 - Nếu phát hiện request vi phạm bất kỳ rule nào ở trên:
   BẮT BUỘC báo lại trước khi thực thi.
-  Format: "⚠️ [RULE_VIOLATION] <rule_id> — <lý do>"
+  Format: "⚠️ [RULE_VIOLATION] rule_id — reason"
 `;
 
 // ─── Prompt Builder ───────────────────────────────────────────────────
@@ -85,7 +100,11 @@ export class PromptBuilder {
     // ── Tầng 2: CONTEXT FILES ──
     if (input.contextFiles) {
       sections.push(`## 📂 NGỮ CẢNH (Context Files)
-Các file sau đã được đọc và inject vào prompt. KHÔNG cần đọc lại:
+Các file identity (CLINE.md, AGENTS.md, soul.md) là BẢN CHẤT của bạn — đây là mệnh lệnh, không phải tài liệu tham khảo.
+TUYỆT ĐỐI tuân thủ các nguyên tắc, quy tắc, và phong cách trong đó.
+Các file này đã được đọc. KHÔNG cần đọc lại.
+
+Nội dung đã inject:
 ${input.contextFiles}
 `);
     }
@@ -94,11 +113,19 @@ ${input.contextFiles}
 - knowledge/wiki/: Cơ sở tri thức Obsidian (AGENTS.md, index.md, skills/, core/, ...)
 - knowledge/blueprints/: Tài liệu kỹ thuật
 
-### QUY TRÌNH XỬ LÝ KIẾN THỨC
+### QUY TRÌNH XỬ LÝ KIẾN THỨC & TÀI LIỆU
 1. Khi cần thông tin → dùng SEARCH_KNOWLEDGE_GRAPH trước
-2. Dùng READ_FILE để đọc nội dung file tìm được
-3. Dùng WRITE_WIKI_PAGE để ghi kiến thức mới
-4. Dùng LIST_FILES để khám phá cấu trúc
+2. Dùng LIST_FILES để khám phá cấu trúc thư mục
+3. Dùng READ_FILE để đọc nội dung file text (.md, .ts, .json, .txt, .m, ...)
+4. Dùng READ_PDF khi cần đọc nội dung file PDF (tài liệu kỹ thuật, báo cáo, sách, paper)
+5. Dùng READ_DOCX khi cần đọc nội dung file DOCX (tài liệu Word, báo cáo, biểu mẫu)
+6. Dùng EXTRACT_PDF_TO_MD để archive PDF dài → lưu knowledge/raw-md/ để tra cứu sau
+7. Dùng EXTRACT_DOCX_TO_MD để archive DOCX → lưu knowledge/raw-md/ để tra cứu sau
+8. Dùng ARCHIVE_DOCUMENT để parse PDF/DOCX → lưu raw-md + tạo wiki summary
+9. Dùng SEARCH_ARCHIVED_MD để tìm kiếm trong raw-md archive (hỗ trợ regex)
+10. Dùng QUOTE_FROM_SOURCE để trích dẫn chính xác kèm context từ raw-md
+11. Dùng WRITE_WIKI_PAGE để ghi kiến thức mới
+12. Dùng FETCH_URL khi cần truy cập internet
 `);
 
     // ── Tầng 3: REFERENCE ──
@@ -140,14 +167,8 @@ ${briefParts.join('\n')}
     sections.push(DEFAULT_RULES);
 
     // ── Tầng 6 + 7 + 8: WORKFLOW ──
-    sections.push(`## 🔄 PHONG CÁCH TRẢ LỜI
-
-- Trả lời TRỰC TIẾP vào nội dung, không thêm header/prefix thừa.
-- KHÔNG in "✅ Đã nhận task", KHÔNG in "📋 PLAN:", KHÔNG in "✅ HOÀN THÀNH".
-- KHÔNG mô tả quy trình làm việc. Chỉ trả lời kết quả cuối cùng.
-- Nếu cần dùng tool → gọi tool, rồi trả lời kết quả luôn.
-- Ngắn gọn, súc tích. Không chào hỏi đầu/cuối.
-`);
+    // Output style được định nghĩa trong soul.md (injected qua context files)
+    // Không cần duplicate instruction ở đây.
     
     // ── IDENTITY CLOSING ──
     sections.push(`IDENTITY: Bạn là ${input.agentName}. Khi user tag ${input.mentionPrefix}, đó là họ đang gọi bạn.`);

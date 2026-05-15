@@ -1,0 +1,47 @@
+# Kiến Trúc Hệ Thống AI Agent Cá Nhân - Tổng Quan
+
+## Tài liệu nguồn
+- **File**: `knowledge/blueprints/Tai-lieu-he-thong-AI-Agent.pdf`
+- **Loại**: PDF nghiên cứu chuyên sâu
+- **Nội dung**: Phân tích kiến trúc AI Agent, framework, bộ nhớ, kỹ năng
+
+## Tóm tắt nội dung chính
+
+### 1. Nền Tảng Điều Phối Khung Đa Tác Tử
+Các framework phổ biến:
+| Framework | Ưu điểm | Nhược điểm |
+|-----------|---------|------------|
+| **AgentScope** (Alibaba) | Tích hợp ReAct, A2A, sẵn sàng production | Phứ thộc khi mở rộng |
+| **MetaGPT** | Mô phỏng công ty, code tuân theo SOP | Thiếu linh hoạt |
+| **CrewAI** | Role-based, đồng đội giải quyết rủi ro | Cần quản lý phức tạp |
+| **LangChain** | Linh hoạt tối đa | Dễ xảy ra spaghetti code |
+| **Google ADK** | Tương thích Gemini, phân cấp rõ ràng | Chỉ dành cho Google |
+| **SmolAgents** | Code-first, footprint nhỏ gọn | Hạn chế quy mô |
+
+### 2. Kiến Trúc Điều Phối Tất Định (Deterministic)
+- **Bernstein**: Xóa chi phí token, đảm bảo tính tái tạo và kiểm toán
+- **GNAP**: Git-Native Agent Protocol - vận hành đa tác tử không cần máy chủ
+- **MagiC**: Kubernetes cho AI Agents - quản lý lifecycle độc lập
+
+### 3. Bộ Nhớ & Trạng Thái (Memory & State)
+| Nền tảng | Đặc điểm | Ưu điểm |
+|----------|----------|---------|
+| **Mem0** | ADD-only, tìm kiếm lai, liên kết thực thể | Không mất dữ liệu lịch sử |
+| **Zep** | Vector + Graph, tự chỉnh sửa ký ức | Giữ database tinh gọn |
+| **Letta** | Bộ nhớ phân tầng, tương tác qua tool calls | Học tập liên tục |
+
+### 4. Quản Lý Kỹ Năng & MCP
+- **Model Context Protocol (MCP)**: Chuẩn ngành "USB-C cho AI"
+- **Composio**: Kết nối 1000+ công cụ doanh nghiệp
+- **The Library**: Meta-skill quản lý kỹ năng phân phối riêng
+
+## Ứng dụng thực tế
+- **Zero Touch Engineering**: Tự động hóa cấp độ chuyên gia
+- **Production-ready**: Sẵn sàng triển khai với observability
+- **Offline-capable**: Hoạt động ngoại tuyến hoàn toàn
+
+## Tags
+#ai-agent #architecture #orchestration #memory #mcp #skills #framework
+
+---
+#ai-agent #architecture #orchestration #memory #mcp #skills #framework

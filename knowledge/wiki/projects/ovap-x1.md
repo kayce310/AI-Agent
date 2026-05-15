@@ -24,6 +24,7 @@ Mô phỏng, tích hợp và ổn định hệ điều khiển bay OVAP-X1, bao 
 
 ## 🔗 Liên kết
 
+- [[ovap-x1-v1.4]] — **Wiki chi tiết OVAP-X1 v1.4** (kiến trúc, toán học, mixer, kết quả)
 - [[../troubleshooting/matlab-drawnow-nocancel-unsupported]]
 - [[../skills/verification-protocol]]
 - [[../skills/evolution-protocol]]

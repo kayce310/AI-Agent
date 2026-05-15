@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "meta": {
+    "description": "Track processed files to skip scanning on next session",
+    "lastUpdated": "2026-05-15T09:30:00.000Z"
+  },
+  "files": [
+    {
+      "path": "knowledge/blueprints/Tai-lieu-he-thong-AI-Agent.pdf",
+      "type": "document",
+      "action": "archived",
+      "destination": "knowledge/wiki/blueprints/ai-agent-architecture-system-design.md",
+      "checksum": "",
+      "processedAt": "2026-05-15T09:30:00+07:00",
+      "notes": "Archived to wiki as summary"
+    }
+  ],
+  "stats": {
+    "totalProcessed": 1,
+    "byType": {
+      "code": 0,
+      "document": 1,
+      "config": 0,
+      "script": 0,
+      "other": 0
+    }
+  }
+}
+
+
+---
+#processed
