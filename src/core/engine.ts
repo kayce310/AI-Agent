@@ -16,10 +16,11 @@ import { readFile } from 'fs/promises';
 import MemoryCore from './memory.js';
 import ProviderRegistry from './provider-registry.js';
 import PromptBuilder from './prompt-builder.js';
-import { TOOLS_DEFINITION, executeToolCall } from './tools.js';
-import { selectRelevantTools, estimateToolsTokenCount } from './tool-pruner.js';
+import { ToolRegistry, getDefaultRegistry } from './tool-registry.js';
+import { selectRelevantTools, estimateToolsTokenCount, ensureToolDefinitionsLoaded } from './tool-pruner.js';
 import { EngineRequest, EngineResponse, ChatMessage } from './types.js';
 import { evolutionEngine } from './evolution.js';
+import { ModelRouter, buildDefaultRouter } from './model-adapter.js';
 
 // ── Kato Core Identity Files ──
 const KATO_IDENTITY_FILES = [
@@ -33,12 +34,15 @@ const MAX_TOOL_CALL_CYCLES = 10;
 
 export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
+  private modelRouter: ModelRouter;
   private memory: MemoryCore;
   private katoIdentityContext: string = '';
+  private toolRegistry!: ToolRegistry;
 
   constructor(registry?: ProviderRegistry) {
     super();
     this.registry = registry ?? new ProviderRegistry();
+    this.modelRouter = new ModelRouter();
     this.memory = new MemoryCore();
   }
 
@@ -46,6 +50,15 @@ export class Engine extends EventEmitter {
     this.registry.loadFromConfig();
     await evolutionEngine.init();
     await evolutionEngine.loadDefaultRules();
+
+    // Initialize ToolRegistry (auto-registers all built-in plugins)
+    this.toolRegistry = await getDefaultRegistry();
+
+    // Pre-load tool definitions into tool-pruner cache
+    await ensureToolDefinitionsLoaded();
+
+    // Build ModelRouter with registered adapters
+    this.modelRouter = await buildDefaultRouter(this.registry);
 
     // Load Kato Identity Files
     const identityParts: string[] = [];
@@ -60,7 +73,8 @@ export class Engine extends EventEmitter {
     }
     this.katoIdentityContext = identityParts.join('\n\n');
 
-    console.log(`✅ Engine initialized with ${this.registry.listModels().length} models`);
+    const adapters = this.modelRouter.listAdapters();
+    console.log(`✅ Engine initialized with ${adapters.length} model adapter(s): ${adapters.map(a => a.name).join(', ') || 'none'}`);
     console.log(`🧬 Evolution: ${evolutionEngine.getStats().totalErrorsTracked} errors tracked, ${evolutionEngine.getStats().activeRules} rules active`);
   }
 
@@ -146,7 +160,7 @@ export class Engine extends EventEmitter {
         }
         
         const toolsTokenEstimate = estimateToolsTokenCount(selectedTools);
-        console.log(`📤 Tools selected: ${selectedTools.length}/${TOOLS_DEFINITION.length} (~${toolsTokenEstimate} tokens)`);
+        console.log(`📤 Tools selected: ${selectedTools.length}/${this.toolRegistry.toolCount} (~${toolsTokenEstimate} tokens)`);
 
         const payload: any = {
           model: modelId,
@@ -213,7 +227,7 @@ export class Engine extends EventEmitter {
               continue;
             }
 
-            const toolResult = executeToolCall(toolCall);
+            const toolResult = this.toolRegistry.executeToolCall(toolCall);
 
             messages.push({
               role: 'tool',
