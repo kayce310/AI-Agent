@@ -11,6 +11,7 @@
 import { EventEmitter } from 'events';
 import { readFile } from 'fs/promises';
 import MemoryCore from './memory.js';
+import MemoryStore, { globalMemoryStore } from './memory-store.js';
 import ProviderRegistry from './provider-registry.js';
 import PromptBuilder from './prompt-builder.js';
 import { ToolRegistry, getDefaultRegistry } from './tool-registry.js';
@@ -73,6 +74,32 @@ export class Engine extends EventEmitter {
     this.agent.on('cascade', (data: any) => {
       this.emit('cascade', data);
     });
+
+    // Initialize MemoryStore
+    await globalMemoryStore.init();
+
+    // Register automatic memory hooks on Agent
+    // Memory hook: save tool results as task-type blocks
+    this.agent.onEvent('tool:result', async (data) => {
+      const sessionId = (data.sessionId as string) || 'default';
+      const toolName = (data.toolName as string) || 'unknown';
+      const result = JSON.stringify(data.result);
+      if (result && result !== 'undefined' && result !== 'null') {
+        await globalMemoryStore.add('task', `Tool ${toolName}: ${result.substring(0, 500)}`, {
+          tags: ['tool_result', toolName],
+          sessionId,
+        });
+      }
+    }, 100);
+
+    // Memory hook: save assistant responses as persona-type blocks
+    this.agent.onEvent('model:response', async (data) => {
+      const sessionId = (data.sessionId as string) || 'default';
+      if (data.finishReason === 'stop') {
+        // Final response is saved by saveMessage — no need to duplicate
+        return;
+      }
+    }, 100);
 
     // Load Kato Identity Files
     const identityParts: string[] = [];
