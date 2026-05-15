@@ -40,9 +40,24 @@ export interface AgentHook {
   priority?: number; // higher = runs first, default 0
 }
 
+// ── Guard Types ──
+export interface GuardResult {
+  allowed: boolean;
+  reason?: string;
+}
+
+export type GuardHandler = (context: HookContext) => Promise<GuardResult>;
+
+export interface AgentGuard {
+  event: EventType;
+  handler: GuardHandler;
+  priority?: number;
+}
+
 // ── HookRegistry ──
 export class HookRegistry {
   private hooks = new Map<EventType, AgentHook[]>();
+  private guards = new Map<EventType, AgentGuard[]>();
 
   /**
    * Register a hook for a specific event type.
@@ -65,18 +80,66 @@ export class HookRegistry {
   }
 
   /**
-   * Emit an event, calling all registered handlers in priority order.
-   * All handlers run sequentially (await) so they don't race.
+   * Register a guard for a specific event type.
+   * Guards run BEFORE regular hooks. If ANY guard returns
+   * { allowed: false }, the entire event is blocked:
+   * no further guards or hooks run, and emit() returns false.
+   * Returns an unsubscribe function.
    */
-  async emit(event: EventType, data: Record<string, unknown> = {}): Promise<void> {
-    const handlers = this.hooks.get(event);
-    if (!handlers || handlers.length === 0) return;
+  before(event: EventType, handler: GuardHandler, priority = 0): () => void {
+    const guard: AgentGuard = { event, handler, priority };
+    const existing = this.guards.get(event) || [];
+    existing.push(guard);
+    existing.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+    this.guards.set(event, existing);
 
+    return () => {
+      const idx = (this.guards.get(event) || []).indexOf(guard);
+      if (idx !== -1) {
+        this.guards.get(event)!.splice(idx, 1);
+      }
+    };
+  }
+
+  /**
+   * Emit an event.
+   *
+   * 1. Guards run first (priority order).
+   *    If any guard returns { allowed: false }, emit returns false
+   *    and no hooks run.
+   * 2. Hooks run sequentially (priority order).
+   *
+   * @returns true if allowed (no guard blocked), false if blocked.
+   */
+  async emit(event: EventType, data: Record<string, unknown> = {}): Promise<boolean> {
     const ctx: HookContext = {
       event,
       timestamp: new Date().toISOString(),
       data,
     };
+
+    // ── Guards (run first) ──
+    const guards = this.guards.get(event);
+    if (guards && guards.length > 0) {
+      for (const guard of guards) {
+        try {
+          const result = await guard.handler(ctx);
+          if (!result.allowed) {
+            console.warn(`[GUARD:${event}] Blocked: ${result.reason ?? 'no reason'}`);
+            return false;
+          }
+        } catch (err) {
+          console.error(`[GUARD:${event}] Error in guard:`, err);
+          // Guard error → block by default (fail-closed)
+          console.warn(`[GUARD:${event}] Blocked due to guard error`);
+          return false;
+        }
+      }
+    }
+
+    // ── Hooks ──
+    const handlers = this.hooks.get(event);
+    if (!handlers || handlers.length === 0) return true;
 
     for (const hook of handlers) {
       try {
@@ -86,28 +149,36 @@ export class HookRegistry {
         // Don't throw — let other handlers run
       }
     }
+
+    return true;
   }
 
   /**
-   * Remove all hooks for a specific event type.
+   * Remove all hooks and guards for a specific event type,
+   * or clear everything if no event type is given.
    */
   clear(event?: EventType): void {
     if (event) {
       this.hooks.delete(event);
+      this.guards.delete(event);
     } else {
       this.hooks.clear();
+      this.guards.clear();
     }
   }
 
   /**
-   * List all registered event types and handler counts.
+   * List all registered event types with handler/guard counts.
    */
-  summary(): Record<EventType, number> {
+  summary(): Record<string, number> {
     const result: Record<string, number> = {};
-    for (const [event, handlers] of this.hooks.entries()) {
-      result[event] = handlers.length;
+    const allEvents = new Set([...this.hooks.keys(), ...this.guards.keys()]);
+    for (const event of allEvents) {
+      const hCount = this.hooks.get(event)?.length ?? 0;
+      const gCount = this.guards.get(event)?.length ?? 0;
+      result[event] = hCount + gCount;
     }
-    return result as Record<EventType, number>;
+    return result;
   }
 }
 

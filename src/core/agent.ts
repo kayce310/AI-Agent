@@ -11,7 +11,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { HookRegistry, globalHooks, EventType } from './hooks.js';
+import { HookRegistry, globalHooks, EventType, GuardHandler } from './hooks.js';
 import { ModelRouter } from './model-adapter.js';
 import { ToolRegistry } from './tool-registry.js';
 import { selectRelevantTools, estimateToolsTokenCount } from './tool-pruner.js';
@@ -68,6 +68,15 @@ export class Agent extends EventEmitter {
     return this.hooks.on(event, async (ctx) => {
       await handler(ctx.data);
     }, priority);
+  }
+
+  /**
+   * Register a guard for a specific event type.
+   * Guards run BEFORE hooks. If any guard returns { allowed: false },
+   * the event is blocked.
+   */
+  onBefore(event: EventType, handler: GuardHandler, priority = 0): () => void {
+    return this.hooks.before(event, handler, priority);
   }
 
   /**
@@ -219,12 +228,24 @@ export class Agent extends EventEmitter {
               continue;
             }
 
-            await this.hooks.emit('tool:call', {
+            const allowed = await this.hooks.emit('tool:call', {
               sessionId: request.sessionId,
               toolName: toolCall.function.name,
               toolArgs: toolCall.function.arguments,
               cycle: toolCallCycles,
             });
+
+            // If guard blocked execution, skip this tool call
+            if (!allowed) {
+              messages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: JSON.stringify({
+                  error: `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`,
+                }),
+              });
+              continue;
+            }
 
             const toolResult = this.toolRegistry.executeToolCall(toolCall);
 
