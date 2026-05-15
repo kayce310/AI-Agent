@@ -4,10 +4,10 @@
  * Giảm payload từ 14 tools (~5k tokens) → 4-7 tools (~1.5k tokens)
  */
 
-import { TOOLS_DEFINITION } from './tools.js';
+import { getDefaultRegistry } from './tool-registry.js';
 
 // Tools được phân loại theo ngữ cảnh sử dụng
-const TOOL_CATEGORIES: Record<string, string[]> = {
+export const TOOL_CATEGORIES: Record<string, string[]> = {
   // Luôn gửi (core navigation)
   core: ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page'],
   
@@ -62,6 +62,21 @@ function detectContext(message: string): string[] {
   return activeCategories;
 }
 
+// ── Cached tool definitions (lazy-init from ToolRegistry) ──
+let _cachedDefinitions: any[] | null = null;
+let _registryInitPromise: Promise<any[]> | null = null;
+
+async function loadDefinitionsFromRegistry(): Promise<any[]> {
+  if (_cachedDefinitions) return _cachedDefinitions;
+  try {
+    const registry = await getDefaultRegistry();
+    _cachedDefinitions = registry.getDefinitions();
+    return _cachedDefinitions;
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Lọc tools definitions dựa vào context
  * @param userMessage Message người dùng để detect context
@@ -76,9 +91,23 @@ export function selectRelevantTools(userMessage: string): any[] {
     if (tools) tools.forEach(t => allowedToolNames.add(t));
   }
   
-  return TOOLS_DEFINITION.filter(tool => 
+  // Try to load definitions synchronously if cached, or start async init
+  if (!_registryInitPromise) {
+    _registryInitPromise = loadDefinitionsFromRegistry();
+  }
+  
+  // Use cached definitions if available, otherwise fallback to empty
+  const definitions = _cachedDefinitions || [];
+  return definitions.filter((tool: any) => 
     allowedToolNames.has(tool.function.name)
   );
+}
+
+/**
+ * Pre-load tool definitions from registry (call during app startup)
+ */
+export async function ensureToolDefinitionsLoaded(): Promise<void> {
+  await loadDefinitionsFromRegistry();
 }
 
 /**

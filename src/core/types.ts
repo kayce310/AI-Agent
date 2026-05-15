@@ -58,6 +58,8 @@ export interface EngineRequest {
   constraints?: RequestConstraints;
   /** Tầng 2: Context Files — file bắt buộc phải đọc trước */
   requiredContextFiles?: string[];
+  /** System prompt override — nếu không cung cấp, Engine sẽ build tự động */
+  systemPrompt?: string;
 }
 
 /** Đầu ra chuẩn của Engine */

@@ -30,6 +30,7 @@ export interface ModelResponse {
   tokenUsage?: { input: number; output: number };
   toolCalls?: any[];
   finishReason?: string;
+  reasoningContent?: string;
 }
 
 export interface ModelAdapter {
