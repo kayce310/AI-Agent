@@ -16,6 +16,7 @@ import { ModelRouter } from './model-adapter.js';
 import { ToolRegistry } from './tool-registry.js';
 import { selectRelevantTools, estimateToolsTokenCount } from './tool-pruner.js';
 import { evolutionEngine } from './evolution.js';
+import { Tracer } from './tracer.js';
 import { EngineRequest, EngineResponse, ChatMessage } from './types.js';
 
 // ── Constants ──
@@ -26,6 +27,7 @@ export interface AgentConfig {
   modelRouter: ModelRouter;
   toolRegistry: ToolRegistry;
   hooks?: HookRegistry;
+  tracer?: Tracer;
   maxToolCycles?: number;
   debug?: boolean;
 }
@@ -44,6 +46,7 @@ export class Agent extends EventEmitter {
   private modelRouter: ModelRouter;
   private toolRegistry: ToolRegistry;
   private hooks: HookRegistry;
+  private tracer?: Tracer;
   private maxToolCycles: number;
   private debug: boolean;
 
@@ -52,8 +55,14 @@ export class Agent extends EventEmitter {
     this.modelRouter = config.modelRouter;
     this.toolRegistry = config.toolRegistry;
     this.hooks = config.hooks ?? globalHooks;
+    this.tracer = config.tracer;
     this.maxToolCycles = config.maxToolCycles ?? MAX_TOOL_CALL_CYCLES;
     this.debug = config.debug ?? false;
+
+    // Auto-attach tracer to hooks if provided
+    if (this.tracer) {
+      this.tracer.attachToHooks(this.hooks);
+    }
   }
 
   get hookRegistry(): HookRegistry {

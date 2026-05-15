@@ -2,117 +2,45 @@
   "version": "1.0",
   "errors": [
     {
-      "modelId": "3",
-      "errorType": "PROVIDER_DOWN",
-      "errorMessage": "Connection error.",
-      "stackTrace": "Error: Connection error.\n    at OpenAI.makeRequest (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:792:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OpenAIBackedProvider.invoke (E:\\Test\\AI-Agent\\src\\core\\provider-registry.ts:48:22)\n    at async Engine.process (E:\\Test\\AI-Agent\\src\\core\\engine.ts:158:26)\n    at async Client.<anonymous> (E:\\Test\\AI-Agent\\src\\modules\\discord\\index.ts:126:26)",
-      "sessionId": "1503299844402577479",
-      "contextSnippet": "thông tin trong tháng 5/2026 <@1483642147382231150> nguồn tin cậy hơn như fanpage chính thức",
-      "fingerprint": "0b57a8aee3af",
-      "timestamp": "2026-05-13T06:36:17.332Z"
-    },
-    {
-      "modelId": "4",
-      "errorType": "PROVIDER_DOWN",
-      "errorMessage": "400 No active credentials for provider: deepseek",
-      "stackTrace": "Error: 400 No active credentials for provider: deepseek\n    at APIError.generate (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\core\\error.ts:73:14)\n    at OpenAI.makeStatusError (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:591:28)\n    at OpenAI.makeRequest (E:\\Test\\AI-Agent\\node_modules\\openai\\src\\client.ts:872:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async OpenAIBackedProvider.invoke (E:\\Test\\AI-Agent\\src\\core\\provider-registry.ts:48:22)\n    at async Engine.process (E:\\Test\\AI-Agent\\src\\core\\engine.ts:159:26)\n    at async Client.<anonymous> (E:\\Test\\AI-Agent\\src\\modules\\discord\\index.ts:126:26)",
-      "sessionId": "1503299844402577479",
-      "contextSnippet": "<@1483642147382231150>  xong chưa?",
-      "fingerprint": "075989e98978",
-      "timestamp": "2026-05-15T09:19:48.228Z"
-    },
-    {
-      "modelId": "SYSTEM",
-      "errorType": "SECONDARY_WORKSPACE_CONFLICT",
-      "errorMessage": "Kato ghi processed-files.json vào `knowledge/wiki/knowledge/workspace/processed-files.json` thay vì `knowledge/workspace/processed-files.json` (CLINE.md violation). Fix: merge entry (Tai-lieu-he-thong.pdf) vào CLINE's file + xoá secondary workspace.",
-      "stackTrace": "Audit 2026-05-15: Get-ChildItem phát hiện 2 processed-files.json. Kato's (702 bytes, 1 entry) vs CLINE's (4710 bytes, 20 entries). Root cause: Kato dùng path tương đối theo workspace của nó thay vì từ gốc repo.",
-      "sessionId": "audit-2026-05-15",
-      "contextSnippet": "CLINE.md Line 17 quy định `knowledge/workspace/processed-files.json` nhưng Kato ghi vào `knowledge/wiki/knowledge/workspace/processed-files.json`. Cùng bug chain với nested wiki (2026-05-14) và role-architecture confusion (CLINE vs Cline IDE).",
-      "fingerprint": "secondary-workspace-conflict-001",
-      "timestamp": "2026-05-15T19:17:00.000Z"
-    },
-    {
-      "modelId": "SYSTEM",
-      "errorType": "CLINE_MD_STALE_REFERENCE",
-      "errorMessage": "CLINE.md Line 9 ghi `state.md` nhưng thực tế là `state.json`. Đã fix đồng bộ.",
-      "stackTrace": "Audit 2026-05-15: So sánh CLINE.md Line 9 vs thực tế file system.",
-      "sessionId": "audit-2026-05-15",
-      "contextSnippet": "Line 9: 'Dùng kato-state-manager để đọc/ghi knowledge/workspace/state.md' — state.md không tồn tại.",
-      "fingerprint": "cline-md-stale-ref-001",
-      "timestamp": "2026-05-15T19:17:00.000Z"
-    },
-    {
-      "modelId": "SYSTEM",
-      "errorType": "NESTED_WIKI_RESIDUAL",
-      "errorMessage": "agent-errors.md còn sót trong `knowledge/wiki/knowledge/wiki/core/` sau lần fix 2026-05-14 16:59. Xoá sạch.",
-      "stackTrace": "Audit 2026-05-15: Kato dùng `knowledge/wiki/knowledge/` thay vì `knowledge/wiki/` làm base.",
-      "sessionId": "audit-2026-05-15",
-      "contextSnippet": "Fix một phần ở 2026-05-14: xoá knowledge/wiki/knowledge/wiki/ (stubs + state.json) nhưng sót agent-errors.md.",
-      "fingerprint": "nested-wiki-residual-001",
-      "timestamp": "2026-05-15T19:17:00.000Z"
+      "modelId": "tracer",
+      "errorType": "TOOL_EXECUTION",
+      "errorMessage": "boom",
+      "stackTrace": "Error: boom\n    at <anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:128:15)\n    at Tracer.trace (E:\\Test\\AI-Agent\\src\\core\\tracer.ts:128:28)\n    at <anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:127:20)\n    at waitForActual (node:assert:632:21)\n    at strict.rejects (node:assert:769:31)\n    at TestContext.<anonymous> (E:\\Test\\AI-Agent\\tests\\tracer.test.ts:126:18)\n    at Test.runInAsyncScope (node:async_hooks:228:14)\n    at Test.run (node:internal/test_runner/test:1118:25)\n    at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)\n    at Test.postRun (node:internal/test_runner/test:1247:19)",
+      "sessionId": "tracer",
+      "contextSnippet": "",
+      "fingerprint": "a72dfb4c8e68",
+      "timestamp": "2026-05-15T17:01:57.874Z"
     }
   ],
-  "rules": [
-    {
-      "id": "rate-limit-cooldown",
-      "pattern": "rate limit|429|Too Many Requests",
-      "action": "add_cooldown",
-      "value": 12,
-      "threshold": 3,
-      "description": "Rate limit xảy ra 3 lần → tăng cooldown từ 6h lên 12h",
-      "active": false
-    },
-    {
-      "id": "provider-down-fallback",
-      "pattern": "connect ETIMEDOUT|ECONNREFUSED|ENOTFOUND|network error",
-      "action": "use_fallback",
-      "value": "openai/gpt-3.5-turbo",
-      "threshold": 2,
-      "description": "Provider down 2 lần → tự động chuyển sang GPT-3.5 fallback",
-      "active": false
-    },
-    {
-      "id": "tool-execution-retry",
-      "pattern": "Error executing|tool_call|function_call",
-      "action": "retry_less",
-      "value": 1,
-      "threshold": 5,
-      "description": "Tool execution lỗi 5 lần → giảm số lần retry xuống 1",
-      "active": false
-    },
-    {
-      "id": "parse-error-skip",
-      "pattern": "Invalid API response|JSON parse|format|missing field",
-      "action": "skip_model",
-      "value": "",
-      "threshold": 3,
-      "description": "Parse error 3 lần → skip model đó tự động (bao gồm missing field name)",
-      "active": false
-    }
-  ],
+  "rules": [],
   "modelPerformance": {
-    "3": {
+    "gpt-4": {
       "totalCalls": 2,
+      "failedCalls": 0,
+      "lastFailure": null,
+      "avgResponseTime": 2.5,
+      "errorTypes": {}
+    },
+    "tracer": {
+      "totalCalls": 0,
       "failedCalls": 1,
-      "lastFailure": "2026-05-13T06:36:17.332Z",
+      "lastFailure": "2026-05-15T17:01:57.874Z",
       "avgResponseTime": 0,
       "errorTypes": {
-        "PROVIDER_DOWN": 1
+        "TOOL_EXECUTION": 1
       }
     },
-    "4": {
-      "totalCalls": 30,
-      "failedCalls": 1,
-      "lastFailure": "2026-05-15T09:19:48.228Z",
+    "a": {
+      "totalCalls": 1,
+      "failedCalls": 0,
+      "lastFailure": null,
       "avgResponseTime": 0,
-      "errorTypes": {
-        "PROVIDER_DOWN": 1
-      }
+      "errorTypes": {}
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-15T19:17:00.000Z",
-    "totalErrorsTracked": 5,
+    "lastUpdated": "2026-05-15T17:01:57.874Z",
+    "totalErrorsTracked": 1,
     "activeRules": 0
   }
 }
