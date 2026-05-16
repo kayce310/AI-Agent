@@ -59,4 +59,20 @@ git status --porcelain
 
 ---
 
-*Generated: 2026-05-15 | v1.0 | Anti-Overflow Protocol*
+## Master Roadmap (Phase 4+)
+
+> File tham chiếu chính cho toàn bộ lộ trình sau Phase 3:
+> **`knowledge/blueprints/kato-roadmap-phases-4-8.md`**
+
+File này chứa:
+- **Phase 4** — Memory Layer (Mem0 + Letta) + MCP Protocol Integration
+- **Phase 5** — Deterministic Orchestration (Bernstein-style decompose-first)
+- **Phase 6** — Observability (Langfuse) + Security (PromptFoo) + LiteLLM Gateway
+- **Phase 7** — SOP Pipeline Engine + 21 Agentic Design Patterns
+- **Phase 8** — Sandboxed Execution + Guardrails + Performance Tuning
+- **Impact analysis**: data bloat, storage growth, performance tradeoffs
+- **Target architecture flow**: từ input guard → decompose → execute → synthesize → output guard
+
+---
+
+*Generated: 2026-05-16 | v1.1 | Master Roadmap integrated*

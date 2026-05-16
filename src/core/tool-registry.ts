@@ -176,6 +176,13 @@ export class ToolRegistry {
   }
 
   /**
+   * Get all registered tool objects (name, description, schema).
+   */
+  getAllTools(): Tool[] {
+    return Array.from(this.toolsMap.values());
+  }
+
+  /**
    * Get count of registered tools.
    */
   get toolCount(): number {

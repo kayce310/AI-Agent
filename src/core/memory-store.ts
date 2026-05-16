@@ -1,22 +1,24 @@
 /**
- * Kato Agent — Memory Store (ADD-only + Multi-signal Retrieval)
- * Phase 3.4 — Memory Architecture Upgrade
+ * Kato Agent — Memory Store (ADD-only + Append-Log Persistence)
+ * Phase 4.0b — MemoryLog integration
  *
  * Replace cho MemoryCore legacy với:
  * - ADD-only pattern: không update/delete, chỉ append
  * - Multi-signal retrieval: text similarity + type filter + time range
- * - Structured MemoryBlock với entities/tags/timestamp
- * - Dual-write mode: vừa ghi vào store mới, vừa sync với legacy memory.ts
+ * - Append-log persistence (O(1) per write, durable, replayable)
+ * - Periodic snapshot để tránh replay quá dài
+ * - Legacy store.json backup cho backward compat
  *
  * Migration path:
- *   1. Tạo memory-store.ts mới (file này)
- *   2. Engine dùng cả 2: legacy để đọc history cũ, new để ghi memory mới
- *   3. Sau 1 thời gian → drop legacy
+ *   1. Tạo memory-store.ts mới (file này) với MemoryLog
+ *   2. Legacy file store.json vẫn được ghi như backup
+ *   3. Sau 1 thời gian → drop store.json, chỉ dùng append-log
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import 'dotenv/config';
+import { MemoryLog, createMemoryLog } from './memory-log.js';
 
 // ── Constants ──
 const DEFAULT_STORE_PATH = './knowledge/memory-store';
@@ -65,6 +67,7 @@ export class MemoryStore {
   private storePath: string;
   private blocks: MemoryBlock[] = [];
   private loaded = false;
+  private log!: MemoryLog;
 
   constructor(storePath?: string) {
     this.storePath = storePath || process.env.MEMORY_STORE_PATH || DEFAULT_STORE_PATH;
@@ -81,9 +84,26 @@ export class MemoryStore {
       console.warn(`⚠️ MemoryStore: cannot create directory: ${err.message}`);
     }
 
-    await this.loadFromDisk();
+    // Initialize append-log persistence
+    this.log = await createMemoryLog(this.storePath);
+
+    // Replay từ log (snapshot + append replay)
+    this.blocks = await this.log.replay();
+
+    // Fallback: nếu log trống, thử load từ legacy store.json
+    if (this.blocks.length === 0) {
+      await this.loadFromDisk();
+
+      // Nếu có legacy data, migrate vào log
+      if (this.blocks.length > 0) {
+        console.log(`🔄 Migrating ${this.blocks.length} legacy blocks to append-log...`);
+        await this.log.append({ op: 'addMany', blocks: this.blocks });
+        await this.log.createSnapshot(this.blocks);
+      }
+    }
+
     this.loaded = true;
-    console.log(`🧠 MemoryStore initialized at ${this.storePath} (${this.blocks.length} blocks loaded)`);
+    console.log(`🧠 MemoryStore initialized at ${this.storePath} (${this.blocks.length} blocks loaded, log seq=${this.log.getStats().lastSeq})`);
   }
 
   // ── ADD-only Write ──
@@ -91,6 +111,7 @@ export class MemoryStore {
   /**
    * Thêm một memory block mới (ADD-only — không update, không delete).
    * Tự động tạo ID và timestamp.
+   * Ghi vào append-log (O(1)) và tạo snapshot periodic.
    */
   async add(
     type: MemoryBlockType,
@@ -117,9 +138,12 @@ export class MemoryStore {
 
     this.blocks.push(block);
 
-    // Auto-flush nếu blocks tích lũy đủ
-    if (this.blocks.length % MAX_BLOCKS_PER_FILE === 0) {
-      await this.flush();
+    // Ghi vào append-log (O(1))
+    await this.log.append({ op: 'add', block });
+
+    // Tạo snapshot nếu cần (periodic: mỗi 1000 ops)
+    if (this.log.shouldSnapshot()) {
+      await this.log.createSnapshot(this.blocks);
     }
 
     return block;
@@ -142,8 +166,12 @@ export class MemoryStore {
       results.push(block);
     }
 
-    if (this.blocks.length % MAX_BLOCKS_PER_FILE === 0) {
-      await this.flush();
+    // Ghi batch vào append-log (O(1))
+    await this.log.append({ op: 'addMany', blocks: results });
+
+    // Tạo snapshot nếu cần (periodic)
+    if (this.log.shouldSnapshot()) {
+      await this.log.createSnapshot(this.blocks);
     }
 
     return results;
@@ -240,41 +268,21 @@ export class MemoryStore {
   // ── Persistence ──
 
   /**
-   * Ghi tất cả blocks xuống disk ngay lập tức.
+   * Đồng bộ memory xuống disk.
+   * Phase 4.0b: Dùng append-log (O(1) snapshot) + backup store.json.
    */
   async flush(): Promise<void> {
     try {
       await fs.mkdir(this.storePath, { recursive: true });
 
-      // Chia nhỏ file nếu quá nhiều blocks
-      if (this.blocks.length <= MAX_BLOCKS_PER_FILE) {
-        const filePath = path.join(this.storePath, 'store.json');
-        await fs.writeFile(filePath, JSON.stringify(this.blocks, null, 2), 'utf8');
-      } else {
-        // Split thành nhiều file theo batches
-        const batches = Math.ceil(this.blocks.length / MAX_BLOCKS_PER_FILE);
-        for (let i = 0; i < batches; i++) {
-          const start = i * MAX_BLOCKS_PER_FILE;
-          const end = start + MAX_BLOCKS_PER_FILE;
-          const batch = this.blocks.slice(start, end);
-          const filePath = path.join(this.storePath, `store-${i}.json`);
-          await fs.writeFile(filePath, JSON.stringify(batch, null, 2), 'utf8');
-        }
-
-        // Ghi manifest
-        const manifest = {
-          version: 1,
-          totalBlocks: this.blocks.length,
-          batchCount: batches,
-          blocksPerFile: MAX_BLOCKS_PER_FILE,
-          updatedAt: new Date().toISOString(),
-        };
-        await fs.writeFile(
-          path.join(this.storePath, 'manifest.json'),
-          JSON.stringify(manifest, null, 2),
-          'utf8',
-        );
+      // 1. Tạo snapshot từ append-log
+      if (this.blocks.length > 0) {
+        await this.log.createSnapshot(this.blocks);
       }
+
+      // 2. Backup: vẫn ghi store.json để tương thích legacy readers
+      const filePath = path.join(this.storePath, 'store.json');
+      await fs.writeFile(filePath, JSON.stringify(this.blocks, null, 2), 'utf8');
     } catch (err: any) {
       console.error(`❌ MemoryStore flush failed:`, err.message);
     }
@@ -349,12 +357,15 @@ export class MemoryStore {
    */
   async clear(): Promise<void> {
     this.blocks = [];
+    await this.log.append({ op: 'clear' });
+    await this.log.createSnapshot(this.blocks);
     await this.flush();
   }
 
-  /** Đóng store: flush trước khi shutdown */
+  /** Đóng store: flush + close log trước khi shutdown */
   async close(): Promise<void> {
     await this.flush();
+    await this.log.close();
     this.loaded = false;
   }
 

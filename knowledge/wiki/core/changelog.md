@@ -39,6 +39,35 @@ Context window model 264k thường bị overflow khi rebuild project lớn → 
 
 ---
 
+# [2026-05-16 12:44] — Reassessment: Roadmap v2.0 sau khi audit codebase thực tế
+
+## Context
+Plan v1.1 (đọc lại từ CLINE.md + 9router-select.ps1 + focus_chain) có 3 giả định stale:
+1. tools.ts (1444 lines) cần refactor → thực tế tools.ts chỉ còn **47 lines**, 9 plugin files đã tách hoàn chỉnh
+2. memory-store.ts dùng `fs.writeFileSync` overwrite → thực tế dùng `fs.writeFile` async + ADD-only in-memory đã đúng
+3. model-adapter chưa có → thực tế đã có ModelRouter + 5 adapters (458 lines)
+
+## Audit findings
+| Item | Phát hiện | Action |
+|------|-----------|--------|
+| tools.ts | 1444→47 lines, 9 plugins tách rời | ❌ Stale — xoá khỏi plan |
+| memory-store | ADD-only in-memory đúng, persistence full-rewrite | ⚠️ Cần append-log |
+| ADR | Chưa có file architecture-decisions.md | ✅ Vẫn là gap |
+| Block types | Thiếu 'world' type | ⚠️ Cần thêm |
+| model-adapter | Đã có 5 adapters + ModelRouter | ❌ Stale — không phải gap |
+| LiteLLM | Dễ thêm, không cần Phase riêng | 🟢 Minute-level task |
+| Patterns | ToolRegistry + HookRegistry = Strategy pattern | ⚠️ Pattern registry execution cần |
+
+## Files affected
+| File | Change |
+|------|--------|
+| `knowledge/blueprints/kato-roadmap-phases-4-8.md` | **REWRITE** — v2.0: loại bỏ 3 stale assumptions, priority matrix (P0/P1/P2), file impact summary, triển khai Phase 4.0 ngay |
+
+## Next
+Bắt đầu Phase 4.0a: ADR → memory-log append-log → MCP client → rotation policy
+
+---
+
 # [2026-05-15 19:17] — Full Audit: Workspace Path Conflict + CLINE.md Violations + Nested Wiki
 
 ## Phát hiện (sau audit toàn diện)
