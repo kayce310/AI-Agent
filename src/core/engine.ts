@@ -21,6 +21,8 @@ import { evolutionEngine } from './evolution.js';
 import { ModelRouter, buildDefaultRouter } from './model-adapter.js';
 import { Agent, AgentConfig } from './agent.js';
 import { HookRegistry, globalHooks } from './hooks.js';
+import { Orchestrator } from './orchestrator.js';
+import { ModelAdapter } from './model-adapter.js';
 
 // ── Kato Core Identity Files ──
 const KATO_IDENTITY_FILES = [
@@ -36,6 +38,7 @@ export class Engine extends EventEmitter {
   private katoIdentityContext: string = '';
   private toolRegistry!: ToolRegistry;
   private agent!: Agent;
+  private orchestrator!: Orchestrator;
   private hooks: HookRegistry;
 
   constructor(registry?: ProviderRegistry) {
@@ -63,7 +66,7 @@ export class Engine extends EventEmitter {
     // Build ModelRouter with registered adapters
     this.modelRouter = await buildDefaultRouter(this.registry);
 
-    // Create Agent instance for orchestration
+    // Create Agent instance for ReAct orchestration
     const agentConfig: AgentConfig = {
       modelRouter: this.modelRouter,
       toolRegistry: this.toolRegistry,
@@ -72,6 +75,22 @@ export class Engine extends EventEmitter {
       debug: false,
     };
     this.agent = new Agent(agentConfig);
+
+    // Create Orchestrator for deterministic decompose→execute→synthesize pipeline
+    // Wrap ModelRouter as a ModelAdapter since signatures are identical (route == invoke)
+    const orchestratorAdapter: ModelAdapter = {
+      name: 'orchestrator-router',
+      label: 'Orchestrator (ModelRouter wrapper)',
+      invoke: (messages, options) => this.modelRouter.route(messages, options),
+      estimateTokens: (messages) => this.modelRouter.estimateTokens(messages),
+      isAvailable: () => this.modelRouter.listAdapters().length > 0,
+    };
+    this.orchestrator = new Orchestrator({
+      model: orchestratorAdapter,
+      toolRegistry: this.toolRegistry,
+      hooks: this.hooks,
+      debug: false,
+    });
 
     // Forward Agent events to Engine consumers
     this.agent.on('cascade', (data: any) => {
@@ -135,7 +154,37 @@ export class Engine extends EventEmitter {
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
     });
 
-    // Prepare the request with system prompt for Agent
+    // ── Task-based routing: use Orchestrator when a structured task is provided ──
+    if (request.task && request.task.trim().length > 0) {
+      try {
+        const orchestratorResult = await this.orchestrator.run(
+          request.task,
+          systemPrompt,  // pass full system prompt as context
+        );
+
+        return {
+          content: orchestratorResult.content,
+          modelUsed: 'orchestrator-pipeline',
+          providerUsed: 'internal',
+        };
+      } catch (err: any) {
+        console.error(`❌ Orchestrator error:`, err.message);
+
+        evolutionEngine.recordError({
+          modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
+          errorType: 'ENGINE_ORCHESTRATOR_FAILED',
+          errorMessage: err.message,
+          stackTrace: err.stack,
+          sessionId: request.sessionId || 'unknown',
+          contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
+        }).catch(() => {});
+
+        // Fall back to Agent-based ReAct loop
+        console.warn('⚠️ Orchestrator failed, falling back to Agent ReAct loop');
+      }
+    }
+
+    // ── Agent-based ReAct loop (default / fallback) ──
     const agentRequest: EngineRequest = {
       ...request,
       systemPrompt,

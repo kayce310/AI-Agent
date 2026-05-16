@@ -23,7 +23,14 @@ export type EventType =
   | 'model:response'
   | 'model:error'
   | 'skill:load'
-  | 'skill:unload';
+  | 'skill:unload'
+  // Phase 5.2 — Orchestrator events
+  | 'orchestrator:decompose-start'
+  | 'orchestrator:decompose-end'
+  | 'orchestrator:execute-start'
+  | 'orchestrator:execute-end'
+  | 'orchestrator:synthesize-start'
+  | 'orchestrator:synthesize-end';
 
 // ── Hook Context ──
 export interface HookContext {

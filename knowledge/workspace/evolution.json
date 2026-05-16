@@ -2,44 +2,29 @@
   "version": "1.0",
   "errors": [
     {
-      "modelId": "tracer",
-      "errorType": "TOOL_EXECUTION",
-      "errorMessage": "boom",
-      "stackTrace": "Error: boom\n    at E:/Test/AI-Agent/tests/tracer.test.ts:128:15\n    at Tracer.trace (E:/Test/AI-Agent/src/core/tracer.ts:128:28)\n    at E:/Test/AI-Agent/tests/tracer.test.ts:127:20\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)",
-      "sessionId": "tracer",
-      "contextSnippet": "",
-      "fingerprint": "a72dfb4c8e68",
-      "timestamp": "2026-05-16T11:35:53.384Z"
+      "modelId": "litellm",
+      "errorType": "ADAPTER_FAILED",
+      "errorMessage": "API error",
+      "sessionId": "model-router",
+      "contextSnippet": "Hello",
+      "fingerprint": "5cd00e970c1f",
+      "timestamp": "2026-05-16T15:16:28.064Z"
     }
   ],
   "rules": [],
   "modelPerformance": {
-    "gpt-4": {
+    "litellm": {
       "totalCalls": 1,
-      "failedCalls": 0,
-      "lastFailure": null,
-      "avgResponseTime": 0,
-      "errorTypes": {}
-    },
-    "tracer": {
-      "totalCalls": 0,
       "failedCalls": 1,
-      "lastFailure": "2026-05-16T11:35:53.384Z",
+      "lastFailure": "2026-05-16T15:16:28.064Z",
       "avgResponseTime": 0,
       "errorTypes": {
-        "TOOL_EXECUTION": 1
+        "ADAPTER_FAILED": 1
       }
-    },
-    "a": {
-      "totalCalls": 1,
-      "failedCalls": 0,
-      "lastFailure": null,
-      "avgResponseTime": 0,
-      "errorTypes": {}
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-16T11:35:53.384Z",
+    "lastUpdated": "2026-05-16T15:16:28.064Z",
     "totalErrorsTracked": 1,
     "activeRules": 0
   }

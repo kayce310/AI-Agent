@@ -93,3 +93,80 @@ export interface CascadeEvent {
   errorMessage?: string;
   tier?: number;
 }
+
+// ── Phase 6.2: Eval Engine Types (PromptFoo-inspired) ──
+
+export type AssertionType = 'exact' | 'contains' | 'regex' | 'llm-graded' | 'similarity' | 'custom';
+
+export interface EvalAssertion {
+  type: AssertionType;
+  value: string;
+  threshold?: number;       // for similarity (0-1)
+  provider?: string;        // for llm-graded (model to use as judge)
+}
+
+export interface EvalTestCase {
+  name: string;
+  input: string;            // prompt to test
+  expected: string;         // expected output
+  assertions: EvalAssertion[];
+  vars?: Record<string, string>; // template variables
+}
+
+export interface EvalSuite {
+  name: string;
+  prompts: string[];        // prompt variants
+  models: string[];         // models to test against
+  tests: EvalTestCase[];
+  description?: string;
+}
+
+export interface EvalTestResult {
+  testName: string;
+  passed: boolean;
+  assertionType: AssertionType;
+  expected: string;
+  actual: string;
+  error?: string;
+  durationMs: number;
+}
+
+export interface EvalResult {
+  suiteName: string;
+  prompt: string;
+  model: string;
+  passed: boolean;
+  totalTests: number;
+  passedTests: number;
+  durationMs: number;
+  testResults: EvalTestResult[];
+  timestamp: string;
+}
+
+// ── Phase 6.2: Security Scanner Types ──
+
+export type SecuritySeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface SecurityPattern {
+  name: string;
+  description: string;
+  severity: SecuritySeverity;
+  category: 'prompt-injection' | 'jailbreak' | 'data-leakage' | 'tool-abuse' | 'path-traversal';
+  detect(input: string): SecurityFinding | null;
+}
+
+export interface SecurityFinding {
+  patternName: string;
+  severity: SecuritySeverity;
+  category: string;
+  matchedText: string;
+  description: string;
+  position?: { start: number; end: number };
+}
+
+export interface SecurityScanResult {
+  passed: boolean;
+  findings: SecurityFinding[];
+  inputLength: number;
+  scannedAt: string;
+}
