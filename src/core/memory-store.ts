@@ -27,7 +27,7 @@ const MAX_BLOCKS_PER_FILE = 500;
 // ── Types ──
 
 /** Loại memory block */
-export type MemoryBlockType = 'human' | 'persona' | 'session' | 'task' | 'fact';
+export type MemoryBlockType = 'human' | 'persona' | 'session' | 'task' | 'fact' | 'world';
 
 /** Một block memory bất biến (ADD-only) */
 export interface MemoryBlock {
