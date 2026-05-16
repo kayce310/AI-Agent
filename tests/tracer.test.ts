@@ -5,8 +5,7 @@
  * Tests: span lifecycle, nested spans, ring buffer, exports, anomaly detection, hook integration.
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, assert } from 'vitest';
 import { Tracer, TraceSpan, Anomaly, createAgentTracer } from '../src/core/tracer.js';
 import { HookRegistry, HookContext } from '../src/core/hooks.js';
 
@@ -123,12 +122,16 @@ describe('Tracer — Nested Spans', () => {
 
   it('should trace a closure and record error', async () => {
     const tracer = new Tracer();
-    await assert.rejects(
-      () => tracer.trace('fail', 'tool', async () => {
+    let thrown = false;
+    try {
+      await tracer.trace('fail', 'tool', async () => {
         throw new Error('boom');
-      }),
-      /boom/,
-    );
+      });
+    } catch (err: any) {
+      thrown = true;
+      assert.ok(err.message.includes('boom'));
+    }
+    assert.ok(thrown, 'Expected error to be thrown');
 
     const spans = tracer.getSpansByType('tool');
     assert.equal(spans.length, 1);

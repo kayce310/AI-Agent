@@ -57,6 +57,9 @@ export class Engine extends EventEmitter {
     // Pre-load tool definitions into tool-pruner cache
     await ensureToolDefinitionsLoaded();
 
+    // Wire EvolutionEngine to HookRegistry for auto-error tracking
+    evolutionEngine.attachToHooks(this.hooks);
+
     // Build ModelRouter with registered adapters
     this.modelRouter = await buildDefaultRouter(this.registry);
 

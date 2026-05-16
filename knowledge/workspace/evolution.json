@@ -5,11 +5,11 @@
       "modelId": "tracer",
       "errorType": "TOOL_EXECUTION",
       "errorMessage": "boom",
-      "stackTrace": "Error: boom\n    at E:/Test/AI-Agent/tests/tracer.test.ts:128:15\n    at Tracer.trace (E:/Test/AI-Agent/src/core/tracer.ts:128:28)\n    at E:/Test/AI-Agent/tests/tracer.test.ts:127:20\n    at waitForActual (node:assert:632:21)\n    at strict.rejects (node:assert:769:31)\n    at TestContext.<anonymous> (E:/Test/AI-Agent/tests/tracer.test.ts:126:18)\n    at Test.runInAsyncScope (node:async_hooks:228:14)\n    at Test.run (node:internal/test_runner/test:1118:25)\n    at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)\n    at Test.postRun (node:internal/test_runner/test:1247:19)",
+      "stackTrace": "Error: boom\n    at E:/Test/AI-Agent/tests/tracer.test.ts:128:15\n    at Tracer.trace (E:/Test/AI-Agent/src/core/tracer.ts:128:28)\n    at E:/Test/AI-Agent/tests/tracer.test.ts:127:20\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///E:/Test/AI-Agent/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)",
       "sessionId": "tracer",
       "contextSnippet": "",
       "fingerprint": "a72dfb4c8e68",
-      "timestamp": "2026-05-15T18:03:51.703Z"
+      "timestamp": "2026-05-16T02:44:56.197Z"
     }
   ],
   "rules": [],
@@ -24,7 +24,7 @@
     "tracer": {
       "totalCalls": 0,
       "failedCalls": 1,
-      "lastFailure": "2026-05-15T18:03:51.703Z",
+      "lastFailure": "2026-05-16T02:44:56.197Z",
       "avgResponseTime": 0,
       "errorTypes": {
         "TOOL_EXECUTION": 1
@@ -39,7 +39,7 @@
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-15T18:03:51.703Z",
+    "lastUpdated": "2026-05-16T02:44:56.197Z",
     "totalErrorsTracked": 1,
     "activeRules": 0
   }

@@ -10,6 +10,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { createHash } from 'node:crypto';
+import { HookRegistry, HookContext } from './hooks.js';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -318,6 +319,44 @@ export class EvolutionEngine {
       ...this.state.meta,
       modelCount: Object.keys(this.state.modelPerformance).length,
     };
+  }
+
+  /**
+   * Attach to HookRegistry — auto-record errors from lifecycle events.
+   * Registers hooks for tool:error, model:error, task:error.
+   */
+  attachToHooks(hooks: HookRegistry): void {
+    hooks.on('tool:error', async (ctx: HookContext) => {
+      await this.recordError({
+        modelId: 'tool',
+        errorType: 'TOOL_EXECUTION',
+        errorMessage: (ctx.data.error as string) ?? JSON.stringify(ctx.data),
+        sessionId: (ctx.data.sessionId as string) ?? 'unknown',
+        contextSnippet: JSON.stringify(ctx.data).slice(0, 200),
+      });
+    });
+
+    hooks.on('model:error', async (ctx: HookContext) => {
+      await this.recordError({
+        modelId: (ctx.data.modelUsed as string) ?? 'unknown',
+        errorType: 'MODEL_ERROR',
+        errorMessage: (ctx.data.error as string) ?? JSON.stringify(ctx.data),
+        sessionId: (ctx.data.sessionId as string) ?? 'unknown',
+        contextSnippet: JSON.stringify(ctx.data).slice(0, 200),
+      });
+    });
+
+    hooks.on('task:error', async (ctx: HookContext) => {
+      await this.recordError({
+        modelId: 'task',
+        errorType: 'TASK_ERROR',
+        errorMessage: (ctx.data.error as string) ?? JSON.stringify(ctx.data),
+        sessionId: (ctx.data.sessionId as string) ?? 'unknown',
+        contextSnippet: JSON.stringify(ctx.data).slice(0, 200),
+      });
+    });
+
+    console.log('🧬 EvolutionEngine attached to HookRegistry');
   }
 
   /** Lấy danh sách errors gần đây */

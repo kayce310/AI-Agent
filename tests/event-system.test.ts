@@ -3,8 +3,7 @@
  * Phase 3.5 — HookRegistry + Guards + Integration
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, assert } from 'vitest';
 import { HookRegistry, globalHooks, EventType, HookContext, GuardHandler } from '../src/core/hooks.js';
 
 // ── Helper ──
@@ -89,10 +88,12 @@ describe('HookRegistry — Core', () => {
     const data = { toolName: 'read_file', result: 'ok' };
     await registry.emit('tool:result', data);
     assert.ok(capturedCtx !== null);
-    assert.equal(capturedCtx!.event, 'tool:result');
-    assert.ok(capturedCtx!.timestamp);
-    assert.equal(capturedCtx!.data.toolName, 'read_file');
-    assert.equal(capturedCtx!.data.result, 'ok');
+    const c = capturedCtx as HookContext;
+    assert.equal(c.event, 'tool:result');
+    assert.ok(c.timestamp);
+    const ctxData = c.data as { toolName: string; result: string };
+    assert.equal(ctxData.toolName, 'read_file');
+    assert.equal(ctxData.result, 'ok');
   });
 });
 
