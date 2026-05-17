@@ -170,3 +170,7 @@ export interface SecurityScanResult {
   inputLength: number;
   scannedAt: string;
 }
+
+// ── Block types for MemoryStore ──
+
+export type MemoryBlockType = 'task' | 'persona' | 'session' | 'context' | 'world';

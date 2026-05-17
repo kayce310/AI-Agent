@@ -26,6 +26,8 @@ import { ModelAdapter } from './model-adapter.js';
 import { PrivilegeGuard, createDefaultRules, createRestrictedAllowList } from './privilege-guard.js';
 import { ResponseCache } from './response-cache.js';
 import { Tracer } from './tracer.js';
+import { RateLimiter, RateLimiterGroup } from './rate-limiter.js';
+import { CostTracker } from './cost-tracker.js';
 
 // ── Kato Core Identity Files ──
 const KATO_IDENTITY_FILES = [
@@ -45,6 +47,7 @@ export class Engine extends EventEmitter {
   private hooks: HookRegistry;
   private privilegeGuard: PrivilegeGuard;
   private responseCache: ResponseCache<string>;
+  private rateLimiter: RateLimiterGroup;
 
   constructor(registry?: ProviderRegistry) {
     super();
@@ -60,6 +63,19 @@ export class Engine extends EventEmitter {
     this.responseCache = new ResponseCache<string>({
       maxSize: 500,
       defaultTTL: 5 * 60 * 1000,
+    });
+
+    // Initialize rate limiter: 60 requests/min, 100k tokens/min
+    this.rateLimiter = new RateLimiterGroup();
+    this.rateLimiter.add('requests', {
+      tokensPerInterval: 60,
+      intervalMs: 60_000,
+      maxBurst: 10,
+    });
+    this.rateLimiter.add('tokens', {
+      tokensPerInterval: 100_000,
+      intervalMs: 60_000,
+      maxBurst: 20_000,
     });
   }
 
@@ -154,8 +170,29 @@ export class Engine extends EventEmitter {
     this.katoIdentityContext = identityParts.join('\n\n');
 
     const adapters = this.modelRouter.listAdapters();
+    // ── Cold start warmup: pre-warm the primary model ──
+    this.warmup().catch(() => {});
+
     console.log(`✅ Engine initialized with ${adapters.length} model adapter(s): ${adapters.map(a => a.name).join(', ') || 'none'}`);
     console.log(`🧬 Evolution: ${evolutionEngine.getStats().totalErrorsTracked} errors tracked, ${evolutionEngine.getStats().activeRules} rules active`);
+  }
+
+  /**
+   * Warmup: send a minimal ping to the primary model to pre-load it.
+   * Non-blocking — fails silently.
+   */
+  private async warmup(): Promise<void> {
+    try {
+      const start = Date.now();
+      await this.modelRouter.route(
+        [{ role: 'user', content: 'ping' }],
+        { maxTokens: 10 },
+      );
+      const ms = Date.now() - start;
+      console.log(`🔥 Cold start warmup: ${ms}ms (model pre-loaded)`);
+    } catch {
+      // Silent — warmup is best-effort
+    }
   }
 
   /**
@@ -198,6 +235,15 @@ export class Engine extends EventEmitter {
   }
 
   async process(request: EngineRequest): Promise<EngineResponse> {
+    // Rate limit check — deny if exceeded
+    if (!this.rateLimiter.tryAll(1)) {
+      const states = this.rateLimiter.getAllStates();
+      return {
+        content: `❌ Rate limit exceeded. Requests: ${states.requests?.denied ?? 0} denied, Tokens: ${states.tokens?.denied ?? 0} denied. Try again later.`,
+        modelUsed: 'none',
+        providerUsed: 'rate-limiter',
+      };
+    }
     // Build system prompt
     const promptBuilder = new PromptBuilder();
     const systemPrompt = promptBuilder.buildSystem({

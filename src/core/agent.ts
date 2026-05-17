@@ -17,6 +17,7 @@ import { ToolRegistry } from './tool-registry.js';
 import { selectRelevantTools, estimateToolsTokenCount } from './tool-pruner.js';
 import { evolutionEngine } from './evolution.js';
 import { Tracer } from './tracer.js';
+import { Janitor } from './janitor.js';
 import { EngineRequest, EngineResponse, ChatMessage } from './types.js';
 
 // ── Constants ──
@@ -47,8 +48,9 @@ export class Agent extends EventEmitter {
   private toolRegistry: ToolRegistry;
   private hooks: HookRegistry;
   private tracer?: Tracer;
-  private maxToolCycles: number;
+private maxToolCycles: number;
   private debug: boolean;
+  private janitor?: Janitor;
 
   constructor(config: AgentConfig) {
     super();
@@ -63,6 +65,17 @@ export class Agent extends EventEmitter {
     if (this.tracer) {
       this.tracer.attachToHooks(this.hooks);
     }
+
+    // Wire Janitor to run post-execution verification on 'tool:result' events
+    this.janitor = new Janitor({ autoLint: false });
+    this.onEvent('task:complete', async (data) => {
+      // Non-blocking: don't hold up response for janitor
+      this.janitor!.testOnly().then(result => {
+        if (!result.passed) {
+          console.warn(`🧹 Janitor: ${result.failed} test(s) failed after execution`);
+        }
+      }).catch(() => {});
+    }, -100); // low priority — run last
   }
 
   get hookRegistry(): HookRegistry {
