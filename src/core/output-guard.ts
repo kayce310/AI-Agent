@@ -45,7 +45,7 @@ export interface OutputGuardConfig {
 
 // ── Patterns ──
 
-const API_KEY_PATTERN = /(?:sk|pk|api[_-]?key|secret|token)[\s_-]?(?:=|:)\s*['"]?[a-zA-Z0-9_-]{20,}/gi;
+const API_KEY_PATTERN = /(?:sk|pk|api[_-]?key|secret|token)[\s_-]?(?:=|:)\s*['"]?[a-zA-Z0-9_-]{20,}|(?:sk|pk)-[a-zA-Z0-9_-]{20,}/gi;
 const BEARER_PATTERN = /bearer\s+[a-zA-Z0-9._-]{20,}/gi;
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const IP_PATTERN = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
