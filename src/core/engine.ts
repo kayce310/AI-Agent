@@ -23,6 +23,9 @@ import { Agent, AgentConfig } from './agent.js';
 import { HookRegistry, globalHooks } from './hooks.js';
 import { Orchestrator } from './orchestrator.js';
 import { ModelAdapter } from './model-adapter.js';
+import { PrivilegeGuard, createDefaultRules, createRestrictedAllowList } from './privilege-guard.js';
+import { ResponseCache } from './response-cache.js';
+import { Tracer } from './tracer.js';
 
 // ── Kato Core Identity Files ──
 const KATO_IDENTITY_FILES = [
@@ -40,6 +43,8 @@ export class Engine extends EventEmitter {
   private agent!: Agent;
   private orchestrator!: Orchestrator;
   private hooks: HookRegistry;
+  private privilegeGuard: PrivilegeGuard;
+  private responseCache: ResponseCache<string>;
 
   constructor(registry?: ProviderRegistry) {
     super();
@@ -47,6 +52,15 @@ export class Engine extends EventEmitter {
     this.modelRouter = new ModelRouter();
     this.memory = new MemoryCore();
     this.hooks = globalHooks;
+    this.privilegeGuard = new PrivilegeGuard({
+      rules: createDefaultRules(),
+      restrictedMode: false,
+      restrictedAllowList: createRestrictedAllowList(),
+    });
+    this.responseCache = new ResponseCache<string>({
+      maxSize: 500,
+      defaultTTL: 5 * 60 * 1000,
+    });
   }
 
   async init(): Promise<void> {
@@ -62,6 +76,9 @@ export class Engine extends EventEmitter {
 
     // Wire EvolutionEngine to HookRegistry for auto-error tracking
     evolutionEngine.attachToHooks(this.hooks);
+
+    // Wire PrivilegeGuard as guard on tool:call events
+    this.privilegeGuard.attachToHooks(this.hooks);
 
     // Build ModelRouter with registered adapters
     this.modelRouter = await buildDefaultRouter(this.registry);
@@ -139,6 +156,45 @@ export class Engine extends EventEmitter {
     const adapters = this.modelRouter.listAdapters();
     console.log(`✅ Engine initialized with ${adapters.length} model adapter(s): ${adapters.map(a => a.name).join(', ') || 'none'}`);
     console.log(`🧬 Evolution: ${evolutionEngine.getStats().totalErrorsTracked} errors tracked, ${evolutionEngine.getStats().activeRules} rules active`);
+  }
+
+  /**
+   * Check if a tool is allowed by PrivilegeGuard.
+   * Exposed for testing.
+   */
+  checkPrivilege(toolName: string, tags?: string[]): { allowed: boolean; reason?: string } {
+    return this.privilegeGuard.check(toolName, tags);
+  }
+
+  /**
+   * Enable/disable restricted mode.
+   * Exposed for testing.
+   */
+  setRestrictedMode(enabled: boolean, allowList?: string[]): void {
+    this.privilegeGuard.setRestrictedMode(enabled, allowList);
+  }
+
+  /**
+   * Set restricted mode allow list.
+   * Exposed for testing.
+   */
+  setRestrictedAllowList(allowList: string[]): void {
+    this.privilegeGuard.setRestrictedMode(this.privilegeGuard.isRestrictedMode(), allowList);
+  }
+
+  /**
+   * Get response cache for performance.
+   * Exposed for testing.
+   */
+  getCache(): ResponseCache<string> {
+    return this.responseCache;
+  }
+
+  /**
+   * Get privilege guard reference.
+   */
+  getPrivilegeGuard(): PrivilegeGuard {
+    return this.privilegeGuard;
   }
 
   async process(request: EngineRequest): Promise<EngineResponse> {
