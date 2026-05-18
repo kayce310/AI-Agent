@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('CodeParser', () => {
   it('detects language from markdown fences', async () => {
-    const { CodeParser } = await import('../src/core/code-parser.js');
+    const { CodeParser } = await import('../src/core/agents/code-parser.js');
     const parser = new CodeParser();
 
     expect(parser.detectLanguage('```typescript\nconst x = 1;\n```')).toBe('typescript');
@@ -24,7 +24,7 @@ describe('CodeParser', () => {
   });
 
   it('strips markdown fences', async () => {
-    const { CodeParser } = await import('../src/core/code-parser.js');
+    const { CodeParser } = await import('../src/core/agents/code-parser.js');
     const parser = new CodeParser();
 
     const stripped = parser.stripFences('```typescript\nconst x = 1;\n```');
@@ -33,7 +33,7 @@ describe('CodeParser', () => {
   });
 
   it('strips fences without language tag', async () => {
-    const { CodeParser } = await import('../src/core/code-parser.js');
+    const { CodeParser } = await import('../src/core/agents/code-parser.js');
     const parser = new CodeParser();
 
     const stripped = parser.stripFences('```\nconst x = 1;\n```');
@@ -41,7 +41,7 @@ describe('CodeParser', () => {
   });
 
   it('returns empty string for empty fences', async () => {
-    const { CodeParser } = await import('../src/core/code-parser.js');
+    const { CodeParser } = await import('../src/core/agents/code-parser.js');
     const parser = new CodeParser();
 
     expect(parser.stripFences('')).toBe('');
@@ -50,7 +50,7 @@ describe('CodeParser', () => {
 
   describe('parseFunctions', () => {
     it('extracts regular function declarations', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```ts\nfunction hello(a: string, b: number) {\n  return a;\n}\n```');
@@ -62,7 +62,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts async functions', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```ts\nasync function fetchData(url: string) {\n  const res = await fetch(url);\n  return res.json();\n}\n```');
@@ -72,7 +72,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts exported functions', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```ts\nexport function add(a: number, b: number) {\n  return a + b;\n}\n```');
@@ -82,7 +82,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts arrow functions assigned to const', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```ts\nconst multiply = (a: number, b: number) => {\n  return a * b;\n};\n```');
@@ -91,7 +91,7 @@ describe('CodeParser', () => {
     });
 
     it('handles non-JS code gracefully', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```python\ndef hello():\n    print("hi")\n```');
@@ -99,7 +99,7 @@ describe('CodeParser', () => {
     });
 
     it('handles code with no functions', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const funcs = parser.parseFunctions('```ts\nconst x = 1;\nconst y = 2;\n```');
@@ -109,7 +109,7 @@ describe('CodeParser', () => {
 
   describe('parseImports', () => {
     it('extracts named imports', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const imports = parser.parseImports('```ts\nimport { useState, useEffect } from "react";\n```');
@@ -120,7 +120,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts default imports', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const imports = parser.parseImports('```ts\nimport React from "react";\n```');
@@ -131,7 +131,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts namespace imports', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const imports = parser.parseImports('```ts\nimport * as fs from "fs";\n```');
@@ -142,7 +142,7 @@ describe('CodeParser', () => {
     });
 
     it('extracts multiple import types', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const imports = parser.parseImports('```ts\nimport React from "react";\nimport { useState } from "react";\nimport * as lodash from "lodash";\n```');
@@ -150,7 +150,7 @@ describe('CodeParser', () => {
     });
 
     it('handles code with no imports', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const imports = parser.parseImports('```ts\nconst x = 5;\n```');
@@ -160,7 +160,7 @@ describe('CodeParser', () => {
 
   describe('checkSyntax', () => {
     it('passes valid JS code', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const result = parser.checkSyntax('```ts\nfunction foo() { return 1; }\n```');
@@ -168,7 +168,7 @@ describe('CodeParser', () => {
     });
 
     it('detects unmatched closing brace', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const result = parser.checkSyntax('```ts\nfunction foo() { return 1; } }\n```');
@@ -177,7 +177,7 @@ describe('CodeParser', () => {
     });
 
     it('detects unclosed brace', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const result = parser.checkSyntax('```ts\nfunction foo() {\n  return 1;\n```');
@@ -186,7 +186,7 @@ describe('CodeParser', () => {
     });
 
     it('skips syntax check for non-JS', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const result = parser.checkSyntax('```python\nprint("hello")\n```');
@@ -196,7 +196,7 @@ describe('CodeParser', () => {
 
   describe('parse (full pipeline)', () => {
     it('returns complete parse result', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const code = '```ts\nimport { readFile } from "fs";\n\nfunction process(path: string) {\n  return readFile(path);\n}\n```';
@@ -210,7 +210,7 @@ describe('CodeParser', () => {
     });
 
     it('reports syntax errors in pipeline', async () => {
-      const { CodeParser } = await import('../src/core/code-parser.js');
+      const { CodeParser } = await import('../src/core/agents/code-parser.js');
       const parser = new CodeParser();
 
       const result = parser.parse('```ts\nfunction broken() { \n```');

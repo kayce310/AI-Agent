@@ -10,11 +10,11 @@
  */
 
 import { describe, it, beforeAll, afterAll, beforeEach, afterEach, assert } from 'vitest';
-import { Decomposer, DecompositionResult, SubTask } from '../src/core/decomposer.js';
-import { PlanExecutor, ExecutionReport, TaskResult } from '../src/core/plan-executor.js';
-import { ResultSynthesizer } from '../src/core/result-synthesizer.js';
-import { ModelAdapter, ModelOptions, ModelResponse } from '../src/core/model-adapter.js';
-import { ToolRegistry } from '../src/core/tool-registry.js';
+import { Decomposer, DecompositionResult, SubTask } from '../src/core/engine/decomposer.js';
+import { PlanExecutor, ExecutionReport, TaskResult } from '../src/core/engine/plan-executor.js';
+import { ResultSynthesizer } from '../src/core/engine/result-synthesizer.js';
+import { ModelAdapter, ModelOptions, ModelResponse } from '../src/core/llm/model-adapter.js';
+import { ToolRegistry } from '../src/core/tools/tool-registry.js';
 
 // ── Mock ModelAdapter ──
 

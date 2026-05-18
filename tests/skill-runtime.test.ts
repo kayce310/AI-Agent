@@ -24,8 +24,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import os from 'os';
-import { SkillRuntime, SkillDefinition, SkillResult, Task, SkillTrigger } from '../src/core/skill-runtime.js';
-import { HookRegistry } from '../src/core/hooks.js';
+import { SkillRuntime, SkillDefinition, SkillResult, Task, SkillTrigger } from '../src/core/agents/skill-runtime.js';
+import { HookRegistry } from '../src/core/core/hooks.js';
 
 // ── Helpers ──
 

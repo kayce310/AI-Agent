@@ -3,7 +3,7 @@
  * Provides: fetch_url
  */
 import { execSync } from 'child_process';
-import { ToolPlugin } from '../tool-registry.js';
+import { ToolPlugin } from './tool-registry.js';
 import { BASE_PATH } from './_shared.js';
 
 const plugin: ToolPlugin = {

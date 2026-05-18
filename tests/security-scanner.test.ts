@@ -8,7 +8,7 @@ import {
   SecurityBlockedError,
   createDefaultPatterns,
   globalSecurityScanner,
-} from '../src/core/security-scanner.js';
+} from '../src/core/security/security-scanner.js';
 
 // ════════════════════════════════
 //  createDefaultPatterns

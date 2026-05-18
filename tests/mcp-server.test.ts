@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { ToolRegistry } from '../src/core/tool-registry.js';
-import { MCPClientManager } from '../src/core/mcp-client.js';
+import { ToolRegistry } from '../src/core/tools/tool-registry.js';
+import { MCPClientManager } from '../src/core/mcp/mcp-client.js';
 
 // Helper: minimal plugin with test tools
 const testPlugin = {

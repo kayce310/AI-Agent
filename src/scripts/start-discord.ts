@@ -3,7 +3,7 @@ import path from 'path';
 import os from 'os';
 import { execSync } from 'child_process';
 import { DiscordBridge } from '../modules/discord/index.js';
-import Engine from '../core/engine.js';
+import Engine from '../core/engine/engine.js';
 
 // ── Single-Instance Lock ──
 // PID file để đảm bảo chỉ 1 instance Kato Discord Bot chạy

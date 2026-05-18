@@ -23,7 +23,7 @@ describe('RateLimiter', () => {
   });
 
   it('allows consumption within limit', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 5,
       intervalMs: 60_000,
@@ -35,7 +35,7 @@ describe('RateLimiter', () => {
   });
 
   it('denies when tokens exhausted', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 2,
       intervalMs: 60_000,
@@ -46,7 +46,7 @@ describe('RateLimiter', () => {
   });
 
   it('denies when single request exceeds max tokens', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 3,
       intervalMs: 60_000,
@@ -56,7 +56,7 @@ describe('RateLimiter', () => {
   });
 
   it('refills tokens after interval passes', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 3,
       intervalMs: 60_000,
@@ -73,7 +73,7 @@ describe('RateLimiter', () => {
   });
 
   it('accumulates multiple refills if idle multiple intervals', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 5,
       intervalMs: 60_000,
@@ -92,7 +92,7 @@ describe('RateLimiter', () => {
   });
 
   it('caps tokens at maxBurst', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 10,
       intervalMs: 60_000,
@@ -107,7 +107,7 @@ describe('RateLimiter', () => {
   });
 
   it('defaults maxBurst to tokensPerInterval', async () => {
-    const { RateLimiter } = await import('../src/core/rate-limiter.js');
+    const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
     const limiter = new RateLimiter('test', {
       tokensPerInterval: 7,
       intervalMs: 60_000,
@@ -119,7 +119,7 @@ describe('RateLimiter', () => {
 
   describe('consume async', () => {
     it('returns 0 if tokens available immediately', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 5,
         intervalMs: 60_000,
@@ -130,7 +130,7 @@ describe('RateLimiter', () => {
     });
 
     it('waits and returns wait time', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 1,
         intervalMs: 60_000,
@@ -149,7 +149,7 @@ describe('RateLimiter', () => {
 
   describe('getState', () => {
     it('returns current state', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 10,
         intervalMs: 60_000,
@@ -165,7 +165,7 @@ describe('RateLimiter', () => {
     });
 
     it('tracks denied requests', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 2,
         intervalMs: 60_000,
@@ -183,7 +183,7 @@ describe('RateLimiter', () => {
 
   describe('reset', () => {
     it('resets tokens and counters', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 5,
         intervalMs: 60_000,
@@ -202,7 +202,7 @@ describe('RateLimiter', () => {
 
   describe('setConfig', () => {
     it('updates tokensPerInterval — refill rate changes, maxBurst still from constructor', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 2,
         intervalMs: 60_000,
@@ -215,7 +215,7 @@ describe('RateLimiter', () => {
     });
 
     it('updates maxBurst — increases burst capacity', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RateLimiter('test', {
         tokensPerInterval: 5,
         intervalMs: 60_000,
@@ -229,10 +229,9 @@ describe('RateLimiter', () => {
     });
 
     it('updates both tokensPerInterval and maxBurst together — use high initial maxBurst', async () => {
-      const { RateLimiter } = await import('../src/core/rate-limiter.js');
       // Use real timer context for this test to avoid Date.now() issues
       vi.useRealTimers();
-      const { RateLimiter: RL } = await import('../src/core/rate-limiter.js');
+      const { RateLimiter: RL } = await import('../src/core/security/rate-limiter.js');
       const limiter = new RL('test', {
         tokensPerInterval: 5,
         intervalMs: 60_000,
@@ -254,7 +253,7 @@ describe('RateLimiter', () => {
 
 describe('RateLimiterGroup', () => {
   it('adds and retrieves limiters', async () => {
-    const { RateLimiterGroup } = await import('../src/core/rate-limiter.js');
+    const { RateLimiterGroup } = await import('../src/core/security/rate-limiter.js');
     const group = new RateLimiterGroup();
 
     group.add('requests', { tokensPerInterval: 10, intervalMs: 60_000 });
@@ -266,7 +265,7 @@ describe('RateLimiterGroup', () => {
   });
 
   it('tryAll returns true only when ALL limiters allow', async () => {
-    const { RateLimiterGroup } = await import('../src/core/rate-limiter.js');
+    const { RateLimiterGroup } = await import('../src/core/security/rate-limiter.js');
     const group = new RateLimiterGroup();
 
     group.add('requests', { tokensPerInterval: 2, intervalMs: 60_000 });
@@ -280,7 +279,7 @@ describe('RateLimiterGroup', () => {
   });
 
   it('getAllStates returns states for all limiters', async () => {
-    const { RateLimiterGroup } = await import('../src/core/rate-limiter.js');
+    const { RateLimiterGroup } = await import('../src/core/security/rate-limiter.js');
     const group = new RateLimiterGroup();
 
     group.add('a', { tokensPerInterval: 5, intervalMs: 60_000 });
@@ -296,7 +295,7 @@ describe('RateLimiterGroup', () => {
   });
 
   it('resetAll resets all limiters', async () => {
-    const { RateLimiterGroup } = await import('../src/core/rate-limiter.js');
+    const { RateLimiterGroup } = await import('../src/core/security/rate-limiter.js');
     const group = new RateLimiterGroup();
 
     group.add('a', { tokensPerInterval: 2, intervalMs: 60_000 });

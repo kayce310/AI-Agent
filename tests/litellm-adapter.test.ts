@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LiteLLMAdapter, LiteLLMConfig, ModelRouter } from '../src/core/model-adapter.js';
+import { LiteLLMAdapter, LiteLLMConfig, ModelRouter } from '../src/core/llm/model-adapter.js';
 
 // ── Mocks ──────────────────────────────────────────────────────
 

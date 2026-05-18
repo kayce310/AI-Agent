@@ -10,8 +10,8 @@
  */
 
 import { Client, GatewayIntentBits, Message } from 'discord.js';
-import Engine from '../../core/engine.js';
-import { EngineRequest } from '../../core/types.js';
+import Engine from '../../core/engine/engine.js';
+import { EngineRequest } from '../../core/core/types.js';
 import 'dotenv/config';
 
 export class DiscordBridge {
@@ -39,7 +39,7 @@ export class DiscordBridge {
   private statusMessage: Map<string, Message> = new Map(); // channelId -> message
 
   private registerEngineHandlers(): void {
-    this.engine.on('cascade', async (event) => {
+    this.engine.on('cascade', async (event: any) => {
       const msg = this.statusMessage.get(event.sessionId);
       if (!msg) return;
 

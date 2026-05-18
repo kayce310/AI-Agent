@@ -15,7 +15,7 @@ describe('Engine Guardrails Integration', () => {
   beforeEach(async () => {
     vi.resetModules();
     // Delay engine init to bypass setInterval issues in tests
-    const Engine = (await import('../src/core/engine.js')).Engine;
+    const Engine = (await import('../src/core/engine/engine.js')).Engine;
     engine = new Engine();
     // Don't call init() — tests check wiring on bare instance
   });

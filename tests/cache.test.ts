@@ -22,7 +22,7 @@ describe('ResponseCache', () => {
   });
 
   it('stores and retrieves values', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: false });
 
     cache.set('key1', 'value1');
@@ -30,14 +30,14 @@ describe('ResponseCache', () => {
   });
 
   it('returns undefined for missing key', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: false });
 
     expect(cache.get('nonexistent')).toBeUndefined();
   });
 
   it('respects TTL expiration', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({
       defaultTTL: 1000, // 1 second
       trackStats: false,
@@ -54,7 +54,7 @@ describe('ResponseCache', () => {
   });
 
   it('has returns false for expired entries', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({
       defaultTTL: 500,
       trackStats: false,
@@ -68,7 +68,7 @@ describe('ResponseCache', () => {
   });
 
   it('deletes specific keys', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: false });
 
     cache.set('key1', 'value1');
@@ -78,7 +78,7 @@ describe('ResponseCache', () => {
   });
 
   it('clears all entries', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: false });
 
     cache.set('key1', 'value1');
@@ -92,7 +92,7 @@ describe('ResponseCache', () => {
   });
 
   it('evicts LRU entries when at capacity', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({
       maxSize: 3,
       trackStats: false,
@@ -115,7 +115,7 @@ describe('ResponseCache', () => {
   });
 
   it('supports custom TTL per entry', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({
       defaultTTL: 10000,
       trackStats: false,
@@ -130,7 +130,7 @@ describe('ResponseCache', () => {
   });
 
   it('updates access count and lastAccessedAt on get', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: false });
 
     cache.set('key1', 'value1');
@@ -146,7 +146,7 @@ describe('ResponseCache', () => {
   });
 
   it('tracks hit/miss statistics', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: true });
 
     cache.set('key1', 'value1');
@@ -165,7 +165,7 @@ describe('ResponseCache', () => {
   });
 
   it('tracks evictions in stats', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({
       maxSize: 2,
       trackStats: true,
@@ -181,7 +181,7 @@ describe('ResponseCache', () => {
   });
 
   it('resets statistics', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<string>({ trackStats: true });
 
     cache.get('miss1');
@@ -198,7 +198,7 @@ describe('ResponseCache', () => {
   });
 
   it('builds cache keys from components', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
 
     const key1 = ResponseCache.buildKey('gpt-4', 'session-123', 'What is AI?');
     const key2 = ResponseCache.buildKey('gpt-4', 'session-123', 'What is AI?');
@@ -209,7 +209,7 @@ describe('ResponseCache', () => {
   });
 
   it('builds cache keys from object', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
 
     const key1 = ResponseCache.buildKeyFromObject({
       modelId: 'gpt-4',
@@ -226,7 +226,7 @@ describe('ResponseCache', () => {
   });
 
   it('supports generic type parameter', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
 
     interface ComplexValue {
       id: number;
@@ -245,7 +245,7 @@ describe('ResponseCache', () => {
   });
 
   it('createDefaultCache creates a working cache', async () => {
-    const { createDefaultCache } = await import('../src/core/response-cache.js');
+    const { createDefaultCache } = await import('../src/core/security/response-cache.js');
     const cache = createDefaultCache({ trackStats: false });
 
     cache.set('key', 'value');
@@ -253,7 +253,7 @@ describe('ResponseCache', () => {
   });
 
   it('handles many entries gracefully', async () => {
-    const { ResponseCache } = await import('../src/core/response-cache.js');
+    const { ResponseCache } = await import('../src/core/security/response-cache.js');
     const cache = new ResponseCache<number>({
       maxSize: 100,
       trackStats: false,

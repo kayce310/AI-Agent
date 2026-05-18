@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createSOPRegistry, createAnalyzeSOP, createResearchSOP, createWriteSOP, SOP } from '../src/core/sop-registry';
-import { createSOPEngine, SOPEngine, SOPExecutionContext } from '../src/core/sop-engine';
-import { createPatternRegistry, registerAllPatterns, AgenticPattern } from '../src/core/pattern-registry';
-import { createPatternSelector, analyzeTaskDescription, PatternSelector } from '../src/core/pattern-selector';
+import { createSOPRegistry, createAnalyzeSOP, createResearchSOP, createWriteSOP, SOP } from '../src/core/sop/sop-registry.js';
+import { createSOPEngine, SOPEngine, SOPExecutionContext } from '../src/core/sop/sop-engine.js';
+import { createPatternRegistry, registerAllPatterns, AgenticPattern } from '../src/core/patterns/index.js';
+import { createPatternSelector, analyzeTaskDescription, PatternSelector } from '../src/core/patterns/index.js';
 
 // ── SOP Registry Tests ─────────────────────────────────────────
 

@@ -9,10 +9,10 @@
                           "apiKey":  "local-proxy-key",
                           "models":  [
                                          {
-                                             "id":  "5",
+                                             "id":  "4",
                                              "maxTokens":  8192,
                                              "tier":  1,
-                                             "label":  "9Router Combo 5"
+                                             "label":  "9Router Combo 4"
                                          }
                                      ]
                       }

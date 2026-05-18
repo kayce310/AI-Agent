@@ -5,7 +5,7 @@
  * Adapter (Discord/CLI/Telegram) + Core Engine + Provider Registry
  */
 
-import Engine from './core/engine.js';
+import Engine from './core/engine/engine.js';
 import DiscordBridge from './modules/discord/index.js';
 
 console.log(`🚀 Kato Agent System v5.0 starting...`);

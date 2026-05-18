@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { KatoStateManager, ProcessedFile } from '../core/state-manager.js';
+import { KatoStateManager, ProcessedFile } from '../core/memory/state-manager.js';
 
 const [, , command = 'read', ...args] = process.argv;
 const manager = new KatoStateManager();

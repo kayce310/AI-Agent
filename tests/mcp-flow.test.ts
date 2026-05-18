@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('MCP Flow Integration', () => {
   it('MCPClientManager class has expected methods', async () => {
-    const { MCPClientManager } = await import('../src/core/mcp-client.js');
+    const { MCPClientManager } = await import('../src/core/mcp/mcp-client.js');
     const client = new MCPClientManager();
 
     expect(typeof client.connectStdio).toBe('function');
@@ -18,7 +18,7 @@ describe('MCP Flow Integration', () => {
   });
 
   it('startMCPServer function exists', async () => {
-    const { startMCPServer } = await import('../src/core/mcp-server.js');
+    const { startMCPServer } = await import('../src/core/mcp/mcp-server.js');
     expect(typeof startMCPServer).toBe('function');
   });
 
@@ -33,7 +33,7 @@ describe('MCP Flow Integration', () => {
   });
 
   it('MCP client can be constructed', async () => {
-    const { MCPClientManager } = await import('../src/core/mcp-client.js');
+    const { MCPClientManager } = await import('../src/core/mcp/mcp-client.js');
     const client = new MCPClientManager();
     expect(client).toBeInstanceOf(Object);
   });

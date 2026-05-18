@@ -17,6 +17,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "knowledge/**/*"],
+  "include": ["src/**/*", "knowledge/wiki/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { execSync } from 'child_process';
 
 // Mock child_process to avoid actual command execution
 vi.mock('child_process', () => ({
@@ -22,7 +23,7 @@ describe('Janitor', () => {
   });
 
   it('constructs with default config', async () => {
-    const { Janitor } = await import('../src/core/janitor.js');
+    const { Janitor } = await import('../src/core/agents/janitor.js');
     const janitor = new Janitor();
 
     const config = janitor.getConfig();
@@ -33,7 +34,7 @@ describe('Janitor', () => {
   });
 
   it('constructs with custom config', async () => {
-    const { Janitor } = await import('../src/core/janitor.js');
+    const { Janitor } = await import('../src/core/agents/janitor.js');
     const janitor = new Janitor({
       autoTest: false,
       autoLint: false,
@@ -49,7 +50,7 @@ describe('Janitor', () => {
   });
 
   it('setConfig updates config at runtime', async () => {
-    const { Janitor } = await import('../src/core/janitor.js');
+    const { Janitor } = await import('../src/core/agents/janitor.js');
     const janitor = new Janitor({ autoTest: true });
 
     janitor.setConfig({ autoTest: false, autoLint: false });
@@ -69,7 +70,7 @@ describe('Janitor', () => {
         });
       });
 
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor({ projectRoot: '/tmp/test' });
 
       // sweep catches execSync errors
@@ -79,7 +80,7 @@ describe('Janitor', () => {
     });
 
     it('skips test when skipTest option set', async () => {
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor({ projectRoot: '/tmp/test' });
 
       // With skipTest, no execSync should be called for tests
@@ -88,7 +89,7 @@ describe('Janitor', () => {
     });
 
     it('skips lint when skipLint option set', async () => {
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor({ projectRoot: '/tmp/test' });
 
       const result = await janitor.sweep({ skipTest: true, skipLint: true });
@@ -106,7 +107,7 @@ describe('Janitor', () => {
         });
       });
 
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor({ projectRoot: '/tmp/test' });
 
       const result = await janitor.testOnly();
@@ -117,7 +118,7 @@ describe('Janitor', () => {
 
   describe('PII scanning patterns', () => {
     it('has default PII patterns defined', async () => {
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor();
 
       // Access private config to verify patterns exist through sweep
@@ -130,7 +131,7 @@ describe('Janitor', () => {
       // Mock successful test run with minimal output (no PII)
       (execSync as any).mockReturnValue('Tests passed: 10 passed');
 
-      const { Janitor } = await import('../src/core/janitor.js');
+      const { Janitor } = await import('../src/core/agents/janitor.js');
       const janitor = new Janitor({
         projectRoot: '/tmp/test',
         autoLint: false,

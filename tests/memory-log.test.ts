@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
-import { MemoryLog, createMemoryLog } from '../src/core/memory-log.js';
+import { MemoryLog, createMemoryLog } from '../src/core/memory/memory-log.js';
 
 describe('MemoryLog', () => {
   let logDir: string;
@@ -285,14 +285,15 @@ describe('MemoryLog', () => {
       }
       await log.sync();
 
-      // Replay — chỉ lấy từ log hiện tại (archive không auto-replay)
+      // Replay — đọc cả archive và active log
       const log2 = await createMemoryLog(logDir);
       const blocks = await log2.replay();
       await log2.close();
 
-      // Sau rotate, chỉ có entries mới (rot10-rot14)
-      expect(blocks.length).toBeGreaterThanOrEqual(5);
-      expect(blocks[0].id).toBe('rot10');
+      // Replay phải trả về tất cả blocks: archive (rot0-rot9) + active (rot10-rot14) = 15
+      expect(blocks.length).toBe(15);
+      expect(blocks[0].id).toBe('rot0');
+      expect(blocks[14].id).toBe('rot14');
     });
   });
 });

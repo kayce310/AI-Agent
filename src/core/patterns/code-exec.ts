@@ -3,7 +3,7 @@
  * Phase 7.2c: parse code → validate → execute → return result
  */
 
-import { CodeParser, CodeParseResult } from '../code-parser.js';
+import { CodeParser, CodeParseResult } from '../agents/code-parser.js';
 
 export interface CodeExecRequest {
   code: string;

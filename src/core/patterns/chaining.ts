@@ -3,7 +3,7 @@
  * Phase 7.2c: each step passes output as input to next
  */
 
-import { ToolRegistry } from '../tool-registry.js';
+import { ToolRegistry } from '../tools/tool-registry.js';
 
 export interface ChainingStep {
   toolName: string;

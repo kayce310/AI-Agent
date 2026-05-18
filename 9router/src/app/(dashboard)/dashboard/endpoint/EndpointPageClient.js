@@ -14,9 +14,11 @@ const TUNNEL_BENEFITS = [
 
 const TUNNEL_PING_INTERVAL_MS = 2000;
 const TUNNEL_PING_MAX_MS = 300000;
-const STATUS_POLL_INTERVAL_MS = 5000;
+const STATUS_POLL_FAST_MS = 5000;
+const STATUS_POLL_SLOW_MS = 30000;
 const REACHABLE_MISS_THRESHOLD = 5;
-const CLIENT_PING_INTERVAL_MS = 10000;
+const CLIENT_PING_FAST_MS = 10000;
+const CLIENT_PING_SLOW_MS = 60000;
 const CLIENT_PING_TIMEOUT_MS = 5000;
 
 // Browser-side health probe: bypasses backend DNS issues (1.1.1.1 vs OS resolver).
@@ -111,20 +113,33 @@ export default function APIPageClient({ machineId }) {
   useEffect(() => {
     fetchData();
     loadSettings();
-    // Poll status periodically + on tab visible to sync after watchdog restarts
-    const interval = setInterval(() => { syncTunnelStatus(); }, STATUS_POLL_INTERVAL_MS);
+  }, []);
+
+  // Adaptive status poll: slow when healthy, fast when degraded; pause when tab hidden.
+  useEffect(() => {
+    const anyEnabled = tunnelEnabled || tsEnabled;
+    if (!anyEnabled) return;
+    const tunnelHealthy = !tunnelEnabled || tunnelReachable;
+    const tsHealthy = !tsEnabled || tsReachable;
+    const allHealthy = tunnelHealthy && tsHealthy;
+    const delay = allHealthy ? STATUS_POLL_SLOW_MS : STATUS_POLL_FAST_MS;
+    let timer = null;
+    const tick = () => { if (!document.hidden) syncTunnelStatus(); };
+    timer = setInterval(tick, delay);
     const onVisible = () => { if (!document.hidden) syncTunnelStatus(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      clearInterval(interval);
+      if (timer) clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [tunnelEnabled, tsEnabled, tunnelReachable, tsReachable]);
 
   // Browser-side periodic ping: probes tunnel/tailscale URLs directly so UI stays
   // "reachable" even when backend DNS (1.1.1.1) hiccups on *.ts.net or *.trycloudflare.com.
+  // Adaptive: slow when healthy, fast when degraded; pause when tab hidden.
   useEffect(() => {
     const probeBoth = async () => {
+      if (document.hidden) return;
       if (tunnelEnabled && tunnelUrl) {
         const ok = await clientPingUrl(tunnelUrl);
         tunnelClientReachableRef.current = ok;
@@ -140,10 +155,16 @@ export default function APIPageClient({ machineId }) {
         tsClientReachableRef.current = false;
       }
     };
+    const anyEnabled = (tunnelEnabled && tunnelUrl) || (tsEnabled && tsUrl);
+    if (!anyEnabled) return;
     probeBoth();
-    const id = setInterval(probeBoth, CLIENT_PING_INTERVAL_MS);
+    const tunnelHealthy = !tunnelEnabled || tunnelReachable;
+    const tsHealthy = !tsEnabled || tsReachable;
+    const allHealthy = tunnelHealthy && tsHealthy;
+    const delay = allHealthy ? CLIENT_PING_SLOW_MS : CLIENT_PING_FAST_MS;
+    const id = setInterval(probeBoth, delay);
     return () => clearInterval(id);
-  }, [tunnelEnabled, tunnelUrl, tsEnabled, tsUrl]);
+  }, [tunnelEnabled, tunnelUrl, tsEnabled, tsUrl, tunnelReachable, tsReachable]);
 
   // Effective reachable = serverReachable OR clientReachable (1 of 2 is enough).
   // Miss-debounce: only flip to false after N consecutive misses on BOTH sides.

@@ -5,7 +5,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { ToolPlugin } from '../tool-registry.js';
+import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, isCommandSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
 
 const plugin: ToolPlugin = {

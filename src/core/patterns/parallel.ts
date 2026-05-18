@@ -3,7 +3,7 @@
  * Phase 7.2c: fan-out → gather results
  */
 
-import { ToolRegistry } from '../tool-registry.js';
+import { ToolRegistry } from '../tools/tool-registry.js';
 
 export interface ParallelStep {
   id: string;

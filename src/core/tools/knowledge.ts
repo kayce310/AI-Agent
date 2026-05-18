@@ -4,7 +4,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import { ToolPlugin } from '../tool-registry.js';
+import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, addProcessedFile } from './_shared.js';
 import { BASE_PATH } from './_shared.js';
 

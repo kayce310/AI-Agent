@@ -3,7 +3,7 @@
  * Phase 7.2c: generate → critique → refine cycle
  */
 
-import { ModelRouter } from '../model-adapter.js';
+import { ModelRouter } from '../llm/model-adapter.js';
 
 export interface ReflectionStep {
   type: 'generate' | 'critique' | 'refine';

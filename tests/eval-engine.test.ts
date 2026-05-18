@@ -9,8 +9,8 @@ import {
   summarizeEvalResults,
   EvalCache,
   globalEvalCache,
-} from '../src/core/eval-engine.js';
-import type { EvalSuite, EvalAssertion } from '../src/core/types.js';
+} from '../src/core/observability/eval-engine.js';
+import type { EvalSuite, EvalAssertion } from '../src/core/core/types.js';
 
 // ── Cleanup ──
 afterEach(() => {
