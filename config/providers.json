@@ -9,10 +9,10 @@
                           "apiKey":  "local-proxy-key",
                           "models":  [
                                          {
-                                             "id":  "4",
+                                             "id":  "openrouter/openrouter/owl-alpha",
                                              "maxTokens":  8192,
                                              "tier":  1,
-                                             "label":  "9Router Combo 4"
+                                             "label":  "9Router Combo openrouter/openrouter/owl-alpha"
                                          }
                                      ]
                       }
