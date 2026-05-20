@@ -1,17 +1,59 @@
 /**
  * Kato Agent — Model Adapter (Multi-Provider Abstraction)
  * Phase 3.2 — cho phép fallback chain + multi-provider.
- * 
+ *
  * Mỗi adapter wrap 1 provider (9router, LiteLLM, Ollama, OpenAI, Anthropic...)
  * ModelRouter quản lý danh sách adapter và fallback khi provider down.
  */
 
 import OpenAI from 'openai';
 import ProviderRegistry, { IProviderClient, ProviderInvokeParams } from './provider-registry.js';
-import { LLMProviderConfig, ModelSpec, ChatMessage } from '../core/types.js';
-import { evolutionEngine } from '../core/evolution.js';
+import { LLMProviderConfig, ModelSpec, ChatMessage } from '../types.js';
+import { evolutionEngine } from '../evolution.js';
 import path from 'path';
 import fs from 'fs';
+
+// ── Thinking Content Stripper ────────────────────────────────────
+// Some LLM providers (DeepSeek, OpenRouter) embed thinking/reasoning
+// content inside the main content field. This function strips it.
+
+const THINKING_BLOCK_PATTERNS = [
+  /<thinking>[\s\S]*?<\/thinking>/gi,
+  /```thinking[\s\S]*?```/gi,
+  /<think>[\s\S]*?<\/think>/gi,
+  /<reasoning>[\s\S]*?<\/reasoning>/gi,
+  /<analysis>[\s\S]*?<\/analysis>/gi,
+];
+
+const THINKING_LINE_PATTERNS = [
+  /^Tool:\s*/i,
+  /^Calling:\s*/i,
+  /^Executing:\s*/i,
+  /^Function call:/i,
+  /^Invoking tool:/i,
+];
+
+export function stripThinkingContent(content: string): string {
+  if (!content) return content;
+  let cleaned = content;
+  for (const pattern of THINKING_BLOCK_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  const lines = cleaned.split('\n');
+  const filtered: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    let skip = false;
+    for (const pattern of THINKING_LINE_PATTERNS) {
+      if (pattern.test(trimmed)) {
+        skip = true;
+        break;
+      }
+    }
+    if (!skip) filtered.push(line);
+  }
+  return filtered.join('\n').trim();
+}
 
 // ── Interfaces ──────────────────────────────────────────────────
 
@@ -118,6 +160,9 @@ export class RouterAdapter implements ModelAdapter {
     // Strip model prefix headers
     content = content.replace(/^[\w\/\.-]+:\s*/m, '');
 
+    // Strip thinking content
+    content = stripThinkingContent(content);
+
     // Check for tool calls
     const toolCalls: any[] | undefined = choice.message?.tool_calls || undefined;
 
@@ -205,6 +250,7 @@ export class LiteLLMAdapter implements ModelAdapter {
 
     let content = choice.message?.content || '';
     content = content.replace(/^[\w\/\.-]+:\s*/m, '');
+    content = stripThinkingContent(content);
 
     const toolCalls: any[] | undefined = choice.message?.tool_calls || undefined;
 
@@ -249,8 +295,6 @@ export class OllamaAdapter implements ModelAdapter {
   }
 
   isAvailable(): boolean {
-    // Quick check: can we reach the Ollama server?
-    // We don't block on this — let the invoke fail fast
     return true;
   }
 
@@ -261,7 +305,6 @@ export class OllamaAdapter implements ModelAdapter {
   async invoke(messages: any[], options?: ModelOptions): Promise<ModelResponse> {
     const model = options?.model || this.defaultModel;
 
-    // Convert OpenAI-format messages to Ollama format
     const ollamaMessages = messages.map((m: any) => ({
       role: m.role,
       content: m.content || '',
@@ -288,7 +331,8 @@ export class OllamaAdapter implements ModelAdapter {
     }
 
     const data = await res.json();
-    const content = (data.message?.content || '').replace(/^[\w\/\.-]+:\s*/m, '');
+    let content = (data.message?.content || '').replace(/^[\w\/\.-]+:\s*/m, '');
+    content = stripThinkingContent(content);
 
     return {
       content,
@@ -305,9 +349,8 @@ export class OllamaAdapter implements ModelAdapter {
 export class ModelRouter {
   private adapters: ModelAdapter[] = [];
   private defaultAdapter: string = '';
-  private lastError: Map<string, string> = new Map(); // adapterName -> error
+  private lastError: Map<string, string> = new Map();
 
-  /** Register an adapter */
   use(adapter: ModelAdapter): void {
     this.adapters.push(adapter);
     if (!this.defaultAdapter && adapter.isAvailable()) {
@@ -316,14 +359,12 @@ export class ModelRouter {
     console.log(`🔌 ModelRouter: registered adapter "${adapter.name}" (${adapter.label})`);
   }
 
-  /** Set default adapter */
   setDefault(name: string): void {
     if (this.adapters.some(a => a.name === name)) {
       this.defaultAdapter = name;
     }
   }
 
-  /** List registered adapters */
   listAdapters(): { name: string; label: string; available: boolean }[] {
     return this.adapters.map(a => ({
       name: a.name,
@@ -332,17 +373,11 @@ export class ModelRouter {
     }));
   }
 
-  /** Get a specific adapter by name */
   getAdapter(name: string): ModelAdapter | undefined {
     return this.adapters.find(a => a.name === name);
   }
 
-  /**
-   * Route request to best adapter with fallback chain.
-   * Strategy: try default → try each remaining → throw if all fail.
-   */
   async route(messages: any[], options?: ModelOptions): Promise<ModelResponse> {
-    // Build ordered candidate list: default first, then by registration order
     const candidates = this.buildCandidateList();
     if (candidates.length === 0) {
       throw new Error('No adapters registered in ModelRouter');
@@ -361,10 +396,7 @@ export class ModelRouter {
         const response = await adapter.invoke(messages, options);
         console.log(`✅ ModelRouter: success via "${adapter.name}" (model: ${response.modelUsed})`);
 
-        // Record success in evolution
         evolutionEngine.recordSuccess(adapter.name, 0).catch(() => {});
-
-        // Clear last error for this adapter
         this.lastError.delete(adapter.name);
 
         return response;
@@ -372,7 +404,6 @@ export class ModelRouter {
         console.warn(`⚠️ ModelRouter: adapter "${adapter.name}" failed: ${err.message}`);
         this.lastError.set(adapter.name, err.message);
 
-        // Record error in evolution
         evolutionEngine.recordError({
           modelId: options?.model || adapter.name,
           errorType: 'ADAPTER_FAILED',
@@ -382,26 +413,21 @@ export class ModelRouter {
         }).catch(() => {});
 
         lastError = err;
-        // Continue to next adapter
       }
     }
 
-    // All adapters failed
     throw new Error(`All adapters failed. Last error: ${lastError?.message}`);
   }
 
-  /** Estimate total tokens */
   estimateTokens(messages: any[]): number {
     if (this.adapters.length === 0) return 0;
     return this.adapters[0].estimateTokens(messages);
   }
 
-  /** Get last error for each adapter */
   getAdapterErrors(): Map<string, string> {
     return new Map(this.lastError);
   }
 
-  /** Build candidate list: default first, then rest by registration order */
   private buildCandidateList(): ModelAdapter[] {
     if (this.adapters.length === 0) return [];
 
@@ -418,14 +444,9 @@ export class ModelRouter {
 
 // ── Default Adapter Builder ─────────────────────────────────────
 
-/**
- * Build a ModelRouter with default adapters based on available config.
- * Priority: 9router (from provider-registry) > LiteLLM (from env) > Ollama (from env)
- */
 export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<ModelRouter> {
   const router = new ModelRouter();
 
-  // 1. Try 9router from ProviderRegistry
   const reg = registry ?? new ProviderRegistry();
   try {
     reg.loadFromConfig();
@@ -438,14 +459,12 @@ export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<M
     console.warn(`⚠️ ModelRouter: 9router config load failed: ${err.message}`);
   }
 
-  // 2. Try LiteLLM from env
   const litellm = LiteLLMAdapter.fromEnv();
   if (litellm) {
     router.use(litellm);
     console.log('🔌 ModelRouter: LiteLLM adapter registered');
   }
 
-  // 3. Try Ollama from env
   const ollama = OllamaAdapter.fromEnv();
   if (ollama) {
     router.use(ollama);

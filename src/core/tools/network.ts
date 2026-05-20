@@ -28,7 +28,14 @@ const plugin: ToolPlugin = {
           const parsedUrl = new URL(urlStr);
           const mod = parsedUrl.protocol === 'https:' ? https : http;
 
-          const req = mod.get(urlStr, { timeout }, (res) => {
+          const req = mod.get(urlStr, {
+            timeout,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
+            },
+          }, (res) => {
             let data = '';
             res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
             res.on('end', () => {

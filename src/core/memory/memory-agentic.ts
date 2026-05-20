@@ -1,11 +1,12 @@
 /**
  * MemoryAgentic — Agentic memory layer that allows agents to modify memory autonomously.
- * 
+ *
  * Extends MemoryTemporal with write/delete capabilities and agent-driven memory management.
- * 
+ *
  * This implements the "agentic memory" concept from the architecture PDF.
  */
-import MemoryTemporal, { MemoryBlock, MemoryConfig } from './memory-temporal.js';
+import MemoryTemporal, { MemoryConfig, MemoryItem } from './memory-temporal.js';
+import { MemoryBlock } from './memory-log.js';
 
 export interface MemoryAgenticConfig extends MemoryConfig {
   allowAgentWrite?: boolean;
@@ -30,9 +31,15 @@ export class MemoryAgentic extends MemoryTemporal {
   /**
    * Agent can add a new memory block
    */
-  public async addBlockForAgent(agentId: string, block: MemoryBlock): Promise<boolean> {
-    // Agent-specific validation could be added here if needed
-    this.addBlock(block);
+  public async addBlockForAgent(agentId: string, block: Omit<MemoryBlock, 'id' | 'timestamp'> & { id?: string; timestamp?: string }): Promise<boolean> {
+    await this.addBlock(block.content, {
+      type: block.type,
+      agentId,
+      sessionId: block.sessionId,
+      tags: block.tags,
+      entities: block.entities,
+      parentId: block.parentId,
+    });
     return true;
   }
 
@@ -40,16 +47,14 @@ export class MemoryAgentic extends MemoryTemporal {
    * Agent can delete a memory block
    */
   public async deleteBlockForAgent(agentId: string, blockId: string): Promise<boolean> {
-    this.deleteBlock(blockId);
-    return true;
+    return this.deleteBlock(blockId);
   }
 
   /**
    * Get memory blocks for a specific agent (filtered by world/context)
    */
-  public getAgentMemory(agentId: string, world?: string): MemoryBlock[] {
-    const all = this.getRecentBlocks(100);
-    return world ? all.filter((b: any) => b.metadata?.world === world) : all;
+  public async getAgentMemory(agentId: string, world?: string): Promise<MemoryItem[]> {
+    return this.query({ agentId, world, limit: 100 });
   }
 }
 

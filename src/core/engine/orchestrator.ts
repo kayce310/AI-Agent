@@ -13,8 +13,8 @@ import { ToolRegistry } from '../tools/tool-registry.js';
 import { Decomposer, DecompositionResult } from './decomposer.js';
 import { PlanExecutor, ExecutionReport } from './plan-executor.js';
 import { ResultSynthesizer } from './result-synthesizer.js';
-import { HookRegistry, globalHooks } from '../core/hooks.js';
-import { evolutionEngine } from '../core/evolution.js';
+import { HookRegistry, globalHooks } from '../hooks.js';
+import { evolutionEngine } from '../evolution.js';
 
 // ── Types ──
 
@@ -50,6 +50,84 @@ export class Orchestrator {
   }
 
   /**
+   * Detect cycles in the task dependency graph using DFS.
+   * Returns error message if cycle found, null if no cycle.
+   */
+  private detectCycle(tasks: { id: string; requires: string[] }[]): string | null {
+    const graph = new Map<string, string[]>();
+    const visited = new Set<string>();
+    const recStack = new Set<string>();
+
+    // Build adjacency list
+    for (const task of tasks) {
+      graph.set(task.id, task.requires);
+    }
+
+    // DFS cycle detection
+    const dfs = (node: string): boolean => {
+      if (!visited.has(node)) {
+        visited.add(node);
+        recStack.add(node);
+
+        const neighbors = graph.get(node) || [];
+        for (const neighbor of neighbors) {
+          if (!visited.has(neighbor)) {
+            if (dfs(neighbor)) return true;
+          } else if (recStack.has(neighbor)) {
+            return true; // Cycle detected
+          }
+        }
+      }
+      recStack.delete(node);
+      return false;
+    };
+
+    // Check each node
+    for (const node of graph.keys()) {
+      if (!visited.has(node)) {
+        if (dfs(node)) {
+          // Find the cycle path for better error message
+          const cyclePath = this.findCyclePath(graph, node);
+          return `Circular dependency detected: ${cyclePath.join(' → ')}`;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Helper to find the actual cycle path for better error reporting.
+   */
+  private findCyclePath(graph: Map<string, string[]>, start: string): string[] {
+    const visited = new Set<string>();
+    const path: string[] = [];
+    const stack: string[] = [start];
+
+    while (stack.length > 0) {
+      const node = stack.pop()!;
+      if (visited.has(node)) {
+        // Found cycle, return path from first occurrence of node to end
+        const idx = path.indexOf(node);
+        if (idx !== -1) {
+          return [...path.slice(idx), node];
+        }
+        continue;
+      }
+      visited.add(node);
+      path.push(node);
+      const neighbors = graph.get(node) || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          stack.push(neighbor);
+        }
+      }
+    }
+
+    return [start]; // fallback
+  }
+
+  /**
    * Run the full orchestration pipeline: decompose → execute → synthesize.
    * Emits hook events at each phase for observability.
    */
@@ -81,6 +159,23 @@ export class Orchestrator {
       task,
       subTaskCount: decomposition.subTasks.length,
     });
+
+    // ── DAG Cycle Detection ──
+    const cycleError = this.detectCycle(decomposition.subTasks.map(st => ({
+      id: st.id,
+      requires: st.requires || []
+    })));
+    if (cycleError) {
+      console.error(`❌ DAG Cycle Detected: ${cycleError}`);
+      evolutionEngine.recordError({
+        modelId: 'orchestrator',
+        errorType: 'ORCHESTRATOR_DAG_CYCLE',
+        errorMessage: cycleError,
+        contextSnippet: task.substring(0, 200),
+        sessionId: 'orchestrator',
+      }).catch(() => {});
+      throw new Error(`DAG Cycle Detected: ${cycleError}`);
+    }
 
     // ── Phase 2: Execute ──
     await this.hooks.emit('orchestrator:execute-start', {

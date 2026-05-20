@@ -8,8 +8,8 @@
  * Integrates into Agent via HookRegistry hooks.
  */
 
-import { HookRegistry, HookContext, globalHooks } from '../core/hooks.js';
-import { evolutionEngine } from '../core/evolution.js';
+import { HookRegistry, HookContext, globalHooks } from '../hooks.js';
+import { evolutionEngine } from '../evolution.js';
 
 // ── Types ──────────────────────────────────────────────────────────────
 

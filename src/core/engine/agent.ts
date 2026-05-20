@@ -11,14 +11,14 @@
  */
 
 import { EventEmitter } from 'events';
-import { HookRegistry, globalHooks, EventType, GuardHandler } from '../core/hooks.js';
+import { HookRegistry, globalHooks, EventType, GuardHandler } from '../hooks.js';
 import { ModelRouter } from '../llm/model-adapter.js';
 import { ToolRegistry } from '../tools/tool-registry.js';
 import { selectRelevantTools, estimateToolsTokenCount } from '../tools/tool-pruner.js';
-import { evolutionEngine } from '../core/evolution.js';
+import { evolutionEngine } from '../evolution.js';
 import { Tracer } from '../observability/tracer.js';
 import { Janitor } from '../agents/janitor.js';
-import { EngineRequest, EngineResponse, ChatMessage } from '../core/types.js';
+import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
 
 // ── Constants ──
 const MAX_TOOL_CALL_CYCLES = 10;
@@ -72,7 +72,11 @@ private maxToolCycles: number;
       // Non-blocking: don't hold up response for janitor
       this.janitor!.testOnly().then(result => {
         if (!result.passed) {
-          console.warn(`🧹 Janitor: ${result.failed} test(s) failed after execution`);
+          if (result.failed === -1) {
+            console.warn(`🧹 Janitor: test command failed - ${result.output.substring(0, 100)}`);
+          } else {
+            console.warn(`🧹 Janitor: ${result.failed} test(s) failed after execution`);
+          }
         }
       }).catch(() => {});
     }, -100); // low priority — run last
@@ -99,6 +103,13 @@ private maxToolCycles: number;
    */
   onBefore(event: EventType, handler: GuardHandler, priority = 0): () => void {
     return this.hooks.before(event, handler, priority);
+  }
+
+  private sanitizeFinalResponse(content: string): string {
+    return content
+      .replace(/<longcat_tool_call[\s\S]*?<\/longcat_tool_call>/gi, '')
+      .replace(/<tool_call[\s\S]*?<\/tool_call>/gi, '')
+      .trim();
   }
 
   /**
@@ -215,6 +226,7 @@ private maxToolCycles: number;
         if (modelResult.finishReason === 'stop') {
           finalContent = modelResult.content || '';
           finalContent = finalContent.replace(/^[\w\/\.-]+:\s*/m, '');
+          finalContent = this.sanitizeFinalResponse(finalContent);
 
           if (this.debug) {
             console.log(`✅ Final response after ${toolCallCycles} tool cycles`);
@@ -232,12 +244,21 @@ private maxToolCycles: number;
         }
 
         // ── Tool calls ──
-        if (modelResult.finishReason === 'tool_calls' && modelResult.toolCalls) {
-          const assistantMsg: any = {
-            role: 'assistant',
-            content: modelResult.content || null,
-            tool_calls: modelResult.toolCalls,
-          };
+         if (modelResult.finishReason === 'tool_calls' && modelResult.toolCalls) {
+           // Emit intermediate response if model provided text before tool calls
+           if (modelResult.content) {
+             await this.hooks.emit('model:intermediate_response', {
+               sessionId: request.sessionId,
+               content: modelResult.content,
+               cycle: toolCallCycles,
+             });
+           }
+
+           const assistantMsg: any = {
+             role: 'assistant',
+             content: modelResult.content || null,
+             tool_calls: modelResult.toolCalls,
+           };
           if (modelResult.reasoningContent) {
             assistantMsg.reasoning_content = modelResult.reasoningContent;
           }
@@ -303,6 +324,7 @@ private maxToolCycles: number;
         console.warn(`⚠️ Unknown finish_reason: ${modelResult.finishReason}`);
         finalContent = modelResult.content ||
           (modelResult.toolCalls?.length ? '⚠️ Đang xử lý yêu cầu...' : '❌ Phản hồi không mong đợi.');
+        finalContent = this.sanitizeFinalResponse(finalContent);
 
         return {
           content: finalContent,

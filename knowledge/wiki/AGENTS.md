@@ -22,6 +22,7 @@
 | **Quản lý trạng thái** | Dùng Data Plane an toàn | [[skills/state-management]] |
 | **Khởi động Discord** | Start bot qua kato-boot.bat | [[skills/module-discord]] |
 | **Kiến trúc Core** | Tra cứu core architecture | [[core/_INDEX]] |
+| **AI Gateway** | Gọi 9Router APIs | [[skills/9router]] |
 
 ---
 

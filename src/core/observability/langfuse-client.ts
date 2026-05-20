@@ -14,7 +14,7 @@
 
 import Langfuse from 'langfuse';
 import { type LangfuseTraceClient, type LangfuseSpanClient, type LangfuseGenerationClient } from 'langfuse-core';
-import { HookRegistry } from '../core/hooks.js';
+import { HookRegistry } from '../hooks.js';
 
 // ── Types ──
 

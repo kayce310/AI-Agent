@@ -320,6 +320,26 @@ describe('PrivilegeGuard', () => {
     expect(guard.check('knowledge:search').allowed).toBe(true);
   });
 
+  it('parses JSON toolArgs and supports aliased tool patterns in attachToHooks', async () => {
+    const { PrivilegeGuard } = await import('../src/core/security/privilege-guard.js');
+    const guard = new PrivilegeGuard({
+      rules: [
+        { toolPattern: 'filesystem:read', effect: 'allow', reason: 'Allow read_file via alias' },
+      ],
+      defaultEffect: 'deny',
+    });
+
+    const handler = guard.attachToHooks({
+      before: (_event: any, fn: any) => {
+        const result = fn({ toolName: 'read_file', toolArgs: JSON.stringify({ path: './README.md' }) });
+        expect(result).toEqual({ allowed: true });
+        return () => {};
+      },
+    });
+
+    expect(typeof handler).toBe('function');
+  });
+
   it('matches double-star glob patterns', async () => {
     const { PrivilegeGuard } = await import('../src/core/security/privilege-guard.js');
     const guard = new PrivilegeGuard({

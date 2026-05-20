@@ -15,7 +15,7 @@ import type {
   SecurityFinding,
   SecurityScanResult,
   SecuritySeverity,
-} from '../core/types.js';
+} from '../types.js';
 
 // ── Built-in Security Patterns ──
 

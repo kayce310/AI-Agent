@@ -127,8 +127,12 @@ export class Janitor {
         timeout: 60_000,
         encoding: 'utf-8',
       });
-      const failMatch = output.match(/(\d+)\s+failed?/);
-      const failed = failMatch ? parseInt(failMatch[1]) : 0;
+      const failMatch = output.match(/(\d+)\s+failed?/i);
+      const failed = failMatch ? parseInt(failMatch[1], 10) : 0;
+      const hasFailureIndicator = /\bfailed\b/i.test(output) || /\berror\b/i.test(output);
+      if (!failMatch && hasFailureIndicator) {
+        return { passed: false, failed: -1, output: output.substring(0, 2000) };
+      }
       return { passed: failed === 0, failed, output: output.substring(0, 2000) };
     } catch (err: any) {
       return { passed: false, failed: -1, output: err.stdout || err.message };

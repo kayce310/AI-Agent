@@ -2,11 +2,9 @@
  * Kato ResponseCache — LRU + TTL Cache for LLM Responses
  * Phase 8.3a — Performance Optimization
  *
- * Provides:
- * - LRU eviction (least recently used)
- * - TTL-based expiry (time-to-live per entry)
- * - Configurable max size
- * - Stats tracking (hits, misses, evictions)
+ * Phase 2 Updates:
+ * - Side-effect detection: bypass cache for mutating operations
+ * - Persona-aware key: includes CLINE.md hash in key
  */
 
 // ── Types ──
@@ -43,14 +41,60 @@ export interface CacheKey {
   sessionId: string;
   /** SHA-256 hash of the prompt */
   promptHash: string;
+  /** Hash of persona file (CLINE.md) for cache invalidation on persona change */
+  personaHash?: string;
 }
 
-// ── Simple SHA-256 Hash (pure JS fallback) ──
+// ── Side-Effect Tool Patterns ──
 
 /**
- * Simple string hash (not cryptographic, just for cache key).
- * Uses DJB2 algorithm for speed.
+ * Tool patterns that mutate state — cache MUST be bypassed.
+ * Any request that triggers these tools should not be cached.
  */
+const SIDE_EFFECT_TOOL_PATTERNS = [
+  'sandbox:execute',
+  'filesystem:write',
+  'filesystem:delete',
+  'filesystem:create',
+  'filesystem:move',
+  'filesystem:copy',
+  'system:exec',
+  'system:spawn',
+  'docker:run',
+  'docker:exec',
+  'database:write',
+  'database:update',
+  'database:delete',
+  'config:update',
+  'config:write',
+  'state:write',
+  'state:update',
+];
+
+/**
+ * Check if a tool name matches any side-effect pattern.
+ */
+export function isSideEffectTool(toolName: string): boolean {
+  for (const pattern of SIDE_EFFECT_TOOL_PATTERNS) {
+    if (pattern.endsWith('*')) {
+      const prefix = pattern.slice(0, -1);
+      if (toolName.startsWith(prefix)) return true;
+    } else if (pattern === toolName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if any tool in a list has side effects.
+ */
+export function hasSideEffectTools(toolNames: string[]): boolean {
+  return toolNames.some(isSideEffectTool);
+}
+
+// ── Simple Hash (DJB2) ──
+
 function simpleHash(input: string): string {
   let hash = 5381;
   for (let i = 0; i < input.length; i++) {
@@ -72,10 +116,13 @@ export class ResponseCache<T = string> {
   private misses = 0;
   private evictions = 0;
 
+  // Track tools called in current request for side-effect detection
+  private toolsInCurrentRequest: string[] = [];
+
   constructor(config: ResponseCacheConfig = {}) {
     this.cache = new Map();
     this.maxSize = config.maxSize ?? 1000;
-    this.defaultTTL = config.defaultTTL ?? 5 * 60 * 1000; // 5 minutes
+    this.defaultTTL = config.defaultTTL ?? 5 * 60 * 1000;
     this.trackStats = config.trackStats ?? true;
 
     // Periodic cleanup every 60s
@@ -83,25 +130,61 @@ export class ResponseCache<T = string> {
   }
 
   /**
-   * Build a cache key from components.
+   * Start tracking a new request for side-effect detection.
+   * Call this at the beginning of each request.
    */
-  static buildKey(modelId: string, sessionId: string, prompt: string): string {
+  beginRequest(): void {
+    this.toolsInCurrentRequest = [];
+  }
+
+  /**
+   * Record a tool call during the request.
+   */
+  recordToolCall(toolName: string): void {
+    this.toolsInCurrentRequest.push(toolName);
+  }
+
+  /**
+   * Check if current request has side effects.
+   */
+  hasSideEffects(): boolean {
+    return hasSideEffectTools(this.toolsInCurrentRequest);
+  }
+
+  /**
+   * Build a cache key from components.
+   * Now includes persona hash for cache invalidation on persona change.
+   */
+  static buildKey(
+    modelId: string,
+    sessionId: string,
+    prompt: string,
+    personaHash?: string
+  ): string {
     const hash = simpleHash(prompt);
-    return `${modelId}::${sessionId}::${hash}`;
+    const personaPart = personaHash ? `::${personaHash}` : '';
+    return `${modelId}::${sessionId}::${hash}${personaPart}`;
   }
 
   /**
    * Build a cache key from object.
    */
   static buildKeyFromObject(key: CacheKey): string {
-    return `${key.modelId}::${key.sessionId}::${key.promptHash}`;
+    const personaPart = key.personaHash ? `::${key.personaHash}` : '';
+    return `${key.modelId}::${key.sessionId}::${key.promptHash}${personaPart}`;
   }
 
   /**
    * Get a value from cache.
-   * Returns undefined if not found or expired.
+   * Returns undefined if not found, expired, or if side effects detected.
    */
   get(key: string): T | undefined {
+    // BYPASS: if current request has side effects, don't read from cache
+    if (this.hasSideEffects()) {
+      if (this.trackStats) this.misses++;
+      return undefined;
+    }
+
     const entry = this.cache.get(key);
 
     if (!entry) {
@@ -133,8 +216,14 @@ export class ResponseCache<T = string> {
 
   /**
    * Set a value in cache.
+   * BYPASS: if current request has side effects, don't write to cache.
    */
   set(key: string, value: T, ttl?: number): void {
+    // BYPASS: if current request has side effects, don't cache
+    if (this.hasSideEffects()) {
+      return;
+    }
+
     const now = Date.now();
     const expiresAt = now + (ttl ?? this.defaultTTL);
 
@@ -238,9 +327,6 @@ export class ResponseCache<T = string> {
 
   // ── Private Helpers ──
 
-  /**
-   * Evict the least recently used entry (first item in Map).
-   */
   private evictLRU(): void {
     const oldestKey = this.cache.keys().next().value;
     if (oldestKey) {
@@ -249,9 +335,6 @@ export class ResponseCache<T = string> {
     }
   }
 
-  /**
-   * Remove all expired entries.
-   */
   private evictExpired(): void {
     const now = Date.now();
     for (const [key, entry] of this.cache.entries()) {
@@ -263,11 +346,6 @@ export class ResponseCache<T = string> {
   }
 }
 
-// ── Convenience Factory ──
-
-/**
- * Create a default ResponseCache for string values.
- */
 export function createDefaultCache(config?: ResponseCacheConfig): ResponseCache<string> {
   return new ResponseCache<string>(config);
 }
@@ -275,4 +353,6 @@ export function createDefaultCache(config?: ResponseCacheConfig): ResponseCache<
 export default {
   ResponseCache,
   createDefaultCache,
+  isSideEffectTool,
+  hasSideEffectTools,
 };

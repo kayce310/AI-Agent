@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Resolve project root from script location (src/core/state-manager.ts → ../../)
 // NOT from process.cwd(), to prevent creating duplicate state.json
 // when agent runs commands from a different directory
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 export type AgentLifecycle = 'UNINITIALIZED' | 'INITIALIZING' | 'READY' | 'ERROR';
 

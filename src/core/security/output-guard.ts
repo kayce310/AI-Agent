@@ -9,7 +9,7 @@
  * - Sanitization (strip dangerous content)
  */
 
-import type { SecuritySeverity } from '../core/types.js';
+import type { SecuritySeverity } from '../types.js';
 
 // ── Types ──
 

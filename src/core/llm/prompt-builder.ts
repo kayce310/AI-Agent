@@ -12,7 +12,7 @@
  * 8. Alignment  → Đồng thuận rồi mới hành động
  */
 
-import { EngineRequest, RequestConstraints, RequestReference } from '../core/types.js';
+import { EngineRequest, RequestConstraints, RequestReference } from '../types.js';
 
 // ─── Tầng 5: Persona — Identity-driven (picoclaw-style) ──────────────
 // Output style được định nghĩa trong soul.md (injected vào context files)
@@ -115,7 +115,7 @@ ${input.contextFiles}
 
 ### QUY TRÌNH XỬ LÝ KIẾN THỨC & TÀI LIỆU
 1. Khi cần thông tin → dùng SEARCH_KNOWLEDGE_GRAPH trước
-2. Dùng LIST_FILES để khám phá cấu trúc thư mục
+2. Dùng list_directory để khám phá cấu trúc thư mục
 3. Dùng READ_FILE để đọc nội dung file text (.md, .ts, .json, .txt, .m, ...)
 4. Dùng READ_PDF khi cần đọc nội dung file PDF (tài liệu kỹ thuật, báo cáo, sách, paper)
 5. Dùng READ_DOCX khi cần đọc nội dung file DOCX (tài liệu Word, báo cáo, biểu mẫu)

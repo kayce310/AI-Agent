@@ -16,7 +16,6 @@
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import path from 'path';
-import { MemoryBlock, MemoryBlockType } from './memory-store.js';
 
 // ── Constants ──
 const SNAPSHOT_INTERVAL = 1000; // tạo snapshot mỗi N operations
@@ -31,6 +30,23 @@ const ARCHIVE_PREFIX = 'store';               // archive file prefix
 const ARCHIVE_EXT = '.log.archive';           // archive extension
 
 // ── Types ──
+
+/** Loại memory block */
+export type MemoryBlockType = 'human' | 'persona' | 'session' | 'task' | 'fact' | 'world';
+
+/** Một block memory bất biến (ADD-only) */
+export interface MemoryBlock {
+  id: string;
+  type: MemoryBlockType;
+  content: string;
+  timestamp: string;   // ISO 8601
+  entities?: string[];
+  tags?: string[];
+  /** Optional: reference tới session này (cho session type) */
+  sessionId?: string;
+  /** Optional: link tới block khác */
+  parentId?: string;
+}
 
 /** Operation types được log */
 export type LogOperation = 'add' | 'addMany' | 'snapshot' | 'clear';
@@ -170,26 +186,29 @@ export class MemoryLog {
     const snapshot = await this.tryLoadSnapshot();
     let blocks: MemoryBlock[] = snapshot?.blocks ?? [];
     let startSeq = snapshot?.seq ?? 0;
-
+  
     // Collect all log files: active + archives, sorted by timestamp (oldest first)
     const allLogFiles = await this.collectLogFiles();
-
-    let totalLines = 0;
-
+  
+    let maxSeq = startSeq;
+  
     for (const logFile of allLogFiles) {
       const filePath = path.join(this.logDir, logFile);
       try {
         const content = await fs.readFile(filePath, 'utf8');
         const lines = content.trim().split('\n');
-
+  
         for (const line of lines) {
           if (!line.trim()) continue;
-
+  
           const entry: LogEntry = JSON.parse(line);
-
+  
+          // Update maxSeq regardless of snapshot skip
+          if (entry.seq > maxSeq) maxSeq = entry.seq;
+  
           // Skip entries before snapshot
           if (entry.seq <= startSeq) continue;
-
+  
           switch (entry.op) {
             case 'add':
               if (entry.block) blocks.push(entry.block);
@@ -205,18 +224,16 @@ export class MemoryLog {
               break;
           }
         }
-
-        totalLines += lines.length;
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
           console.warn(`⚠️ MemoryLog: cannot read log file ${logFile}: ${err.message}`);
         }
       }
     }
-
-    this.seq = totalLines;
+  
+    this.seq = maxSeq;
     this.opsSinceSnapshot = this.seq - (this.manifest.lastSnapshotSeq || 0);
-
+  
     return blocks;
   }
 

@@ -21,6 +21,7 @@ export type EventType =
   | 'memory:read'
   | 'model:invoke'
   | 'model:response'
+  | 'model:intermediate_response'
   | 'model:error'
   | 'skill:load'
   | 'skill:unload'

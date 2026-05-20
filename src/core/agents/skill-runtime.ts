@@ -18,7 +18,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { HookRegistry } from '../core/hooks.js';
+import { HookRegistry } from '../hooks.js';
 
 // ── Types ──
 

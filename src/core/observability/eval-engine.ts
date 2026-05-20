@@ -14,7 +14,7 @@ import type {
   EvalAssertion,
   EvalResult,
   EvalTestResult,
-} from '../core/types.js';
+} from '../types.js';
 
 // ── String Similarity (Levenshtein-based) ──
 

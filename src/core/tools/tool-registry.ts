@@ -207,14 +207,14 @@ export async function getDefaultRegistry(): Promise<ToolRegistry> {
 async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
   // Dynamic imports: all tool plugins are discovered and registered
   const pluginModules: Record<string, string> = {
-    filesystem: './tools/filesystem.js',
-    knowledge: './tools/knowledge.js',
-    document: './tools/document.js',
-    archive: './tools/archive.js',
-    network: './tools/network.js',
-    skills: './tools/skills.js',
-    report: './tools/report.js',
-    system: './tools/system.js',
+    filesystem: './filesystem.js',
+    knowledge: './knowledge.js',
+    document: './document.js',
+    network: './network.js',
+    archive: './archive.js',
+    skills: './skills.js',
+    report: './report.js',
+    system: './system.js',
   };
   for (const [name, modulePath] of Object.entries(pluginModules)) {
     try {

@@ -1,62 +1,165 @@
-/**
- * Network Tools Plugin
- * Provides: fetch_url
+﻿/**
+ * Archive Tools Plugin
+ * Provides: search_archived_md, quote_from_source
  */
-import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
-import { BASE_PATH } from './_shared.js';
+import { BASE_PATH, isPathSafe } from './_shared.js';
+
+function scanRawMdFiles(dir: string, results: string[] = []): string[] {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      scanRawMdFiles(fullPath, results);
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
 
 const plugin: ToolPlugin = {
-  name: 'network',
+  name: 'archive',
   tools: [
     {
-      name: 'fetch_url',
-      description: 'Truy cập internet để lấy nội dung từ một URL',
+      name: 'search_archived_md',
+      description: 'Tìm kiếm trong knowledge/raw-md/ theo keyword hoặc regex',
       schema: {
         type: 'object',
         properties: {
-          url: { type: 'string', description: 'URL cần truy cập (http/https)' }
+          keyword: { type: 'string', description: 'Từ khóa hoặc biểu thức regex cần tìm' },
+          regex: { type: 'boolean', description: 'Dùng regex hay substring', default: false },
+          max_results: { type: 'number', description: 'Số kết quả tối đa', default: 20 }
         },
-        required: ['url']
+        required: ['keyword']
       },
       execute(args: Record<string, any>) {
-        const url = args.url;
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          return { error: 'URL phải bắt đầu bằng http:// hoặc https://' };
+        const keyword = String(args.keyword || '').trim();
+        const useRegex = Boolean(args.regex);
+        const maxResults = Number(args.max_results) || 20;
+
+        if (!keyword) {
+          return { error: 'keyword không được để trống' };
         }
 
-        const script = `
-const fetch = globalThis.fetch;
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 10000);
-fetch('${url.replace(/'/g, "\\'")}', {
-  signal: controller.signal,
-  headers: { 'User-Agent': 'Kato-Agent/1.0' }
-}).then(async r => {
-  clearTimeout(timeout);
-  if (!r.ok) { process.exit(1); }
-  const txt = await r.text();
-  process.stdout.write(txt);
-}).catch(() => process.exit(1));
-`;
+        const archiveDir = path.join(BASE_PATH, 'knowledge', 'raw-md');
+        if (!fs.existsSync(archiveDir)) {
+          return { keyword, total_results: 0, results: [] };
+        }
 
+        let matcher: RegExp;
         try {
-          const output = execSync(`node -e "${script.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, {
-            cwd: BASE_PATH,
-            encoding: 'utf8',
-            timeout: 15000,
-            maxBuffer: 1024 * 1024,
-            windowsHide: true
-          });
+          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&'), 'i');
+        } catch (err: any) {
+          return { error: `Regex không hợp lệ: ${err.message}` };
+        }
 
-          if (!output || output.trim().length === 0) {
-            return `❌ Không thể truy cập ${url} (HTTP error hoặc timeout)`;
+        const files = scanRawMdFiles(archiveDir);
+        const results: any[] = [];
+
+        for (const file of files) {
+          const content = fs.readFileSync(file, 'utf8');
+          if (!matcher.test(content)) continue;
+
+          const snippets: string[] = [];
+          const lines = content.split(/\r?\n/);
+          for (let i = 0; i < lines.length && snippets.length < 3; i++) {
+            if (matcher.test(lines[i])) {
+              const start = Math.max(0, i - 2);
+              const end = Math.min(lines.length - 1, i + 2);
+              snippets.push(lines.slice(start, end + 1).join('\n'));
+            }
           }
 
-          return `📄 Nội dung từ ${url}:\n\n${output.substring(0, 102400)}` + (output.length > 102400 ? '\n\n[... trang quá dài, đã cắt ở 100KB]' : '');
-        } catch (err: any) {
-          return { error: `Lỗi fetch ${url}: ${err.message}` };
+          results.push({
+            path: path.relative(BASE_PATH, file),
+            matches: snippets,
+          });
+          if (results.length >= maxResults) break;
         }
+
+        return {
+          keyword,
+          total_results: results.length,
+          results,
+        };
+      }
+    },
+    {
+      name: 'quote_from_source',
+      description: 'Trích dẫn chính xác từ raw-md kèm context lines',
+      schema: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Đường dẫn file raw-md tương đối hoặc tuyệt đối' },
+          keyword: { type: 'string', description: 'Từ khóa hoặc regex cần trích dẫn' },
+          context_lines: { type: 'number', description: 'Số dòng context xung quanh', default: 2 },
+          regex: { type: 'boolean', description: 'Dùng regex hay substring', default: false }
+        },
+        required: ['path', 'keyword']
+      },
+      execute(args: Record<string, any>) {
+        const rawPath = String(args.path || '').trim();
+        const keyword = String(args.keyword || '').trim();
+        const contextLines = Number(args.context_lines) || 2;
+        const useRegex = Boolean(args.regex);
+
+        if (!rawPath) {
+          return { error: 'path không được để trống' };
+        }
+        if (!keyword) {
+          return { error: 'keyword không được để trống' };
+        }
+
+        const archiveBase = path.resolve(BASE_PATH, 'knowledge', 'raw-md');
+        let candidatePath = path.resolve(rawPath);
+        if (!candidatePath.startsWith(archiveBase)) {
+          candidatePath = path.resolve(archiveBase, rawPath);
+        }
+
+        if (!candidatePath.startsWith(archiveBase)) {
+          return { error: 'Đường dẫn file chỉ được phép nằm trong knowledge/raw-md/' };
+        }
+        if (!fs.existsSync(candidatePath)) {
+          return { error: `File ${candidatePath} không tồn tại` };
+        }
+        if (!fs.statSync(candidatePath).isFile()) {
+          return { error: `${candidatePath} không phải là file` };
+        }
+        if (!isPathSafe(candidatePath)) {
+          return { error: `Đường dẫn ${candidatePath} không được phép truy cập` };
+        }
+
+        const content = fs.readFileSync(candidatePath, 'utf8');
+        let matcher: RegExp;
+        try {
+          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&'), 'i');
+        } catch (err: any) {
+          return { error: `Regex không hợp lệ: ${err.message}` };
+        }
+
+        const lines = content.split(/\r?\n/);
+        const matches: any[] = [];
+        for (let i = 0; i < lines.length; i++) {
+          if (matcher.test(lines[i])) {
+            const start = Math.max(0, i - contextLines);
+            const end = Math.min(lines.length - 1, i + contextLines);
+            matches.push({
+              line: i + 1,
+              snippet: lines.slice(start, end + 1).join('\n')
+            });
+          }
+          if (matches.length >= 20) break;
+        }
+
+        return {
+          path: path.relative(BASE_PATH, candidatePath),
+          keyword,
+          total_matches: matches.length,
+          matches,
+        };
       }
     }
   ]

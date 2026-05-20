@@ -60,6 +60,8 @@ export interface EngineRequest {
   requiredContextFiles?: string[];
   /** System prompt override — nếu không cung cấp, Engine sẽ build tự động */
   systemPrompt?: string;
+  /** Fast mode flag — bypass Orchestrator for simple queries */
+  fastMode?: boolean;
 }
 
 /** Đầu ra chuẩn của Engine */

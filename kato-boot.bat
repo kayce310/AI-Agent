@@ -5,12 +5,19 @@ echo -------------------------
 
 :: 0. Kill cac instance cu
 echo [0/3] Cleaning old instances...
-taskkill /F /FI "WINDOWTITLE eq Kato*" /IM node.exe 2>nul
-taskkill /F /FI "WINDOWTITLE eq tsx*" /IM node.exe 2>nul
-timeout /t 2 /nobreak >nul
 
-:: Clean stale PID file
-if exist "%TEMP%\kato-discord.pid" del "%TEMP%\kato-discord.pid" 2>nul
+:: Kill by PID from PID file (precise, no collateral damage)
+if exist "%TEMP%\kato-discord.pid" (
+    for /f "tokens=*" %%a in (%TEMP%\kato-discord.pid) do (
+        taskkill /F /PID %%a 2>nul
+    )
+    del "%TEMP%\kato-discord.pid" 2>nul
+    timeout /t 2 /nobreak >nul
+)
+
+:: Fallback: kill by window title (legacy)
+taskkill /F /FI "WINDOWTITLE eq Kato*" /IM node.exe 2>nul
+timeout /t 1 /nobreak >nul
 
 echo    Done.
 

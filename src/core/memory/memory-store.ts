@@ -18,30 +18,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import 'dotenv/config';
-import { MemoryLog, createMemoryLog } from './memory-log.js';
+import { MemoryLog, createMemoryLog, MemoryBlock, MemoryBlockType } from './memory-log.js';
 
 // ── Constants ──
 const DEFAULT_STORE_PATH = './knowledge/memory-store';
 const MAX_BLOCKS_PER_FILE = 500;
 
 // ── Types ──
-
-/** Loại memory block */
-export type MemoryBlockType = 'human' | 'persona' | 'session' | 'task' | 'fact' | 'world';
-
-/** Một block memory bất biến (ADD-only) */
-export interface MemoryBlock {
-  id: string;
-  type: MemoryBlockType;
-  content: string;
-  timestamp: string;   // ISO 8601
-  entities?: string[];
-  tags?: string[];
-  /** Optional: reference tới session này (cho session type) */
-  sessionId?: string;
-  /** Optional: link tới block khác */
-  parentId?: string;
-}
 
 /** Query options cho retrieval */
 export interface MemoryQueryOptions {
@@ -60,6 +43,9 @@ export interface LegacyMessage {
   reasoning_content?: string;
   tool_call_id?: string;
 }
+
+// Re-export for backward compatibility
+export type { MemoryBlock, MemoryBlockType };
 
 // ── Memory Store Class ──
 

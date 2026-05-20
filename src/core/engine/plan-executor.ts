@@ -2,13 +2,9 @@
  * Kato Agent — PlanExecutor (Deterministic Task Execution)
  * Phase 5.1b — execute structured task list from Decomposer
  *
- * Takes a DecomposerResult and executes each sub-task:
- *   - llm: invoke the model with the task description
- *   - tool: execute a registered tool by name
- *   - sop: runs a SOP from SOPRegistry (future)
- *   - parallel: executes sibling tasks concurrently
- *
- * Dependency resolution: topological sort based on `requires` field.
+ * Phase 2: Concurrency Limit (MAX_CONCURRENT_TASKS = 3)
+ * - Instead of Promise.all unlimited, we run tasks in chunks of size LIMIT.
+ * - This ensures at most LIMIT tasks run concurrently (e.g., 3 sandbox instances).
  */
 
 import { ModelAdapter, ModelResponse } from '../llm/model-adapter.js';
@@ -42,6 +38,8 @@ export class PlanExecutor {
   private model: ModelAdapter;
   private toolRegistry: ToolRegistry;
   private debug: boolean;
+  /** Max number of tasks running in parallel (e.g., sandbox instances) */
+  private static readonly MAX_CONCURRENT_TASKS = 3;
 
   constructor(model: ModelAdapter, toolRegistry: ToolRegistry, debug = false) {
     this.model = model;
@@ -52,7 +50,7 @@ export class PlanExecutor {
   /**
    * Execute a decomposition plan.
    * Resolves dependencies via topological sort, executes in order,
-   * parallel groups run concurrently.
+   * parallel groups run with concurrency limit.
    */
   async execute(plan: DecompositionResult): Promise<ExecutionReport> {
     const startTime = Date.now();
@@ -77,13 +75,16 @@ export class PlanExecutor {
         results.push(result);
         if (result.error) errorCount++;
       } else {
-        // Parallel
-        const parallelResults = await Promise.all(
-          level.map(task => this.executeTask(task))
-        );
-        for (const r of parallelResults) {
-          results.push(r);
-          if (r.error) errorCount++;
+        // Parallel with concurrency limit: run in chunks of MAX_CONCURRENT_TASKS
+        for (let i = 0; i < level.length; i += PlanExecutor.MAX_CONCURRENT_TASKS) {
+          const chunk = level.slice(i, i + PlanExecutor.MAX_CONCURRENT_TASKS);
+          const chunkResults = await Promise.all(
+            chunk.map(task => this.executeTask(task))
+          );
+          for (const r of chunkResults) {
+            results.push(r);
+            if (r.error) errorCount++;
+          }
         }
       }
     }

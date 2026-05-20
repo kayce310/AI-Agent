@@ -9,7 +9,7 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
-import { LLMProviderConfig, ProviderConfigFile, ModelSpec } from '../core/types.js';
+import { LLMProviderConfig, ProviderConfigFile, ModelSpec } from '../types.js';
 
 export interface IProviderClient {
   baseUrl: string;

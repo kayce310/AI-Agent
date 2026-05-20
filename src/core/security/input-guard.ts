@@ -13,7 +13,7 @@ import {
   SecurityBlockedError,
   createDefaultPatterns,
 } from './security-scanner.js';
-import type { SecurityPattern, SecuritySeverity } from '../core/types.js';
+import type { SecurityPattern, SecuritySeverity } from '../types.js';
 
 // ── Types ──
 
