@@ -741,7 +741,21 @@
       "timestamp": 1779258611124,
       "id": "gnap-1779258611124-addjpv",
       "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779258724097,
+      "id": "gnap-1779258724097-0pkuym",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779258724102,
+      "id": "gnap-1779258724102-4q1rvl",
+      "status": "pending"
     }
   ],
-  "lastSync": 1779258611124
+  "lastSync": 1779258724102
 }

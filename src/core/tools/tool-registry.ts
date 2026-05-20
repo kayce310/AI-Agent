@@ -149,11 +149,11 @@ export class ToolRegistry {
    * Backward-compatible wrapper for the ReAct loop.
    * Accepts { id, type, function: { name, arguments } } format from LLM.
    */
-  executeToolCall(toolCall: {
+  async executeToolCall(toolCall: {
     id: string;
     type?: string;
     function: { name: string; arguments?: string };
-  }): any {
+  }): Promise<any> {
     const functionName = toolCall.function.name;
     let args: Record<string, any> = {};
     if (toolCall.function.arguments) {
@@ -163,9 +163,16 @@ export class ToolRegistry {
         args = {};
       }
     }
-    // Execute synchronously for backward compat with engine.ts ReAct loop
-    const result = this.toolsMap.get(functionName)?.execute(args);
-    return result !== undefined ? result : { error: `Tool "${functionName}" not found` };
+    const tool = this.toolsMap.get(functionName);
+    if (!tool) {
+      return { error: `Tool "${functionName}" not found` };
+    }
+    try {
+      const result = await tool.execute(args);
+      return result;
+    } catch (err: any) {
+      return { error: `Tool "${functionName}" execution failed: ${err.message}` };
+    }
   }
 
   /**

@@ -299,7 +299,7 @@ private maxToolCycles: number;
               continue;
             }
 
-            const toolResult = this.toolRegistry.executeToolCall(toolCall);
+            const toolResult = await this.toolRegistry.executeToolCall(toolCall);
 
             // ── DEBUG: Log tool result ──
             const resultStr = JSON.stringify(toolResult);

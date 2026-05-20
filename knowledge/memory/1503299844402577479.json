@@ -38,5 +38,15 @@
     "role": "assistant",
     "content": "Training data: **63 tỉnh thành** (trước sáp nhập).\n\nSáp nhập 2025 (dự kiến): giảm xuống **34 tỉnh thành** (44 tỉnh + 6 thành phố trực thuộc trung ương → 28 tỉnh + 6 TP).\n\nNhưng fetch_url Wikipedia fail → không xác nhận được trạng thái thực tế hiện tại. Bạn cần tôi thử nguồn khác?",
     "timestamp": 1779258611518
+  },
+  {
+    "role": "user",
+    "content": "thời tiết hiện tại hôm nay tại thành phố Hồ Chí Minh <@1483642147382231150>",
+    "timestamp": 1779258690918
+  },
+  {
+    "role": "assistant",
+    "content": "Tất cả API đều trả về response rỗng. Có thể mạng hoặc proxy chặn.\n\n**⚠️ Không có thông tin thời tiết thực tế.** Câu trả lời trước đó là training data — không đáng tin. Xin lỗi.\n\nBạn có thể:\n- Tự kiểm tra tại [wttr.in/HoChiMinh](https://wttr.in/HoChiMinh)\n- Cho tôi biết nếu muốn thử lại sau",
+    "timestamp": 1779258724529
   }
 ]
