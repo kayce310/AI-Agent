@@ -104,18 +104,39 @@ function toolPatternMatches(pattern: string, toolName: string): boolean {
 
 /**
  * Check if a path contains traversal attempts or escapes workspace.
+ * Zero-Trust: reject everything unless explicitly within WORKSPACE_ROOT.
  * Returns true if path is SAFE, false if TRAVERSAL DETECTED.
+ *
+ * Defense layers:
+ *   1. Null byte injection
+ *   2. Tilde expansion
+ *   3. Windows backslash → forward slash normalization
+ *   4. Traversal sequence detection (..)
+ *   5. Absolute path rejection (C:\, \\server)
+ *   6. Workspace root prefix enforcement
  */
 export function isPathSafe(inputPath: string, workspaceRoot: string): boolean {
-  // Reject raw traversal sequences
-  if (inputPath.includes('..')) return false;
+  // Layer 1: Reject null bytes
+  if (inputPath.includes('\0')) return false;
+
+  // Layer 2: Reject tilde expansion
   if (inputPath.includes('~')) return false;
 
-  // Normalize and check if within workspace
+  // Layer 3: Normalize Windows backslash → forward slash
+  let normalized = inputPath.replace(/\\/g, '/');
+
+  // Layer 4: Reject traversal sequences (..)
+  if (normalized.includes('..')) return false;
+
+  // Layer 5: Reject absolute paths (e.g. /etc/passwd, C:/)
+  if (path.isAbsolute(normalized)) return false;
+
+  // Layer 6: Resolve and enforce workspace root prefix
   const path = require('path');
-  const resolved = path.resolve(workspaceRoot, inputPath);
+  const resolved = path.resolve(workspaceRoot, normalized);
   const normalizedRoot = path.resolve(workspaceRoot);
 
+  // Must start with workspace root + separator (prevent partial match attacks)
   if (!resolved.startsWith(normalizedRoot + path.sep) && resolved !== normalizedRoot) {
     return false;
   }

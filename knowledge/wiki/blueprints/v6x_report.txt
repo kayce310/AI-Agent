@@ -1,0 +1,81 @@
+==============================================
+V6X PWM NOISE ANALYSIS REPORT
+Ground Loop Interference - Flight Controller
+==============================================
+Generated: 2026-05-20
+Source: knowledge/blueprints/v6x_pwm_noise.txt
+
+--- RAW DATA ---
+timestamp  | pwm_ch1 | pwm_ch2
+0.001s     | 1500 us | 1502 us
+0.002s     | 1850 us | 1501 us  <-- SPIKE CH1 (+350)
+0.003s     | 1501 us | 1500 us
+0.004s     | 1100 us | 1499 us  <-- SPIKE CH1 (-400)
+0.005s     | 1500 us | 1500 us
+
+--- THÔNG SỐ PWM ---
+Center (neutral): 1500 us
+Valid range: 1000 - 2000 us
+Sample rate: 1000 Hz (1ms interval)
+Channels: CH1 (Roll/Pitch primary), CH2 (secondary)
+
+--- KẾT QUẢ TÍNH TOÁN ---
+
+CH1 Max Spike (positive): +350 us at t=0.002s (raw=1850 us)
+CH1 Max Spike (negative): -400 us at t=0.004s (raw=1100 us)
+CH1 Max Absolute Deviation: 400 us
+
+CH2 Max Absolute Deviation: 2 us
+
+>>> MAX SPIKE OVERALL: 400 us (CH1, t=0.004s, raw=1100 us) <<<
+
+--- ĐÁNH GIÁ NGHIÊM TRỌNG ---
+Severity: CAUTION
+- CH1 spike 400 us = 26.7% deviation from center
+- Within valid PWM range (1000-2000) but indicates ground loop noise
+- CH2 stable (2 us deviation) - confirms issue isolated to CH1 path
+
+--- NGUYÊN NHÂN GỐC RỄ (GROUND LOOP) ---
+
+1. Đặc trưng nhận diện:
+   - Spike NGẮN (1 sample = 1ms width) → đặc trưng ground loop
+   - Bipolar: +350 us và -400 us → nhiễu AC coupling qua ground plane
+   - CH2 ổn định → nhiễu chỉ xâm nhập qua CH1 trace/connector
+
+2. Cơ chế:
+   Ground loop xảy ra khi có NHIỀU ĐIỂM GROUND khác potential giữa:
+   - ESC ground ↔ Flight controller ground
+   - Power distribution ground ↔ Signal ground
+   - USB ground (debug) ↔ Battery ground
+   
+   Dòng điện ground chạy qua shared impedance → tạo voltage spike
+   → couple vào PWM signal trace qua parasitic capacitance
+
+3. Nguyên nhân phổ biến nhất trong mạch bay:
+   a) ESC không dùng signal ground wire riêng
+   b) PDB (Power Distribution Board) ground plane quá hẹp
+   c) Motor wire routing gần PWM signal trace
+   d) Thiếu capacitor tại servo/ESC connector (100nF ceramic)
+
+--- KHUYẾN NGHỊ KHẮC PHỤC ---
+
+Ưu tiên 1 (Nhanh):
+- Thêm 100nF ceramic capacitor giữa CH1 signal và ground tại FC connector
+- Reroute CH1 signal wire xa motor power wires
+
+Ưu tiên 2 (Thiết kế):
+- Tách analog ground và power ground, nối tại 1 điểm (star ground)
+- Dùng shielded cable cho PWM signals nếu dài >10cm
+- Thêm ferrite bead trên CH1 line
+
+Ưu tiên 3 (Kiểm chứng):
+- Đo ground voltage giữa ESC và FC bằng oscilloscope
+- Nếu >50mV → xác nhận ground loop, cần star ground topology
+
+==============================================
+END OF REPORT
+==============================================
+
+
+---
+#v6x #pwm #noise #ground-loop #flight-controller #analysis

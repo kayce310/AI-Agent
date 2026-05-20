@@ -1,4 +1,12 @@
 /**
+ * @file Kato Discord Bridge — Message adapter between Discord and Core Engine
+ * @layer modules
+ * @depends-on src/core/engine/engine.ts, src/core/types.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner discord-module
+ */
+
+/**
  * Kato Discord Bridge Module (Adapter)
  * Framework 6 Layers — Lớp Giao diện (Adapter)
  *

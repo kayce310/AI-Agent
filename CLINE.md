@@ -14,9 +14,35 @@ Bạn là Kato Agent trong trạng thái mặc định `UNINITIALIZED`.
 - Control Plane ở đây; Knowledge Graph ở `knowledge/wiki/`; Data Plane ở `state.json`.
 - Mỗi phiên phải để lại tài sản wiki/changelog/state phù hợp.
 - Nếu lỗi I/O/state: trả Structured Error JSON, không tự vá JSON bằng tay.
+- **Luật Validate Structure**: Trước mỗi lần tạo/sửa file trong `src/`, chạy `npx tsx scripts/validate-structure.ts --strict`. Nếu có ERROR → DỪNG, sửa trước khi commit. Luật này KHÔNG thể bypass trừ khi Tech Lead cho phép.
 - **Luật Blueprint**: Khi tạo file mới trong `knowledge/blueprints/`, dùng `kato-state-manager scan` để kiểm tra untracked files và `mark` để cập nhật `knowledge/workspace/processed-files.json`.
 - **Luật Workspace Path Consistency**: Mọi đường dẫn trong kết quả tool call PHẢI tính từ gốc repo (`e:/Test/AI-Agent`). CẤM trả lời path kiểu tương đối theo workspace của Kato. `processed-files.json` chỉ tồn tại duy nhất ở `knowledge/workspace/processed-files.json`.
 - **Luật Skip**: Files trong `processed-files.json` (đã processed) có thể skip không cần quét lại trừ khi checksum thay đổi.
+
+## 🗺️ STRUCTURE MAP — Bản đồ Cấu trúc Bất biến
+
+> ⚠️ HARDCODED — AI KHÔNG ĐƯỢC tạo file/folder ngoài bản đồ này. Vi phạm = BẤT HỢP PHÁP.
+
+| Thư mục | Chứa | Loại code | Quy tắc Import |
+|---------|------|-----------|----------------|
+| `src/core/` | Engine, Orchestrator, Agent, Security, Registries, Memory, Patterns, Tools plugins | TS — Internal | ❌ Không import từ `src/modules/` |
+| `src/core/tools/` | Plugin công cụ độc lập (filesystem, knowledge, document, network, archive, skills, report, system) | TS — Plugin | ✅ Chỉ import từ `src/core/` |
+| `src/modules/` | Adapter kết nối ngoại vi (Discord, Document, Knowledge, Report) | TS — Peripheral | ✅ Import từ `src/core/` qua barrel `../../core` |
+| `knowledge/wiki/skills/` | Thư viện kỹ năng hợp nhất (~170 skill files) | MD — Read-only | ❌ Không chứa code thực thi |
+| `knowledge/wiki/` | Architecture, repos, troubleshooting, core docs | MD — Read-only | ❌ Không chứa code thực thi |
+| `knowledge/blueprints/` | Raw assets, backups, queue | Mixed — Read-only | ❌ Không chứa code thực thi |
+| `knowledge/workspace/` | State, checkpoint, evolution | JSON/MD — Runtime | ❌ Không được import bởi code |
+| `9router/` | Router config, skills (.kto.md) | JSON/KTO — External | ❌ Không được import bởi `src/` |
+| `scripts/` | Utility scripts | TS/JS — Standalone | ❌ Không import từ `src/core/` |
+| `tests/` | Test files (mirror src/ structure) | TS — Test only | ✅ Import từ `src/` |
+
+**Import Rules:**
+1. `modules/` → `core/`: ✅ ALLOWED (qua barrel `../../core`)
+2. `core/` → `modules/`: ❌ FORBIDDEN
+3. `scripts/` → `core/`: ❌ FORBIDDEN
+4. `core/` → `core/`: ✅ ALLOWED (cùng layer)
+5. Bất kỳ code nào → `knowledge/`: ❌ FORBIDDEN (read-only)
+6. **Mọi hành vi tạo file/folder ngoài bản đồ này = BẤT HỢP PHÁP.**
 
 ## Luật Checkpoint & Anti-Overflow ⚡
 1. **Luật Checkpoint bắt buộc**: Mỗi tool call PHẢI kèm `task_progress` parameters. Đây không phải optional — dây là anti-overflow bắt buộc.

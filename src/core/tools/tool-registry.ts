@@ -9,10 +9,8 @@
  *   registry.executeToolCall(toolCall) — Backward-compat wrapper for ReAct loop
  */
 
-import { execSync, ExecSyncOptions } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { secureRuntime, WORKSPACE_ROOT, isPathSafe } from './tool-gateway.js';
 
 // ── Types ──
 
@@ -44,13 +42,14 @@ const PROCESSED_FILES_PATH = path.join(BASE_PATH, 'knowledge/workspace/processed
 // ── Shared Utilities ──
 
 const SAFE_PATHS = [
-  path.resolve(BASE_PATH),
+  // ⚠️ ROOT repo path REMOVED — too permissive, bypasses all restrictions
   path.resolve(BASE_PATH, 'src'),
   path.resolve(BASE_PATH, 'knowledge'),
   path.resolve(BASE_PATH, 'config'),
   path.resolve(BASE_PATH, 'scripts'),
   path.resolve(BASE_PATH, 'docker'),
   path.resolve(BASE_PATH, '9router'),
+  path.resolve(BASE_PATH, 'tests'),
 ];
 
 function isPathSafe(targetPath: string): boolean {
@@ -238,6 +237,6 @@ async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
   console.log(`✅ ToolRegistry ready: ${registry.toolCount} tools registered`);
 }
 
-// Re-export the backward-compat executeToolCall
-export { addProcessedFile, isPathSafe, toFileUrl, execSync, fs, path };
+// Re-export safe utilities only (NO raw fs/execSync — use tool-gateway.ts)
+export { addProcessedFile, isPathSafe, toFileUrl, secureRuntime, WORKSPACE_ROOT };
 export default ToolRegistry;
