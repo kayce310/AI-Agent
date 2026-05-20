@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start:discord": "npx tsx src/scripts/start-discord.ts",
+    "config:9router": "npx tsx scripts/configure-9router.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

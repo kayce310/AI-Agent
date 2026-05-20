@@ -1,11 +1,16 @@
 /**
- * Skills Tools Plugin
- * Provides: load_skill, check_stale_skills (Phase 2c)
+ * @file Skills Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
 import { BASE_PATH } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 const plugin: ToolPlugin = {
   name: 'skills',
@@ -23,11 +28,13 @@ const plugin: ToolPlugin = {
       execute(args: Record<string, any>) {
         const slug = args.slug;
         try {
-          const skillPath = path.join(BASE_PATH, '9router/skills', slug, `${slug}.kto.md`);
-          if (!fs.existsSync(skillPath)) {
+          // Read 9router path from env var (external service)
+          const nineRouterPath = process.env.NINE_ROUTER_EXTERNAL_PATH || path.join(BASE_PATH, '9router');
+          const skillPath = path.join(nineRouterPath, 'skills', slug, `${slug}.kto.md`);
+          if (!secureRuntime.safeExists(skillPath)) {
             return { error: `Skill "${slug}" không tồn tại tại ${skillPath}` };
           }
-          const content = fs.readFileSync(skillPath, 'utf8');
+          const content = secureRuntime.safeReadFile(skillPath);
           return { slug, name: slug, content: content.length > 5000 ? content.substring(0, 5000) + '...\n[Truncated]' : content };
         } catch (err: any) {
           return { error: `Lỗi khi load skill: ${err.message}` };
@@ -47,18 +54,19 @@ const plugin: ToolPlugin = {
       execute(args: Record<string, any>) {
         try {
           const maxAgeDays = args.max_age_days || 30;
-          const skillsDir = path.join(BASE_PATH, '9router/skills');
-          if (!fs.existsSync(skillsDir)) {
+          const nineRouterPath = process.env.NINE_ROUTER_EXTERNAL_PATH || path.join(BASE_PATH, '9router');
+          const skillsDir = path.join(nineRouterPath, 'skills');
+          if (!secureRuntime.safeExists(skillsDir)) {
             return { error: 'Thư mục skills không tồn tại' };
           }
           const staleSkills: any[] = [];
-          const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+          const entries = secureRuntime.safeReaddir(skillsDir);
           const now = Date.now();
           for (const entry of entries) {
             if (entry.isDirectory()) {
               const skillPath = path.join(skillsDir, entry.name, `${entry.name}.kto.md`);
-              if (fs.existsSync(skillPath)) {
-                const stat = fs.statSync(skillPath);
+              if (secureRuntime.safeExists(skillPath)) {
+                const stat = secureRuntime.safeStat(skillPath);
                 const ageDays = (now - stat.mtimeMs) / (1000 * 60 * 60 * 24);
                 if (ageDays > maxAgeDays) {
                   staleSkills.push({ slug: entry.name, daysSinceUpdate: Math.round(ageDays), lastModified: stat.mtime.toISOString().split('T')[0] });

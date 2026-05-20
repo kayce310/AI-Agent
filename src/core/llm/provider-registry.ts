@@ -1,9 +1,13 @@
 /**
- * Kato Agent — Provider Registry
- * Framework 6 Layers — Lớp Lõi (Core Domain)
- * 
+ * @file Kato Agent — Provider Registry
+ * @layer core
+ * @depends-on config/providers.json, .env (NINE_ROUTER_API_BASE)
+ * @imported-by src/core/llm/llm.ts, src/core/engine/engine.ts
+ * @owner core-llm
+ *
  * Quản lý danh sách LLM Provider. Hoàn toàn "mù" về platform.
  * Load config từ file, cung cấp interface tìm model theo ID.
+ * Hỗ trợ external 9Router thông qua biến môi trường NINE_ROUTER_API_BASE.
  */
 
 import OpenAI from 'openai';
@@ -90,6 +94,11 @@ export class ProviderRegistry {
     }
 
     for (const cfg of parsed.providers) {
+      // If 9router config has hardcoded baseUrl but env var exists, override
+      if (cfg.name === '9router' && process.env.NINE_ROUTER_API_BASE) {
+        console.log(`✅ [ProviderRegistry] Overriding 9Router baseUrl from env: ${process.env.NINE_ROUTER_API_BASE}`);
+        cfg.baseUrl = process.env.NINE_ROUTER_API_BASE;
+      }
       this.register(cfg);
     }
 
@@ -133,10 +142,10 @@ export class ProviderRegistry {
   getModelSpecs(): ModelSpec[] {
     const specs: ModelSpec[] = [];
     if (!fs.existsSync(this.configPath)) return [];
-    
+
     const raw = fs.readFileSync(this.configPath, 'utf8');
     const parsed: ProviderConfigFile = JSON.parse(raw);
-    
+
     for (const p of parsed.providers) {
       for (const m of p.models) {
         if (typeof m === 'string') {
@@ -158,6 +167,26 @@ export class ProviderRegistry {
 
   /** Register default providers từ env vars (fallback khi không có config) */
   private registerDefaultProviders(): void {
+    // 9Router external service takes priority if configured
+    const nineRouterBase = process.env.NINE_ROUTER_API_BASE;
+    if (nineRouterBase) {
+      console.log(`✅ [ProviderRegistry] Using external 9Router: ${nineRouterBase}`);
+      this.register({
+        name: '9router',
+        baseUrl: nineRouterBase,
+        apiKey: process.env.NINE_ROUTER_API_KEY || 'local-proxy-key',
+        models: [
+          'openrouter/openrouter/owl-alpha',
+          'anthropic/claude-3-haiku',
+          'meta-llama/llama-3-8b-instruct',
+          'mistralai/mistral-7b-instruct-v0.3',
+          'google/gemma-2-9b-it',
+          'openai/gpt-3.5-turbo',
+        ],
+      });
+      return;
+    }
+
     const baseURL = process.env.OPENAI_BASE_URL || 'http://127.0.0.1:8000/v1';
     const apiKey = process.env.OPENAI_API_KEY || 'dummy';
 

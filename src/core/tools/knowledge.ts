@@ -1,18 +1,23 @@
 /**
- * Knowledge Tools Plugin
- * Provides: search_knowledge_graph, write_wiki_page
+ * @file Knowledge Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, addProcessedFile } from './_shared.js';
 import { BASE_PATH } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 /**
  * Quét thư mục tìm kiếm keyword (dùng cho search_knowledge_graph)
  */
 function scanDir(dir: string, prefix: string, keyword: string, results: any[]): void {
-  const items = fs.readdirSync(dir, { withFileTypes: true });
+  const items = secureRuntime.safeReaddir(dir);
 
   for (const item of items) {
     const fullPath = path.join(dir, item.name);
@@ -21,7 +26,7 @@ function scanDir(dir: string, prefix: string, keyword: string, results: any[]): 
     if (item.isDirectory()) {
       scanDir(fullPath, relativePath + '/', keyword, results);
     } else if (item.name.endsWith('.md')) {
-      const content = fs.readFileSync(fullPath, 'utf8').toLowerCase();
+      const content = secureRuntime.safeReadFile(fullPath).toLowerCase();
 
       if (content.includes(`[[${keyword}]]`)) {
         results.push({
@@ -75,7 +80,7 @@ const plugin: ToolPlugin = {
 
         for (const baseDir of scanPaths) {
           const fullDir = path.join(BASE_PATH, baseDir);
-          if (!fs.existsSync(fullDir)) continue;
+          if (!secureRuntime.safeExists(fullDir)) continue;
           scanDir(fullDir, baseDir, keyword, results);
         }
 
@@ -108,14 +113,14 @@ const plugin: ToolPlugin = {
         }
 
         const dirPath = path.dirname(fullPath);
-        fs.mkdirSync(dirPath, { recursive: true });
+        secureRuntime.safeMkdir(dirPath);
 
         let content = args.content;
         if (args.tags) {
           content += `\n\n---\n#${args.tags.split(' ').join(' #')}`;
         }
 
-        fs.writeFileSync(fullPath, content, 'utf8');
+        secureRuntime.safeWriteFile(fullPath, content);
 
         const wikiRelPath = path.join('knowledge/wiki/', relativePath);
         addProcessedFile({

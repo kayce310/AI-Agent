@@ -1,14 +1,19 @@
-﻿/**
- * Archive Tools Plugin
- * Provides: search_archived_md, quote_from_source
+/**
+ * @file Archive Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
 import { BASE_PATH, isPathSafe } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 function scanRawMdFiles(dir: string, results: string[] = []): string[] {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const entries = secureRuntime.safeReaddir(dir);
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -45,13 +50,13 @@ const plugin: ToolPlugin = {
         }
 
         const archiveDir = path.join(BASE_PATH, 'knowledge', 'raw-md');
-        if (!fs.existsSync(archiveDir)) {
+        if (!secureRuntime.safeExists(archiveDir)) {
           return { keyword, total_results: 0, results: [] };
         }
 
         let matcher: RegExp;
         try {
-          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&'), 'i');
+          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
         } catch (err: any) {
           return { error: `Regex không hợp lệ: ${err.message}` };
         }
@@ -60,7 +65,7 @@ const plugin: ToolPlugin = {
         const results: any[] = [];
 
         for (const file of files) {
-          const content = fs.readFileSync(file, 'utf8');
+          const content = secureRuntime.safeReadFile(file);
           if (!matcher.test(content)) continue;
 
           const snippets: string[] = [];
@@ -122,20 +127,20 @@ const plugin: ToolPlugin = {
         if (!candidatePath.startsWith(archiveBase)) {
           return { error: 'Đường dẫn file chỉ được phép nằm trong knowledge/raw-md/' };
         }
-        if (!fs.existsSync(candidatePath)) {
+        if (!secureRuntime.safeExists(candidatePath)) {
           return { error: `File ${candidatePath} không tồn tại` };
         }
-        if (!fs.statSync(candidatePath).isFile()) {
+        if (!secureRuntime.safeStat(candidatePath).isFile()) {
           return { error: `${candidatePath} không phải là file` };
         }
         if (!isPathSafe(candidatePath)) {
           return { error: `Đường dẫn ${candidatePath} không được phép truy cập` };
         }
 
-        const content = fs.readFileSync(candidatePath, 'utf8');
+        const content = secureRuntime.safeReadFile(candidatePath);
         let matcher: RegExp;
         try {
-          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&'), 'i');
+          matcher = useRegex ? new RegExp(keyword, 'i') : new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
         } catch (err: any) {
           return { error: `Regex không hợp lệ: ${err.message}` };
         }

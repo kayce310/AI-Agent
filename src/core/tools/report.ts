@@ -1,11 +1,16 @@
 /**
- * Report Tools Plugin
- * Provides: generate_report (Phase 2c)
+ * @file Report Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
 import { BASE_PATH } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 const plugin: ToolPlugin = {
   name: 'report',
@@ -48,8 +53,8 @@ const plugin: ToolPlugin = {
 
         // Try template file
         const templatePath = path.join(BASE_PATH, 'knowledge/templates', `${template}.md`);
-        if (fs.existsSync(templatePath)) {
-          let content = fs.readFileSync(templatePath, 'utf8');
+        if (secureRuntime.safeExists(templatePath)) {
+          let content = secureRuntime.safeReadFile(templatePath);
           // Simple variable substitution
           for (const [key, value] of Object.entries(params)) {
             content = content.replace(new RegExp(`{{${key}}}`, 'g'), String(value));

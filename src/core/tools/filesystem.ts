@@ -1,11 +1,16 @@
 /**
- * Filesystem Tools Plugin
- * Provides: list_directory, read_file
+ * @file Filesystem Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 const plugin: ToolPlugin = {
   name: 'filesystem',
@@ -25,10 +30,10 @@ const plugin: ToolPlugin = {
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `Thư mục ${targetPath} không tồn tại` };
         }
-        return fs.readdirSync(targetPath, { withFileTypes: true }).map(item => ({
+        return secureRuntime.safeReaddir(targetPath).map(item => ({
           name: item.name,
           type: item.isDirectory() ? 'directory' : 'file'
         }));
@@ -49,13 +54,13 @@ const plugin: ToolPlugin = {
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File ${targetPath} không tồn tại` };
         }
-        if (!fs.statSync(targetPath).isFile()) {
+        if (!secureRuntime.safeStat(targetPath).isFile()) {
           return { error: `${targetPath} không phải là file` };
         }
-        return { content: fs.readFileSync(targetPath, 'utf8') };
+        return { content: secureRuntime.safeReadFile(targetPath) };
       }
     }
   ]

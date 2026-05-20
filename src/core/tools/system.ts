@@ -1,12 +1,18 @@
 /**
- * System Tools Plugin
- * Provides: process_new_raw, execute_command, extract_formulas
+ * @file System Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
+ * execSync is retained for execute_command (whitelisted shell execution).
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, isCommandSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 const plugin: ToolPlugin = {
   name: 'system',
@@ -25,13 +31,13 @@ const plugin: ToolPlugin = {
         const inputDir = args.input_dir || path.join(BASE_PATH, 'knowledge/raw-input/');
         const absInputDir = path.resolve(BASE_PATH, inputDir);
 
-        if (!fs.existsSync(absInputDir)) {
+        if (!secureRuntime.safeExists(absInputDir)) {
           return { error: `Thư mục input ${absInputDir} không tồn tại` };
         }
 
-        const files = fs.readdirSync(absInputDir);
-        const pdfs = files.filter(f => f.toLowerCase().endsWith('.pdf'));
-        const docxs = files.filter(f => f.toLowerCase().endsWith('.docx'));
+        const files = secureRuntime.safeReaddir(absInputDir);
+        const pdfs = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+        const docxs = files.filter(f => f.name.toLowerCase().endsWith('.docx'));
 
         if (pdfs.length === 0 && docxs.length === 0) {
           return `✅ Không có file mới (PDF/DOCX) trong ${inputDir}`;
@@ -42,9 +48,9 @@ const plugin: ToolPlugin = {
 
         for (const pdfFile of pdfs) {
           try {
-            const pdfPath = path.join(absInputDir, pdfFile);
+            const pdfPath = path.join(absInputDir, pdfFile.name);
             const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-            fs.mkdirSync(tmpDir, { recursive: true });
+            secureRuntime.safeMkdir(tmpDir);
             const tmpScriptPath = path.join(tmpDir, 'process.mjs');
             const pdfPathJs = pdfPath.replace(/\\/g, '/');
 
@@ -53,23 +59,23 @@ import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/documen
 const result = convertDocumentToMd('${pdfPathJs}');
 process.stdout.write(JSON.stringify(result));
 `;
-            fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+            secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
             const output = execSync(`node "${tmpScriptPath}"`, { cwd: BASE_PATH, encoding: 'utf8', timeout: 120000, maxBuffer: 50 * 1024 * 1024, windowsHide: true });
-            try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+            try { secureRuntime.safeRm(tmpDir); } catch {}
             const result = JSON.parse(output.trim());
 
             addProcessedFile({ path: pdfPath, type: 'pdf', action: 'process_new_raw', destination: result.mdPath });
-            processed.push(`✅ ${pdfFile} → ${result.mdPath}`);
+            processed.push(`✅ ${pdfFile.name} → ${result.mdPath}`);
           } catch (err: any) {
-            errors.push(`❌ ${pdfFile}: ${err.message}`);
+            errors.push(`❌ ${pdfFile.name}: ${err.message}`);
           }
         }
 
         for (const docxFile of docxs) {
           try {
-            const docxPath = path.join(absInputDir, docxFile);
+            const docxPath = path.join(absInputDir, docxFile.name);
             const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-            fs.mkdirSync(tmpDir, { recursive: true });
+            secureRuntime.safeMkdir(tmpDir);
             const tmpScriptPath = path.join(tmpDir, 'process.mjs');
             const docxPathJs = docxPath.replace(/\\/g, '/');
 
@@ -78,15 +84,15 @@ import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/documen
 const result = convertDocumentToMd('${docxPathJs}');
 process.stdout.write(JSON.stringify(result));
 `;
-            fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+            secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
             const output = execSync(`node "${tmpScriptPath}"`, { cwd: BASE_PATH, encoding: 'utf8', timeout: 120000, maxBuffer: 50 * 1024 * 1024, windowsHide: true });
-            try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+            try { secureRuntime.safeRm(tmpDir); } catch {}
             const result = JSON.parse(output.trim());
 
             addProcessedFile({ path: docxPath, type: 'document', action: 'process_new_raw', destination: result.mdPath });
-            processed.push(`✅ ${docxFile} → ${result.mdPath}`);
+            processed.push(`✅ ${docxFile.name} → ${result.mdPath}`);
           } catch (err: any) {
-            errors.push(`❌ ${docxFile}: ${err.message}`);
+            errors.push(`❌ ${docxFile.name}: ${err.message}`);
           }
         }
 
@@ -152,11 +158,11 @@ process.stdout.write(JSON.stringify(result));
           if (!isPathSafe(fullPath)) {
             return { error: `Đường dẫn ${args.mdPath} không được phép truy cập` };
           }
-          if (!fs.existsSync(fullPath)) {
+          if (!secureRuntime.safeExists(fullPath)) {
             return { error: `File ${args.mdPath} không tồn tại` };
           }
 
-          const content = fs.readFileSync(fullPath, 'utf8');
+          const content = secureRuntime.safeReadFile(fullPath);
 
           // Extract LaTeX formulas (inline $...$ and display $$...$$)
           const displayFormulas: string[] = [];

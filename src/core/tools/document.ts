@@ -1,12 +1,19 @@
 /**
- * Document Tools Plugin
- * Provides: read_pdf, read_docx, extract_pdf_to_md, extract_docx_to_md, archive_document
+ * @file Document Tools Plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @owner core-tools
+ *
+ * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
+ * execSync is retained for spawning child processes (PDF/DOCX parsing) but
+ * all file read/write uses secureRuntime.
  */
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
+import { secureRuntime } from './tool-gateway.js';
 
 const plugin: ToolPlugin = {
   name: 'document',
@@ -27,10 +34,10 @@ const plugin: ToolPlugin = {
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File PDF ${targetPath} không tồn tại` };
         }
-        if (!fs.statSync(targetPath).isFile()) {
+        if (!secureRuntime.safeStat(targetPath).isFile()) {
           return { error: `${targetPath} không phải là file` };
         }
 
@@ -59,12 +66,9 @@ if (pages.length > 1) {
 if (text.length > 20000) {
   text = text.substring(0, 20000) + '\\n\\n[... truncated at 20000 chars]';
 }
-process.stdout.write(JSON.stringify({
-  content: text,
-  pageCount: numPages
-}));
+process.stdout.write(JSON.stringify({ content: text, pageCount: numPages }));
 `;
-          fs.writeFileSync(tmpScriptPath, tmpScript, 'utf8');
+          secureRuntime.safeWriteFile(tmpScriptPath, tmpScript);
 
           const output = execSync(`node "${tmpScriptPath}"`, {
             cwd: BASE_PATH,
@@ -74,7 +78,7 @@ process.stdout.write(JSON.stringify({
             windowsHide: true
           });
 
-          try { fs.unlinkSync(tmpScriptPath); } catch {}
+          try { secureRuntime.safeUnlink(tmpScriptPath); } catch {}
 
           const result = JSON.parse(output.trim());
           if (result.error) {
@@ -102,17 +106,17 @@ process.stdout.write(JSON.stringify({
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File DOCX ${targetPath} không tồn tại` };
         }
-        if (!fs.statSync(targetPath).isFile()) {
+        if (!secureRuntime.safeStat(targetPath).isFile()) {
           return { error: `${targetPath} không phải là file` };
         }
 
         try {
           const maxLength = args.max_length || 20000;
           const tmpDir = path.join(BASE_PATH, '.tmp-docx-' + Date.now());
-          fs.mkdirSync(tmpDir, { recursive: true });
+          secureRuntime.safeMkdir(tmpDir);
           const tmpScriptPath = path.join(tmpDir, 'parse-docx.mjs');
           const docxPathJs = path.resolve(targetPath).replace(/\\/g, '/');
 
@@ -127,7 +131,7 @@ if (text.length > ${maxLength}) {
 }
 process.stdout.write(JSON.stringify({ content: text }));
 `;
-          fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+          secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
 
           const output = execSync(`node "${tmpScriptPath}"`, {
             cwd: BASE_PATH,
@@ -137,7 +141,7 @@ process.stdout.write(JSON.stringify({ content: text }));
             windowsHide: true
           });
 
-          try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+          try { secureRuntime.safeRm(tmpDir); } catch {}
 
           const result = JSON.parse(output.trim());
           if (result.error) {
@@ -164,14 +168,14 @@ process.stdout.write(JSON.stringify({ content: text }));
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File PDF ${targetPath} không tồn tại` };
         }
 
         try {
           const pdfPathJs = path.resolve(targetPath).replace(/\\/g, '/');
           const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-          fs.mkdirSync(tmpDir, { recursive: true });
+          secureRuntime.safeMkdir(tmpDir);
           const tmpScriptPath = path.join(tmpDir, 'convert-pdf.mjs');
 
           const scriptContent = `
@@ -179,7 +183,7 @@ import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/documen
 const result = convertDocumentToMd('${pdfPathJs}');
 process.stdout.write(JSON.stringify(result));
 `;
-          fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+          secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
 
           const output = execSync(`node "${tmpScriptPath}"`, {
             cwd: BASE_PATH,
@@ -189,7 +193,7 @@ process.stdout.write(JSON.stringify(result));
             windowsHide: true
           });
 
-          try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+          try { secureRuntime.safeRm(tmpDir); } catch {}
 
           const result = JSON.parse(output.trim());
 
@@ -227,14 +231,14 @@ process.stdout.write(JSON.stringify(result));
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File DOCX ${targetPath} không tồn tại` };
         }
 
         try {
           const docxPathJs = path.resolve(targetPath).replace(/\\/g, '/');
           const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-          fs.mkdirSync(tmpDir, { recursive: true });
+          secureRuntime.safeMkdir(tmpDir);
           const tmpScriptPath = path.join(tmpDir, 'convert-docx.mjs');
 
           const scriptContent = `
@@ -242,7 +246,7 @@ import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/documen
 const result = convertDocumentToMd('${docxPathJs}');
 process.stdout.write(JSON.stringify(result));
 `;
-          fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+          secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
 
           const output = execSync(`node "${tmpScriptPath}"`, {
             cwd: BASE_PATH,
@@ -252,7 +256,7 @@ process.stdout.write(JSON.stringify(result));
             windowsHide: true
           });
 
-          try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+          try { secureRuntime.safeRm(tmpDir); } catch {}
 
           const result = JSON.parse(output.trim());
 
@@ -291,13 +295,13 @@ process.stdout.write(JSON.stringify(result));
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
         }
-        if (!fs.existsSync(targetPath)) {
+        if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File ${targetPath} không tồn tại` };
         }
 
         try {
           const tmpDir = path.join(BASE_PATH, '.tmp-archive-' + Date.now());
-          fs.mkdirSync(tmpDir, { recursive: true });
+          secureRuntime.safeMkdir(tmpDir);
           const tmpScriptPath = path.join(tmpDir, 'archive.mjs');
           const filePathJs = path.resolve(targetPath).replace(/\\/g, '/');
           const topic = args.topic || '';
@@ -307,7 +311,7 @@ import { archiveDocument } from '${toFileUrl(BASE_PATH)}/src/modules/knowledge/m
 const result = archiveDocument('${filePathJs}', ${topic ? `'${topic.replace(/'/g, "\\'")}'` : undefined});
 process.stdout.write(JSON.stringify(result));
 `;
-          fs.writeFileSync(tmpScriptPath, scriptContent, 'utf8');
+          secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
 
           const output = execSync(`node "${tmpScriptPath}"`, {
             cwd: BASE_PATH,
@@ -317,7 +321,7 @@ process.stdout.write(JSON.stringify(result));
             windowsHide: true
           });
 
-          try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+          try { secureRuntime.safeRm(tmpDir); } catch {}
 
           const result = JSON.parse(output.trim());
           if (!result.success) {

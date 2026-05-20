@@ -1,10 +1,18 @@
 /**
- * Shared utilities for tool plugins
+ * @file Shared utilities for tool plugins
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts
+ * @imported-by All tool plugins
+ * @owner core-tools
+ *
+ * ZERO-TRUST: This file imports fs/path for BASE_PATH and utility functions only.
+ * All file I/O operations route through tool-gateway.ts (secureRuntime).
  */
-import * as fs from 'fs';
-import * as path from 'path';
 
-export const BASE_PATH = path.resolve(process.cwd());
+import * as path from 'path';
+import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
+
+export const BASE_PATH = WORKSPACE_ROOT;
 
 const SAFE_PATHS = [
   path.resolve(BASE_PATH),
@@ -13,7 +21,6 @@ const SAFE_PATHS = [
   path.resolve(BASE_PATH, 'config'),
   path.resolve(BASE_PATH, 'scripts'),
   path.resolve(BASE_PATH, 'docker'),
-  path.resolve(BASE_PATH, '9router'),
 ];
 
 export function isPathSafe(targetPath: string): boolean {
@@ -39,8 +46,8 @@ export function addProcessedFile(entry: {
     const pfPath = path.join(BASE_PATH, 'knowledge/workspace/processed-files.json');
     let data: any = { schemaVersion: '1.0', files: [], meta: { lastUpdated: new Date().toISOString() } };
 
-    if (fs.existsSync(pfPath)) {
-      data = JSON.parse(fs.readFileSync(pfPath, 'utf8'));
+    if (secureRuntime.safeExists('knowledge/workspace/processed-files.json')) {
+      data = JSON.parse(secureRuntime.safeReadFile('knowledge/workspace/processed-files.json'));
     }
 
     if (data.files && Array.isArray(data.files)) {
@@ -68,7 +75,7 @@ export function addProcessedFile(entry: {
       byType
     };
 
-    fs.writeFileSync(pfPath, JSON.stringify(data, null, 2), 'utf8');
+    secureRuntime.safeWriteFile('knowledge/workspace/processed-files.json', JSON.stringify(data, null, 2));
     console.log(`📝 auto-mark processed: ${entry.path} (${entry.action})`);
     return true;
   } catch (err: any) {
@@ -79,9 +86,8 @@ export function addProcessedFile(entry: {
 
 export function loadProcessedFiles(): string[] {
   try {
-    const pfPath = path.join(BASE_PATH, 'knowledge/workspace/processed-files.json');
-    if (fs.existsSync(pfPath)) {
-      const data = JSON.parse(fs.readFileSync(pfPath, 'utf8'));
+    if (secureRuntime.safeExists('knowledge/workspace/processed-files.json')) {
+      const data = JSON.parse(secureRuntime.safeReadFile('knowledge/workspace/processed-files.json'));
       if (data.files && Array.isArray(data.files)) {
         return data.files.map((f: any) => f.path);
       }
