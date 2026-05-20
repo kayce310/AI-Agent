@@ -5,3 +5,11 @@ dist/
 knowledge/workspace/state.json.bak.*
 docker/9router/
 C:\Users\Khang\AppData\Local\Temp\9router\
+.external-assets/
+9router/node_modules/
+9router/.next/
+9router/gitbook/
+9router/tests/
+9router/docs/
+9router/tester/
+9router/.vscode/

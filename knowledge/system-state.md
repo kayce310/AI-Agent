@@ -1,9 +1,9 @@
 # 🧬 System State — Living Manifest
 
-> Auto-generated: 2026-05-20T09:02:00Z
-> Session: session-2026-05-20T09-02-00-000Z
+> Auto-generated: 2026-05-20T13:05:00Z
+> Session: session-2026-05-20T13-05-00-000Z
 > Agent: Kato v5.3
-> Checkpoint: governance-phase-3
+> Checkpoint: operation-liposuction
 
 ---
 
@@ -90,8 +90,18 @@
 | 2026-05-20 | gov-phase-2 | Created validate-structure.ts; Added @depends-on to DiscordBridge; Created modules/index.ts barrel |
 | 2026-05-20 | gov-phase-3 | Created .husky/pre-commit hook; Created .github/workflows/structure-check.yml CI |
 | 2026-05-20 | gov-phase-4 | Operation IMMOBILIZE: Rebuilt isPathSafe() 6-layer Zero-Trust; Created tool-gateway.ts; Removed execSync/fs re-export from registry; Added R5 Static Security Scan |
-| 2026-05-20 | gov-phase-5 | Operation Clean Slate: Purged 6 orphan candidates (tool-pruner.ts, extract_worker.js/cjs, repos/, .obsidian/, blueprints/queue/) — ~50MB+ freed |
+| 2026-05-20 | gov-phase-5 | Operation Clean Slate: Purged 6 orphan candidates — ~50MB+ freed |
+| 2026-05-20 | gov-phase-6 | Operation Liposuction: Moved 52 PDFs to .external-assets/, purged 9router rác (node_modules/.next/gitbook/tests/docs/tester/.vscode), git gc aggressive — ~891MB freed, 41,534 files removed |
 
 ---
+
+**Storage After Liposuction:**
+| Metric | Before | After | Delta |
+|--------|--------|-------|-------|
+| Total repo | 2,320 MB | 1,429 MB | **-891 MB** |
+| Total files | 61,300 | 19,766 | **-41,534** |
+| .git | 556 MB | 517 MB | -39 MB |
+| 9router | 859 MB | ~5 MB | **-854 MB** |
+| knowledge/raw | 497 MB | 0 MB | **-497 MB** |
 
 > 📌 **Next Action:** Phase 3+ — Wire Janitor, unify skills system, add dependency headers to ALL src/ files, add core tests.
