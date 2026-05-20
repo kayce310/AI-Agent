@@ -8,8 +8,8 @@ import { getDefaultRegistry } from './tool-registry.js';
 
 // Tools được phân loại theo ngữ cảnh sử dụng
 export const TOOL_CATEGORIES: Record<string, string[]> = {
-  // Luôn gửi (core navigation)
-  core: ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page'],
+  // Luôn gửi (core navigation + internet access)
+  core: ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'],
   
   // Document processing (PDF, DOCX) — parse, archive
   document: ['read_pdf', 'read_docx', 'extract_pdf_to_md', 'extract_docx_to_md'],
@@ -23,8 +23,8 @@ export const TOOL_CATEGORIES: Record<string, string[]> = {
   // Skills Manager (Phase 2c) — lazy-load và phát hiện skills cũ
   skills: ['load_skill', 'check_stale_skills'],
   
-  // External access
-  network: ['fetch_url'],
+  // External access (backup — fetch_url đã ở core)
+  network: [],
   
   // System operations — chỉ gửi khi cần
   admin: ['process_new_raw', 'execute_command'],

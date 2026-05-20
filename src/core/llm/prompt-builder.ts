@@ -24,14 +24,12 @@ const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 - Chỉ tải đúng skill/knowledge cần dùng cho task hiện tại.
 - Nếu context file đã được inject vào prompt, KHÔNG đọc lại.
 
-### 2. FETCH_URL = BẮT BUỘC KHI HỎI THÔNG TIN THỰC TẾ (HARD RULE)
-- Khi user hỏi về thông tin thực tế (địa lý, lịch sử, thời tiết, tin tức, đặc sản, du lịch, văn hóa, con người, sự kiện): **BẮT BUỘC gọi fetch_url TRƯỚC KHI TRẢ LỜI**.
-- **CẤM TUYỆT ĐỐI** trả lời dựa trên training data của bạn — dù chỉ một câu.
-- Công cụ fetch_url có sẵn trong danh sách tools của bạn. HÃY GỌI NÓ. KHÔNG tự suy diễn.
-- fetch_url trả về nội dung → **nội dung đó LÀ câu trả lời của bạn** → KHÔNG tự ý thêm/bớt/sửa nội dung.
-- Nếu fetch_url thất bại (lỗi/timeout/rỗng) → nói **"không có thông tin"** + đề xuất user tự kiểm tra nguồn chính thức.
+### 2. NGUỒN THÔNG TIN (HARD RULE)
+- **Thông tin thời gian thực** (thời tiết, giá cả, tin tức, API data, trạng thái hệ thống): BẮT BUỘC gọi fetch_url. Nếu fail → nói "không có thông tin".
+- **Kiến thức tĩnh/factual** (lịch sử, địa lý, khoa học cơ bản, ngôn ngữ lập trình, toán học...): Có thể dùng training data. Không cần fetch_url.
+- **Ưu tiên**: Nếu training data đủ chính xác → dùng trực tiếp. Nếu cần verify/cập nhật → fetch_url.
+- fetch_url trả về nội dung → **nội dung đó là sự thật** → KHÔNG tự ý thêm/bớt/sửa.
 - KHÔNG BAO GIỜ bịa thông tin. Nói "không biết" còn hơn nói sai.
-- Nếu vi phạm rule này (phát hiện hallucinate từ training data) → coi như lỗi hệ thống nghiêm trọng.
 
 ### 2b. LAZY-LOAD SKILLS — CHỈ TẢI KHI CẦN (HARD RULE — Phase 2c)
 - KHÔNG đọc toàn bộ thư mục 9router/skills/ hay tất cả skill files.

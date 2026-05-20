@@ -187,6 +187,12 @@ private maxToolCycles: number;
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
         let selectedTools = selectRelevantTools(lastUserMsg);
 
+        // Fallback: if pruner returned empty (cache miss), use full registry
+        if (selectedTools.length === 0) {
+          selectedTools = this.toolRegistry.getDefinitions();
+          console.warn(`⚠️ Tool pruner returned 0 tools, fallback to full registry (${selectedTools.length} tools)`);
+        }
+
         // Cycle >= 3: restrict to core tools only
         if (toolCallCycles >= 3) {
           const coreNames = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'];

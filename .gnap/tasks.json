@@ -657,7 +657,35 @@
       "timestamp": 1779251688950,
       "id": "gnap-1779251688950-9k3cbv",
       "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779251740136,
+      "id": "gnap-1779251740136-diu9ki",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779251740141,
+      "id": "gnap-1779251740141-omgo6a",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779252465386,
+      "id": "gnap-1779252465386-wd00dh",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779252465391,
+      "id": "gnap-1779252465391-vjjwbi",
+      "status": "pending"
     }
   ],
-  "lastSync": 1779251688950
+  "lastSync": 1779252465391
 }

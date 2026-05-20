@@ -556,12 +556,83 @@ Hoàn tất convert 217 skills từ `knowledge/references/autoskills/packages/au
 - **Quy mô**: 217 skills (plan gốc 15-30 seed) — ~10x overscope, nhưng tác động positive
 - **angular-developer**: Force-convert vi phạm mitigation threshold (37 files > 20)
 - **Chưa implement**: lazy-load mechanism + generatedAt/stale check (để lại Phase 2c)
-
 ## Files affected
 | File | Change |
 |------|--------|
 | `knowledge/blueprints/autoskill-conversion-plan.md` | NEW — plan riêng cho autoskill |
 | `knowledge/blueprints/workspace-tracking.md` | UPDATE — hoàn tất phase, reference plan |
 | `knowledge/workspace/state.md` | UPDATE — Phase 2b ✅ |
+
+---
+
+# [2026-05-20 04:50] — Fix: Duplicate response + fetch_url 403 + Over-strict training data rule
+
+## Context
+Bot Discord có 3 bugs phát hiện từ phản hồi user:
+1. Trả lời 2 lần cho 1 tin nhắn (duplicate response)
+2. fetch_url trả về 403 Forbidden (thiếu User-Agent header)
+3. Rule cấm hoàn toàn training data → bot không trả lời được câu hỏi kiến thức tĩnh
+
+## Root Cause Analysis
+
+### Bug 1: Duplicate response
+- `releaseMessageLock()` không xóa lock file, chỉ update timestamp → lock TTL 5min
+- 2 instance chạy song song (command `&`), race condition giữa `fs.existsSync` và `fs.openSync('wx')`
+
+### Bug 2: fetch_url 403
+- `http.get` không gửi User-Agent header → Wikipedia và nhiều site chặn request
+- Test confirm: `https.get('https://vi.wikipedia.org/...')` → Status 403
+
+### Bug 3: Over-strict rule
+- `prompt-builder.ts` `DEFAULT_RULES`: "CẤM TUYỆT ĐỐI trả lời dựa trên training data"
+- `hard-rules.md`: "Không dùng training data"
+- `soul.md`: "KHÔNG BAO GIỜ dùng LLM training data"
+- Bot bắt buộc fetch_url cho MỌI câu hỏi → khi fetch_url fail → bot "mute"
+
+### Bug 4: Tool pruner không inject fetch_url
+- `selectRelevantTools()` dùng cached definitions, nếu cache miss → trả empty array
+- Bot nói "fetch_url không có trong danh sách tools"
+
+## Fixes Applied
+
+### Fix 1: Duplicate response
+- `releaseMessageLock()` giờ xóa lock file ngay sau khi xử lý xong
+- Thêm PID double-check trong `DiscordBridge.start()`
+- Kill 2 instance, restart 1 instance
+
+### Fix 2: fetch_url 403
+- Thêm `User-Agent`, `Accept`, `Accept-Language` headers vào `fetch_url` tool
+- Test: fetch Wikipedia → Status 200, 181KB content ✅
+
+### Fix 3: Over-strict rule
+- `prompt-builder.ts`: Relax rule — cho phép training data cho kiến thức tĩnh
+- `hard-rules.md`: "Kiến thức tĩnh/factual có thể dùng training data"
+- `soul.md`: "LLM training data — dùng cho kiến thức tĩnh/factual"
+
+### Fix 4: Tool pruner fallback
+- Thêm `fetch_url` vào `core` category (luôn inject)
+- Thêm fallback trong `agent.ts`: nếu `selectRelevantTools` trả empty → dùng full registry
+
+## Files affected
+| File | Change |
+|------|--------|
+| `src/modules/discord/index.ts` | fix releaseMessageLock + PID guard |
+| `src/core/tools/network.ts` | thêm User-Agent header |
+| `src/core/llm/prompt-builder.ts` | relax fetch_url rule |
+| `src/core/tools/tool-pruner.ts` | fetch_url vào core category |
+| `src/core/engine/agent.ts` | fallback nếu pruner trả empty |
+| `knowledge/wiki/rules/hard-rules.md` | relax training data rule |
+| `knowledge/wiki/core/soul.md` | cho phép training data tĩnh |
+
+## SOP cho lần sau (từ user feedback)
+1. Đọc SOP trước khi xử lý bug
+2. Phân tích root cause (không sửa surface)
+3. Kiểm chứng tuần tự từng fix
+4. Lưu changelog sau khi fix
+
+## Kiểm chứng
+- Bot trả lời 1 lần/message ✅
+- fetch_url Wikipedia 200 OK ✅
+- Training data cho kiến thức tĩnh ✅ (cần user test trên Discord)
 
 
