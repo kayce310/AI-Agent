@@ -392,7 +392,9 @@ export class ModelRouter {
           continue;
         }
 
-        console.log(`📤 ModelRouter: trying adapter "${adapter.name}"...`);
+        // ── DEBUG: Log tools being sent to API ──
+        const toolNames = options?.tools?.map((t: any) => t.function?.name).join(', ') || 'none';
+        console.log(`📤 ModelRouter: trying adapter "${adapter.name}" | tools: [${toolNames}] (${options?.tools?.length || 0})`);
         const response = await adapter.invoke(messages, options);
         console.log(`✅ ModelRouter: success via "${adapter.name}" (model: ${response.modelUsed})`);
 

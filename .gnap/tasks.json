@@ -685,7 +685,63 @@
       "timestamp": 1779252465391,
       "id": "gnap-1779252465391-vjjwbi",
       "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779254907199,
+      "id": "gnap-1779254907199-nx6h1p",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779254907203,
+      "id": "gnap-1779254907203-f6wm4c",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779254975996,
+      "id": "gnap-1779254975996-i8vkia",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779254976000,
+      "id": "gnap-1779254976000-jr390a",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779255123786,
+      "id": "gnap-1779255123786-a04ahf",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779255123790,
+      "id": "gnap-1779255123790-c8hnm9",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779258611119,
+      "id": "gnap-1779258611119-pi8itl",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779258611124,
+      "id": "gnap-1779258611124-addjpv",
+      "status": "pending"
     }
   ],
-  "lastSync": 1779252465391
+  "lastSync": 1779258611124
 }

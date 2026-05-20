@@ -277,6 +277,9 @@ private maxToolCycles: number;
               continue;
             }
 
+            // ── DEBUG: Log every tool call ──
+            console.log(`🔧 TOOL_CALL: ${toolCall.function.name} | args: ${toolCall.function.arguments?.substring(0, 200) || 'none'} | cycle: ${toolCallCycles}`);
+
             const allowed = await this.hooks.emit('tool:call', {
               sessionId: request.sessionId,
               toolName: toolCall.function.name,
@@ -297,6 +300,10 @@ private maxToolCycles: number;
             }
 
             const toolResult = this.toolRegistry.executeToolCall(toolCall);
+
+            // ── DEBUG: Log tool result ──
+            const resultStr = JSON.stringify(toolResult);
+            console.log(`🔧 TOOL_RESULT: ${toolCall.function.name} | result_length: ${resultStr.length} | preview: ${resultStr.substring(0, 200)}`);
 
             await this.hooks.emit('tool:result', {
               sessionId: request.sessionId,
