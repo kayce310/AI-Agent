@@ -10,7 +10,9 @@
  */
 
 import { fileURLToPath } from 'url';
-import { secureRuntime, WORKSPACE_ROOT, isPathSafe } from './tool-gateway.js';
+import * as path from 'path';
+import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
+import { isPathSafe } from './_shared.js';
 
 // ── Types ──
 
@@ -66,14 +68,14 @@ function addProcessedFile(entry: {
 }): void {
   try {
     let data: { files: any[] } = { files: [] };
-    if (fs.existsSync(PROCESSED_FILES_PATH)) {
-      data = JSON.parse(fs.readFileSync(PROCESSED_FILES_PATH, 'utf8'));
+    if (secureRuntime.safeExists(PROCESSED_FILES_PATH)) {
+      data = JSON.parse(secureRuntime.safeReadFile(PROCESSED_FILES_PATH));
     }
     data.files.push({
       ...entry,
       timestamp: new Date().toISOString(),
     });
-    fs.writeFileSync(PROCESSED_FILES_PATH, JSON.stringify(data, null, 2), 'utf8');
+    secureRuntime.safeWriteFile(PROCESSED_FILES_PATH, JSON.stringify(data, null, 2));
   } catch (err) {
     console.warn('⚠️ Could not write to processed-files.json:', (err as Error).message);
   }

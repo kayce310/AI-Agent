@@ -28,5 +28,65 @@
         "description": "Implementation-level deep comparison of Kato vs 13 AI Agent frameworks"
       }
     }
+  },
+  "src": {
+    "core/tools/tool-pruner.ts": {
+      "checksum": "new",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "size": 3500,
+      "description": "Tool Pruner — Keyword-based tool selection + token estimation. Recreated after deletion in Phase 5 cleanup.",
+      "action": "created"
+    },
+    "core/tools/tool-registry.ts": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "size": 7200,
+      "description": "Tool Registry — Fixed missing path/fs imports, replaced raw fs with secureRuntime",
+      "action": "modified"
+    },
+    "core/security/privilege-guard.ts": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "size": 11000,
+      "description": "PrivilegeGuard — Added missing import path, removed duplicate require('path')",
+      "action": "modified"
+    }
+  },
+  "config": {
+    "providers.json": {
+      "checksum": "existing",
+      "processedAt": "2026-05-20T00:00:00.000Z",
+      "description": "9router provider config — baseUrl: http://localhost:20128/v1"
+    }
+  },
+  "scripts": {
+    "configure-9router.ts": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "description": "9Router External Configuration — Fixed default path to e:/Test/9router",
+      "action": "modified"
+    }
+  },
+  "root": {
+    "9router-boot.bat": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "description": "9Router Boot Selector — Fixed external path to e:\\Test\\9router",
+      "action": "modified"
+    },
+    ".env": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "description": "Environment vars — Added NINE_ROUTER_EXTERNAL_PATH, NINE_ROUTER_API_BASE, NINE_ROUTER_PORT",
+      "action": "modified"
+    }
+  },
+  "knowledge": {
+    "system-state.md": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T02:30:00.000Z",
+      "description": "System State — Added 9router external to module matrix, changelog gov-phase-8",
+      "action": "modified"
+    }
   }
 }

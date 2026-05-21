@@ -36,8 +36,9 @@
 | MCP | `src/core/mcp/*.ts` | 🟡 UNKNOWN | — | 2 files, not verified |
 | SOP Engine | `src/core/sop/*.ts` | 🟡 UNKNOWN | — | 4 files, not verified |
 | Observability | `src/core/observability/*.ts` | 🟡 UNKNOWN | — | 5 files, not verified |
+| **9Router (External)** | `e:/Test/9router` | 🟢 ACTIVE (EXTERNAL) | 2026-05-21 | External runtime, port 20128, configured via configure-9router.ts |
 
-**Summary:** 🟢 9 ACTIVE | 🟡 14 UNKNOWN/FIXED | 🔴 1 DEAD
+**Summary:** 🟢 10 ACTIVE | 🟡 14 UNKNOWN/FIXED | 🔴 1 DEAD
 
 ---
 
@@ -91,7 +92,9 @@
 | 2026-05-20 | gov-phase-3 | Created .husky/pre-commit hook; Created .github/workflows/structure-check.yml CI |
 | 2026-05-20 | gov-phase-4 | Operation IMMOBILIZE: Rebuilt isPathSafe() 6-layer Zero-Trust; Created tool-gateway.ts; Removed execSync/fs re-export from registry; Added R5 Static Security Scan |
 | 2026-05-20 | gov-phase-5 | Operation Clean Slate: Purged 6 orphan candidates — ~50MB+ freed |
+| 2026-05-20 | gov-phase-7 | Operation External Boundary: Wired 9router as external service, created configure-9router.ts |
 | 2026-05-20 | gov-phase-6 | Operation Liposuction: Moved 52 PDFs to .external-assets/, purged 9router rác (node_modules/.next/gitbook/tests/docs/tester/.vscode), git gc aggressive — ~891MB freed, 41,534 files removed |
+| 2026-05-21 | gov-phase-8 | Fixed 9router external path: e:/Test/9router-runtime → e:/Test/9router, ran configure-9router.ts successfully, updated system-state.md |
 
 ---
 
@@ -101,7 +104,7 @@
 | Total repo | 2,320 MB | 1,429 MB | **-891 MB** |
 | Total files | 61,300 | 19,766 | **-41,534** |
 | .git | 556 MB | 517 MB | -39 MB |
-| 9router | 859 MB | ~5 MB | **-854 MB** |
+| 9router (old, purged) | 859 MB | ~5 MB | **-854 MB** |
 | knowledge/raw | 497 MB | 0 MB | **-497 MB** |
 
 > 📌 **Next Action:** Phase 3+ — Wire Janitor, unify skills system, add dependency headers to ALL src/ files, add core tests.

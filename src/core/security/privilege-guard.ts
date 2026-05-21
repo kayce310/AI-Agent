@@ -7,6 +7,8 @@
  * Supports path traversal detection.
  */
 
+import * as path from 'path';
+
 // ── Types ──
 
 /** A single privilege rule */
@@ -132,7 +134,6 @@ export function isPathSafe(inputPath: string, workspaceRoot: string): boolean {
   if (path.isAbsolute(normalized)) return false;
 
   // Layer 6: Resolve and enforce workspace root prefix
-  const path = require('path');
   const resolved = path.resolve(workspaceRoot, normalized);
   const normalizedRoot = path.resolve(workspaceRoot);
 

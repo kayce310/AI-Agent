@@ -1,27 +1,34 @@
 @echo off
 setlocal enabledelayedexpansion
-title 9Router Boot Selector v2.1
-echo ?? 9Router Boot Selector v2.1
-echo -----------------------------
-echo.
+title 9Router Boot Selector v2.2 (External)
+echo ?? 9Router Boot Selector v2.2 (External Runtime)
+echo ----------------------------------------
+
+:: ===== Read external path from env or use default =====
+set "NINE_ROUTER_PATH=e:\Test\9router"
+if not "%NINE_ROUTER_EXTERNAL_PATH%"=="" set "NINE_ROUTER_PATH=%NINE_ROUTER_EXTERNAL_PATH%"
 
 :: ===== Kiem tra 9router =====
-echo [0/3] Checking 9router...
+echo [0/3] Checking 9router on port 20128...
 curl -s --max-time 3 -o nul -w "%%{http_code}" http://localhost:20128/v1/models > "%TEMP%\.9router.http" 2>nul
 set /p HTTP_CODE=<"%TEMP%\.9router.http"
 del "%TEMP%\.9router.http" 2>nul
 
 if "!HTTP_CODE!"=="200" (
-    echo    ?? 9router running.
+    echo    ?? 9router running on port 20128.
     goto SELECTOR
 )
 
-echo    ? Starting 9router from local clone...
-if exist "9router\package.json" (
-    start "9router" cmd /c "cd /d "%~dp0" && cd 9router && npm run dev"
-    timeout /t 20 /nobreak >nul
+echo    ? 9router not running. Starting external runtime...
+echo    Path: !NINE_ROUTER_PATH!
+
+if exist "!NINE_ROUTER_PATH!\package.json" (
+    start "9router-external" cmd /c "cd /d "!NINE_ROUTER_PATH!" && npm run dev"
+    echo    Waiting for 9router to start...
+    timeout /t 25 /nobreak >nul
 ) else (
-    echo [ERROR] Cannot find 9router\
+    echo [ERROR] Cannot find 9router runtime at: !NINE_ROUTER_PATH!
+    echo    Set NINE_ROUTER_EXTERNAL_PATH env var or update 9router-boot.bat
     pause
     exit /b 1
 )
@@ -32,11 +39,12 @@ curl -s --max-time 5 -o nul -w "%%{http_code}" http://localhost:20128/v1/models 
 set /p HTTP_CODE=<"%TEMP%\.9router.http"
 del "%TEMP%\.9router.http" 2>nul
 if not "!HTTP_CODE!"=="200" (
-    echo [ERROR] 9router failed to start.
+    echo [ERROR] 9router failed to start on port 20128.
+    echo    Check: !NINE_ROUTER_PATH!
     pause
     exit /b 1
 )
-echo    ?? 9router started.
+echo    ?? 9router started on port 20128.
 
 :: ===== Chon combo =====
 :SELECTOR
@@ -52,9 +60,10 @@ if !EXIT_CODE! equ 3 ( echo Error. & pause & exit /b 1 )
 set /p SID=<"%TEMP%\.9router-sel.txt"
 del "%TEMP%\.9router-sel.txt" 2>nul
 echo.
-echo -----------------------------
+echo ----------------------------------------
 echo ?? Combo: !SID!
-echo -----------------------------
+echo ?? 9Router: !NINE_ROUTER_PATH! (external)
+echo ----------------------------------------
 
 :: Clean memory
 if exist "knowledge\memory\*.json" ( del /q "knowledge\memory\*.json" 2>nul & echo ?? Memory cleaned. )

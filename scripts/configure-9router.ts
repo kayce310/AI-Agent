@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
 
-const DEFAULT_9ROUTER_PATH = 'e:/Test/9router-runtime';
+const DEFAULT_9ROUTER_PATH = 'e:/Test/9router';
 const DEFAULT_9ROUTER_PORT = 20128;
 const DEFAULT_9ROUTER_API_BASE = `http://127.0.0.1:${DEFAULT_9ROUTER_PORT}`;
 

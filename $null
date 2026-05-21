@@ -1,2 +1,2 @@
-'docker' is not recognized as an internal or external command,
-operable program or batch file.
+ERROR: Invalid argument/option - ';'.
+Type "TASKKILL /?" for usage.
