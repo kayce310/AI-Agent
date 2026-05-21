@@ -1,4 +1,12 @@
 /**
+ * @file mcp-client — MCP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-mcp
+ */
+
+/**
  * MCP Client — Kato wrapper around the Model Context Protocol SDK
  * Phase 4.1a: Connect to external MCP servers, discover tools, integrate into ToolRegistry
  *

@@ -1,4 +1,12 @@
 /**
+ * @file tool-arbiter — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Tool Arbiter Pattern
  * Tool selection arbitration — intelligently selects the best tool for a given task.
  * 

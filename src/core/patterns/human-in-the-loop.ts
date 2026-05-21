@@ -1,4 +1,12 @@
 /**
+ * @file human-in-the-loop — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Human-in-the-Loop Pattern
  * Requires human approval before executing critical actions.
  * 

@@ -1,4 +1,12 @@
 /**
+ * @file evaluation — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Evaluation Pattern — LLM-as-Judge
  * Evaluates output quality using a separate LLM as judge.
  * 

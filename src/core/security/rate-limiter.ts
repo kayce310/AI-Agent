@@ -1,4 +1,12 @@
 /**
+ * @file rate-limiter — Security module
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-security
+ */
+
+/**
  * RateLimiter — Token-bucket rate limiter for API calls
  * Phase 6.4b: token/minute, request/minute limits
  */

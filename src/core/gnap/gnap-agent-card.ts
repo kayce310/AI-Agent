@@ -1,4 +1,12 @@
 /**
+ * @file gnap-agent-card — GNAP protocol
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-gnap
+ */
+
+/**
  * GNAP Agent Card — Signed Agent Card for Git-Native Agent Protocol
  * 
  * Defines the structure of an agent's identity card in the GNAP protocol.

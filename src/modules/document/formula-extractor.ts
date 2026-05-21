@@ -1,4 +1,12 @@
 /**
+ * @file formula-extractor — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Formula Extractor — Phase 2: Wiki & Knowledge Integration
  * 
  * Trích xuất công thức từ văn bản PDF/DOCX sang định dạng LaTeX.

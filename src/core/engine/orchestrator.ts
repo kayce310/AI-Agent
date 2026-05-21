@@ -1,4 +1,12 @@
 /**
+ * @file orchestrator — Core Engine component
+ * @layer core
+ * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner core-engine
+ */
+
+/**
  * Kato Agent — Orchestrator (Bernstein Deterministic Orchestration Pipeline)
  * Phase 5.2 — Integrate Decomposer + PlanExecutor + ResultSynthesizer
  *

@@ -1,4 +1,12 @@
 /**
+ * @file gnap-queue — GNAP protocol
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-gnap
+ */
+
+/**
  * GNAP Queue — Git-Native Agent Protocol task queue
  * 
  * Uses actual git commands via child_process to persist tasks.

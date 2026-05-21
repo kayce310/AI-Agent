@@ -1,4 +1,12 @@
 /**
+ * @file supervisor — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Supervisor Pattern
  * Monitors agent execution, validates intermediate steps, and intervenes on errors.
  * 

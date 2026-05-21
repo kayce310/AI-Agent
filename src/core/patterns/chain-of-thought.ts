@@ -1,4 +1,12 @@
 /**
+ * @file chain-of-thought — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Chain-of-Thought Pattern
  * Structured reasoning with step-by-step thinking process.
  * 

@@ -1,4 +1,12 @@
 /**
+ * @file sop-engine — SOP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-sop
+ */
+
+/**
  * Kato Agent — SOP Engine (Phase 7.1b)
  * 
  * Executes SOP steps sequentially, routing each step to the right handler:

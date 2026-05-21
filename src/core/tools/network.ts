@@ -1,4 +1,12 @@
 /**
+ * @file network — Tool plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts
+ * @imported-by src/core/tools/tool-registry.ts
+ * @owner core-tools
+ */
+
+/**
  * Network Tools Plugin
  * Provides: fetch_url (Phase 2c)
  */

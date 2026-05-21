@@ -1,4 +1,12 @@
 /**
+ * @file memory-compressor — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * Kato Local Memory Compressor
  * Framework 6 Layers — Lớp Bộ Nhớ (Memory Layer)
  * 

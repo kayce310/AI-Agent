@@ -1,4 +1,12 @@
 /**
+ * @file docx-parser — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * DOCX Parser Module
  * Parse file .docx → text/markdown dùng mammoth
  * Chạy đồng bộ qua execSync (ESM compatible)

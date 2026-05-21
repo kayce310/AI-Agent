@@ -1,4 +1,12 @@
 /**
+ * @file plan-executor — Core Engine component
+ * @layer core
+ * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner core-engine
+ */
+
+/**
  * Kato Agent — PlanExecutor (Deterministic Task Execution)
  * Phase 5.1b — execute structured task list from Decomposer
  *

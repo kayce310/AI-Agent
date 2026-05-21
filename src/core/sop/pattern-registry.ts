@@ -1,4 +1,12 @@
 /**
+ * @file pattern-registry — SOP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-sop
+ */
+
+/**
  * Kato Agent — Pattern Registry (Phase 7.2a)
  * 
  * Strategy pattern registry for agentic design patterns.

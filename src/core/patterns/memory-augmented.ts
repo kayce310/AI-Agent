@@ -1,4 +1,12 @@
 /**
+ * @file memory-augmented — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Memory-Augmented Pattern (RAG-enhanced generation)
  * Enhances generation with retrieval from memory/knowledge base.
  * 

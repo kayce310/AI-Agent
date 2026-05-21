@@ -1,4 +1,12 @@
 /**
+ * @file langfuse-client — Observability module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-observability
+ */
+
+/**
  * Kato Agent — LangfuseClient
  * Phase 6.1a: Observability with Langfuse
  *

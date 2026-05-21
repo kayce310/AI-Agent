@@ -1,4 +1,12 @@
 /**
+ * @file reflection — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Reflection Pattern — Self-evaluate and refine outputs
  * Phase 7.2c: generate → critique → refine cycle
  */

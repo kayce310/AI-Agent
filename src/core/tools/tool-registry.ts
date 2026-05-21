@@ -1,7 +1,12 @@
 /**
- * Tool Registry — Central Registry For All Tools
+ * @file Tool Registry — Central Registry For All Tools
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts
+ * @imported-by src/core/engine/engine.ts, src/core/tools/tool-pruner.ts, src/core/tools/tools.ts
+ * @owner core-tools
+ *
  * Phase 3.1a: Plugin-based tool registration
- * 
+ *
  * API:
  *   registry.use(plugin)       — Register a tool plugin
  *   registry.getDefinitions()  — Get OpenAI-compatible tool definitions

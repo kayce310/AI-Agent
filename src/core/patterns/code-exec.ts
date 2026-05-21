@@ -1,4 +1,12 @@
 /**
+ * @file code-exec — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Code Execution Pattern — Execute generated code in sandbox
  * Phase 7.2c: parse code → validate → execute → return result
  */

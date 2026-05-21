@@ -1,4 +1,12 @@
 /**
+ * @file model-adapter — LLM adapter
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-llm
+ */
+
+/**
  * Kato Agent — Model Adapter (Multi-Provider Abstraction)
  * Phase 3.2 — cho phép fallback chain + multi-provider.
  *

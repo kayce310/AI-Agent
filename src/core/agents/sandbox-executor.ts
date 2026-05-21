@@ -1,4 +1,12 @@
 /**
+ * @file sandbox-executor — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * SandboxExecutor — WSL2 Bridge + Bubblewrap isolated execution
  * Phase 5.2b: execute untrusted code in bwrap sandbox via WSL2
  *

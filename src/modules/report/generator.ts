@@ -1,4 +1,12 @@
 /**
+ * @file generator — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Kato Agent — Report Generator (Phase 3.2)
  * 
  * Sinh báo cáo text từ outline + sources + style.

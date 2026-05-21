@@ -1,4 +1,12 @@
 /**
+ * @file tool-augmented — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Tool-Augmented Pattern
  * Dynamic tool use — agent selects and uses tools based on task requirements.
  * 

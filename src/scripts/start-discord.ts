@@ -1,3 +1,10 @@
+/**
+ * @file start-discord — Startup script
+ * @layer scripts
+ * @depends-on src/core/index.ts, src/modules/discord/index.ts
+ * @owner infrastructure
+ */
+
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

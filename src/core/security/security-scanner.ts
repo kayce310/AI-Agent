@@ -1,4 +1,12 @@
 /**
+ * @file security-scanner — Security module
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-security
+ */
+
+/**
  * Kato Security Scanner — PromptFoo-Inspired Red Teaming & Input Guard
  * Phase 6.2 — Security Analysis
  *

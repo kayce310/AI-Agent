@@ -1,4 +1,12 @@
 /**
+ * @file output-guard — Security module
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-security
+ */
+
+/**
  * Kato OutputGuard — Response Validation & Sanitization
  * Phase 8.2b — Output Security
  *

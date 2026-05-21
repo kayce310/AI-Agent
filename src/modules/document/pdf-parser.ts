@@ -1,4 +1,12 @@
 /**
+ * @file pdf-parser — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * PDF Parser Module
  * Parse file PDF → text/markdown dùng pdf-parse v2 (ESM)
  * Chạy đồng bộ qua execSync + temp .mjs script

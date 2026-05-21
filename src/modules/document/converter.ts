@@ -1,4 +1,12 @@
 /**
+ * @file converter — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Document → Markdown Converter
  * Batch convert PDF/DOCX sang .md, lưu vào knowledge/raw-md/
  * Dùng cho CLI tool: node scripts/convert-doc-to-md.mjs <filepath>

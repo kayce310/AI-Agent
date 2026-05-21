@@ -1,4 +1,12 @@
 /**
+ * @file decomposer — Core Engine component
+ * @layer core
+ * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner core-engine
+ */
+
+/**
  * Kato Agent — Decomposer (Bernstein Deterministic Orchestration)
  * Phase 5.1a — 1 LLM call → structured task list
  *

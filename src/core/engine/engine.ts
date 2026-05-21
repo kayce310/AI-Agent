@@ -1,4 +1,10 @@
 /**
+ * @file Engine — Core ReAct Loop
+ * @layer core
+ * @depends-on (all core modules)
+ * @imported-by src/scripts/start-discord.ts, src/modules/discord/index.ts
+ * @owner core-engine
+ *
  * Kato Agent — Core Engine (ReAct Loop)
  * Framework 6 Layers — Lớp Lõi (Core Domain)
  *

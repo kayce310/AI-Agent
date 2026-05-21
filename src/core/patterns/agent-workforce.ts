@@ -1,4 +1,12 @@
 /**
+ * @file agent-workforce — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Agent Workforce Pattern
  * Manages a pool of specialized agents with task distribution and load balancing.
  */

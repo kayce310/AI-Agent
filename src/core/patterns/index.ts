@@ -1,4 +1,12 @@
 /**
+ * @file index — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Agentic Patterns Registry
  * Central export for all 16+ agentic design patterns.
  */

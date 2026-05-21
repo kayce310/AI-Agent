@@ -1,4 +1,12 @@
 /**
+ * @file mcp-server — MCP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-mcp
+ */
+
+/**
  * MCP Server — Expose Kato internal tools as an MCP server
  * Phase 4.1b: Start an MCP server so external MCP clients can call Kato tools
  *

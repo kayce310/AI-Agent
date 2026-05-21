@@ -1,4 +1,12 @@
 /**
+ * @file index — Entry point
+ * @layer core
+ * @depends-on (all core modules)
+ * @imported-by (none — top-level)
+ * @owner core
+ */
+
+/**
  * Kato Agent Main Entry Point
  * Framework 6 Layers — Kiến trúc Module hóa
  * 

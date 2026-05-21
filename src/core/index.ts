@@ -1,4 +1,12 @@
 /**
+ * @file index — Core barrel export
+ * @layer core
+ * @depends-on (all core modules)
+ * @imported-by src/modules/*
+ * @owner core
+ */
+
+/**
  * Kato Agent Core Entry Point
  * Framework 6 Layers Claude Code
  */

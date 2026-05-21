@@ -1,4 +1,12 @@
 /**
+ * @file adaptive-thinking — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Adaptive Thinking Pattern
  * Adjusts thinking depth based on task complexity.
  * 

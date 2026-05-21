@@ -1,4 +1,12 @@
 /**
+ * @file dynamic-scaffolding — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Dynamic Scaffolding Pattern
  * Auto-generate agent structure based on task analysis.
  * 

@@ -1,9 +1,14 @@
 /**
- * Kato PrivilegeGuard — Per-Tool RBAC (Role-Based Access Control)
+ * @file PrivilegeGuard — Per-Tool RBAC (Role-Based Access Control)
+ * @layer core
+ * @depends-on (none — standalone security module)
+ * @imported-by src/core/tools/tool-gateway.ts, src/core/engine/engine.ts
+ * @owner core-security
+ *
  * Phase 8.2c — Tool Authorization
  *
  * PrivilegeGuard supports explicit allow/deny rules with optional restricted mode.
- * In standalone use it defaults to allow; Engine initializes it with deny for zero-trust.
+ * In standalone use it defaults to allow; Engine initializes it with deny for zero-trrust.
  * Supports path traversal detection.
  */
 

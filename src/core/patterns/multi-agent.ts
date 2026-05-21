@@ -1,4 +1,12 @@
 /**
+ * @file multi-agent — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Multi-Agent Pattern — Debate & Consensus
  * Multiple agents debate a topic and reach consensus through structured discussion.
  * 

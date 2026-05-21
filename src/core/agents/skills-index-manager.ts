@@ -1,4 +1,12 @@
 /**
+ * @file skills-index-manager — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * Skills Index Manager — Phase 2c: Lazy-Load & Stale Tracking
  * 
  * Quản lý index của skills từ knowledge/wiki/skills/ để hỗ trợ lazy-load

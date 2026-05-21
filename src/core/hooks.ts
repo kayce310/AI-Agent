@@ -1,4 +1,12 @@
 /**
+ * @file hooks — Event lifecycle hooks
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-hooks
+ */
+
+/**
  * Kato Agent — HookRegistry (Event Lifecycle System)
  * Phase 3.5 — Event-driven Engine
  *

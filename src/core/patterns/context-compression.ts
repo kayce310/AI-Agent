@@ -1,4 +1,12 @@
 /**
+ * @file context-compression — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Context Compression Pattern
  * Optimizes context window usage by compressing and summarizing information.
  * 

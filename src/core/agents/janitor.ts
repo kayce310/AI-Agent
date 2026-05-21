@@ -1,4 +1,12 @@
 /**
+ * @file janitor — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * Janitor — Post-execution verification step
  * Phase 5.4: run tests, lint, PII scan after tool execution
  */

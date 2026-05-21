@@ -1,4 +1,12 @@
 /**
+ * @file failure-classifier — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * FailureClassifier — Classify and categorize execution failures
  * Phase 5.x: analyze errors → classify type → suggest recovery
  */

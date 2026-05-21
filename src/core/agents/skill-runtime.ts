@@ -1,4 +1,12 @@
 /**
+ * @file skill-runtime — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * Kato Agent — SkillRuntime (Executable Skill System)
  * Phase 3.7 — Skill Runtime
  *

@@ -1,4 +1,12 @@
 /**
+ * @file pattern-selector — SOP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-sop
+ */
+
+/**
  * Kato Agent — Pattern Selector (Phase 7.2b)
  * 
  * Analyzes a task description and selects the best agentic pattern(s)

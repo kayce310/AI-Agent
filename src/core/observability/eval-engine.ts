@@ -1,4 +1,12 @@
 /**
+ * @file eval-engine — Observability module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-observability
+ */
+
+/**
  * Kato Eval Engine — PromptFoo-Inspired Assertion & Eval Harness
  * Phase 6.2 — LLM Evaluation & Red Teaming
  *

@@ -1,4 +1,12 @@
 /**
+ * @file style-engine — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Kato Agent — Style Engine (Phase 3.1)
  * 
  * Định nghĩa 4 styles cho report generator:

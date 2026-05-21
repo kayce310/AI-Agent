@@ -1,4 +1,12 @@
 /**
+ * @file memory-temporal — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * MemoryTemporal — Time-indexed block storage with Append-Log Persistence
  *
  * Architecture (inspired by mem0):

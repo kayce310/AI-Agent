@@ -1,4 +1,12 @@
 /**
+ * @file memory-log — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * Kato Agent — Memory Append-Log Persistence
  * Phase 4.0b — Thay thế full-rewrite flush() bằng append-log
  *

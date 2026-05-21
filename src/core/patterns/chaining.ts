@@ -1,4 +1,12 @@
 /**
+ * @file chaining — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Chaining Pattern — Sequentially chain tool calls
  * Phase 7.2c: each step passes output as input to next
  */

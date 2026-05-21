@@ -1,4 +1,12 @@
 /**
+ * @file parallel — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Parallel Pattern — Execute multiple tool calls concurrently
  * Phase 7.2c: fan-out → gather results
  */

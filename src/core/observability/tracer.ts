@@ -1,4 +1,12 @@
 /**
+ * @file tracer — Observability module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-observability
+ */
+
+/**
  * Kato Tracer — O11y Tracing for Agent Lifecycle
  * Phase 3.6
  *

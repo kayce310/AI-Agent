@@ -1,4 +1,12 @@
 /**
+ * @file prompt-builder — LLM adapter
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-llm
+ */
+
+/**
  * Kato Prompt Builder — 8-Tầng Prompt Engineering (Claude 4.6 Standard)
  * 
  * Biến monolithic SYSTEM_PROMPT_TEMPLATE thành pipeline 8 tầng:

@@ -1,4 +1,12 @@
 /**
+ * @file memory — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * Kato Multi-Layer Memory Core
  * Framework 6 Layers Claude Code - Lớp 2 Bộ Nhớ
  * 

@@ -1,4 +1,12 @@
 /**
+ * @file result-synthesizer — Core Engine component
+ * @layer core
+ * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner core-engine
+ */
+
+/**
  * Kato Agent — ResultSynthesizer (Execution Summary → Human Response)
  * Phase 5.1c — final LLM call to synthesize execution results
  *

@@ -1,4 +1,12 @@
 /**
+ * @file sub-agent — Agent module
+ * @layer core
+ * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-agents
+ */
+
+/**
  * SubAgent — Lightweight sub-agent abstraction
  * Phase 5.3: standalone agent instance with its own prompt + tools
  */

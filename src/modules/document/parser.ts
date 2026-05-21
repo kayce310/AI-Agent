@@ -1,4 +1,12 @@
 /**
+ * @file parser — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Document Parser Factory
  * Auto-detect file type (PDF/DOCX) và gọi parser tương ứng
  * Platform-agnostic, dùng chung cho tất cả module (Discord, CLI, Telegram)

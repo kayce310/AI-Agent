@@ -1,4 +1,12 @@
 /**
+ * @file md-archiver — Peripheral adapter
+ * @layer modules
+ * @depends-on src/core/index.ts
+ * @imported-by src/scripts/start-discord.ts
+ * @owner modules
+ */
+
+/**
  * Markdown Archiver — Phase 2: Wiki & Knowledge Integration
  * 
  * Quản lý lưu trữ tài liệu đã convert (raw-md) và tóm tắt wiki.

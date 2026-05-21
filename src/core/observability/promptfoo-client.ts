@@ -1,4 +1,12 @@
 /**
+ * @file promptfoo-client — Observability module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-observability
+ */
+
+/**
  * PromptFooClient — Dedicated client for PromptFoo evaluation
  * Phase 6.2: run red-teaming and eval tests via PromptFoo CLI
  *

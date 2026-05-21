@@ -1,4 +1,12 @@
 /**
+ * @file evolution — Evolution engine
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-evolution
+ */
+
+/**
  * Kato Evolution Engine — Error Registry + Self-Evolution
  * 
  * [V5.2] Cơ chế mới hoàn toàn:

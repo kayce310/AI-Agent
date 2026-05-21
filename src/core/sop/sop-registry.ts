@@ -1,4 +1,12 @@
 /**
+ * @file sop-registry — SOP module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-sop
+ */
+
+/**
  * Kato Agent — SOP Registry (Phase 7.1a)
  * 
  * YAML-schema SOP templates for structured procedure definitions.

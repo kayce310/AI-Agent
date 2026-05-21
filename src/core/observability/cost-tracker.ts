@@ -1,4 +1,12 @@
 /**
+ * @file cost-tracker — Observability module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-observability
+ */
+
+/**
  * CostTracker — Per-span token cost tracking
  * Phase 6.4a: read Langfuse spans, compute token cost
  */

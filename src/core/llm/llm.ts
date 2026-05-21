@@ -1,4 +1,12 @@
 /**
+ * @file llm — LLM adapter
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-llm
+ */
+
+/**
  * Kato Universal LLM Core with Agent Loop & Tool Calling
  * Framework 6 Layers Claude Code - Lớp Lõi
  * 

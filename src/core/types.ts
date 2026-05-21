@@ -1,4 +1,12 @@
 /**
+ * @file types — Core type definitions
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by (all core modules)
+ * @owner core-types
+ */
+
+/**
  * Kato Agent — Core Types
  * Framework 6 Layers — Lớp Lõi (Core Domain)
  * 

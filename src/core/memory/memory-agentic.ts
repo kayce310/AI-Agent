@@ -1,4 +1,12 @@
 /**
+ * @file memory-agentic — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * MemoryAgentic — Agentic memory layer that allows agents to modify memory autonomously.
  *
  * Extends MemoryTemporal with write/delete capabilities and agent-driven memory management.

@@ -1,4 +1,12 @@
 /**
+ * @file self-consistency — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Self-Consistency Pattern
  * Generate multiple reasoning paths and select the most consistent answer.
  * 

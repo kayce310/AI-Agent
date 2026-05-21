@@ -1,4 +1,12 @@
 /**
+ * @file memory-store — Memory module
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-memory
+ */
+
+/**
  * Kato Agent — Memory Store (ADD-only + Append-Log Persistence)
  * Phase 4.0b — MemoryLog integration
  *

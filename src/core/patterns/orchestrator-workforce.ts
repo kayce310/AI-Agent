@@ -1,4 +1,12 @@
 /**
+ * @file orchestrator-workforce — Agent pattern
+ * @layer core
+ * @depends-on (none — standalone)
+ * @imported-by src/core/patterns/index.ts
+ * @owner core-patterns
+ */
+
+/**
  * Orchestrator-Workforce Pattern
  * Multi-agent coordination with a central orchestrator managing worker agents.
  * 

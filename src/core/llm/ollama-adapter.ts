@@ -1,4 +1,12 @@
 /**
+ * @file ollama-adapter — LLM adapter
+ * @layer core
+ * @depends-on src/core/types.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-llm
+ */
+
+/**
  * OllamaAdapter — Local model inference via Ollama
  * Phase 6.5: run local models (Llama, Mistral, Phi, etc.)
  */

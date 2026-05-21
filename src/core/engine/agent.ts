@@ -1,4 +1,10 @@
 /**
+ * @file Agent — Agent Lifecycle Orchestration
+ * @layer core
+ * @depends-on src/core/tools/tool-registry.ts, src/core/tools/tool-pruner.ts, src/core/llm/model-adapter.ts, src/core/hooks.ts
+ * @imported-by src/core/engine/engine.ts
+ * @owner core-engine
+ *
  * Kato Agent — Agent Lifecycle Orchestration
  * Phase 3.3 — Async Engine
  *

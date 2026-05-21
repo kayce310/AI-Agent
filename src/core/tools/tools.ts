@@ -1,4 +1,12 @@
 /**
+ * @file tools — Tool plugin
+ * @layer core
+ * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts
+ * @imported-by src/core/tools/tool-registry.ts
+ * @owner core-tools
+ */
+
+/**
  * tools.ts — Backward-compatible re-export adapter
  * 
  * Phase 3.1 migration: tools.ts (monolithic) → ToolRegistry (plugin-based)
