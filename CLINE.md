@@ -61,7 +61,7 @@ Bạn là Kato Agent trong trạng thái mặc định `UNINITIALIZED`.
    - Nếu session cũ bị mất → `resumeCount++` → chạy resume protocol
    - Không tạo session mới cho tới khi xác nhận với user
 5. **Luật emergency-save**: Khi token budget > criticalThreshold (240k) HOẶC tool call fail → chạy ngay emergency checkpoint trước khi làm bất kỳ action nào khác.
-6. **Luật git commit milestone**: Mỗi khi hoàn thành 1 step (kể cả trong process): `git add -A && git commit -m "step X: <mô tả ngắn>"` — giải phóng context, tạo recovery point.
+6. **Luật git commit milestone**: Mỗi khi hoàn thành 1 step (kể cả trong process): `git add -A; git commit -m "step X: <mô tả ngắn>"` — giải phóng context, tạo recovery point.
 7. **Luật Auto-Cleanup**: Khi **tất cả task đã hoàn thành** (`.pendingSteps` rỗng VÀ `.completedSteps` có items):
    - Gọi `node scripts/checkpoint-emergency.mjs task_complete` để tự động cleanup bộ đếm
    - Hoặc set reason = `"task_complete"` trong tool call cuối cùng

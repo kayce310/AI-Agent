@@ -11,7 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { isPathSafe } from '../security/privilege-guard.js';
+import { isPathSafe } from './_shared.js';
 
 export const WORKSPACE_ROOT = path.resolve(process.cwd());
 
@@ -30,10 +30,13 @@ export class SecureRuntimeContext {
    * Validate a path is within workspace. Throws on violation.
    */
   private validatePath(inputPath: string): string {
-    if (!isPathSafe(inputPath, this.workspaceRoot)) {
+    // Resolve to absolute path first
+    const resolved = path.resolve(this.workspaceRoot, inputPath);
+    // Check against safe paths (workspace root is always safe)
+    if (!isPathSafe(resolved) && !resolved.startsWith(this.workspaceRoot)) {
       throw new Error(`Path traversal blocked: "${inputPath}" is outside workspace root`);
     }
-    return path.resolve(this.workspaceRoot, inputPath);
+    return resolved;
   }
 
   // ── Safe File Operations ──

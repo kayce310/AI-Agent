@@ -10,11 +10,14 @@
 
 import { getDefaultRegistry } from './tool-registry.js';
 
+// ── Core Tools (always available) ──
+const CORE_TOOLS = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'];
+
 // ── Tool Categories ──
 // Each category maps to a set of keywords that indicate the user needs these tools
 const TOOL_CATEGORIES: Record<string, { tools: string[]; keywords: string[] }> = {
   core: {
-    tools: ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'],
+    tools: CORE_TOOLS,
     keywords: ['file', 'read', 'directory', 'folder', 'list', 'search', 'find', 'wiki', 'knowledge', 'url', 'fetch', 'http', 'web'],
   },
   filesystem: {
@@ -98,9 +101,9 @@ export function selectRelevantTools(userMessage: string): any[] {
     }
   }
 
-  // If no keywords matched, return empty (caller handles fallback)
+  // If no keywords matched, return core tools as minimum (not empty)
   if (matchedToolNames.size === 0) {
-    return [];
+    matchedToolNames = new Set(CORE_TOOLS);
   }
 
   // Filter tool definitions to only matched tools
