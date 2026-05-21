@@ -9,16 +9,16 @@
 // Discord Bridge
 export { DiscordBridge } from './discord/index.js';
 
-// Document Processing
-export { DocumentParser } from './document/parser.js';
-export { DocxParser } from './document/docx-parser.js';
-export { PdfParser } from './document/pdf-parser.js';
-export { FormulaExtractor } from './document/formula-extractor.js';
-export { DocumentConverter } from './document/converter.js';
+// Document Processing — these modules use default exports (no named class exports)
+export { detectDocumentType, readDocument, extractToMarkdown, getBaseName } from './document/parser.js';
+export { readDocx, extractDocxToMd, extractFormulasFromDocx } from './document/docx-parser.js';
+export { readPdf, extractPdfToMd, extractFormulasFromPdf, getPdfBaseName } from './document/pdf-parser.js';
+export { extractFormulas, extractFormulasFromMd, formatFormulasToMd } from './document/formula-extractor.js';
+export { convertDocumentToMd, batchConvertDirectory, getConvertedSummary, listConvertedFiles } from './document/converter.js';
 
 // Knowledge Archiving
-export { MdArchiver } from './knowledge/md-archiver.js';
+export { archiveDocument, searchArchivedMd, quoteFromSource, listArchivedFiles } from './knowledge/md-archiver.js';
 
 // Report Generation
-export { ReportGenerator } from './report/generator.js';
-export { StyleEngine } from './report/style-engine.js';
+export { generateReport, ReportInput, ReportOutput } from './report/generator.js';
+export { formatCitation, formatHeading, formatDate, STYLE_CONFIGS, ReportStyle, StyleConfig } from './report/style-engine.js';

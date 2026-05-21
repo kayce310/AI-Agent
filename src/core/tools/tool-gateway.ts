@@ -13,6 +13,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { isPathSafe, WORKSPACE_ROOT } from './path-utils.js';
 
+// Re-export for downstream consumers
+export { WORKSPACE_ROOT } from './path-utils.js';
+
 /**
  * SecureRuntimeContext — Provides sandboxed file access for tools.
  * All paths validated through isPathSafe() before any I/O.

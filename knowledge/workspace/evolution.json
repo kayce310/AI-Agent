@@ -8,7 +8,7 @@
       "sessionId": "model-router",
       "contextSnippet": "Hello",
       "fingerprint": "5cd00e970c1f",
-      "timestamp": "2026-05-21T07:11:54.199Z"
+      "timestamp": "2026-05-21T10:06:28.414Z"
     }
   ],
   "rules": [],
@@ -16,7 +16,7 @@
     "litellm": {
       "totalCalls": 1,
       "failedCalls": 1,
-      "lastFailure": "2026-05-21T07:11:54.199Z",
+      "lastFailure": "2026-05-21T10:06:28.414Z",
       "avgResponseTime": 0,
       "errorTypes": {
         "ADAPTER_FAILED": 1
@@ -24,7 +24,7 @@
     }
   },
   "meta": {
-    "lastUpdated": "2026-05-21T07:11:54.199Z",
+    "lastUpdated": "2026-05-21T10:06:28.414Z",
     "totalErrorsTracked": 1,
     "activeRules": 0
   }

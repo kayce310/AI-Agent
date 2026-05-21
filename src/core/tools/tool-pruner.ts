@@ -103,7 +103,8 @@ export function selectRelevantTools(userMessage: string): any[] {
 
   // If no keywords matched, return core tools as minimum (not empty)
   if (matchedToolNames.size === 0) {
-    matchedToolNames = new Set(CORE_TOOLS);
+    const coreSet = new Set(CORE_TOOLS);
+    return _allToolDefinitions.filter((t: any) => coreSet.has(t.function?.name));
   }
 
   // Filter tool definitions to only matched tools

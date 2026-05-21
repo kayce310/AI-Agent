@@ -1,11 +1,10 @@
+#!/usr/bin/env node
 /**
  * @file kato-state-manager — Startup script
  * @layer scripts
  * @depends-on src/core/index.ts, src/modules/discord/index.ts
  * @owner infrastructure
  */
-
-#!/usr/bin/env node
 import { KatoStateManager, ProcessedFile } from '../core/memory/state-manager.js';
 
 const [, , command = 'read', ...args] = process.argv;

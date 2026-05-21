@@ -17,7 +17,6 @@
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
-import { isPathSafe } from './_shared.js';
 
 // ── Types ──
 

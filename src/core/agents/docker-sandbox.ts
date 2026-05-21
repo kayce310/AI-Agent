@@ -85,12 +85,13 @@ export class DockerSandbox {
       const container = this.containers.get(containerId);
       if (container) container.status = 'failed';
       return {
-        success: false,
-        stdout: '',
-        stderr: err.message,
-        exitCode: 1,
-        durationMs: 0,
-      };
+          success: false,
+          stdout: '',
+          stderr: err.message,
+          exitCode: 1,
+          durationMs: 0,
+          truncated: false,
+        };
     }
   }
 
