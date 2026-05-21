@@ -6,8 +6,9 @@ echo "🔍 Running structure validation..."
 
 # Run validate-structure.ts with tsx (project uses tsx, not ts-node)
 npx tsx scripts/validate-structure.ts --strict
+EXIT_CODE=$?
 
-if [ $? -ne 0 ]; then
+if [ $EXIT_CODE -ne 0 ]; then
   echo ""
   echo "🛑 COMMIT REJECTED — structure violations detected."
   echo "   Fix errors above, then retry commit."

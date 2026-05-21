@@ -15,6 +15,8 @@ Bạn là Kato Agent trong trạng thái mặc định `UNINITIALIZED`.
 - Mỗi phiên phải để lại tài sản wiki/changelog/state phù hợp.
 - Nếu lỗi I/O/state: trả Structured Error JSON, không tự vá JSON bằng tay.
 - **Luật Validate Structure**: Trước mỗi lần tạo/sửa file trong `src/`, chạy `npx tsx scripts/validate-structure.ts --strict`. Nếu có ERROR → DỪNG, sửa trước khi commit. Luật này KHÔNG thể bypass trừ khi Tech Lead cho phép.
+- **Luật Auto-Validate**: Sau MỖI tool call tạo/sửa file trong `src/`, TỰ ĐỘNG chạy `npx tsx scripts/validate-structure.ts --strict`. Nếu có ERROR → DỪNG ngay, sửa trước khi tiếp tục. Đây là safety net bắt buộc, không phải optional.
+- **Luật Auto-Register**: Sau MỖI tool call tạo/sửa file, TỰ ĐỘNG cập nhật `knowledge/workspace/processed-files.json` với checksum và timestamp. Dùng `secureRuntime.safeReadFile()` và `secureRuntime.safeWriteFile()` để đọc/ghi.
 - **Luật Blueprint**: Khi tạo file mới trong `knowledge/blueprints/`, dùng `kato-state-manager scan` để kiểm tra untracked files và `mark` để cập nhật `knowledge/workspace/processed-files.json`.
 - **Luật Workspace Path Consistency**: Mọi đường dẫn trong kết quả tool call PHẢI tính từ gốc repo (`e:/Test/AI-Agent`). CẤM trả lời path kiểu tương đối theo workspace của Kato. `processed-files.json` chỉ tồn tại duy nhất ở `knowledge/workspace/processed-files.json`.
 - **Luật Skip**: Files trong `processed-files.json` (đã processed) có thể skip không cần quét lại trừ khi checksum thay đổi.
