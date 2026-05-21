@@ -76,9 +76,7 @@ export { DockerSandbox, DockerSandboxConfig, ContainerInstance } from '../agents
 export { PromptFooClient, PromptFooTestConfig, PromptFooResult, PromptFooClientConfig } from '../observability/promptfoo-client.js';
 export { SubAgent, SubAgentConfig, SubAgentResult } from '../agents/sub-agent.js';
 export { FailureClassifier, FailureCategory, ClassifiedFailure } from '../agents/failure-classifier.js';
-export { OllamaAdapter, OllamaAdapterConfig } from '../llm/ollama-adapter.js';
 export * from '../llm/model-adapter.js';
-export * from '../llm/ollama-adapter.js';
 export * from './types.js';
 
 console.log(`✅ Kato Agent System initialized`);
