@@ -11,7 +11,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { LangfuseClient, createLangfuseClient } from '../src/core/observability/langfuse-client.js';
-import { HookRegistry } from '../src/core/core/hooks.js';
+import { HookRegistry } from '../src/core/hooks.js';
 
 // ── Setup ──
 

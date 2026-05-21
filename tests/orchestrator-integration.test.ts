@@ -15,7 +15,7 @@ import { PlanExecutor } from '../src/core/engine/plan-executor.js';
 import { ResultSynthesizer } from '../src/core/engine/result-synthesizer.js';
 import { ModelAdapter } from '../src/core/llm/model-adapter.js';
 import { ToolRegistry } from '../src/core/tools/tool-registry.js';
-import { globalHooks, EventType } from '../src/core/core/hooks.js';
+import { globalHooks, EventType } from '../src/core/hooks.js';
 
 // Mock ModelAdapter
 class MockModelAdapter implements ModelAdapter {

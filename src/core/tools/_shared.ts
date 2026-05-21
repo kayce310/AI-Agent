@@ -1,32 +1,20 @@
 /**
  * @file Shared utilities for tool plugins
  * @layer core
- * @depends-on src/core/tools/tool-gateway.ts
+ * @depends-on src/core/tools/path-utils.ts
  * @imported-by All tool plugins
  * @owner core-tools
  *
- * ZERO-TRUST: This file imports fs/path for BASE_PATH and utility functions only.
+ * ZERO-TRUST: This file imports path-utils for BASE_PATH and isPathSafe.
  * All file I/O operations route through tool-gateway.ts (secureRuntime).
  */
 
 import * as path from 'path';
-import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
+import { WORKSPACE_ROOT, isPathSafe } from './path-utils.js';
+import { secureRuntime } from './tool-gateway.js';
 
 export const BASE_PATH = WORKSPACE_ROOT;
-
-const SAFE_PATHS = [
-  path.resolve(BASE_PATH),
-  path.resolve(BASE_PATH, 'src'),
-  path.resolve(BASE_PATH, 'knowledge'),
-  path.resolve(BASE_PATH, 'config'),
-  path.resolve(BASE_PATH, 'scripts'),
-  path.resolve(BASE_PATH, 'docker'),
-];
-
-export function isPathSafe(targetPath: string): boolean {
-  const resolved = path.resolve(targetPath);
-  return SAFE_PATHS.some(safe => resolved.startsWith(safe));
-}
+export { isPathSafe };
 
 export function toFileUrl(filePath: string): string {
   const resolved = path.resolve(filePath).replace(/\\/g, '/');

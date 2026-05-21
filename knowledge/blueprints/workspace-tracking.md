@@ -1,7 +1,7 @@
 # 🗺 Workspace Tracking & Session Persistence
 
 > **Mục đích**: Lưu plan tổng thể, tiến độ real-time, và cơ chế resume khi mất kết nối.
-> **Last updated**: 2026-05-15
+> **Last updated**: 2026-05-21
 
 ---
 
@@ -17,14 +17,15 @@
 ## 🎯 Project Roadmap (Tổng thể)
 
 | Phase | Status | Mô tả |
-|-------|--------|-------|
+|-------|--------|--------|
 | **Phase 0: Foundation** | ✅ Hoàn tất | Engine v5.3, Discord Bot, MemoryCompressor, 9router |
 | **Phase 1: Document Processing** | ✅ Hoàn tất | PDF/DOCX parser, converter, CLI scripts |
-| **Phase 2: Wiki Integration** | 🔴 IN PROGRESS | md-archiver, search_archived_md, Formula Extractor |
-| **Phase 2b: AutoSkills → Wiki Convert** | ✅ HOÀN TẤT | 217 skills converted → `knowledge/wiki/skills/` |
-| **Phase 3: Agent System** | ⬜ Chưa bắt đầu | Multi-agent orchestration |
-| **Phase 4: Knowledge Base** | ⬜ Chưa bắt đầu | Full knowledge ingestion pipeline |
-| **Phase 5: Deploy** | ⬜ Chưa bắt đầu | Production deployment |
+| **Phase 2: Wiki Integration** | ✅ Hoàn tất | md-archiver, search_archived_md, Formula Extractor |
+| **Phase 2b: AutoSkills → Wiki Convert** | ✅ Hoàn tất | 217 skills converted → `knowledge/wiki/skills/` |
+| **Phase 3: Agent System** | ✅ Hoàn tất | Tool Registry (9 plugins), model-adapter, Agent, HookRegistry, evolution, tracer |
+| **Phase 3b: Restructure** | ✅ Hoàn tất | Flat → layered architecture (10 subdirectories, 39 files moved) |
+| **Phase 4-8: Core Features** | ✅ Hoàn tất | Memory, Orchestration, Observability, SOPs, Patterns, Security |
+| **Remaining** | 🔴 IN PROGRESS | Fix imports, wire modules, tests |
 
 ---
 
@@ -98,6 +99,7 @@ Convert 217 skills từ `knowledge/references/autoskills/packages/autoskills/ski
 
 ## 📁 Cấu trúc Workspace Tracking
 `knowledge/blueprints/autoskill-conversion-plan.md` for autoskill-specific plan.
+`knowledge/workspace/restructure-final-manifest.md` for restructure status.
 
 ```
 knowledge/
@@ -105,7 +107,9 @@ knowledge/
 │   ├── workspace-tracking.md    ← FILE NÀY: plan + task board
 │   └── autoskill-conversion-plan.md ← AutoSkills-specific plan + forensic
 ├── workspace/
-│   └── state.md                  ← Session state + kiến trúc hiện tại
+│   ├── state.md                  ← Session state + kiến trúc hiện tại
+│   ├── restructure-final-manifest.md ← Restructure status (✅ 95%)
+│   └── known-issues-fix-plan.md  ← Active issues (P0/P1/P2)
 ├── wiki/
 │   ├── core/
 │   │   ├── changelog.md         ← Lịch sử thay đổi (append-only)
@@ -131,3 +135,4 @@ Get-Content -Path "knowledge/blueprints/workspace-tracking.md" | Select-Object -
 
 # Xem session state
 Get-Content -Path "knowledge/workspace/state.md"
+```

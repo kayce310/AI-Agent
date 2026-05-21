@@ -4,7 +4,7 @@
  */
 
 import { describe, it, beforeEach, afterEach, assert } from 'vitest';
-import { HookRegistry, globalHooks, EventType, HookContext, GuardHandler } from '../src/core/core/hooks.js';
+import { HookRegistry, globalHooks, EventType, HookContext, GuardHandler } from '../src/core/hooks.js';
 
 // ── Helper ──
 function freshRegistry(): HookRegistry {

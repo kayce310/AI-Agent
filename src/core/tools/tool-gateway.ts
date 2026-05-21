@@ -11,9 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { isPathSafe } from './_shared.js';
-
-export const WORKSPACE_ROOT = path.resolve(process.cwd());
+import { isPathSafe, WORKSPACE_ROOT } from './path-utils.js';
 
 /**
  * SecureRuntimeContext — Provides sandboxed file access for tools.

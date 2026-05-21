@@ -7,7 +7,7 @@
 
 import { describe, it, beforeAll, afterAll, assert } from 'vitest';
 import { Tracer, TraceSpan, Anomaly, createAgentTracer } from '../src/core/observability/tracer.js';
-import { HookRegistry, HookContext } from '../src/core/core/hooks.js';
+import { HookRegistry, HookContext } from '../src/core/hooks.js';
 
 // ── Helpers ──
 

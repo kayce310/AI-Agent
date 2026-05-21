@@ -13,7 +13,7 @@
 import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
-import { ToolPlugin } from './tool-registry.js';
+import type { ToolPlugin } from './tool-registry.js';
 
 const plugin: ToolPlugin = {
   name: 'network',

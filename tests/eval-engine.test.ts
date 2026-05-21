@@ -10,7 +10,7 @@ import {
   EvalCache,
   globalEvalCache,
 } from '../src/core/observability/eval-engine.js';
-import type { EvalSuite, EvalAssertion } from '../src/core/core/types.js';
+import type { EvalSuite, EvalAssertion } from '../src/core/types.js';
 
 // ── Cleanup ──
 afterEach(() => {

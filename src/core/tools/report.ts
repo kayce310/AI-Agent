@@ -8,7 +8,7 @@
  */
 
 import * as path from 'path';
-import { ToolPlugin } from './tool-registry.js';
+import type { ToolPlugin } from './tool-registry.js';
 import { BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
 

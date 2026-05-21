@@ -11,7 +11,7 @@
 
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { ToolPlugin } from './tool-registry.js';
+import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
 
