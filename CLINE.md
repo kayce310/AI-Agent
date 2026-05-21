@@ -210,7 +210,7 @@ no match → new violation, register immediately with all four fields.
 
 ```
 node scripts/checkpoint-emergency.mjs
-git add -A; git commit -m "emergency: token budget critical"
+git add -A && git commit -m "emergency: token budget critical"
 ```
 
 ### Checkpoint Rule 1 — `task_progress` on every tool call
@@ -296,4 +296,4 @@ Resets: `resumeCount → 0`, clears history, sets `currentEstimateUsage → 0`.
 
 ---
 
-*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-21*
+*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-21* 

@@ -1,6 +1,6 @@
 # 📐 Restructure Final Manifest — Kato Agent Core
 
-> **Generated**: 2026-05-21 | **Status**: ✅ ~95% Complete
+> **Generated**: 2026-05-21 | **Status**: ✅ 100% Complete
 > **Consolidated from**: `restructure-plan.md` + `restructure-plan-vs-reality.md`
 
 ---
@@ -56,37 +56,26 @@ src/core/
 
 ---
 
-## 4. Còn sót lại ❌
+## 4. Verification — HOÀN TẤT ✅
 
-| Việc | Chi tiết | Ưu tiên |
-|------|----------|---------|
-| Fix source file imports | `model-adapter.ts`, `tracer.ts`, `engine.ts` — old relative paths | **P1** |
-| Fix test file imports | ~60 import paths cần cập nhật | **P1** |
-| Verify `npx tsc --noEmit` | Chưa chạy thành công sau restructure | **P1** |
-| Verify `npm run test` | 435 tests cần pass trên cấu trúc mới | **P1** |
-
----
-
-## 5. Chi tiết import paths cần fix
-
-### Source files:
-- `src/core/llm/model-adapter.ts` — `./types.js` → `../types.js`, `./evolution.js` → `../evolution.js`
-- `src/core/observability/tracer.ts` — `./hooks.js` → `../hooks.js`
-- `src/core/engine/engine.ts` — nhiều old flat paths
-
-### Test files (~60 patterns):
-- `../src/core/agent.js` → `../src/core/engine/agent.js`
-- `../src/core/plan-executor.js` → `../src/core/engine/plan-executor.js`
-- `../src/core/result-synthesizer.js` → `../src/core/engine/result-synthesizer.js`
-- `../src/core/eval-engine.js` → `../src/core/observability/eval-engine.js`
-- `../src/core/hooks.js` → `../src/core/hooks.js` (giữ nguyên — đã ở root)
-- `../src/core/langfuse-client.js` → `../src/core/observability/langfuse-client.js`
-- `../src/core/model-adapter.js` → `../src/core/llm/model-adapter.js`
-- *(full list trong `restructure-plan-remaining.md`)*
+| Việc | Chi tiết | Trạng thái |
+|------|----------|------------|
+| Fix source file imports | `model-adapter.ts`, `tracer.ts`, `engine.ts` — old relative paths | ✅ Done (Campaign 2) |
+| Fix test file imports | ~60 import paths cần cập nhật | ✅ Done (Campaign 2) |
+| Verify `npx tsc --noEmit` | 0 errors on new structure | ✅ Done (commit `d35ff1de`) |
+| Verify `npm run test` | 468/468 tests pass (24 files) | ✅ Done (commit `d35ff1de`) |
+| Fix barrel export paths | `src/core/index.ts` — all `../` → `./` for core subdirs | ✅ Done |
+| Fix `tool-gateway.ts` | Export `WORKSPACE_ROOT` for downstream consumers | ✅ Done |
+| Fix `tool-pruner.ts` | `const` reassignment → early return pattern | ✅ Done |
+| Fix `docker-sandbox.ts` | Add missing `truncated` property in catch block | ✅ Done |
+| Fix `modules/index.ts` | Named exports to match actual module exports | ✅ Done |
+| Fix `privilege-guard` import | `createDefaultRules` → `createDefaultAllowRules` | ✅ Done |
+| Fix `kato-state-manager.ts` | Shebang moved to line 1 | ✅ Done |
+| Git commit | `d35ff1de` — 9 files changed, 103 insertions(+), 86 deletions(-) | ✅ Done |
 
 ---
 
-## 6. Garbage Collection — ĐÃ XÓA ✅
+## 5. Garbage Collection — ĐÃ XÓA ✅
 
 | File | Lý do |
 |------|-------|
@@ -100,4 +89,4 @@ src/core/
 
 ---
 
-*End of manifest. Còn lại: fix imports → verify → commit.*
+*End of manifest. All campaigns complete. Repository is clean: tsc ✓, tests ✓, committed.*

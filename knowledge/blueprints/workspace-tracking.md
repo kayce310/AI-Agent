@@ -25,7 +25,7 @@
 | **Phase 3: Agent System** | ✅ Hoàn tất | Tool Registry (9 plugins), model-adapter, Agent, HookRegistry, evolution, tracer |
 | **Phase 3b: Restructure** | ✅ Hoàn tất | Flat → layered architecture (10 subdirectories, 39 files moved) |
 | **Phase 4-8: Core Features** | ✅ Hoàn tất | Memory, Orchestration, Observability, SOPs, Patterns, Security |
-| **Remaining** | 🔴 IN PROGRESS | Fix imports, wire modules, tests |
+| **Remaining** | ✅ Hoàn tất | Fix imports, wire modules, tests — all done (commit `d35ff1de`) |
 
 ---
 
