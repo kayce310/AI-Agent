@@ -1,314 +1,328 @@
-# 📸 Architecture Snapshot — Ground Truth Baseline
+# 🏗️ Kato Agent — Architecture Snapshot (v6.0)
 
-> Generated: 2026-05-08T08:12:00Z
-> Purpose: Pre-review baseline for external architecture assessment
+> **Cập nhật**: 2026-05-21T03:00:00Z
+> **Phiên**: gov-phase-8
+> **Trạng thái**: Bot Discord đang chạy, 9router external configured
 
 ---
 
-## Task 1: Directory Structure Scan
-
-### 1.1 src/core/ — Lõi xử lý (Depth 2)
+## 1. Tổng Quan Kiến Trúc
 
 ```
-src/core/
-├── agents/                    # Agent runtime & management
-│   ├── agent-manager.ts
-│   ├── code-parser.ts
-│   ├── docker-sandbox.ts
-│   ├── failure-classifier.ts
-│   ├── janitor.ts
-│   ├── sandbox-executor.ts
-│   ├── skill-runtime.ts
-│   ├── skills-index-manager.ts
-│   └── sub-agent.ts
-├── engine/                   # Execution engine
-│   ├── agent.ts
-│   ├── decomposer.ts
-│   ├── engine.ts
-│   ├── orchestrator.ts
-│   ├── plan-executor.ts
-│   └── result-synthesizer.ts
-├── gnap/                     # GNAP protocol
-│   ├── gnap-agent-card.ts
-│   └── gnap-queue.ts
-├── llm/                      # LLM abstraction layer
-│   ├── llm.ts
-│   ├── model-adapter.ts
-│   ├── ollama-adapter.ts
-│   ├── prompt-builder.ts
-│   └── provider-registry.ts
-├── mcp/                      # MCP client/server
-│   ├── mcp-client.ts
-│   └── mcp-server.ts
-├── memory/                   # Memory subsystems
-│   ├── memory-agentic.ts
-│   ├── memory-compressor.ts
-│   ├── memory-log.ts
-│   ├── memory-store.ts
-│   ├── memory-temporal.ts
-│   ├── memory.ts
-│   └── state-manager.ts
-├── observability/            # Metrics & tracing
-│   ├── cost-tracker.ts
-│   ├── eval-engine.ts
-│   ├── langfuse-client.ts
-│   ├── promptfoo-client.ts
-│   └── tracer.ts
-├── patterns/                 # Thinking patterns (20 files)
-│   ├── adaptive-thinking.ts
-│   ├── agent-workforce.ts
-│   ├── chain-of-thought.ts
-│   ├── chaining.ts
-│   ├── code-exec.ts
-│   ├── context-compression.ts
-│   ├── dynamic-scaffolding.ts
-│   ├── evaluation.ts
-│   ├── human-in-the-loop.ts
-│   ├── index.ts
-│   ├── memory-augmented.ts
-│   ├── multi-agent.ts
-│   ├── orchestrator-workforce.ts
-│   ├── parallel.ts
-│   ├── reflection.ts
-│   ├── routing.ts
-│   ├── self-consistency.ts
-│   ├── self-discovery.ts
-│   ├── supervisor.ts
-│   ├── tool-arbiter.ts
-│   └── tool-augmented.ts
-├── security/                 # Security layer
-│   ├── input-guard.ts
-│   ├── output-guard.ts
-│   ├── privilege-guard.ts
-│   ├── rate-limiter.ts
-│   ├── response-cache.ts
-│   └── security-scanner.ts
-├── sop/                      # SOP engine
-│   ├── pattern-registry.ts
-│   ├── pattern-selector.ts
-│   ├── sop-engine.ts
-│   └── sop-registry.ts
-├── tools/                    # Tool plugins (10 plugins)
-│   ├── _shared.ts
-│   ├── archive.ts
-│   ├── document.ts
-│   ├── filesystem.ts
-│   ├── knowledge.ts
-│   ├── network.ts
-│   ├── report.ts
-│   ├── skills.ts
-│   ├── system.ts
-│   ├── tool-pruner.ts
-│   ├── tool-registry.ts
-│   └── tools.ts
-├── evolution.ts              # Self-evolution logic
-├── hooks.ts                  # Lifecycle hooks
-├── index.ts                  # Core barrel export
-└── types.ts                  # Shared type definitions
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        KATO AGENT v6.0                                  │
+│                    Framework 6 Layers + Plugin Architecture             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐              │
+│  │   Discord     │───▶│   Engine     │───▶│   LLM        │              │
+│  │   Bridge      │    │   (ReAct)    │    │   Providers  │              │
+│  │   (Adapter)   │◀───│              │◀───│   (9router)  │              │
+│  └──────────────┘    └──────┬───────┘    └──────────────┘              │
+│                             │                                           │
+│                    ┌────────┴────────┐                                  │
+│                    │   Tool System   │                                  │
+│                    │   (Plugin-based)│                                  │
+│                    └────────┬────────┘                                  │
+│                             │                                           │
+│         ┌───────────────────┼───────────────────┐                      │
+│         │                   │                   │                      │
+│    ┌────┴────┐        ┌────┴────┐        ┌────┴────┐                  │
+│    │ Security│        │ Memory  │        │Patterns │                  │
+│    │ (6 file)│        │ (7 file)│        │(16 file)│                  │
+│    └─────────┘        └─────────┘        └─────────┘                  │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                    Knowledge Graph (Read-only)                   │   │
+│  │  knowledge/wiki/  │  knowledge/blueprints/  │  knowledge/workspace/ │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Core stats**: 11 subdirectories, ~65 TypeScript files
+---
+
+## 2. Cấu Trúc Thư Mục
+
+### 2.1. Source Code (`src/`)
+
+| Thư mục | Mục đích | Files |
+|---------|----------|-------|
+| `src/index.ts` | Entry point, barrel export | 1 |
+| `src/core/` | Core domain (Engine, Agent, Security, Memory, Patterns, Tools) | ~50 |
+| `src/core/engine/` | ReAct loop, Agent lifecycle, Orchestrator | 6 |
+| `src/core/tools/` | Tool plugins (filesystem, knowledge, document, network, archive, skills, report, system) | 11 |
+| `src/core/security/` | Input/Output guard, Privilege guard, Rate limiter, Security scanner | 6 |
+| `src/core/memory/` | Memory core, Store, Temporal, Agentic, Log | 7 |
+| `src/core/patterns/` | 16 agent patterns (CoT, ReAct, Reflection, etc.) | 16 |
+| `src/core/llm/` | LLM adapter, Model router, Provider registry, Prompt builder, Ollama | 5 |
+| `src/core/observability/` | Tracer, Cost tracker, Eval engine, Langfuse, Promptfoo | 5 |
+| `src/core/sop/` | SOP engine, Registry, Pattern selector | 4 |
+| `src/core/gnap/` | GNAP protocol, Agent card | 2 |
+| `src/core/mcp/` | MCP client, MCP server | 2 |
+| `src/core/agents/` | Agent manager, Code parser, Janitor, Sandbox, Sub-agent, Skills index | 9 |
+| `src/modules/` | Peripheral adapters (Discord, Document, Knowledge, Report) | 10 |
+| `src/scripts/` | Startup scripts (Discord, State manager) | 2 |
+
+### 2.2. Knowledge (`knowledge/`)
+
+| Thư mục | Mục đích | Files |
+|---------|----------|-------|
+| `knowledge/wiki/` | Architecture docs, Skills (~170), Troubleshooting | ~200 |
+| `knowledge/blueprints/` | Raw assets, backups, PDFs | ~30 |
+| `knowledge/workspace/` | State, checkpoint, evolution, processed-files | ~15 |
+| `knowledge/memory/` | Memory store, temporal | ~5 |
+| `knowledge/analysis/` | Implementation plans, gap analyses | ~5 |
+| `knowledge/raw/` | PDFs, technical docs | ~20 |
+
+### 2.3. Config & Scripts
+
+| Thư mục | Mục đích | Files |
+|---------|----------|-------|
+| `config/` | Provider configs | 1 |
+| `scripts/` | Utility scripts (validate, configure-9router, etc.) | 10 |
+| `tests/` | Test files (mirror src/ structure) | 15 |
+| `9router/` | 9router source (legacy, runtime at `e:\Test\9router`) | ~20 |
+| `.husky/` | Git hooks | 2 |
+| `.github/` | CI workflows | ~5 |
 
 ---
 
-### 1.2 src/modules/ — Module ngoại vi (Depth 2)
+## 3. Cơ Chế Hoạt Động
+
+### 3.1. Boot Sequence
 
 ```
-src/modules/
-├── discord/                   # Discord bot integration
-│   └── index.ts
-├── document/                  # Document processing pipeline
-│   ├── converter.ts
-│   ├── docx-parser.ts
-│   ├── formula-extractor.ts
-│   ├── parser.ts
-│   └── pdf-parser.ts
-├── knowledge/                 # Knowledge archiving
-│   └── md-archiver.ts
-└── report/                    # Report generation
-    ├── generator.ts
-    └── style-engine.ts
+1. 9router-boot.bat
+   ├── Check 9router running on port 20128
+   ├── If not → start e:\Test\9router (npm run dev)
+   ├── Run 9router-select.ps1 (fetch models, select combo)
+   └── Call kato-boot.bat
+
+2. kato-boot.bat
+   ├── Kill old instances (PID file)
+   ├── Check dependencies (npm install)
+   └── Start: npx tsx src/scripts/start-discord.ts
+
+3. start-discord.ts
+   ├── PID lock (single instance)
+   ├── Create Engine → engine.init()
+   │   ├── Load providers from config/providers.json
+   │   ├── Init evolution engine
+   │   ├── Load tool registry (plugins)
+   │   ├── Load tool pruner definitions
+   │   ├── Build model router
+   │   └── Create Agent with config
+   ├── Create DiscordBridge(engine)
+   └── bridge.start() → Discord.login(token)
 ```
 
-**Modules stats**: 4 modules, 9 TypeScript files
-
----
-
-### 1.3 knowledge/ — Tri thức (Depth 2)
+### 3.2. Message Processing Flow
 
 ```
-knowledge/
-├── analysis/                  # Analysis documents
-│   ├── skill-system-implementation-plan.md
-│   └── v5.0-vs-skill-framework-gap-analysis.md
-├── blueprints/                # Raw blueprints & backups
-│   ├── queue/                 # Chunked processing queue
-│   ├── *.pdf, *.docx, *.json # Mixed raw assets
-│   └── 9router-backup-*.json  # Router config backups
-├── memory/                    # Agent memory
-│   └── *.json
-├── memory-store/              # Memory store manifest
-│   └── manifest.json
-├── memory-temporal/           # Temporal memory
-│   └── manifest.json
-├── raw/                       # Raw source documents (PDFs)
-│   └── *.pdf, *.txt
-├── raw-md/                    # Raw markdown conversions
-├── references/                # Reference materials
-├── wiki/                      # Structured knowledge base
-│   ├── AGENTS.md              # Role router
-│   ├── architecture.md        # Architecture overview
-│   ├── index.md               # Knowledge base index
-│   ├── blueprints/            # Architecture blueprints (2 files)
-│   ├── core/                  # Core architecture docs (7 files + _INDEX)
-│   ├── knowledge/             # Domain knowledge (3 files)
-│   ├── projects/              # Project profiles (2 files)
-│   ├── prompts/               # Prompt templates (3 files)
-│   ├── repos/                 # Repo analysis (10+ analysis files)
-│   ├── rules/                 # Governance rules
-│   ├── scripts/               # Script documentation
-│   ├── skills/                # Skill library (~170 skill files + _INDEX)
-│   ├── tools/                 # Tool definitions
-│   └── troubleshooting/       # Troubleshooting guides (5 files + _INDEX)
-└── workspace/                 # Runtime state
-    ├── audit-findings-sprintA.md
-    ├── checkpoint.json
-    ├── checkpoint.bak.json
-    ├── evolution.json
-    ├── priority-plan.md
-    ├── processed-files.json
-    ├── restructure-plan-remaining.md
-    ├── state.json
-    └── state.md
+Discord Message
+    │
+    ▼
+DiscordBridge.messageCreate()
+    ├── Check: bot message? → skip
+    ├── Check: /switch model: → update currentModel
+    ├── Check: /list models → reply with models
+    ├── Check: @Kato or "kato" in message
+    │   ├── Cross-instance dedup (lock file)
+    │   ├── In-memory dedup (Set)
+    │   ├── Save user message to history
+    │   ├── Get channel history
+    │   ├── Create EngineRequest
+    │   ├── Send "⏳ Đang xử lý..."
+    │   └── Call engine.process(request)
+    │
+    ▼
+Engine.process()
+    ├── Load KATO identity files (CLINE.md, AGENTS.md, soul.md)
+    ├── Build system prompt (PromptBuilder)
+    ├── Agent.run() (ReAct loop)
+    │   ├── selectRelevantTools(userMessage) → tool-pruner
+    │   ├── If 0 tools → fallback to full registry
+    │   ├── Cycle >= 3 → restrict to core tools only
+    │   ├── ModelRouter.route() → try adapters in tier order
+    │   │   ├── 9router (tier 1) → http://localhost:20128/v1
+    │   │   └── On failure → cascade to next tier
+    │   ├── Parse tool_calls from response
+    │   ├── Execute tools via ToolRegistry
+    │   │   └── Each tool → secureRuntime (tool-gateway.ts)
+    │   └── Loop until max cycles or final response
+    │
+    ▼
+DiscordBridge (callback)
+    ├── Save assistant message to history
+    ├── Edit "⏳" message with response
+    └── Release locks
 ```
 
-**Knowledge stats**: ~200+ files across 12 subdirectories
+### 3.3. Tool System (Plugin-based)
 
----
+```
+ToolRegistry (singleton)
+    ├── registerBuiltInPlugins()
+    │   ├── filesystem  → list_directory, read_file
+    │   ├── knowledge   → search_knowledge_graph, write_wiki_page
+    │   ├── document    → read_pdf, read_docx, extract_formulas, archive_document
+    │   ├── network     → fetch_url
+    │   ├── archive     → archive_file, extract_archive
+    │   ├── skills      → load_skill, check_stale_skills
+    │   ├── report      → generate_report, quote_from_source
+    │   ├── system      → execute_command, process_new_raw
+    │   └── (each plugin: name, tools[], execute())
+    │
+    ├── getDefinitions() → OpenAI-compatible tool definitions
+    ├── execute(name, args) → run tool by name
+    └── executeToolCall(toolCall) → backward-compat wrapper
 
-## Task 2: Governance Check
+ToolPruner
+    ├── ensureToolDefinitionsLoaded() → preload from registry
+    ├── selectRelevantTools(userMessage) → keyword matching
+    │   └── Categories: core, filesystem, document, knowledge, network, skills, report, archive, system
+    └── estimateToolsTokenCount(tools) → token estimation
 
-### 2.1 Folder Code Ownership Rules
-
-**Status: ⚠️ PARTIAL — No explicit folder-to-code mapping document exists**
-
-| Folder | Expected Content | Enforced? |
-|--------|-----------------|-----------|
-| `src/core/` | Core engine, agents, LLM, memory, security, tools | ❌ No hard rule |
-| `src/modules/` | Peripheral integrations (Discord, docs, reports) | ❌ No hard rule |
-| `knowledge/wiki/` | Structured knowledge, skills, architecture docs | ❌ No hard rule |
-| `knowledge/blueprints/` | Raw assets, backups, queue | ❌ No hard rule |
-| `knowledge/workspace/` | Runtime state only | ❌ No hard rule |
-| `scripts/` | Utility scripts | ❌ No hard rule |
-| `tests/` | Test files | ❌ No hard rule |
-
-**Finding**: CLINE.md defines operational laws (checkpoint, token budget, git commit) but does NOT specify which folder can contain what code type. No `.gitkeep` or `README.md` in subdirectories to enforce boundaries.
-
----
-
-### 2.2 Tool/Module Registration Process
-
-**Status: ✅ DEFINED — Plugin-based registration via ToolRegistry**
-
-From `src/core/tools/tool-registry.ts`:
-
-```typescript
-// Registration API:
-registry.use(plugin)       // Register a tool plugin
-registry.getDefinitions()  // Get OpenAI-compatible definitions
-registry.execute(name, args) // Execute by name
+ToolGateway (Security)
+    ├── secureRuntime (singleton)
+    │   ├── safeReadFile() → fs.readFileSync (validated path)
+    │   ├── safeWriteFile() → fs.writeFileSync (validated path)
+    │   ├── safeExists() → fs.existsSync (validated path)
+    │   ├── safeReaddir() → fs.readdirSync (validated path)
+    │   ├── safeStat() → fs.statSync (validated path)
+    │   └── validatePath() → isPathSafe() from privilege-guard
+    └── isPathSafe() → 6-layer Zero-Trust path validation
 ```
 
-**Built-in plugins** (auto-registered in `registerBuiltInPlugins`):
-- `filesystem`, `knowledge`, `document`, `network`, `archive`, `skills`, `report`, `system`
+### 3.4. Security Layer
 
-**Process**:
-1. Create plugin file in `src/core/tools/`
-2. Export default `ToolPlugin` with `name`, `tools[]`, optional `onRegister`
-3. Add entry to `pluginModules` map in `registerBuiltInPlugins()`
-4. Singleton `getDefaultRegistry()` auto-loads all plugins
+```
+PrivilegeGuard
+    ├── 6-layer isPathSafe():
+    │   ├── Layer 1: Normalize path
+    │   ├── Layer 2: Reject null bytes
+    │   ├── Layer 3: Normalize Windows backslash
+    │   ├── Layer 4: Reject traversal (..)
+    │   ├── Layer 5: Reject absolute paths
+    │   └── Layer 6: Enforce workspace root prefix
+    ├── RBAC rules (allow/deny per tool pattern)
+    └── Hook-based enforcement
 
-**Finding**: No formal documentation of this process exists outside the code itself. No `CONTRIBUTING.md` or registration guide.
+InputGuard  → Prompt injection detection
+OutputGuard → Data leakage prevention
+RateLimiter → Token bucket (60 req/min, 100k tokens/min)
+ResponseCache → LRU cache (500 entries, 5min TTL)
+SecurityScanner → Static analysis for tool abuse
+```
 
----
+### 3.5. Memory System
 
-### 2.3 Skills Inventory Management
+```
+MemoryCore       → Channel-based message store
+MemoryStore      → ADD-only memory blocks (JSON)
+MemoryTemporal   → Time-based retention (30 days)
+MemoryAgentic    → Agent-writeable memory
+MemoryLog        → Structured memory blocks
+```
 
-**Status: ✅ DEFINED — Centralized index at `knowledge/wiki/skills/_INDEX.md`**
+### 3.6. LLM Provider System
 
-**Structure**:
-- `knowledge/wiki/skills/` contains ~170 skill files
-- `_INDEX.md` is the master catalog with categories:
-  - 🔒 Security & Auth (5 skills)
-  - 🚀 DevOps & Cloud (10 skills)
-  - 📱 Mobile (12 skills)
-  - 🤖 AI & Agents (5 skills)
-  - 🧪 Testing (10 skills)
-  - 🖥️ Backend & Database (25 skills)
-  - 🎨 Frontend & UI (50+ skills)
-  - 🧰 Tools & Libraries (40+ skills)
-  - 🧱 Nền tảng / Platform (4 core skills)
-  - 🧠 Quản trị Tri thức / Knowledge Mgmt (2 skills)
-  - ⚙️ Xử lý Nâng cao / Advanced (3 skills)
-  - 🎨 Giao diện / UI (1 skill)
-  - 🔒 Bảo mật / Security (1 skill)
-  - 🧬 Tiến hóa / Evolution (1 skill)
-  - 🚀 Deployment (1 skill)
+```
+ProviderRegistry
+    ├── loadFromConfig() → read config/providers.json
+    └── Register adapters
 
-**Core platform skills** (Kato-specific):
-- `coding-standards` — Module hóa, MCP compatibility
-- `verification-protocol` — Testing, validation
-- `communication-protocol` — Ultra-Terse Mode
-- `state-management` — Data Plane, atomic writes
-- `knowledge-management` — Wiki, indexing
-- `obsidian-formatting` — Wiki-links, tags
-- `big-data-processing` — Chunking, orchestrator-worker
-- `automation-directives` — O(1) query, self-learning
-- `ui-vibe-coding` — Design system
-- `security-sandbox` — Docker isolation
-- `evolution-protocol` — Changelog, memory commit
-- `module-discord` — Discord bot startup
+ModelRouter
+    ├── buildDefaultRouter() → create adapters from registry
+    ├── route(messages, options) → try adapters in tier order
+    │   ├── Emit cascade events (trying/failed)
+    │   └── Return first successful response
+    └── Cascade fallback on failure
 
-**Finding**: Skills are well-cataloged but many appear to be third-party (Clerk, Cloudflare, etc.) — unclear which are actively used vs. reference.
-
----
-
-## Task 3: Baseline Summary
-
-### System Version
-- **Kato Bootloader**: v5.0
-- **Knowledge Base**: v4.0
-- **Architecture**: Agentic Workspace with Control/Data Plane separation
-
-### Key Architectural Patterns
-1. **Plugin-based tool system** — Tools registered via `ToolRegistry.use()`
-2. **Modular skills** — Each skill = 1 file, 1 task
-3. **State management** — `state.json` via `kato-state-manager` (no direct edits)
-4. **Checkpoint protocol** — Anti-overflow with `checkpoint.json`
-5. **Zero Waste Token** — Load only what's needed
-
-### Governance Gaps Identified
-| Gap | Severity | Location |
-|-----|----------|----------|
-| No folder-to-code ownership rules | Medium | Missing doc |
-| No tool registration guide | Low | Code-only |
-| No skill lifecycle management | Medium | `_INDEX.md` only |
-| No architecture decision records (ADR) | Medium | `core/architecture-decisions.md` exists but not linked from index |
-| Mixed third-party vs core skills | Low | `knowledge/wiki/skills/` |
-
-### File Counts
-| Area | Files |
-|------|-------|
-| `src/core/` | ~65 .ts |
-| `src/modules/` | ~9 .ts |
-| `src/scripts/` | ~3 .ts/.js |
-| `knowledge/wiki/skills/` | ~170 .md |
-| `knowledge/wiki/core/` | 7 .md |
-| `knowledge/wiki/repos/` | 12 .md |
-| `knowledge/blueprints/` | ~30+ mixed |
-| `knowledge/raw/` | ~30+ PDFs |
-| `tests/` | 18 .test.ts |
+9router (External)
+    ├── Runtime: e:\Test\9router\ (Next.js app)
+    ├── API: http://localhost:20128/v1
+    ├── Config: config/providers.json
+    │   ├── baseUrl: http://localhost:20128/v1
+    │   ├── apiKey: local-proxy-key
+    │   └── models: openrouter/openrouter/owl-alpha
+    └── Skills: e:\Test\9router\skills\ (.kto.md format)
+```
 
 ---
 
-> 📸 Snapshot complete. Ready for external architecture review.
+## 4. Luật Vận Hành (CLINE.md)
+
+| Luật | Mô tả |
+|------|--------|
+| **Validate Structure** | Trước mỗi tạo/sửa file trong `src/`, chạy validate-structure.ts --strict |
+| **Auto-Validate** | Sau MỖI tool call, tự động chạy validate |
+| **Auto-Register** | Sau MỖI tool call, tự động cập nhật processed-files.json |
+| **Blueprint** | Khi tạo file trong `knowledge/blueprints/`, dùng kato-state-manager |
+| **Workspace Path** | Mọi path tính từ gốc repo (e:/Test/AI-Agent) |
+| **Skip** | Files trong processed-files.json có thể skip |
+| **Checkpoint** | Mỗi tool call phải kèm task_progress |
+| **Token Budget** | Kiểm tra context.tokenBudget trước mỗi tool call |
+| **Git Commit** | Mỗi khi hoàn thành 1 step, git add + commit |
+
+---
+
+## 5. Pre-commit Hooks
+
+```
+.husky/pre-commit     → Shell script (Linux/Mac)
+.husky/pre-commit.ps1 → PowerShell script (Windows)
+    └── npx tsx scripts/validate-structure.ts --strict
+        ├── R1: Folder Ownership
+        ├── R2: Import Path Integrity
+        ├── R3: Dependency Headers (@depends-on)
+        ├── R4: Dead Code Detection
+        └── R5: Static Security Scan (raw fs import)
+```
+
+---
+
+## 6. State Management
+
+```
+knowledge/workspace/state.json
+    ├── agent.lifecycle: READY
+    ├── agent.role: Lead AI Engineer
+    ├── session.id: session-2026-05-14T13-36-00-000Z
+    ├── controlPlane.bootloader: CLINE.md
+    ├── dataPlane.statePath: knowledge/workspace/state.json
+    ├── engineVersion: v5.3.1
+    └── critical: memoryCompressor, safeContextTruncator, reactLoopGuard
+
+knowledge/workspace/processed-files.json
+    └── Registry of all created/modified files with checksums
+
+knowledge/workspace/checkpoint.json
+    └── Session checkpoint for overflow recovery
+```
+
+---
+
+## 7. Known Issues
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| `read_file` execution failed: Cannot access 'path' before initialization | HIGH | Investigating (circular import in tool-gateway) |
+| Tool pruner returns 0 tools for some messages | MEDIUM | Acceptable (fallback to full registry) |
+| 84 files missing @depends-on headers | LOW | Pre-existing |
+| 16 dead code exports in index.ts | LOW | Pre-existing |
+| `src/core/index.ts` has wrong import paths (`../engine` vs `./engine`) | MEDIUM | Pre-existing, doesn't affect runtime |
+
+---
+
+## 8. External Dependencies
+
+| Service | Location | Port | Status |
+|---------|----------|------|--------|
+| 9router | e:\Test\9router\ | 20128 | Configured |
+| Discord | discord.com | 443 | Connected |
+| OpenRouter | openrouter.ai | 443 | Via 9router |
+
+---
+
+> 📌 **Next Action**: Fix `read_file` path initialization issue, add @depends-on headers to new files, investigate circular imports
