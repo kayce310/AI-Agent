@@ -31,17 +31,24 @@
   },
   "src": {
     "core/tools/tool-pruner.ts": {
-      "checksum": "new",
-      "processedAt": "2026-05-21T02:30:00.000Z",
-      "size": 3500,
-      "description": "Tool Pruner — Keyword-based tool selection + token estimation. Recreated after deletion in Phase 5 cleanup.",
-      "action": "created"
+      "checksum": "modified",
+      "processedAt": "2026-05-21T03:30:00.000Z",
+      "size": 3600,
+      "description": "Tool Pruner — Keyword-based tool selection + token estimation. Fixed: always return core tools as minimum.",
+      "action": "modified"
     },
     "core/tools/tool-registry.ts": {
       "checksum": "modified",
       "processedAt": "2026-05-21T02:30:00.000Z",
       "size": 7200,
       "description": "Tool Registry — Fixed missing path/fs imports, replaced raw fs with secureRuntime",
+      "action": "modified"
+    },
+    "core/tools/tool-gateway.ts": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T03:30:00.000Z",
+      "size": 2800,
+      "description": "Tool Gateway — Fixed circular import: isPathSafe now imported from _shared.js instead of privilege-guard.js",
       "action": "modified"
     },
     "core/security/privilege-guard.ts": {
@@ -86,6 +93,18 @@
       "checksum": "modified",
       "processedAt": "2026-05-21T02:30:00.000Z",
       "description": "System State — Added 9router external to module matrix, changelog gov-phase-8",
+      "action": "modified"
+    },
+    "workspace/known-issues-fix-plan.md": {
+      "checksum": "new",
+      "processedAt": "2026-05-21T03:30:00.000Z",
+      "description": "Known Issues Fix Plan — 3 issues: circular import, tool pruner, missing headers",
+      "action": "created"
+    },
+    "wiki/core/current-architecture-snapshot.md": {
+      "checksum": "modified",
+      "processedAt": "2026-05-21T03:00:00.000Z",
+      "description": "Architecture Snapshot — Full system structure and mechanism documentation",
       "action": "modified"
     }
   }
