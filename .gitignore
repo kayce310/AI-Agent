@@ -13,3 +13,16 @@ C:\Users\Khang\AppData\Local\Temp\9router\
 9router/docs/
 9router/tester/
 9router/.vscode/
+
+# Embedded git repos (use submodules if needed)
+knowledge/references/autoskills/
+knowledge/references/picoclaw/
+knowledge/references/nanoclaw/
+
+# Large binary assets
+knowledge/blueprints/*.pdf
+knowledge/raw/
+
+# OS files
+.DS_Store
+Thumbs.db
