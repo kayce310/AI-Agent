@@ -263,3 +263,6 @@ knowledge/raw/
 # OS files
 .DS_Store
 Thumbs.db
+# Runtime & IDE
+.gnap/
+.vscode/
