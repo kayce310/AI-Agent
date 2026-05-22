@@ -1,0 +1,20 @@
+{
+    "providers":  [
+                      {
+                          "name":  "9router",
+                          "type":  "proxy",
+                          "tier":  1,
+                          "label":  "9Router (External — Model Selection Delegated)",
+                          "baseUrl":  "http://localhost:20128/v1",
+                          "apiKey":  "local-proxy-key",
+                          "models":  [
+                                         {
+                                             "id":  "openrouter/openrouter/owl-alpha",
+                                             "maxTokens":  8192,
+                                             "tier":  1,
+                                             "label":  "9Router Combo openrouter/openrouter/owl-alpha"
+                                         }
+                                     ]
+                      }
+                  ]
+}

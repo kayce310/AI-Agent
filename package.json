@@ -1,0 +1,28 @@
+{
+  "name": "ai-agent",
+  "version": "1.0.0",
+  "description": "Kato Agent",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "config:9router": "npx tsx scripts/configure-9router.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "langfuse": "^3.38.20",
+    "mammoth": "^1.12.0",
+    "openai": "^6.37.0",
+    "pdf-parse": "^2.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.4"
+  }
+}
