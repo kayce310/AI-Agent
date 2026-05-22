@@ -12,7 +12,7 @@
  * Quản lý index của skills từ knowledge/wiki/skills/ để hỗ trợ lazy-load
  * và phát hiện skills cũ cần review lại.
  * 
- * Tuân thủ CLINE.md Rule: Tra knowledge/wiki/index.md và chỉ tải đúng skill cần dùng.
+ * Tuân thủ KATO.md Rule: Tra knowledge/wiki/index.md và chỉ tải đúng skill cần dùng.
  * 
  * API đồng bộ, gọi được từ tools.ts (executeToolCall).
  */

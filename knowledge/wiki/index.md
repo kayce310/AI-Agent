@@ -97,7 +97,7 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 ## 📊 Trạng thái Hệ thống
 
 - **Phiên bản**: v4.0 (Agentic Workspace)
-- **CLINE.md**: Bootloader siêu nén / Control Plane
+- **KATO.md**: Bootloader siêu nén / Control Plane
 - **Skills**: Modular SOPs + Data Plane state manager
 - **Triết lý**: Zero Waste Token, Control/Data Plane separation
 

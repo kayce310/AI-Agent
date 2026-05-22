@@ -37,7 +37,7 @@ export interface KatoWorkspaceState {
   };
   modelCooldowns?: Record<string, string>;
   controlPlane: {
-    bootloader: 'CLINE.md';
+    bootloader: 'KATO.md';
     router: 'knowledge/wiki/AGENTS.md';
     index: 'knowledge/wiki/index.md';
   };
@@ -207,7 +207,7 @@ export class KatoStateManager {
         currentTask,
       },
       controlPlane: {
-        bootloader: 'CLINE.md',
+        bootloader: 'KATO.md',
         router: 'knowledge/wiki/AGENTS.md',
         index: 'knowledge/wiki/index.md',
       },

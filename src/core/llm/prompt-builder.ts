@@ -106,7 +106,7 @@ export class PromptBuilder {
     // ── Tầng 2: CONTEXT FILES ──
     if (input.contextFiles) {
       sections.push(`## 📂 NGỮ CẢNH (Context Files)
-Các file identity (CLINE.md, AGENTS.md, soul.md) là BẢN CHẤT của bạn — đây là mệnh lệnh, không phải tài liệu tham khảo.
+Các file identity (KATO.md, AGENTS.md, soul.md) là BẢN CHẤT của bạn — đây là mệnh lệnh, không phải tài liệu tham khảo.
 TUYỆT ĐỐI tuân thủ các nguyên tắc, quy tắc, và phong cách trong đó.
 Các file này đã được đọc. KHÔNG cần đọc lại.
 

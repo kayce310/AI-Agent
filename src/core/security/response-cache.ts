@@ -12,7 +12,7 @@
  *
  * Phase 2 Updates:
  * - Side-effect detection: bypass cache for mutating operations
- * - Persona-aware key: includes CLINE.md hash in key
+ * - Persona-aware key: includes KATO.md hash in key
  */
 
 // ── Types ──
@@ -49,7 +49,7 @@ export interface CacheKey {
   sessionId: string;
   /** SHA-256 hash of the prompt */
   promptHash: string;
-  /** Hash of persona file (CLINE.md) for cache invalidation on persona change */
+  /** Hash of persona file (KATO.md) for cache invalidation on persona change */
   personaHash?: string;
 }
 

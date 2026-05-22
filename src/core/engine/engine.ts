@@ -37,7 +37,7 @@ import { MemoryAgentic } from '../memory/memory-agentic.js';
 import { GNAPQueue } from '../gnap/gnap-queue.js';
 
 const KATO_IDENTITY_FILES = [
-  'CLINE.md',
+  'KATO.md',
   'knowledge/wiki/AGENTS.md',
   'knowledge/wiki/core/soul.md',
 ];
