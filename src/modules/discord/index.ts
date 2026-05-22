@@ -89,11 +89,11 @@ function cleanupOldLocks(): void {
 
 export class DiscordBridge {
   private client: Client;
-  private engine: Engine;
+  private gateway: any;
   private currentModel: string = '';
   private processingMessages: Set<string> = new Set(); // in-memory dedup guard
 
-  constructor(engine?: Engine) {
+  constructor(gateway: any) {
     cleanupOldLocks(); // cleanup stale lock files on startup
 
     this.client = new Client({
@@ -104,11 +104,11 @@ export class DiscordBridge {
       ]
     });
 
-    this.engine = engine ?? new Engine();
-    this.currentModel = this.engine.detectFreeModel();
-    console.log(`🎯 Default model (auto-detected): ${this.currentModel}`);
+    this.gateway = gateway;
+    // this.currentModel = this.engine.detectFreeModel(); // TODO: Gateway model detection
+    console.log(`🎯 Gateway initialized`);
     this.registerEventHandlers();
-    this.registerEngineHandlers();
+    // this.registerEngineHandlers(); // TODO: Gateway event handlers
   }
 
   private statusMessage: Map<string, Message> = new Map(); // channelId -> message
@@ -176,37 +176,35 @@ export class DiscordBridge {
         try {
           console.log(`✅ Discord -> Engine: forwarding message (id: ${message.id})`);
 
-          await this.engine.saveMessage(channelId, {
-            role: 'user',
-            content: message.content,
-            timestamp: Date.now()
-          });
+          // await this.engine.saveMessage(channelId, {
+          //   role: 'user',
+          //   content: message.content,
+          //   timestamp: Date.now()
+          // });
 
-          const history = await this.engine.getHistory(channelId);
+          // const history = await this.engine.getHistory(channelId);
 
-          const request: EngineRequest = {
+          const request = {
+            input: message.content,
+            userId: message.author.id,
             sessionId: channelId,
-            messages: history,
-            modelId: this.currentModel,
-            agentName: 'Kato',
-            protocol: 'Discord',
-            mentionPrefix: '',
+            platform: 'discord' as const,
           };
 
           const initialMsg = await message.reply(`⏳ Đang xử lý...`);
           this.statusMessage.set(channelId, initialMsg);
 
-          const response = await this.engine.process(request);
+          const response = await this.gateway.process(request);
 
-          await this.engine.saveMessage(channelId, {
-            role: 'assistant',
-            content: response.content,
-            timestamp: Date.now()
-          });
+          // await this.engine.saveMessage(channelId, {
+          //   role: 'assistant',
+          //   content: response.output,
+          //   timestamp: Date.now()
+          // });
 
           let editSucceeded = false;
           try {
-            await initialMsg.edit(response.content);
+            await initialMsg.edit(response.output);
             editSucceeded = true;
           } catch (editErr) {
             console.warn(`⚠️ Failed to edit message: ${(editErr as Error).message}`);
@@ -216,7 +214,7 @@ export class DiscordBridge {
               // ignore delete failures
             }
             try {
-              await message.reply(response.content);
+              await message.reply(response.output);
               editSucceeded = true;
             } catch (replyErr) {
               console.error(`❌ Failed to send response: ${(replyErr as Error).message}`);
@@ -224,7 +222,7 @@ export class DiscordBridge {
           }
 
           if (editSucceeded) {
-            console.log(`✅ Discord <- Engine: response sent (model: ${response.modelUsed})`);
+            console.log(`✅ Discord <- Gateway: response sent`);
           }
         } catch (err: any) {
           console.error(`❌ Discord processing failed for message ${message.id}:`, err.message);

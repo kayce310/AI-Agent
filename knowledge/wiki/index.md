@@ -19,10 +19,26 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 | Thư mục | Mô tả |
 |---------|-------|
 | [[skills/]] | Kỹ năng modular (SOP) - Mỗi file 1 nhiệm vụ |
+| [[agents-skills/]] | Library kỹ năng mở rộng (Reference) |
 | [[core/]] | Kiến trúc lõi, tầm nhìn, changelog |
 | [[projects/]] | Theo dự án - Mỗi project có state.md |
 | [[troubleshooting/]] | Thư viện giải pháp lỗi |
 | [[workspace/]] | Trạng thái phiên làm việc |
+
+---
+
+## Agent Skill Library
+Location: `knowledge/agents-skills/`
+Index: `knowledge/agents-skills/common/_INDEX.md`
+       `knowledge/agents-skills/typescript/_INDEX.md`
+Rules: `knowledge/agents-skills/agent-skill-standard-rule.md`
+
+Categories:
+- common/ (23 skills) — best-practices, debugging, security, TDD, git, v.v.
+- typescript/ (4 skills) — language, tooling, security, best-practices
+
+Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
+       Không load toàn bộ library.
 
 ---
 
@@ -70,6 +86,13 @@ Trung tâm bản đồ tri thức của hệ thống Kato Agent
 - [[core/changelog]] - Nhật ký Tiến hóa hệ thống
 - [[core/llm-architecture]] - Kiến trúc Lõi LLM Universal
 - [[core/task-queue]] - Hệ thống hàng đợi tác vụ
+
+---
+
+## 🌐 Gateway Layer
+- `src/core/gateway/` — Gateway Layer
+  - `types.ts`: KatoRequest, KatoResponse, PlatformAdapter
+  - `index.ts`: KatoGateway class
 
 ---
 

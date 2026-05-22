@@ -14,6 +14,7 @@
  */
 
 import Engine from './core/engine/engine.js';
+import { KatoGateway } from './core/gateway/index.js';
 import DiscordBridge from './modules/discord/index.js';
 
 console.log(`🚀 Kato Agent System v5.0 starting...`);
@@ -24,8 +25,11 @@ async function main() {
     const engine = new Engine();
     await engine.init();
 
-    // 2. Khởi tạo Discord Adapter (platform-specific)
-    const discord = new DiscordBridge(engine);
+    // 2. Khởi tạo Gateway Layer
+    const gateway = new KatoGateway(engine);
+
+    // 3. Khởi tạo Discord Adapter (platform-specific)
+    const discord = new DiscordBridge(gateway);
     await discord.start();
 
     console.log(`✅ All modules initialized successfully`);
