@@ -11,6 +11,7 @@ import os from 'os';
 import { execSync } from 'child_process';
 import { DiscordBridge } from '../modules/discord/index.js';
 import Engine from '../core/engine/engine.js';
+import { KatoGateway } from '../core/gateway/index.js';
 
 // ── Single-Instance Lock ──
 const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
@@ -101,7 +102,8 @@ async function start() {
   const engine = new Engine();
   await engine.init();
 
-  const bridge = new DiscordBridge(engine);
+  const gateway = new KatoGateway(engine);
+  const bridge = new DiscordBridge(gateway);
   await bridge.start();
 }
 

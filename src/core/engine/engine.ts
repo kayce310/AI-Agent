@@ -171,7 +171,9 @@ export class Engine extends EventEmitter {
       } catch { console.warn(`⚠️ Could not load Kato identity file: ${fp}`); }
     }
     this.katoIdentityContext = identityParts.join('\n\n');
-    this.warmup().catch(() => {});
+    if (process.env.KATO_WARMUP !== 'false') {
+      this.warmup().catch(() => {});
+    }
     const adapters = this.modelRouter.listAdapters();
     console.log(`✅ Engine initialized with ${adapters.length} model adapter(s)`);
   }

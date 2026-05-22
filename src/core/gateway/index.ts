@@ -26,9 +26,17 @@ export class KatoGateway {
   }
 
   async process(request: KatoRequest): Promise<KatoResponse> {
-    // Call engine.run() or engine.process()
-    // For now, assuming engine.run(task, context)
-    const result = await this._engine.run(request.input, request.sessionId);
+    const engineRequest: EngineRequest = {
+      sessionId: request.sessionId,
+      messages: [{ role: 'user', content: request.input }],
+      modelId: 'default',
+      agentName: 'Kato',
+      protocol: 'gateway',
+      mentionPrefix: '',
+      task: request.input,
+    };
+
+    const result = await this._engine.process(engineRequest);
     
     return {
       output: result.content,
