@@ -19,7 +19,7 @@ interface HeaderTemplate {
 }
 
 const TEMPLATES: HeaderTemplate[] = [
-  { pattern: 'src/core/engine/', header: (f) => `/**\n * @file ${f} — Core Engine component\n * @layer core\n * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts\n * @imported-by src/scripts/start-discord.ts\n * @owner core-engine\n */` },
+  { pattern: 'src/core/engine/', header: (f) => `/**\n * @file ${f} — Core Engine component\n * @layer core\n * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts\n * @owner core-engine\n */` },
   { pattern: 'src/core/tools/', header: (f) => `/**\n * @file ${f} — Tool plugin\n * @layer core\n * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts\n * @imported-by src/core/tools/tool-registry.ts\n * @owner core-tools\n */` },
   { pattern: 'src/core/security/', header: (f) => `/**\n * @file ${f} — Security module\n * @layer core\n * @depends-on (none — standalone)\n * @imported-by src/core/engine/engine.ts\n * @owner core-security\n */` },
   { pattern: 'src/core/memory/', header: (f) => `/**\n * @file ${f} — Memory module\n * @layer core\n * @depends-on src/core/types.ts\n * @imported-by src/core/engine/engine.ts\n * @owner core-memory\n */` },

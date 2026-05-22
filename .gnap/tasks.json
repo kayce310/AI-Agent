@@ -867,7 +867,21 @@
       "timestamp": 1779357988625,
       "id": "gnap-1779357988625-ok6df3",
       "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779412351326,
+      "id": "gnap-1779412351326-8izzfx",
+      "status": "pending"
+    },
+    {
+      "name": "test-task",
+      "sessionId": "s1",
+      "timestamp": 1779412351332,
+      "id": "gnap-1779412351332-egt6c2",
+      "status": "pending"
     }
   ],
-  "lastSync": 1779357988626
+  "lastSync": 1779412351333
 }
