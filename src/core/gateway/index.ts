@@ -10,17 +10,25 @@ import Engine from '../engine/engine.js';
 import { KatoRequest, KatoResponse, PlatformAdapter } from './types.js';
 
 export class KatoGateway {
-  private engine: Engine;
+  private _engine: Engine;
   private adapters: Map<string, PlatformAdapter> = new Map();
 
   constructor(engine: Engine) {
-    this.engine = engine;
+    this._engine = engine;
+  }
+
+  get engine(): Engine {
+    return this._engine;
+  }
+
+  onEngineEvent(event: string, handler: Function): void {
+    this._engine.on(event, handler as any);
   }
 
   async process(request: KatoRequest): Promise<KatoResponse> {
     // Call engine.run() or engine.process()
     // For now, assuming engine.run(task, context)
-    const result = await this.engine.run(request.input, request.sessionId);
+    const result = await this._engine.run(request.input, request.sessionId);
     
     return {
       output: result.content,

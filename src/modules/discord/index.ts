@@ -105,16 +105,16 @@ export class DiscordBridge {
     });
 
     this.gateway = gateway;
-    // this.currentModel = this.engine.detectFreeModel(); // TODO: Gateway model detection
+    this.currentModel = this.gateway.engine.detectFreeModel();
     console.log(`🎯 Gateway initialized`);
     this.registerEventHandlers();
-    // this.registerEngineHandlers(); // TODO: Gateway event handlers
+    this.registerEngineHandlers();
   }
 
   private statusMessage: Map<string, Message> = new Map(); // channelId -> message
 
   private registerEngineHandlers(): void {
-    this.engine.on('cascade', async (event: any) => {
+    this.gateway.onEngineEvent('cascade', async (event: any) => {
       const msg = this.statusMessage.get(event.sessionId);
       if (!msg) return;
 
@@ -151,7 +151,7 @@ export class DiscordBridge {
 
       // Xử lý lệnh liệt kê model
       if (message.content.toLowerCase() === '/list models') {
-        const models = this.engine.listModels().join('\n- ');
+        const models = this.gateway.engine.listModels().join('\n- ');
         await message.reply(`📋 **Models available:**\n- ${models}`);
         return;
       }
@@ -207,7 +207,7 @@ export class DiscordBridge {
             await initialMsg.edit(response.output);
             editSucceeded = true;
           } catch (editErr) {
-            console.warn(`⚠️ Failed to edit message: ${(editErr as Error).message}`);
+            console.warn(`⚠️ Failed to edit message: ${editErr instanceof Error ? editErr.message : String(editErr)}`);
             try {
               await initialMsg.delete();
             } catch {
@@ -217,7 +217,7 @@ export class DiscordBridge {
               await message.reply(response.output);
               editSucceeded = true;
             } catch (replyErr) {
-              console.error(`❌ Failed to send response: ${(replyErr as Error).message}`);
+              console.error(`❌ Failed to send response: ${replyErr instanceof Error ? replyErr.message : String(replyErr)}`);
             }
           }
 
@@ -225,7 +225,7 @@ export class DiscordBridge {
             console.log(`✅ Discord <- Gateway: response sent`);
           }
         } catch (err: any) {
-          console.error(`❌ Discord processing failed for message ${message.id}:`, err.message);
+          console.error(`❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
         } finally {
           this.statusMessage.delete(channelId);
           this.processingMessages.delete(message.id);
@@ -236,10 +236,10 @@ export class DiscordBridge {
   }
 
   public async start(): Promise<void> {
-    const token = process.env.DISCORD_TOKEN;
+    const token = process.env.DISCORD_BOT_TOKEN;
 
     if (!token) {
-      throw new Error('DISCORD_TOKEN không được tìm thấy trong file .env');
+      throw new Error('DISCORD_BOT_TOKEN không được tìm thấy trong file .env');
     }
 
     // ── Double-check PID lock before connecting to Discord ──
