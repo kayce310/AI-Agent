@@ -25,6 +25,11 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+const ts = () => {
+  const d = new Date();
+  return `[${d.toISOString().split('T')[1].slice(0,12)}]`;
+};
+
 // Cross-instance dedup: lock file per message ID in temp dir
 const MSG_LOCK_DIR = path.join(os.tmpdir(), 'kato-msg-locks');
 const MSG_LOCK_TTL_MS = 5 * 60 * 1000;
@@ -40,7 +45,7 @@ function tryAcquireMessageLock(messageId: string): boolean {
         const stats = fs.statSync(lockFile);
         if (Date.now() - stats.mtimeMs > MSG_LOCK_TTL_MS) {
           fs.unlinkSync(lockFile);
-          console.log(`ℹ️ Expired lock removed for message ${messageId}`);
+          console.log(`${ts()} ℹ️ Expired lock removed for message ${messageId}`);
         } else {
           return false;
         }
@@ -64,7 +69,7 @@ function releaseMessageLock(messageId: string): void {
     const lockFile = path.join(MSG_LOCK_DIR, `${messageId}.lock`);
     if (fs.existsSync(lockFile)) {
       fs.unlinkSync(lockFile);
-      console.log(`🔓 Lock released for message ${messageId}`);
+      console.log(`${ts()} 🔓 Lock released for message ${messageId}`);
     }
   } catch {}
 }
@@ -106,7 +111,7 @@ export class DiscordBridge {
 
     this.gateway = gateway;
     this.currentModel = this.gateway.engine.detectFreeModel();
-    console.log(`🎯 Gateway initialized`);
+    console.log(`${ts()} 🎯 Gateway initialized`);
     this.registerEventHandlers();
     this.registerEngineHandlers();
   }
@@ -122,7 +127,7 @@ export class DiscordBridge {
         if (event.type === 'trying') {
           await msg.edit(`⏳ [Cascade] Đang thử model: \`${event.modelId}\` (Tier ${event.tier})...`);
         } else if (event.type === 'failed') {
-          console.log(`❌ Cascade failure for ${event.modelId}: ${event.errorMessage}`);
+          console.log(`${ts()} ❌ Cascade failure for ${event.modelId}: ${event.errorMessage}`);
         }
       } catch (err) {
         // Ignore edit errors (rate limits, etc)
@@ -132,7 +137,7 @@ export class DiscordBridge {
 
   private registerEventHandlers(): void {
     this.client.once('clientReady', () => {
-      console.log(`✅ Kato Discord Bot đã sẵn sàng`);
+      console.log(`${ts()} ✅ Kato Discord Bot đã sẵn sàng`);
     });
 
     this.client.on('messageCreate', async (message: Message) => {
@@ -144,7 +149,7 @@ export class DiscordBridge {
         if (modelId) {
           this.currentModel = modelId;
           await message.reply(`✅ Đã chuyển sang model: \`${modelId}\``);
-          console.log(`🔄 Discord: switched model to ${modelId}`);
+          console.log(`${ts()} 🔄 Discord: switched model to ${modelId}`);
         }
         return;
       }
@@ -161,12 +166,12 @@ export class DiscordBridge {
       const hasKatoKeyword = !isMentioned && message.content.toLowerCase().includes('kato');
       if (isMentioned || hasKatoKeyword) {
         if (this.processingMessages.has(message.id)) {
-          console.log(`⚠️ Duplicate event for message ${message.id}, skipping`);
+          console.log(`${ts()} ⚠️ Duplicate event for message ${message.id}, skipping`);
           return;
         }
 
         if (!tryAcquireMessageLock(message.id)) {
-          console.log(`⚠️ Cross-instance duplicate for message ${message.id}, skipping`);
+          console.log(`${ts()} ⚠️ Cross-instance duplicate for message ${message.id}, skipping`);
           return;
         }
 
@@ -174,7 +179,7 @@ export class DiscordBridge {
         const channelId = message.channelId;
 
         try {
-          console.log(`✅ Discord -> Engine: forwarding message (id: ${message.id})`);
+          console.log(`${ts()} ✅ Discord -> Engine: forwarding message (id: ${message.id})`);
 
           // await this.engine.saveMessage(channelId, {
           //   role: 'user',
@@ -222,10 +227,10 @@ export class DiscordBridge {
           }
 
           if (editSucceeded) {
-            console.log(`✅ Discord <- Gateway: response sent`);
+            console.log(`${ts()} ✅ Discord <- Gateway: response sent`);
           }
         } catch (err: any) {
-          console.error(`❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
+          console.error(`${ts()} ❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
         } finally {
           this.statusMessage.delete(channelId);
           this.processingMessages.delete(message.id);
@@ -251,7 +256,7 @@ export class DiscordBridge {
           try {
             process.kill(pid, 0);
             // Another alive process holds the lock
-            console.error(`⚠️ Another Kato instance (PID ${pid}) already running. Exiting.`);
+            console.error(`${ts()} ⚠️ Another Kato instance (PID ${pid}) already running. Exiting.`);
             process.exit(0);
           } catch {
             // Stale lock, replace it

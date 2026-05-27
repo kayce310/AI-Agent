@@ -84,12 +84,23 @@ export class PromptBuilder {
    * Xây dựng system prompt hoàn chỉnh theo 8 tầng
    */
   buildSystem(input: PromptInput): string {
+    console.time('prompt-build');
     const sections: string[] = [];
 
     // ── DATETIME ──
     const now = new Date();
     const timezone = 'Asia/Bangkok (UTC+7)';
-    const dateStr = now.toISOString().replace('T', ' ').split('.')[0];
+    // Convert UTC → Asia/Bangkok (UTC+7) manually (toISOString always returns UTC)
+    const utcMs = now.getTime();
+    const bangkokMs = utcMs + 7 * 60 * 60 * 1000;
+    const bkk = new Date(bangkokMs);
+    const y = bkk.getUTCFullYear();
+    const m = String(bkk.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(bkk.getUTCDate()).padStart(2, '0');
+    const hh = String(bkk.getUTCHours()).padStart(2, '0');
+    const mm = String(bkk.getUTCMinutes()).padStart(2, '0');
+    const ss = String(bkk.getUTCSeconds()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
     sections.push(`⏰ Thời gian hiện tại: ${dateStr} ${timezone}\n`);
 
     // ── IDENTITY ──
@@ -179,7 +190,9 @@ ${briefParts.join('\n')}
     // ── IDENTITY CLOSING ──
     sections.push(`IDENTITY: Bạn là ${input.agentName}. Khi user tag ${input.mentionPrefix}, đó là họ đang gọi bạn.`);
 
-    return sections.join('\n\n');
+    const result = sections.join('\n\n');
+    console.timeEnd('prompt-build');
+    return result;
   }
 
   /**

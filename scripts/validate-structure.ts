@@ -251,7 +251,10 @@ function checkSecurityScan() {
   // - validate-structure.ts: utility script, not a runtime tool
   // - document.ts: needs execSync for PDF/DOCX parsing via child processes
   // - system.ts: needs execSync for execute_command tool
-  const exemptFiles = ['tool-gateway.ts', 'validate-structure.ts', 'document.ts', 'system.ts'];
+  // - ast-scanner.ts: ENGINE component (not a tool) — reads source code from
+  //   the project's own src/ tree via AST parse, never reads user data.
+  //   Architecture exception approved by Tech Lead (Micro-Task 50).
+  const exemptFiles = ['tool-gateway.ts', 'validate-structure.ts', 'document.ts', 'system.ts', 'ast-scanner.ts'];
 
   for (const file of files) {
     const fileName = path.basename(file);

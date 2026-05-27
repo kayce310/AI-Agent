@@ -30,7 +30,6 @@ import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } fr
 import { ResponseCache } from '../security/response-cache.js';
 import { Tracer } from '../observability/tracer.js';
 import { RateLimiter, RateLimiterGroup } from '../security/rate-limiter.js';
-import { CostTracker } from '../observability/cost-tracker.js';
 import { MemoryTemporal } from '../memory/memory-temporal.js';
 import { MemoryBlock } from '../memory/memory-log.js';
 import { MemoryAgentic } from '../memory/memory-agentic.js';

@@ -6,11 +6,13 @@
  * @owner core-tools
  *
  * Phase 3.1a: Plugin-based tool registration
+ * Phase 3.1b: AST-based auto-discovery (Micro-Task 50)
  *
  * API:
- *   registry.use(plugin)       — Register a tool plugin
- *   registry.getDefinitions()  — Get OpenAI-compatible tool definitions
- *   registry.execute(name, args) — Execute a tool by name
+ *   registry.use(plugin)             — Register a tool plugin
+ *   registry.registerAll(scanner?)   — Auto-discover & register via AST scan
+ *   registry.getDefinitions()        — Get OpenAI-compatible tool definitions
+ *   registry.execute(name, args)     — Execute a tool by name
  *   registry.executeToolCall(toolCall) — Backward-compat wrapper for ReAct loop
  */
 
@@ -39,6 +41,9 @@ export interface ToolPlugin {
   tools: Tool[];
   onRegister?(registry: ToolRegistry): void;
 }
+
+// ── Forward declarations (avoid circular dep) ──
+import type { ASTScanner, ScannerManifest } from './ast-scanner.js';
 
 // ── Base Constants ──
 
@@ -181,6 +186,38 @@ export class ToolRegistry {
   }
 
   /**
+   * Auto-discover and register tool plugins using AST Scanner.
+   *
+   * Scans configured directories, parses AST to detect ToolPlugin exports,
+   * then dynamically imports and registers valid plugins.
+   *
+   * Uses checksum-based caching to skip re-scanning when source files
+   * have not changed — ensuring minimal cold-start overhead.
+   *
+   * @param scanner Optional ASTScanner instance (defaults to singleton)
+   * @returns ScannerManifest with full scan report
+   */
+  async registerAll(scanner?: ASTScanner): Promise<ScannerManifest> {
+    const { ASTScanner: ScannerCls, getDefaultScanner } = await import('./ast-scanner.js');
+    const engine = scanner ?? getDefaultScanner();
+
+    // Phase 1: Scan directories + AST parse (cached if unchanged)
+    const manifest = await engine.registerAll(this);
+
+    // Phase 2: Report results
+    if (manifest.errors.length > 0) {
+      for (const err of manifest.errors) {
+        console.warn(`⚠️ AST Scanner: ${err.file} — ${err.message}`);
+      }
+    }
+    if (manifest.imported > 0) {
+      console.log(`🔍 AST Scanner: ${manifest.imported}/${manifest.discovered} plugins registered (${this.toolsMap.size} total tools)`);
+    }
+
+    return manifest;
+  }
+
+  /**
    * List all registered tool names.
    */
   listTools(): string[] {
@@ -216,7 +253,7 @@ export async function getDefaultRegistry(): Promise<ToolRegistry> {
   return _defaultRegistry;
 }
 
-async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
+async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscovery = true): Promise<void> {
   // Dynamic imports: all tool plugins are discovered and registered
   const pluginModules: Record<string, string> = {
     filesystem: './filesystem.js',
@@ -240,6 +277,15 @@ async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
       console.warn(`⚠️ Failed to load plugin "${name}" from ${modulePath}: ${err.message}`);
     }
   }
+  // Phase 2a: Auto-discovery via AST Scanner (Micro-Task 50)
+  if (enableAutoDiscovery) {
+    try {
+      await registry.registerAll();
+    } catch (err: any) {
+      console.warn(`⚠️ AST auto-discovery skipped: ${err.message}`);
+    }
+  }
+
   console.log(`✅ ToolRegistry ready: ${registry.toolCount} tools registered`);
 }
 

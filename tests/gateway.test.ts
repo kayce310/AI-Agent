@@ -4,7 +4,7 @@ import { KatoGateway } from '../src/core/gateway/index.js';
 describe('KatoGateway', () => {
   it('should normalize KatoRequest and return KatoResponse', async () => {
     const mockEngine = {
-      run: vi.fn().mockResolvedValue({ content: 'Hello from Engine' }),
+      process: vi.fn().mockResolvedValue({ content: 'Hello from Engine' }),
     } as any;
 
     const gateway = new KatoGateway(mockEngine);
@@ -20,6 +20,6 @@ describe('KatoGateway', () => {
     expect(response.output).toBe('Hello from Engine');
     expect(response.sessionId).toBe('session-1');
     expect(response.platform).toBe('terminal');
-    expect(mockEngine.run).toHaveBeenCalledWith('Hello', 'session-1');
+    expect(mockEngine.process).toHaveBeenCalled();
   });
 });

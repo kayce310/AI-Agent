@@ -8,6 +8,7 @@
 
 import Engine from '../engine/engine.js';
 import { KatoRequest, KatoResponse, PlatformAdapter } from './types.js';
+import { EngineRequest } from '../types.js';
 
 export class KatoGateway {
   private _engine: Engine;

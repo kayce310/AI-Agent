@@ -29,7 +29,7 @@ After the write, also run:
 kato-state-manager scan && kato-state-manager mark <file-path>
 ```
 
-This updates `knowledge/workspace/processed-files.json` with the new file's checksum and timestamp.
+This updates `knowledge/workspace/checkpoint.json` with the new file's checksum and timestamp.
 **The write is not complete until both commands succeed.**
 
 > **Why this is at the top:** Structure violations are the leading cause of system corruption in this
@@ -51,7 +51,10 @@ If `RESUME.md` exists → do not proceed. Follow the Resume Procedure at the bot
 Load `knowledge/wiki/AGENTS.md` to identify your role and routing logic.
 
 **Step 3 — Load only the required skill**
-Check `knowledge/wiki/index.md`, then load exactly the skill needed. Do not load the full wiki.
+Check `knowledge/wiki/index.md` or `knowledge/agents-skills/<category>/_INDEX.md`, then load exactly the skill needed. Do not load the full wiki.
+Skills are stored in two locations:
+- `knowledge/wiki/skills/` — 11 wiki-style skill files
+- `knowledge/agents-skills/` — 27+ agent skill files (SKILL.md with references)
 
 **Step 4 — Read runtime state**
 Use `kato-state-manager` to read `knowledge/workspace/state.json`. Do not assume prior state.
@@ -139,13 +142,24 @@ is not acceptable — it is the same as not reporting.
 | `src/core/memory/` | Channel, ADD-only, Temporal stores | Import from `src/core/` only |
 | `src/core/security/` | Path validation, RBAC, rate limiting | Import from `src/core/` only |
 | `src/core/patterns/` | Agent pattern library | Import from `src/core/` only |
+| `src/core/gnap/` | Git-Native Agent Protocol queue | Import from `src/core/` only |
+| `src/core/gateway/` | Platform-agnostic request gateway | Import from `src/core/` only |
+| `src/core/observability/` | Tracer, metrics | Import from `src/core/` only |
+| `src/core/hooks.ts` | Event system (HookRegistry) | Import from `src/core/` only |
+| `src/core/evolution.ts` | Evolution Engine (error-driven routing) | Import from `src/core/` only |
+| `src/core/sop/` | SOP engine, pattern registry, pattern selector | Import from `src/core/` only |
 | `src/modules/` | External adapters (Discord, Document, Knowledge, Report) | Import core via `../../core` barrel only |
 | `knowledge/wiki/` | Architecture docs, skill library — read-only markdown | No executable code |
+| `knowledge/wiki/skills/` | Wiki-style skills (11 .md files) | No executable code |
+| `knowledge/agents-skills/` | Agent skills (27+ SKILL.md files with references) | No executable code |
 | `knowledge/blueprints/` | Raw assets, queue, backups — read-only | No executable code |
-| `knowledge/workspace/` | Runtime: `state.json`, `checkpoint.json` | Never imported by code |
-| `9router/` | Router config and `.kto.md` skill files | Not imported by `src/` |
+| `knowledge/workspace/` | Runtime: `state.json`, `checkpoint.json`, `evolution.json` | Never imported by code |
+| `knowledge/memory-store/` | MemoryStore persistence (vector store) | No executable code |
+| `knowledge/memory-temporal/` | Temporal memory persistence | No executable code |
+| `config/` | Provider configs (`providers.json`) | Not imported by `src/` |
 | `scripts/` | Standalone utility scripts | Cannot import `src/core/` — no exceptions |
 | `tests/` | Test files mirroring `src/` structure | May import from `src/` |
+| `9router/` | **EXTERNAL** project at `E:\Test\9router` (if present) | Not imported by `src/`; accessed via `NINE_ROUTER_EXTERNAL_PATH` env var |
 
 ### Import rules
 
@@ -296,4 +310,4 @@ Resets: `resumeCount → 0`, clears history, sets `currentEstimateUsage → 0`.
 
 ---
 
-*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-21* 
+*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-27*

@@ -72,20 +72,11 @@ private maxToolCycles: number;
       this.tracer.attachToHooks(this.hooks);
     }
 
-    // Wire Janitor to run post-execution verification on 'tool:result' events
-    this.janitor = new Janitor({ autoLint: false });
-    this.onEvent('task:complete', async (data) => {
-      // Non-blocking: don't hold up response for janitor
-      this.janitor!.testOnly().then(result => {
-        if (!result.passed) {
-          if (result.failed === -1) {
-            console.warn(`🧹 Janitor: test command failed - ${result.output.substring(0, 100)}`);
-          } else {
-            console.warn(`🧹 Janitor: ${result.failed} test(s) failed after execution`);
-          }
-        }
-      }).catch(() => {});
-    }, -100); // low priority — run last
+    // Janitor available for manual/opt-in use only.
+    // NOT auto-wired to task:complete — that would run "npx vitest run" after EVERY response,
+    // even for simple conversational queries. Janitor is for verifying system integrity
+    // after intentional code/tool write operations, not for chat responses.
+    this.janitor = new Janitor({ autoTest: false, autoLint: false });
   }
 
   get hookRegistry(): HookRegistry {

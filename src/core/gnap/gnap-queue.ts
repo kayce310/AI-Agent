@@ -69,6 +69,25 @@ export class GNAPQueue {
     if (!existsSync(this.taskFile)) {
       writeFileSync(this.taskFile, JSON.stringify({ tasks: [], lastSync: 0 }, null, 2));
     }
+    // Auto-init git repo if not already a git repo
+    const gitDir = join(this.taskDir, '.git');
+    if (!existsSync(gitDir)) {
+      try {
+        execSync('git init', { cwd: this.taskDir, stdio: 'pipe' });
+        execSync('git config user.email "gnap@kato.local"', { cwd: this.taskDir, stdio: 'pipe' });
+        execSync('git config user.name "GNAP Queue"', { cwd: this.taskDir, stdio: 'pipe' });
+        // Initial commit so subsequent commits work
+        execSync('git add -A', { cwd: this.taskDir, stdio: 'pipe' });
+        try {
+          execSync('git commit -m "GNAP: init"', { cwd: this.taskDir, stdio: 'pipe' });
+        } catch {
+          // May fail if nothing to commit — ignore
+        }
+        console.log(`📦 GNAP: initialized git repo at ${this.taskDir}`);
+      } catch (err: any) {
+        console.warn(`⚠️ GNAP: could not init git repo — ${err.message}`);
+      }
+    }
   }
 
   /**
@@ -135,7 +154,7 @@ export class GNAPQueue {
     data.lastSync = Date.now();
     writeFileSync(this.taskFile, JSON.stringify(data, null, 2));
 
-    // Git add + commit
+    // Git add + commit — errors propagate to caller
     this.runGit(`git add "${this.taskFile}"`, 'add');
     this.runGit(
       `git commit -m "GNAP: [${fullTask.status}] ${fullTask.name}"`,

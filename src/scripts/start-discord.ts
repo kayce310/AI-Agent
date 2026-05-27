@@ -13,6 +13,12 @@ import { DiscordBridge } from '../modules/discord/index.js';
 import Engine from '../core/engine/engine.js';
 import { KatoGateway } from '../core/gateway/index.js';
 
+// ── Timestamp Helper ──
+const ts = () => {
+  const d = new Date();
+  return `[${d.toISOString().split('T')[1].slice(0,12)}]`;
+};
+
 // ── Single-Instance Lock ──
 const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
 
@@ -24,7 +30,7 @@ function checkPidLock(): void {
       try {
         process.kill(oldPid, 0);
         // Process alive — kill it and wait for full disconnect
-        console.log(`⚠️ Stale process ${oldPid} still running. Killing...`);
+        console.log(`${ts()} ⚠️ Stale process ${oldPid} still running. Killing...`);
         process.kill(oldPid, 'SIGTERM');
         // Wait up to 3s for process to die and Discord gateway to disconnect
         const deadline = Date.now() + 3000;
@@ -36,7 +42,7 @@ function checkPidLock(): void {
             while (Date.now() - start < 200) { /* busy wait */ }
           } catch {
             // Process dead
-            console.log(`✅ Killed stale process ${oldPid}`);
+            console.log(`${ts()} ✅ Killed stale process ${oldPid}`);
             break;
           }
         }
@@ -60,7 +66,7 @@ function checkPidLock(): void {
     const fd = fs.openSync(PID_FILE, 'wx');
     fs.writeSync(fd, String(process.pid));
     fs.closeSync(fd);
-    console.log(`🔒 PID lock acquired: ${process.pid}`);
+    console.log(`${ts()} 🔒 PID lock acquired: ${process.pid}`);
   } catch {
     // File exists — another instance grabbed it between cleanup and now
     try {
@@ -98,7 +104,7 @@ function checkPidLock(): void {
 async function start() {
   checkPidLock();
 
-  console.log("🚀 Starting Kato Discord Bot...");
+  console.log(`${ts()} 🚀 Starting Kato Discord Bot...`);
   const engine = new Engine();
   await engine.init();
 

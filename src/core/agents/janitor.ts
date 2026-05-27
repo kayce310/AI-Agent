@@ -46,7 +46,7 @@ export class Janitor {
 
   constructor(config?: Partial<JanitorConfig>) {
     this.config = {
-      autoTest: true,
+      autoTest: true, // Default to true — run tests after critical tool calls
       autoLint: true,
       piiScan: true,
       projectRoot: config?.projectRoot || process.cwd(),
@@ -57,11 +57,11 @@ export class Janitor {
   /**
    * Run full janitor sweep.
    */
-  async sweep(options?: { skipTest?: boolean; skipLint?: boolean }): Promise<JanitorResult> {
+  async sweep(options?: { skipTest?: boolean; skipLint?: boolean; runTests?: boolean }): Promise<JanitorResult> {
     const result: JanitorResult = { passed: true, errors: [] };
 
     // Run tests
-    if (this.config.autoTest && !options?.skipTest) {
+    if ((this.config.autoTest || options?.runTests) && !options?.skipTest) {
       try {
         const output = execSync('npx vitest run --reporter=verbose 2>&1', {
           cwd: this.config.projectRoot,
@@ -83,7 +83,11 @@ export class Janitor {
       } catch (err: any) {
         result.passed = false;
         result.errors.push(`Test run failed: ${err.message}`);
-        result.tests = { passed: 0, failed: 0, output: err.stdout || err.message };
+        // Parse failed count from output, default to -1 (unknown) if not parseable
+        const output = err.stdout || err.message;
+        const failMatch = output.match(/(\d+)\s+failed?/);
+        const failedCount = failMatch ? parseInt(failMatch[1]) : -1;
+        result.tests = { passed: 0, failed: failedCount, output };
       }
     }
 

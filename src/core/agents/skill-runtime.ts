@@ -154,31 +154,40 @@ function parseSkillMetadata(content: string): { tags: string[]; version: string 
 // ── SkillRuntime ──
 
 export class SkillRuntime {
-  private skillsDir: string;
+  private skillsDirs: string[];
   private active = new Map<string, ActiveSkill>();
   private hooks?: HookRegistry;
 
   constructor(skillsDir?: string, hooks?: HookRegistry) {
-    this.skillsDir = skillsDir || path.join(process.cwd(), 'knowledge/wiki/skills');
+    // If a custom skillsDir is provided (e.g., test temp dir), use ONLY that dir.
+    // Otherwise use the default paths: knowledge/wiki/skills/ + knowledge/agents-skills/
+    if (skillsDir) {
+      this.skillsDirs = [skillsDir];
+    } else {
+      this.skillsDirs = [
+        path.join(process.cwd(), 'knowledge/wiki/skills'),
+        path.join(process.cwd(), 'knowledge/agents-skills'),
+      ];
+    }
     this.hooks = hooks;
   }
 
   /**
-   * List all available skill definitions (from disk, not activated yet).
-   * Scans the skills directory for .md files.
+   * Scan a single directory for skill definitions.
+   * Supports both flat .md files and subdirectory-based skills (SKILL.md).
    */
-  listAvailable(): SkillDefinition[] {
+  private scanDir(skillsDir: string): SkillDefinition[] {
     const defs: SkillDefinition[] = [];
 
-    if (!fs.existsSync(this.skillsDir)) {
+    if (!fs.existsSync(skillsDir)) {
       return defs;
     }
 
-    const items = fs.readdirSync(this.skillsDir, { withFileTypes: true });
+    const items = fs.readdirSync(skillsDir, { withFileTypes: true });
 
     for (const item of items) {
       if (item.isFile() && item.name.endsWith('.md') && !item.name.startsWith('.')) {
-        const fp = path.join(this.skillsDir, item.name);
+        const fp = path.join(skillsDir, item.name);
         const content = fs.readFileSync(fp, 'utf8');
         const { tags, version } = parseSkillMetadata(content);
         const name = item.name.replace(/\.md$/, '');
@@ -196,10 +205,12 @@ export class SkillRuntime {
           content,
         });
       } else if (item.isDirectory()) {
-        // Subdirectory: look for SKILL.md or README.md or <dir-name>.md
+        // Skip hidden directories
+        if (item.name.startsWith('.')) continue;
+        // Skip INDEX-only directories (like common/_INDEX.md, typescript/_INDEX.md)
         const possibleFiles = ['SKILL.md', 'README.md', `${item.name}.md`, `skill.md`];
         for (const f of possibleFiles) {
-          const fp = path.join(this.skillsDir, item.name, f);
+          const fp = path.join(skillsDir, item.name, f);
           if (fs.existsSync(fp)) {
             const content = fs.readFileSync(fp, 'utf8');
             const { tags, version } = parseSkillMetadata(content);
@@ -227,6 +238,26 @@ export class SkillRuntime {
   }
 
   /**
+   * List all available skill definitions (from disk, not activated yet).
+   * Scans both primary (knowledge/wiki/skills/) and secondary (knowledge/agents-skills/) directories.
+   */
+  listAvailable(): SkillDefinition[] {
+    const defs: SkillDefinition[] = [];
+
+    for (const dir of this.skillsDirs) {
+      const scanned = this.scanDir(dir);
+      // Avoid duplicates: if a skill with same name already exists from a prior dir, skip
+      for (const skill of scanned) {
+        if (!defs.some(d => d.name === skill.name)) {
+          defs.push(skill);
+        }
+      }
+    }
+
+    return defs;
+  }
+
+  /**
    * Load and activate a skill by name.
    * 1. Find the skill definition (from disk cache or re-scan).
    * 2. Call onActivate() if defined.
@@ -246,7 +277,7 @@ export class SkillRuntime {
     );
 
     if (!def) {
-      throw new Error(`Skill "${name}" not found in ${this.skillsDir}`);
+      throw new Error(`Skill "${name}" not found in ${this.skillsDirs.join(', ')}`);
     }
 
     // Attach lifecycle hooks

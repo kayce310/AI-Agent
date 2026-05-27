@@ -55,6 +55,11 @@ Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
 | [[skills/communication-protocol]] | Ultra-Terse Mode, không fluff |
 | [[skills/state-management]] | Data Plane an toàn, state.json, atomic write |
 
+### 📡 Tham chiếu Kiến trúc
+| Resource | Mô tả |
+|----------|-------|
+| [[reference/hermes-agent-analysis]] | Phân tích Hermes Agent (Nous Research v0.14.0) — tham chiếu cho Kato |
+
 ### 🧠 Quản trị Tri thức
 | Skill | Mô tả |
 |-------|-------|
