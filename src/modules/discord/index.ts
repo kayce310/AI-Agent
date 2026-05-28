@@ -14,7 +14,7 @@
  * - Gateway handles engine processing, adapter handles UI
  */
 
-import { Client, GatewayIntentBits, Message } from 'discord.js';
+import { Client, GatewayIntentBits, Message, ChannelType } from 'discord.js';
 import { PlatformAdapter, AdapterMessage, AdapterStatus } from '../../core/gateway/types.js';
 import 'dotenv/config';
 import fs from 'fs';
@@ -25,6 +25,43 @@ const ts = () => {
   const d = new Date();
   return `[${d.toISOString().split('T')[1].slice(0,12)}]`;
 };
+
+// ── Discord Runtime Logger ──
+
+const LOG_DIR = path.join(process.cwd(), 'logs');
+
+function ensureLogDir(): void {
+  if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+  }
+}
+
+function getLogFileName(): string {
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  return `discord-${date}.log`;
+}
+
+function logDiscordMessage(
+  userId: string,
+  inText: string,
+  outText: string | null,
+  inputTokens?: number,
+  outputTokens?: number
+): void {
+  try {
+    ensureLogDir();
+    const logFile = path.join(LOG_DIR, getLogFileName());
+    const timestamp = new Date().toISOString();
+    const inTrunc = inText.substring(0, 500).replace(/\n/g, '\\n');
+    const outTrunc = (outText || '').substring(0, 500).replace(/\n/g, '\\n');
+    const inTok = inputTokens ?? '?';
+    const outTok = outputTokens ?? '?';
+    const entry = `[${timestamp}] [${userId}] IN: ${inTrunc} | OUT: ${outTrunc} | tokens: ${inTok}/${outTok}\n`;
+    fs.appendFileSync(logFile, entry, 'utf8');
+  } catch (err) {
+    // Silent fail — logging should never break message processing
+  }
+}
 
 // Cross-instance dedup: lock file per message ID in temp dir
 const MSG_LOCK_DIR = path.join(os.tmpdir(), 'kato-msg-locks');
@@ -267,6 +304,17 @@ export class DiscordBridge implements PlatformAdapter {
         // Forward to the handler (wired by Gateway.register)
         if (this.messageHandler) {
           const response = await this.messageHandler(adapterMsg);
+
+          // Log channel messages only (skip DMs for privacy)
+          if (message.channel.type !== ChannelType.DM) {
+            logDiscordMessage(
+              message.author.id,
+              message.content,
+              response?.output || null,
+              response?.usage?.inputTokens,
+              response?.usage?.outputTokens
+            );
+          }
 
           if (response && response.output) {
             // Edit initial message with the response

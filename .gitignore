@@ -4,6 +4,7 @@ dist/
 build/
 .env
 .env.*
+logs/
 *.log
 *.pdf
 *.docx
