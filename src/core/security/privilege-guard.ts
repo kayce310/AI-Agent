@@ -73,7 +73,7 @@ const TOOL_CATEGORY_MAP: Record<string, string[]> = {
   knowledge: ['search_knowledge_graph', 'write_wiki_page'],
   document: ['read_pdf', 'read_docx', 'extract_pdf_to_md', 'extract_docx_to_md', 'archive_document'],
   network: ['fetch_url'],
-  skills: ['load_skill', 'check_stale_skills'],
+  skills: ['load_skill', 'skill_view', 'check_stale_skills'],
   system: ['process_new_raw', 'execute_command', 'extract_formulas'],
   report: ['generate_report'],
 };
@@ -84,8 +84,8 @@ const TOOL_ALIAS_MAP: Record<string, string[]> = {
   'knowledge:search': ['search_knowledge_graph'],
   'knowledge:read': ['search_knowledge_graph'],
   'document:read': ['read_pdf', 'read_docx'],
-  'skills:list': ['check_stale_skills'],
-  'skills:run': ['load_skill'],
+  'skills:list': ['check_stale_skills', 'list_skills'],
+  'skills:run': ['load_skill', 'skill_view'],
   'sandbox:execute': ['execute_command'],
   'report:generate': ['generate_report'],
 };

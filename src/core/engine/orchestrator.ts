@@ -23,6 +23,7 @@ import { PlanExecutor, ExecutionReport } from './plan-executor.js';
 import { ResultSynthesizer } from './result-synthesizer.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
 import { evolutionEngine } from '../evolution.js';
+import { executeBootSequence } from './boot.js';
 
 // ── Types ──
 
@@ -140,6 +141,17 @@ export class Orchestrator {
    * Emits hook events at each phase for observability.
    */
   async run(task: string, context?: string): Promise<OrchestrationResult> {
+    // ── Boot sequence check ──
+    const boot = await executeBootSequence(process.cwd());
+    if (boot.blocked) {
+      const msg = `Boot sequence blocked: ${boot.reason}`;
+      console.error(`❌ ${msg}`);
+      if (boot.p0Items) {
+        console.error(`   P0 items: ${boot.p0Items.map(i => `[${i.id}] ${i.description}`).join('; ')}`);
+      }
+      throw new Error(msg);
+    }
+
     const startTime = Date.now();
 
     if (this.debug) {

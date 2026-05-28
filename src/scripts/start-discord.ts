@@ -109,8 +109,15 @@ async function start() {
   await engine.init();
 
   const gateway = new KatoGateway(engine);
-  const bridge = new DiscordBridge(gateway);
-  await bridge.start();
+  const bridge = new DiscordBridge();
+
+  // Register adapter → wires message handler
+  gateway.register(bridge);
+
+  // Start adapter (connects to Discord)
+  await gateway.startAdapter('discord');
+
+  console.log(`${ts()} ✅ Gateway running with ${gateway.adapterCount} adapter(s): ${gateway.registeredPlatforms.join(', ')}`);
 }
 
 start().catch(err => {

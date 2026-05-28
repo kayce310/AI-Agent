@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-05-28T07:11:49.050Z",
+  "state": {
+    "schemaVersion": "1.0",
+    "agent": {
+      "lifecycle": "READY",
+      "role": "Lead AI Engineer",
+      "loadedSkills": [],
+      "lastInitializedAt": "2026-05-28T07:09:49.424Z",
+      "readyAt": "2026-05-28T07:09:49.424Z"
+    },
+    "session": {
+      "id": "session-2026-05-28T07-09-44-152Z-mpp5kn6h563g",
+      "startedAt": "2026-05-28T07:09:44.152Z",
+      "updatedAt": "2026-05-28T07:09:49.428Z",
+      "currentTask": null
+    },
+    "controlPlane": {
+      "bootloader": "KATO.md",
+      "router": "knowledge/wiki/AGENTS.md",
+      "index": "knowledge/wiki/index.md"
+    },
+    "dataPlane": {
+      "statePath": "knowledge/workspace/state.json",
+      "manager": "kato-state-manager",
+      "checksum": "5fe58a70a4d85e69e424e1aac6dc09263b116df8ea8c85c6a095980a5436473f"
+    },
+    "notes": [
+      "Initialized by kato-state-manager. Agent must read AGENTS.md before READY."
+    ]
+  },
+  "checkpoint": {
+    "mandatoryChecks": {
+      "beforeFileWrite": [
+        "npx tsx scripts/validate-structure.ts --strict",
+        "abort if output contains ERROR — fix first"
+      ],
+      "afterFileWrite": [
+        "kato-state-manager scan",
+        "kato-state-manager mark <file-path>",
+        "verify processed-files.json updated"
+      ],
+      "onToolCallFail": [
+        "node scripts/checkpoint-emergency.mjs",
+        "git add -A && git commit -m 'emergency: tool call failed'"
+      ]
+    },
+    "techDebt": {
+      "openItems": [
+        {
+          "id": "TD-001",
+          "priority": "P1",
+          "description": "start-kato.ps1 thiếu npm start script",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "TD-002",
+          "priority": "P1",
+          "description": "NINE_ROUTER_EXTERNAL_PATH env var không được set — skills.ts tool plugin không thể load 9router skills",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "TD-003",
+          "priority": "P2",
+          "description": "KATO.md Structure Map liệt kê 9router/ nhưng thư mục không tồn tại trong workspace",
+          "owner": "—",
+          "targetSession": "current"
+        },
+        {
+          "id": "TD-004",
+          "priority": "P2",
+          "description": "processed-files.json không tồn tại — kato-state-manager mark không có file ghi",
+          "owner": "—",
+          "targetSession": "current"
+        }
+      ]
+    }
+  },
+  "processedFiles": {
+    "schemaVersion": "1.0",
+    "meta": {
+      "description": "Track processed files to skip scanning on next session",
+      "lastUpdated": "2026-05-28T06:20:01.130Z"
+    },
+    "files": [
+      {
+        "path": "src/core/agents/agent-manager.ts",
+        "type": "code",
+        "processedAt": "2026-05-28T06:20:01.129Z",
+        "checksum": "",
+        "action": "integrated"
+      }
+    ],
+    "stats": {
+      "totalProcessed": 1,
+      "byType": {
+        "code": 1
+      }
+    }
+  }
+}

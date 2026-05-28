@@ -1,25 +1,21 @@
 /**
- * @file Kato Discord Bridge — Message adapter between Discord and Core Engine
+ * @file Kato Discord Bridge — PlatformAdapter for Discord
  * @layer modules
- * @depends-on src/core/engine/engine.ts, src/core/types.ts
+ * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
  * @imported-by src/scripts/start-discord.ts
  * @owner discord-module
- */
-
-/**
- * Kato Discord Bridge Module (Adapter)
- * Framework 6 Layers — Lớp Giao diện (Adapter)
  *
- * Chỉ làm 2 việc:
- * 1. Hứng tin nhắn từ Discord
- * 2. Ném vào Core Engine → Nhận kết quả và trả về
+ * Implements the PlatformAdapter interface for Discord.
+ * Uses discord.js SDK for platform communication.
  *
- * KHÔNG chứa logic LLM, KHÔNG chứa tool calling.
+ * Inspired by Hermes Agent gateway/platforms/ pattern:
+ * - Converts Discord messages → AdapterMessage (normalized)
+ * - Registered with Gateway via register(adapter)
+ * - Gateway handles engine processing, adapter handles UI
  */
 
 import { Client, GatewayIntentBits, Message } from 'discord.js';
-import Engine from '../../core/engine/engine.js';
-import { EngineRequest } from '../../core/types.js';
+import { PlatformAdapter, AdapterMessage, AdapterStatus } from '../../core/gateway/types.js';
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
@@ -59,7 +55,6 @@ function tryAcquireMessageLock(messageId: string): boolean {
     fs.closeSync(fd);
     return true;
   } catch {
-    // Lock file already exists — another instance is processing or recently processed this message
     return false;
   }
 }
@@ -92,14 +87,17 @@ function cleanupOldLocks(): void {
   } catch {}
 }
 
-export class DiscordBridge {
-  private client: Client;
-  private gateway: any;
-  private currentModel: string = '';
-  private processingMessages: Set<string> = new Set(); // in-memory dedup guard
+export class DiscordBridge implements PlatformAdapter {
+  public readonly platform = 'discord';
+  public status: AdapterStatus = 'stopped';
 
-  constructor(gateway: any) {
-    cleanupOldLocks(); // cleanup stale lock files on startup
+  private client: Client;
+  private messageHandler: ((msg: AdapterMessage) => Promise<any>) | null = null;
+  private processingMessages: Set<string> = new Set();
+  private statusMessage: Map<string, Message> = new Map();
+
+  constructor() {
+    cleanupOldLocks();
 
     this.client = new Client({
       intents: [
@@ -109,145 +107,36 @@ export class DiscordBridge {
       ]
     });
 
-    this.gateway = gateway;
-    this.currentModel = this.gateway.engine.detectFreeModel();
-    console.log(`${ts()} 🎯 Gateway initialized`);
     this.registerEventHandlers();
-    this.registerEngineHandlers();
   }
 
-  private statusMessage: Map<string, Message> = new Map(); // channelId -> message
+  // ──────────────────────────────────────────────
+  // PlatformAdapter Implementation
+  // ──────────────────────────────────────────────
 
-  private registerEngineHandlers(): void {
-    this.gateway.onEngineEvent('cascade', async (event: any) => {
-      const msg = this.statusMessage.get(event.sessionId);
-      if (!msg) return;
-
-      try {
-        if (event.type === 'trying') {
-          await msg.edit(`⏳ [Cascade] Đang thử model: \`${event.modelId}\` (Tier ${event.tier})...`);
-        } else if (event.type === 'failed') {
-          console.log(`${ts()} ❌ Cascade failure for ${event.modelId}: ${event.errorMessage}`);
-        }
-      } catch (err) {
-        // Ignore edit errors (rate limits, etc)
-      }
-    });
+  /**
+   * Register the message handler (called by Gateway.register()).
+   * The handler receives normalized AdapterMessage and returns KatoResponse.
+   */
+  onMessage(handler: (msg: AdapterMessage) => Promise<any>): void {
+    this.messageHandler = handler;
   }
 
-  private registerEventHandlers(): void {
-    this.client.once('clientReady', () => {
-      console.log(`${ts()} ✅ Kato Discord Bot đã sẵn sàng`);
-    });
+  /**
+   * Start the Discord client.
+   */
+  async start(): Promise<void> {
+    if (this.status === 'running') return;
 
-    this.client.on('messageCreate', async (message: Message) => {
-      if (message.author.bot) return;
-
-      // Xử lý lệnh chuyển model
-      if (message.content.toLowerCase().startsWith('/switch model:')) {
-        const modelId = message.content.split(':')[1]?.trim();
-        if (modelId) {
-          this.currentModel = modelId;
-          await message.reply(`✅ Đã chuyển sang model: \`${modelId}\``);
-          console.log(`${ts()} 🔄 Discord: switched model to ${modelId}`);
-        }
-        return;
-      }
-
-      // Xử lý lệnh liệt kê model
-      if (message.content.toLowerCase() === '/list models') {
-        const models = this.gateway.engine.listModels().join('\n- ');
-        await message.reply(`📋 **Models available:**\n- ${models}`);
-        return;
-      }
-
-      // Phản hồi khi được tag hoặc nhắc tên (chỉ 1 trigger/1 message)
-      const isMentioned = message.mentions.has(this.client.user!);
-      const hasKatoKeyword = !isMentioned && message.content.toLowerCase().includes('kato');
-      if (isMentioned || hasKatoKeyword) {
-        if (this.processingMessages.has(message.id)) {
-          console.log(`${ts()} ⚠️ Duplicate event for message ${message.id}, skipping`);
-          return;
-        }
-
-        if (!tryAcquireMessageLock(message.id)) {
-          console.log(`${ts()} ⚠️ Cross-instance duplicate for message ${message.id}, skipping`);
-          return;
-        }
-
-        this.processingMessages.add(message.id);
-        const channelId = message.channelId;
-
-        try {
-          console.log(`${ts()} ✅ Discord -> Engine: forwarding message (id: ${message.id})`);
-
-          // await this.engine.saveMessage(channelId, {
-          //   role: 'user',
-          //   content: message.content,
-          //   timestamp: Date.now()
-          // });
-
-          // const history = await this.engine.getHistory(channelId);
-
-          const request = {
-            input: message.content,
-            userId: message.author.id,
-            sessionId: channelId,
-            platform: 'discord' as const,
-          };
-
-          const initialMsg = await message.reply(`⏳ Đang xử lý...`);
-          this.statusMessage.set(channelId, initialMsg);
-
-          const response = await this.gateway.process(request);
-
-          // await this.engine.saveMessage(channelId, {
-          //   role: 'assistant',
-          //   content: response.output,
-          //   timestamp: Date.now()
-          // });
-
-          let editSucceeded = false;
-          try {
-            await initialMsg.edit(response.output);
-            editSucceeded = true;
-          } catch (editErr) {
-            console.warn(`⚠️ Failed to edit message: ${editErr instanceof Error ? editErr.message : String(editErr)}`);
-            try {
-              await initialMsg.delete();
-            } catch {
-              // ignore delete failures
-            }
-            try {
-              await message.reply(response.output);
-              editSucceeded = true;
-            } catch (replyErr) {
-              console.error(`❌ Failed to send response: ${replyErr instanceof Error ? replyErr.message : String(replyErr)}`);
-            }
-          }
-
-          if (editSucceeded) {
-            console.log(`${ts()} ✅ Discord <- Gateway: response sent`);
-          }
-        } catch (err: any) {
-          console.error(`${ts()} ❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
-        } finally {
-          this.statusMessage.delete(channelId);
-          this.processingMessages.delete(message.id);
-          releaseMessageLock(message.id);
-        }
-      }
-    });
-  }
-
-  public async start(): Promise<void> {
+    this.status = 'starting';
     const token = process.env.DISCORD_BOT_TOKEN;
 
     if (!token) {
+      this.status = 'error';
       throw new Error('DISCORD_BOT_TOKEN không được tìm thấy trong file .env');
     }
 
-    // ── Double-check PID lock before connecting to Discord ──
+    // ── PID lock check ──
     const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
     if (fs.existsSync(PID_FILE)) {
       try {
@@ -255,20 +144,167 @@ export class DiscordBridge {
         if (pid !== process.pid) {
           try {
             process.kill(pid, 0);
-            // Another alive process holds the lock
             console.error(`${ts()} ⚠️ Another Kato instance (PID ${pid}) already running. Exiting.`);
             process.exit(0);
           } catch {
-            // Stale lock, replace it
             fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
           }
         }
-      } catch {
-        // Can't read PID file, proceed cautiously
-      }
+      } catch {}
     }
 
     await this.client.login(token);
+    this.status = 'running';
+    console.log(`${ts()} ✅ Kato Discord Bot đã sẵn sàng (platform: ${this.platform})`);
+  }
+
+  /**
+   * Stop the Discord client and cleanup.
+   */
+  async stop(): Promise<void> {
+    if (this.status === 'stopped') return;
+
+    this.status = 'stopping';
+    try {
+      this.client.destroy();
+      console.log(`${ts()} 🔌 Discord client destroyed`);
+    } catch (err: any) {
+      console.warn(`${ts()} ⚠️ Discord stop warning: ${err.message}`);
+    }
+
+    // Cleanup PID file
+    try {
+      const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
+      if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
+    } catch {}
+
+    this.processingMessages.clear();
+    this.statusMessage.clear();
+    this.status = 'stopped';
+    console.log(`${ts()} ✅ Discord adapter stopped`);
+  }
+
+  /**
+   * Send a text message to a Discord channel.
+   * @returns The Discord message ID if sent successfully, null otherwise.
+   */
+  async sendMessage(channelId: string, content: string): Promise<string | null> {
+    try {
+      const channel = await this.client.channels.fetch(channelId);
+      if (!channel || !channel.isTextBased()) {
+        console.warn(`${ts()} ⚠️ Discord: cannot send to channel ${channelId} — not a text channel`);
+        return null;
+      }
+      const sent = await (channel as any).send(content);
+      return sent.id;
+    } catch (err: any) {
+      console.error(`${ts()} ❌ Discord sendMessage failed: ${err.message}`);
+      return null;
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // Internal Event Handlers
+  // ──────────────────────────────────────────────
+
+  private registerEventHandlers(): void {
+    this.client.once('clientReady', () => {
+      console.log(`${ts()} ✅ Kato Discord Bot is ready`);
+    });
+
+    this.client.on('messageCreate', async (message: Message) => {
+      if (message.author.bot) return;
+
+      // ── Bot Commands (bypass Engine) ──
+      if (message.content.toLowerCase().startsWith('/switch model:')) {
+        // Model switching is handled at the gateway level
+        await message.reply(`ℹ️ Model switching is managed by the gateway.`);
+        return;
+      }
+
+      if (message.content.toLowerCase() === '/list models') {
+        // Model listing is handled at the gateway level
+        await message.reply(`ℹ️ Model listing is available through the gateway.`);
+        return;
+      }
+
+      // ── Mention/Keyword Check ──
+      const isMentioned = message.mentions.has(this.client.user!);
+      const hasKatoKeyword = !isMentioned && message.content.toLowerCase().includes('kato');
+      if (!isMentioned && !hasKatoKeyword) return;
+
+      // ── Dedup ──
+      if (this.processingMessages.has(message.id)) {
+        console.log(`${ts()} ⚠️ Duplicate event for message ${message.id}, skipping`);
+        return;
+      }
+
+      if (!tryAcquireMessageLock(message.id)) {
+        console.log(`${ts()} ⚠️ Cross-instance duplicate for message ${message.id}, skipping`);
+        return;
+      }
+
+      this.processingMessages.add(message.id);
+
+      try {
+        console.log(`${ts()} ✅ Discord -> Gateway: forwarding message (id: ${message.id})`);
+
+        // Convert to AdapterMessage
+        const adapterMsg: AdapterMessage = {
+          messageId: message.id,
+          userId: message.author.id,
+          channelId: message.channelId,
+          text: message.content,
+          platform: 'discord',
+          isMention: isMentioned,
+          timestamp: Date.now(),
+        };
+
+        // Send an initial "processing" message
+        const initialMsg = await message.reply(`⏳ Đang xử lý...`);
+        this.statusMessage.set(message.channelId, initialMsg);
+
+        // Forward to the handler (wired by Gateway.register)
+        if (this.messageHandler) {
+          const response = await this.messageHandler(adapterMsg);
+
+          if (response && response.output) {
+            // Edit initial message with the response
+            let editSucceeded = false;
+            try {
+              await initialMsg.edit(response.output);
+              editSucceeded = true;
+            } catch (editErr) {
+              console.warn(`⚠️ Failed to edit message: ${editErr instanceof Error ? editErr.message : String(editErr)}`);
+              try {
+                await initialMsg.delete();
+              } catch {}
+              try {
+                await message.reply(response.output);
+                editSucceeded = true;
+              } catch (replyErr) {
+                console.error(`❌ Failed to send response: ${replyErr instanceof Error ? replyErr.message : String(replyErr)}`);
+              }
+            }
+
+            if (editSucceeded) {
+              console.log(`${ts()} ✅ Discord <- Gateway: response sent`);
+            }
+          } else {
+            // No response — update the initial message
+            try {
+              await initialMsg.edit(`❌ Không thể xử lý tin nhắn.`);
+            } catch {}
+          }
+        }
+      } catch (err: any) {
+        console.error(`${ts()} ❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
+      } finally {
+        this.statusMessage.delete(message.channelId);
+        this.processingMessages.delete(message.id);
+        releaseMessageLock(message.id);
+      }
+    });
   }
 }
 

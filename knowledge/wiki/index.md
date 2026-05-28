@@ -91,6 +91,7 @@ Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
 - [[core/changelog]] - Nhật ký Tiến hóa hệ thống
 - [[core/llm-architecture]] - Kiến trúc Lõi LLM Universal
 - [[core/task-queue]] - Hệ thống hàng đợi tác vụ
+- [[core/architecture-decisions]] - Architecture Decision Records (ADRs)
 
 ---
 

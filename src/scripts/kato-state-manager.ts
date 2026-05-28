@@ -27,6 +27,14 @@ async function runCommand(commandName: string, commandArgs: string[]) {
       const skills = commandArgs.slice(1);
       return manager.markReady(role, skills);
     }
+    case 'verify':
+      return manager.verify();
+    case 'repair':
+      return manager.repair();
+    case 'begin-tx':
+      return manager.beginTx(commandArgs.join(' ') || 'unknown');
+    case 'commit-tx':
+      return manager.commitTx(commandArgs[0] || '');
     case 'scan':
       return manager.scanBlueprint();
     case 'mark': {
@@ -59,7 +67,7 @@ async function runCommand(commandName: string, commandArgs: string[]) {
         error: {
           code: 'UNKNOWN_COMMAND',
           message: `Unsupported command: ${commandName}`,
-          details: { supported: ['init', 'read', 'ready', 'scan', 'mark'] },
+          details: { supported: ['init', 'read', 'ready', 'scan', 'mark', 'verify', 'repair', 'begin-tx', 'commit-tx'] },
         },
       };
   }

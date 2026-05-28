@@ -20,7 +20,7 @@
 
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 // ── Error Types ──
 
@@ -55,9 +55,11 @@ export interface GNAPTask {
 export class GNAPQueue {
   private taskDir: string;
   private taskFile: string;
+  private workspaceRoot: string;
 
   constructor(baseDir: string = '.') {
-    this.taskDir = join(baseDir, '.gnap');
+    this.workspaceRoot = resolve(baseDir);
+    this.taskDir = join(this.workspaceRoot, '.gnap');
     this.taskFile = join(this.taskDir, 'tasks.json');
     this.ensureTaskDir();
   }
@@ -139,6 +141,23 @@ export class GNAPQueue {
   }
 
   /**
+   * Verify file exists on disk before git add, preventing ghost-file errors.
+   */
+  private gitAdd(description: string): void {
+    if (!existsSync(this.taskFile)) {
+      console.warn(`[GNAP] File not found, skipping git add: ${this.taskFile}`);
+      return;
+    }
+    // Use relative path from workspace root for git add
+    const relPath = `.gnap/tasks.json`;
+    try {
+      execSync(`git add "${relPath}"`, { cwd: this.workspaceRoot, stdio: 'pipe' });
+    } catch (err: any) {
+      console.error(`[GNAP] Git add failed: ${err.message}`);
+    }
+  }
+
+  /**
    * Commit a task to the GNAP queue and persist via git commit.
    */
   async commitTask(task: Omit<GNAPTask, 'id' | 'status'>): Promise<GNAPTask> {
@@ -154,8 +173,8 @@ export class GNAPQueue {
     data.lastSync = Date.now();
     writeFileSync(this.taskFile, JSON.stringify(data, null, 2));
 
-    // Git add + commit — errors propagate to caller
-    this.runGit(`git add "${this.taskFile}"`, 'add');
+    // Git add (with file existence check) + commit
+    this.gitAdd('add');
     this.runGit(
       `git commit -m "GNAP: [${fullTask.status}] ${fullTask.name}"`,
       'commit'

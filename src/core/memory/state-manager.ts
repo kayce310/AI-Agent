@@ -7,7 +7,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 // when agent runs commands from a different directory
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 
-export type AgentLifecycle = 'UNINITIALIZED' | 'INITIALIZING' | 'READY' | 'ERROR';
+export type AgentLifecycle = 'UNINITIALIZED' | 'INITIALIZING' | 'READY' | 'BLOCKED' | 'ERROR';
 
 export interface KatoWorkspaceState {
   schemaVersion: '1.0';
@@ -28,6 +28,7 @@ export interface KatoWorkspaceState {
     role: string | null;
     loadedSkills: string[];
     lastInitializedAt: string | null;
+    readyAt: string | null;
   };
   session: {
     id: string;
@@ -71,6 +72,31 @@ export interface ProcessedFilesState {
   };
 }
 
+export interface CheckpointState {
+  mandatoryChecks: {
+    beforeFileWrite: string[];
+    afterFileWrite: string[];
+    onToolCallFail: string[];
+  };
+  techDebt: {
+    openItems: Array<{
+      id: string;
+      priority: string;
+      description: string;
+      owner: string;
+      targetSession: string;
+    }>;
+  };
+}
+
+export interface UnifiedState {
+  version: '1.0';
+  lastUpdated: string;
+  state: KatoWorkspaceState | null;
+  checkpoint: CheckpointState | null;
+  processedFiles: ProcessedFilesState | null;
+}
+
 export interface StructuredStateError {
   ok: false;
   error: {
@@ -91,6 +117,11 @@ export type StructuredStateResult<T> = StructuredStateSuccess<T> | StructuredSta
 // This prevents duplicate state.json when agent runs from wrong CWD
 const DEFAULT_STATE_PATH = path.join(PROJECT_ROOT, 'knowledge/workspace/state.json');
 const DEFAULT_PROCESSED_FILES_PATH = path.join(PROJECT_ROOT, 'knowledge/workspace/processed-files.json');
+const DEFAULT_CHECKPOINT_PATH = path.join(PROJECT_ROOT, 'knowledge/workspace/checkpoint.json');
+const CURRENT_STATE_PATH = path.join(PROJECT_ROOT, '.kato/state/current.json');
+const TRANSACTION_LOG_DIR = '.kato/state';
+const TRANSACTION_LOG_FILE = 'transactions.log';
+
 const LOCK_SUFFIX = '.lock';
 const TMP_SUFFIX = '.tmp';
 const BACKUP_SUFFIX = '.bak.1';
@@ -99,7 +130,9 @@ const LOCK_STALE_MS = 30_000;
 export class KatoStateManager {
   constructor(
     private readonly statePath = DEFAULT_STATE_PATH,
-    private readonly processedFilesPath = DEFAULT_PROCESSED_FILES_PATH
+    private readonly processedFilesPath = DEFAULT_PROCESSED_FILES_PATH,
+    private readonly checkpointPath = DEFAULT_CHECKPOINT_PATH,
+    private readonly currentStatePath = CURRENT_STATE_PATH
   ) {}
 
   async scanBlueprint(): Promise<StructuredStateResult<{
@@ -163,6 +196,196 @@ export class KatoStateManager {
     return 'other';
   }
 
+  async beginTx(intent: string): Promise<StructuredStateResult<{ txId: string; logPath: string }>> {
+    try {
+      const txLogDir = path.join(PROJECT_ROOT, TRANSACTION_LOG_DIR);
+      const txLogPath = path.join(txLogDir, TRANSACTION_LOG_FILE);
+      await mkdir(txLogDir, { recursive: true });
+
+      const txId = `tx-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 8)}`;
+      const entry = {
+        txId,
+        phase: 'BEGIN',
+        timestamp: new Date().toISOString(),
+        intent,
+      };
+
+      await writeFile(txLogPath, `${JSON.stringify(entry)}\n`, { flag: 'as' });
+      return { ok: true, data: { txId, logPath: txLogPath } };
+    } catch (error) {
+      return this.error('TX_BEGIN_FAILED', 'Unable to begin transaction', this.normalizeError(error));
+    }
+  }
+
+  async commitTx(txId: string): Promise<StructuredStateResult<{ logPath: string }>> {
+    try {
+      const txLogDir = path.join(PROJECT_ROOT, TRANSACTION_LOG_DIR);
+      const txLogPath = path.join(txLogDir, TRANSACTION_LOG_FILE);
+      await mkdir(txLogDir, { recursive: true });
+
+      const entry = {
+        txId,
+        phase: 'COMMIT',
+        timestamp: new Date().toISOString(),
+        intent: null,
+      };
+
+      await writeFile(txLogPath, `${JSON.stringify(entry)}\n`, { flag: 'as' });
+      return { ok: true, data: { logPath: txLogPath } };
+    } catch (error) {
+      return this.error('TX_COMMIT_FAILED', 'Unable to commit transaction', this.normalizeError(error));
+    }
+  }
+
+  async readCheckpoint(): Promise<StructuredStateResult<CheckpointState>> {
+    try {
+      if (!existsSync(this.checkpointPath)) {
+        return this.error('CHECKPOINT_NOT_FOUND', 'checkpoint.json does not exist');
+      }
+      const raw = await readFile(this.checkpointPath, 'utf8');
+      const parsed = JSON.parse(raw) as CheckpointState;
+      return { ok: true, data: parsed };
+    } catch (error) {
+      return this.error('CHECKPOINT_READ_FAILED', 'Unable to read checkpoint.json', this.normalizeError(error));
+    }
+  }
+
+  // ── Unified state (current.json) ──
+
+  async readCurrentState(): Promise<StructuredStateResult<UnifiedState>> {
+    try {
+      if (!existsSync(this.currentStatePath)) {
+        // Fallback: build from legacy files
+        const stateResult = existsSync(this.statePath) ? await this.read() : null;
+        const checkpointResult = await this.readCheckpoint();
+        const processedResult = await this.readProcessedFiles();
+        return {
+          ok: true,
+          data: {
+            version: '1.0',
+            lastUpdated: new Date().toISOString(),
+            state: stateResult?.ok ? stateResult.data : null,
+            checkpoint: checkpointResult.ok ? checkpointResult.data : null,
+            processedFiles: processedResult,
+          },
+        };
+      }
+      const raw = await readFile(this.currentStatePath, 'utf8');
+      const parsed = JSON.parse(raw) as UnifiedState;
+      return { ok: true, data: parsed };
+    } catch (error) {
+      return this.error('CURRENT_STATE_READ_FAILED', 'Unable to read current.json', this.normalizeError(error));
+    }
+  }
+
+  async syncUnifiedState(): Promise<StructuredStateResult<UnifiedState>> {
+    try {
+      const stateResult = existsSync(this.statePath) ? await this.read() : null;
+      const checkpointResult = await this.readCheckpoint();
+      const processedResult = await this.readProcessedFiles();
+
+      const unified: UnifiedState = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        state: stateResult?.ok ? stateResult.data : null,
+        checkpoint: checkpointResult.ok ? checkpointResult.data : null,
+        processedFiles: processedResult,
+      };
+
+      await mkdir(path.dirname(this.currentStatePath), { recursive: true });
+      await writeFile(this.currentStatePath, `${JSON.stringify(unified, null, 2)}\n`, 'utf8');
+      return { ok: true, data: unified };
+    } catch (error) {
+      return this.error('SYNC_UNIFIED_FAILED', 'Unable to sync current.json', this.normalizeError(error));
+    }
+  }
+
+  // ── Verify & Repair ──
+
+  async verify(): Promise<StructuredStateResult<{
+    consistent: boolean;
+    warnings: Array<{ field: string; message: string }>;
+  }>> {
+    const warnings: Array<{ field: string; message: string }> = [];
+
+    try {
+      const currentResult = await this.readCurrentState();
+      if (!currentResult.ok) {
+        warnings.push({ field: 'current', message: 'Cannot read current.json — ' + currentResult.error.message });
+        return { ok: true, data: { consistent: false, warnings } };
+      }
+
+      const current = currentResult.data;
+
+      // Compare state.json with current.json
+      if (current.state && existsSync(this.statePath)) {
+        const stateResult = await this.read();
+        if (stateResult.ok) {
+          if (stateResult.data.session.id !== current.state.session.id) {
+            warnings.push({ field: 'state', message: `state.json session ID differs from current.json` });
+          }
+        } else {
+          warnings.push({ field: 'state', message: 'state.json unreadable: ' + stateResult.error.message });
+        }
+      }
+
+      // Compare checkpoint.json with current.json
+      if (current.checkpoint && existsSync(this.checkpointPath)) {
+        const cpResult = await this.readCheckpoint();
+        if (cpResult.ok) {
+          const cpItems = cpResult.data.techDebt.openItems.length;
+          const currItems = current.checkpoint.techDebt.openItems.length;
+          if (cpItems !== currItems) {
+            warnings.push({ field: 'checkpoint', message: `checkpoint.json has ${cpItems} items, current.json has ${currItems}` });
+          }
+        }
+      }
+
+      // Compare processed-files.json with current.json
+      if (current.processedFiles && existsSync(this.processedFilesPath)) {
+        const pfResult = await this.readProcessedFiles();
+        const currPf = current.processedFiles;
+        if (pfResult.files.length !== currPf.files.length) {
+          warnings.push({ field: 'processedFiles', message: `processed-files.json has ${pfResult.files.length} files, current.json has ${currPf.files.length}` });
+        }
+      }
+
+      return {
+        ok: true,
+        data: { consistent: warnings.length === 0, warnings },
+      };
+    } catch (error) {
+      return this.error('VERIFY_FAILED', 'Unable to verify state consistency', this.normalizeError(error));
+    }
+  }
+
+  async repair(): Promise<StructuredStateResult<{ fixed: string[] }>> {
+    const fixed: string[] = [];
+
+    try {
+      // Build current.json from legacy files
+      const stateResult = existsSync(this.statePath) ? await this.read() : null;
+      const checkpointResult = await this.readCheckpoint();
+      const processedResult = await this.readProcessedFiles();
+
+      const unified: UnifiedState = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        state: stateResult?.ok ? stateResult.data : null,
+        checkpoint: checkpointResult.ok ? checkpointResult.data : null,
+        processedFiles: processedResult,
+      };
+
+      await mkdir(path.dirname(this.currentStatePath), { recursive: true });
+      await writeFile(this.currentStatePath, `${JSON.stringify(unified, null, 2)}\n`, 'utf8');
+      fixed.push('current.json rebuilt from legacy files');
+
+      return { ok: true, data: { fixed } };
+    } catch (error) {
+      return this.error('REPAIR_FAILED', 'Unable to repair state', this.normalizeError(error));
+    }
+  }
+
   private async readProcessedFiles(): Promise<ProcessedFilesState> {
     if (!existsSync(this.processedFilesPath)) {
       return {
@@ -180,6 +403,8 @@ export class KatoStateManager {
     try {
       await mkdir(path.dirname(this.processedFilesPath), { recursive: true });
       await writeFile(this.processedFilesPath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+      // Sync unified state after processed-files write
+      await this.syncUnifiedState().catch(() => undefined);
       return { ok: true, data: state };
     } catch (error) {
       return this.error('WRITE_PROCESSED_FILES_FAILED', 'Unable to write processed-files.json', this.normalizeError(error));
@@ -188,7 +413,11 @@ export class KatoStateManager {
 
   async init(currentTask: string | null = null): Promise<StructuredStateResult<KatoWorkspaceState>> {
     if (existsSync(this.statePath)) {
-      return this.read();
+      // Try reading existing state — if it's valid, return it
+      const existing = await this.read();
+      if (existing.ok) return existing;
+      // If read fails (e.g. schema mismatch, old format), overwrite with fresh state
+      console.warn(`[state-manager] Existing state.json is incompatible, creating fresh state: ${existing.error.message}`);
     }
 
     const now = new Date().toISOString();
@@ -199,9 +428,10 @@ export class KatoStateManager {
         role: null,
         loadedSkills: [],
         lastInitializedAt: null,
+        readyAt: null,
       },
       session: {
-        id: `session-${now.replace(/[:.]/g, '-')}`,
+        id: `session-${now.replace(/[:.]/g, '-')}-${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`,
         startedAt: now,
         updatedAt: now,
         currentTask,
@@ -262,12 +492,14 @@ export class KatoStateManager {
   }
 
   async markReady(role: string, loadedSkills: string[]): Promise<StructuredStateResult<KatoWorkspaceState>> {
+    const now = new Date().toISOString();
     return this.update({
       agent: {
         lifecycle: 'READY',
         role,
         loadedSkills,
-        lastInitializedAt: new Date().toISOString(),
+        lastInitializedAt: now,
+        readyAt: now,
       },
     });
   }
@@ -289,6 +521,9 @@ export class KatoStateManager {
       const finalState = this.withChecksum(state);
       await writeFile(tmpPath, `${JSON.stringify(finalState, null, 2)}\n`, 'utf8');
       await rename(tmpPath, this.statePath);
+
+      // Sync unified state after each state write
+      await this.syncUnifiedState().catch(() => undefined);
 
       return { ok: true, data: finalState };
     } catch (error) {
@@ -313,7 +548,7 @@ export class KatoStateManager {
 
   private assertValid(state: KatoWorkspaceState): void {
     if (state.schemaVersion !== '1.0') throw new Error('Unsupported schemaVersion');
-    if (!['UNINITIALIZED', 'INITIALIZING', 'READY', 'ERROR'].includes(state.agent.lifecycle)) {
+    if (!['UNINITIALIZED', 'INITIALIZING', 'READY', 'BLOCKED', 'ERROR'].includes(state.agent.lifecycle)) {
       throw new Error(`Invalid lifecycle: ${state.agent.lifecycle}`);
     }
     if (state.dataPlane.manager !== 'kato-state-manager') throw new Error('Invalid state manager');
@@ -332,7 +567,7 @@ export class KatoStateManager {
 
   private computeChecksum(state: KatoWorkspaceState): string {
     const normalized = JSON.stringify({ ...state, dataPlane: { ...state.dataPlane, checksum: '' } });
-    return createHash('sha256').update(normalized).digest('hex');
+        return createHash('sha256').update(normalized).digest('hex');
   }
 
   private error(code: string, message: string, details?: unknown): StructuredStateError {

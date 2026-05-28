@@ -39,8 +39,8 @@ const FOLDER_RULES: Record<string, { layer: string; allowed: string[]; forbidden
   },
   'scripts': {
     layer: 'scripts',
-    allowed: ['src/core', 'src/modules'], // scripts can import from src/ for testing/setup
-    forbidden: [],
+    allowed: ['src/modules'], // scripts may import from modules for utility use only
+    forbidden: ['src/core'], // SCRIPTS MUST NOT IMPORT FROM CORE — standalone only
   },
   'tests': {
     layer: 'tests',
@@ -86,15 +86,21 @@ function getFiles(dir: string, exts: string[]): string[] {
 
 function getImportPaths(content: string): string[] {
   const imports: string[] = [];
+
+  // Strip single-line comments (// ...)
+  let cleaned = content.replace(/\/\/.*$/gm, '');
+  // Strip block comments (/* ... */)
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+
   // Match: from '...' / from "..."
   const regex = /from\s+['"]([^'"]+)['"]/g;
   let match;
-  while ((match = regex.exec(content)) !== null) {
+  while ((match = regex.exec(cleaned)) !== null) {
     imports.push(match[1]);
   }
   // Match: import('...')
   const dynRegex = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-  while ((match = dynRegex.exec(content)) !== null) {
+  while ((match = dynRegex.exec(cleaned)) !== null) {
     imports.push(match[1]);
   }
   return imports;
@@ -169,8 +175,35 @@ function checkImportIntegrity() {
         });
       }
 
-      // NOTE: Broken import check removed — TypeScript compiler catches real errors.
-      // R1 (Folder Ownership) already covers cross-layer violations.
+      // Check broken imports — resolved path must exist on disk
+      const resolvedImp = resolveImport(imp, file);
+      if (resolvedImp) {
+        const candidates = [resolvedImp];
+        // Try alternate extensions (TypeScript ESM uses .js, source may be .ts)
+        if (path.extname(resolvedImp) === '.js') {
+          candidates.push(resolvedImp.replace(/\.js$/, '.ts'));
+        } else {
+          candidates.push(`${resolvedImp}.ts`, `${resolvedImp}.js`);
+        }
+        // Try directory/index.ts or directory/index.js
+        candidates.push(
+          path.join(resolvedImp, 'index.ts'),
+          path.join(resolvedImp, 'index.js')
+        );
+
+        const fileExists = candidates.some(p => fs.existsSync(p));
+        if (!fileExists) {
+          const relFile = path.relative(BASE_PATH, file);
+          const lineNum = content.substring(0, content.indexOf(imp)).split('\n').length;
+          violations.push({
+            rule: 'R2-BrokenImport',
+            file: relFile,
+            line: lineNum,
+            message: `Import '${imp}' does not resolve to an existing file`,
+            severity: 'ERROR',
+          });
+        }
+      }
     }
   }
 }
@@ -300,6 +333,26 @@ function checkSecurityScan() {
   }
 }
 
+// ── Rule 6: Knowledge No Executable Code ──
+// knowledge/ must contain only markdown — no .ts, .js, .tsx, .jsx files allowed
+function checkKnowledgeNoExecutableCode() {
+  const knowledgeDir = path.join(BASE_PATH, 'knowledge');
+  if (!fs.existsSync(knowledgeDir)) return;
+
+  const execFiles = getFiles(knowledgeDir, ['.ts', '.js', '.tsx', '.jsx']);
+
+  for (const file of execFiles) {
+    const relFile = path.relative(BASE_PATH, file);
+    violations.push({
+      rule: 'R6-KnowledgeNoCode',
+      file: relFile,
+      line: 1,
+      message: `Knowledge directory contains executable code file. Only markdown is allowed in knowledge/`,
+      severity: 'ERROR',
+    });
+  }
+}
+
 // ── Report ──
 function printReport() {
   console.log('\n🔍 Structure Validation Report');
@@ -359,6 +412,9 @@ function main() {
 
   console.log('Running R5: Static Security Scan...');
   checkSecurityScan();
+
+  console.log('Running R6: Knowledge No Executable Code...');
+  checkKnowledgeNoExecutableCode();
 
   printReport();
 

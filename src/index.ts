@@ -29,8 +29,15 @@ async function main() {
     const gateway = new KatoGateway(engine);
 
     // 3. Khởi tạo Discord Adapter (platform-specific)
-    const discord = new DiscordBridge(gateway);
-    await discord.start();
+    const discord = new DiscordBridge();
+    gateway.register(discord);
+
+    // 4. Start all adapters
+    const { success, failed } = await gateway.startAll();
+    console.log(`✅ Platform adapters started: ${success.join(', ') || '(none)'}`);
+    if (failed.length > 0) {
+      console.warn(`⚠️ Failed adapters: ${failed.map(f => `${f.platform}: ${f.error}`).join('; ')}`);
+    }
 
     console.log(`✅ All modules initialized successfully`);
     console.log(`📋 Models available: ${engine['registry'].listModels().length}`);

@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-05-28T07:39:07.976Z",
+  "state": {
+    "schemaVersion": "1.0",
+    "agent": {
+      "lifecycle": "READY",
+      "role": "Lead AI Engineer",
+      "loadedSkills": [],
+      "lastInitializedAt": "2026-05-28T07:24:09.064Z",
+      "readyAt": "2026-05-28T07:24:09.064Z"
+    },
+    "session": {
+      "id": "session-2026-05-28T07-24-03-733Z-mpp632fqv3il",
+      "startedAt": "2026-05-28T07:24:03.733Z",
+      "updatedAt": "2026-05-28T07:24:09.067Z",
+      "currentTask": "test unified state"
+    },
+    "controlPlane": {
+      "bootloader": "KATO.md",
+      "router": "knowledge/wiki/AGENTS.md",
+      "index": "knowledge/wiki/index.md"
+    },
+    "dataPlane": {
+      "statePath": "knowledge/workspace/state.json",
+      "manager": "kato-state-manager",
+      "checksum": "e691ea01d3e71bb0f08b73a99da9e1cf8b3763c84d5d34381593133b41ca69ab"
+    },
+    "notes": [
+      "Initialized by kato-state-manager. Agent must read AGENTS.md before READY."
+    ]
+  },
+  "checkpoint": null,
+  "processedFiles": {
+    "schemaVersion": "1.0",
+    "meta": {
+      "description": "Track processed files to skip scanning on next session",
+      "lastUpdated": "2026-05-28T07:39:03.584Z"
+    },
+    "files": [
+      {
+        "path": "src/core/agents/agent-manager.ts",
+        "type": "code",
+        "processedAt": "2026-05-28T06:20:01.129Z",
+        "checksum": "",
+        "action": "integrated"
+      },
+      {
+        "path": "src/modules/test-low-risk.ts",
+        "type": "code",
+        "processedAt": "2026-05-28T07:38:33.058Z",
+        "checksum": "",
+        "action": "integrated"
+      },
+      {
+        "path": "src/core/engine/agent.ts",
+        "type": "code",
+        "processedAt": "2026-05-28T07:39:03.581Z",
+        "checksum": "",
+        "action": "integrated"
+      }
+    ],
+    "stats": {
+      "totalProcessed": 3,
+      "byType": {
+        "code": 3
+      }
+    }
+  }
+}

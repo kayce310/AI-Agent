@@ -37,8 +37,8 @@ const TOOL_CATEGORIES: Record<string, { tools: string[]; keywords: string[] }> =
     keywords: ['url', 'http', 'https', 'fetch', 'download', 'upload', 'web', 'api', 'request', 'rest'],
   },
   skills: {
-    tools: ['load_skill', 'check_stale_skills', 'list_skills'],
-    keywords: ['skill', 'load', 'check', 'stale', 'list', 'capability'],
+    tools: ['load_skill', 'skill_view', 'check_stale_skills', 'list_skills'],
+    keywords: ['skill', 'load', 'check', 'stale', 'list', 'view', 'capability'],
   },
   report: {
     tools: ['generate_report', 'quote_text', 'format_report'],

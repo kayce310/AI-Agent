@@ -26,14 +26,31 @@
 
 ---
 
-## ⚡ Quy trình Khởi động BẮT BUỘC (3 bước)
+## ⚡ Quy trình Khởi động BẮT BUỘC (Boot with KATO v7.1)
 
 ```
 1. Đọc file này (AGENTS.md) → Xác định vai trò/router
 2. Tra [[index]] → Tìm skill phù hợp với task
-3. Gọi `kato-state-manager` để init/read state khi cần
-4. Chỉ tải đúng skill cần dùng → Zero Waste Token
+3. Kiểm tra /.kato/state/current.json trước (single source of truth):
+   - Nếu có → dùng làm state chính
+   - Nếu không có → fallback sang state.json, checkpoint.json, processed-files.json riêng lẻ
+4. Nếu /.kato/snapshots/ có snapshot *_resumed.json không tồn tại (pending_resume):
+   - Chạy node scripts/kato-resume.mjs --dry-run để xem thông tin
+   - Hỏi user: "Overflow recovery: snapshot found. Resume?"
+   - Nếu đồng ý: node scripts/kato-resume.mjs --apply
+5. Gọi `kato-state-manager` để init/read state khi cần
+6. Chỉ tải đúng skill cần dùng → Zero Waste Token
 ```
+
+## ✅ State Verification
+
+Chạy các lệnh kiểm tra định kỳ để đảm bảo tính nhất quán:
+
+- `kato-state-manager verify` — So sánh current.json với các legacy file (state.json, checkpoint.json, processed-files.json). Báo WARNING nếu khác nhau.
+- `npx tsx scripts/validate-structure.ts --strict` — Kiểm tra cấu trúc import, folder ownership, security.
+- `node scripts/kato-resume.mjs` — Dry-run: hiển thị snapshot mới nhất (nếu có) mà không apply.
+
+Nếu `verify` báo inconsistency, chạy `kato-state-manager repair` để rebuild current.json từ legacy files, sau đó verify lại.
 
 ---
 

@@ -45,21 +45,28 @@ This updates `knowledge/workspace/checkpoint.json` with the new file's checksum 
 Complete these steps **in order** before executing any task logic.
 
 **Step 1 — Check for overflow recovery**
-If `/.kato/snapshots/` has an emergency snapshot with status `pending_resume` (i.e.,
-a snapshot file not yet marked as `_resumed`), notify the user and ask whether to resume.
-Otherwise proceed normally.
+If `RESUME.md` exists → do not proceed. Follow the Resume Procedure at the bottom of this document.
 
-**Step 2 — Load only the required skill**
+**Step 2 — Read agent roles**
+Load `knowledge/wiki/AGENTS.md` to identify your role and routing logic.
+
+**Step 3 — Load only the required skill**
 Check `knowledge/wiki/index.md` or `knowledge/agents-skills/<category>/_INDEX.md`, then load exactly the skill needed. Do not load the full wiki.
 Skills are stored in two locations:
 - `knowledge/wiki/skills/` — 11 wiki-style skill files
 - `knowledge/agents-skills/` — 27+ agent skill files (SKILL.md with references)
 
-**Step 3 — Load runtime state & check P0**
-Read `/.kato/state/current.json` (single source of truth). If it does not exist, fall back to the individual legacy files (`state.json`, `checkpoint.json`, `processed-files.json`). Then run `git status --porcelain` to spot-check drift. If P0 items exist under `checkpoint.techDebt.openItems`, notify the user and ask whether to fix it first or proceed with the requested task. Do not silently ignore P0 items.
+**Step 4 — Read runtime state**
+Use `kato-state-manager` to read `knowledge/workspace/state.json`. Do not assume prior state.
+Also read `checkpoint.json` — check `mandatoryChecks` and `techDebt.openItems` before proceeding.
 
-**Step 4 — Mark state as READY**
-Once steps 1–3 are complete, update state to `READY`. Only then proceed.
+**Step 5 — Assess open P0 items**
+Read `techDebt.openItems` from `checkpoint.json`. If any item has `priority: P0`:
+notify the user and ask whether to fix it first or proceed with the requested task.
+Do not silently ignore P0 items.
+
+**Step 6 — Mark state as READY**
+Once steps 1–5 are complete, update state to `READY`. Only then proceed.
 
 ---
 
@@ -208,17 +215,27 @@ no match → new violation, register immediately with all four fields.
 
 ## Checkpoint Protocol / Giao thức checkpoint
 
-> **Token budget (khuyến nghị):** Agent nên giảm verbosity khi cảm thấy context đã dài.
-> Không có ngưỡng cứng — dùng cảm nhận thay vì đo đếm.
+### Token budget thresholds
 
-### Checkpoint Rule 1 — Read unified state on boot and after each logical task
+| Usage | Level | Action |
+|-------|-------|--------|
+| > 200k | Warning | Reduce verbosity, shorten descriptions |
+| > 240k | Critical | Stop all tool calls → run emergency checkpoint → notify user |
 
-Read `/.kato/state/current.json` on boot and after each logical task (or every 5-10 steps).
-This is the single source of truth. The individual files (`state.json`, `checkpoint.json`,
-`processed-files.json`) are derived views for backward compatibility.
-Do NOT read before every tool call.
-The `mandatoryChecks` field in the checkpoint section lists commands that must run for every file write.
-After each task, update:
+```
+node scripts/checkpoint-emergency.mjs
+git add -A && git commit -m "emergency: token budget critical"
+```
+
+### Checkpoint Rule 1 — `task_progress` on every tool call
+
+Every tool call must include `task_progress` parameters. This is the primary overflow-prevention
+mechanism — not optional.
+
+### Checkpoint Rule 2 — Read and update `checkpoint.json` on every tool call
+
+Read before each call. The `mandatoryChecks` field lists commands that must run for every file write.
+After each call, update:
 
 - `progress.currentStep`
 - `completedSteps[]` and `pendingSteps[]`
@@ -253,22 +270,21 @@ After each task, update:
 }
 ```
 
-> `checkpoint.json` is a reliable re-injection point for critical constraints when prompt context
-> drifts during long sessions. Read on boot and after each logical task — not before every tool call.
+> `checkpoint.json` is read before every tool call — making it a reliable re-injection point for
+> critical constraints when prompt context drifts during long sessions.
 
-### Checkpoint Rule 2 — Git commit after each completed step
+### Checkpoint Rule 3 — Git commit after each completed step
 
 ```
 git add -A && git commit -m "step X: <short description>"
 ```
 
-### Checkpoint Rule 3 — Detect overflow recovery from snapshot
+### Checkpoint Rule 4 — Detect overflow on boot
 
-If a `pending_resume` snapshot exists in `/.kato/snapshots/` → previous session may have
-overflowed. Notify user and offer to resume via Resume Procedure below.
+If `RESUME.md` exists on boot → previous session overflowed. Follow Resume Procedure below.
 Do not create a new session until user confirms.
 
-### Checkpoint Rule 4 — Auto-cleanup on task complete
+### Checkpoint Rule 5 — Auto-cleanup on task complete
 
 When `pendingSteps` is empty and `completedSteps` has items:
 
@@ -281,50 +297,17 @@ Resets: `resumeCount → 0`, clears history, sets `currentEstimateUsage → 0`.
 
 ---
 
-### Checkpoint Rule 5 — Unified state is single source of truth
-
-`/.kato/state/current.json` is the single source of truth for all runtime state.
-The legacy files `state.json`, `checkpoint.json`, and `processed-files.json` are
-derived views and should always match `current.json`. When they diverge, run
-`kato-state-manager verify` to detect inconsistencies and `kato-state-manager repair`
-to rebuild `current.json` from the legacy files.
-
----
-
 ## Resume Procedure / Quy trình khôi phục
 
-*Trigger: `pending_resume` snapshot found in `/.kato/snapshots/`. Do not start a new session
-until step 4 is confirmed.*
+*Trigger: `RESUME.md` detected on boot. Do not start a new session until step 5 is confirmed.*
 
-1. **Find the latest snapshot** — Run `node scripts/kato-resume.mjs` (dry-run without
-   `--apply` flag first) to identify the most recent snapshot file.
-2. **Read `/.kato/snapshots/snapshot_<ts>.json`** — Inspect `state.session.id`,
-   `checkpoint.mandatoryChecks`, and `processedFiles` to understand the prior session state.
-3. **Run `git status --porcelain`** — compare against `context.filesModifiedThisSession`
-   in checkpoint (if present) to spot-check drift.
-4. **Notify user** — *"Overflow recovery: snapshot from [timestamp] found. Resume?"* — wait.
-5. **On confirmation** — Run `node scripts/kato-resume.mjs --apply` to restore state files
-   (`state.json`, `checkpoint.json`, `processed-files.json`). The snapshot is then renamed
-   to `_resumed.json` to mark it as processed.
-6. **Reset session tracking** — update checkpoint, set `currentEstimateUsage → 0`, continue.
+1. **Read `RESUME.md` fully** — do not skip or summarize.
+2. **Read `checkpoint.json` and `state.json`** — compare session IDs.
+3. **Run `git status --porcelain`** — compare against `filesModifiedThisSession` in checkpoint.
+4. **Read `changelog.md`** — last few entries to understand what was completed.
+5. **Notify user** — *"Context overflow detected at step [X]. resumeCount=[N]. Continue?"* — wait.
+6. **On confirmation** — update checkpoint, reset `currentEstimateUsage → 0`, continue.
 
 ---
 
-## System Health Verification / Kiểm tra sức khỏe hệ thống
-
-Run these commands periodically to ensure system integrity:
-
-| Command | Purpose |
-|---------|---------|
-| `kato-state-manager verify` | Checks unified state (`current.json`) vs legacy files for consistency |
-| `npx tsx scripts/validate-structure.ts --strict` | Ensures architectural integrity: import rules, folder ownership, security |
-| `node scripts/kato-resume.mjs` | Dry-run: shows latest pending snapshot without applying |
-
-If any command reports inconsistency:
-1. Run `kato-state-manager repair` to rebuild `current.json` from legacy files
-2. Re-run `kato-state-manager verify` to confirm consistency
-3. If structure issues found, fix violations and re-validate
-
----
-
-*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-28*
+*Kato Agentic Workspace v6.0 · Control Plane Minimal · Zero Waste Token · Checkpoint Protocol v1.0 · Updated: 2026-05-27*
