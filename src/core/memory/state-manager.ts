@@ -294,9 +294,52 @@ export class KatoStateManager {
 
       await mkdir(path.dirname(this.currentStatePath), { recursive: true });
       await writeFile(this.currentStatePath, `${JSON.stringify(unified, null, 2)}\n`, 'utf8');
+
+      // After writing current.json, sync legacy files from it (bidirectional consistency)
+      await this.syncLegacyFiles().catch(() => undefined);
+
       return { ok: true, data: unified };
     } catch (error) {
       return this.error('SYNC_UNIFIED_FAILED', 'Unable to sync current.json', this.normalizeError(error));
+    }
+  }
+
+  /**
+   * Sync legacy files from current.json (bidirectional consistency).
+   * Reads /.kato/state/current.json and writes:
+   *   - knowledge/workspace/checkpoint.json  (from current.checkpoint)
+   *   - knowledge/workspace/state.json       (from current.state, if different)
+   */
+  async syncLegacyFiles(): Promise<StructuredStateResult<{ checkpointWritten: boolean; stateWritten: boolean }>> {
+    const result = { checkpointWritten: false, stateWritten: false };
+    try {
+      if (!existsSync(this.currentStatePath)) {
+        return { ok: true, data: result };
+      }
+      const raw = await readFile(this.currentStatePath, 'utf8');
+      const current = JSON.parse(raw) as UnifiedState;
+
+      // Write checkpoint.json from current.checkpoint
+      if (current.checkpoint) {
+        await mkdir(path.dirname(this.checkpointPath), { recursive: true });
+        await writeFile(this.checkpointPath, `${JSON.stringify(current.checkpoint, null, 2)}\n`, 'utf8');
+        result.checkpointWritten = true;
+      }
+
+      // Write state.json from current.state
+      if (current.state) {
+        await mkdir(path.dirname(this.statePath), { recursive: true });
+        // Only write if different (compare checksum)
+        const existingState = existsSync(this.statePath) ? await this.read().catch(() => null) : null;
+        if (!existingState?.ok || existingState.data.session.id !== current.state.session.id) {
+          await writeFile(this.statePath, `${JSON.stringify(current.state, null, 2)}\n`, 'utf8');
+          result.stateWritten = true;
+        }
+      }
+
+      return { ok: true, data: result };
+    } catch (error) {
+      return this.error('SYNC_LEGACY_FAILED', 'Unable to sync legacy files from current.json', this.normalizeError(error));
     }
   }
 
