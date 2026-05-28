@@ -195,13 +195,16 @@ function listAllSkills(): SkillEntry[] {
 }
 
 /**
- * Build metadata for a skill by reading and parsing its SKILL.md frontmatter.
+ * Build metadata for a skill by reading only the first 5 lines of its SKILL.md.
+ * Progressive disclosure: full content is loaded lazily via load_skill / skill_view.
  * Returns null if the skill cannot be read.
  */
 function buildSkillMeta(entry: SkillEntry): SkillMeta | null {
   try {
     const content = secureRuntime.safeReadFile(entry.fullPath);
-    const fm = parseFrontmatter(content);
+    const lines = content.split('\n');
+    const firstLines = lines.slice(0, 5).join('\n');
+    const fm = parseFrontmatter(firstLines);
     return {
       slug: entry.slug,
       category: entry.category,
