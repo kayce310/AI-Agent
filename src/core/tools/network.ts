@@ -14,13 +14,14 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 import type { ToolPlugin } from './tool-registry.js';
+import { extractContent } from './content-extractor.js';
 
 const plugin: ToolPlugin = {
   name: 'network',
   tools: [
     {
       name: 'fetch_url',
-      description: 'Tải nội dung từ URL (hỗ trợ HTTP/HTTPS)',
+      description: 'Tải nội dung từ URL. Tự động extract nội dung HTML → plain text (tối đa 3000 ký tự) để tiết kiệm token. Trả về {title, text, links, wordCount} cho HTML pages. Trả về raw content cho non-HTML.',
       schema: {
         type: 'object',
         properties: {
@@ -51,13 +52,34 @@ const plugin: ToolPlugin = {
               for (const [k, v] of Object.entries(res.headers)) {
                 headers[k] = Array.isArray(v) ? v.join(', ') : String(v);
               }
-              resolve({
-                statusCode: res.statusCode,
-                statusMessage: res.statusMessage,
-                headers,
-                contentLength: data.length,
-                content: data.length > 100000 ? data.substring(0, 100000) + '\n\n[... content truncated at 100000 chars]' : data,
-              });
+              // Detect HTML by content-type or first characters
+              const ct = (res.headers['content-type'] || '').toLowerCase();
+              const isHtml = ct.includes('text/html') || ct.includes('application/xhtml') || data.trim().startsWith('<!');
+
+              let result: any;
+              if (isHtml) {
+                const extracted = extractContent(data, urlStr);
+                result = {
+                  statusCode: res.statusCode,
+                  statusMessage: res.statusMessage,
+                  contentType: ct,
+                  title: extracted.title,
+                  text: extracted.text,
+                  links: extracted.links,
+                  wordCount: extracted.wordCount,
+                  contentLength: data.length,
+                  extracted: true,
+                };
+              } else {
+                result = {
+                  statusCode: res.statusCode,
+                  statusMessage: res.statusMessage,
+                  headers,
+                  contentLength: data.length,
+                  content: data.length > 100000 ? data.substring(0, 100000) + '\n\n[... content truncated at 100000 chars]' : data,
+                };
+              }
+              resolve(result);
             });
           });
 
