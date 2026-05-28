@@ -29,7 +29,7 @@ After the write, also run:
 kato-state-manager scan && kato-state-manager mark <file-path>
 ```
 
-This updates `knowledge/workspace/checkpoint.json` with the new file's checksum and timestamp.
+This updates `/.kato/state/current.json` (the unified state) with the new file's checksum and timestamp.
 **The write is not complete until both commands succeed.**
 
 > **Why this is at the top:** Structure violations are the leading cause of system corruption in this

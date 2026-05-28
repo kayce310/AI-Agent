@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-05-28T07:39:03.586Z",
+  "lastUpdated": "2026-05-28T09:09:05.092Z",
   "state": {
     "schemaVersion": "1.0",
     "agent": {
@@ -35,7 +35,7 @@
     "schemaVersion": "1.0",
     "meta": {
       "description": "Track processed files to skip scanning on next session",
-      "lastUpdated": "2026-05-28T07:39:03.584Z"
+      "lastUpdated": "2026-05-28T09:09:05.088Z"
     },
     "files": [
       {
@@ -58,12 +58,19 @@
         "processedAt": "2026-05-28T07:39:03.581Z",
         "checksum": "",
         "action": "integrated"
+      },
+      {
+        "path": "src/core/engine/boot.ts",
+        "type": "code",
+        "processedAt": "2026-05-28T09:09:05.080Z",
+        "checksum": "",
+        "action": "integrated"
       }
     ],
     "stats": {
-      "totalProcessed": 3,
+      "totalProcessed": 4,
       "byType": {
-        "code": 3
+        "code": 4
       }
     }
   }
