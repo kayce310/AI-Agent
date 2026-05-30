@@ -183,6 +183,7 @@ private maxToolCycles: number;
         // ── Select relevant tools ──
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
         let selectedTools = selectRelevantTools(lastUserMsg);
+        console.log(`🔧 [DEBUG] selectRelevantTools("${lastUserMsg.slice(0,50)}") → ${selectedTools.length} tools: [${selectedTools.map((t:any) => t.function?.name).join(', ')}]`);
 
         // Fallback: if pruner returned empty (cache miss), use full registry
         if (selectedTools.length === 0) {
