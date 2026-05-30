@@ -79,6 +79,29 @@ const SIDE_EFFECT_TOOL_PATTERNS = [
   'state:update',
 ];
 
+// ── Real-Time Query Detection ──
+
+/**
+ * Keywords that indicate a real-time query — cache MUST be bypassed.
+ * These queries need fresh data every time (prices, news, weather, etc.).
+ */
+const REAL_TIME_KEYWORDS = [
+  'hôm nay', 'hiện tại', 'mới nhất', 'mới', 'hiện nay',
+  'today', 'current', 'latest', 'now', 'recent', 'new',
+  'giá', 'price', 'news', 'tin tức', 'thời tiết', 'weather',
+  'tỷ giá', 'exchange rate', 'chứng khoán', 'stock',
+  'xăng', 'dầu', 'gas', 'oil', 'crypto', 'bitcoin',
+];
+
+/**
+ * Check if a message contains real-time keywords.
+ * If so, cache should be bypassed to ensure fresh data.
+ */
+export function isRealTimeQuery(message: string): boolean {
+  const lower = message.toLowerCase();
+  return REAL_TIME_KEYWORDS.some(kw => lower.includes(kw));
+}
+
 /**
  * Check if a tool name matches any side-effect pattern.
  */
@@ -185,10 +208,17 @@ export class ResponseCache<T = string> {
   /**
    * Get a value from cache.
    * Returns undefined if not found, expired, or if side effects detected.
+   * @param message Optional — if provided and contains real-time keywords, cache is bypassed.
    */
-  get(key: string): T | undefined {
+  get(key: string, message?: string): T | undefined {
     // BYPASS: if current request has side effects, don't read from cache
     if (this.hasSideEffects()) {
+      if (this.trackStats) this.misses++;
+      return undefined;
+    }
+
+    // BYPASS: if message contains real-time keywords, don't read from cache
+    if (message && isRealTimeQuery(message)) {
       if (this.trackStats) this.misses++;
       return undefined;
     }

@@ -27,7 +27,7 @@ import { HookRegistry, globalHooks } from '../hooks.js';
 import { Orchestrator } from './orchestrator.js';
 import { ModelAdapter } from '../llm/model-adapter.js';
 import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } from '../security/privilege-guard.js';
-import { ResponseCache } from '../security/response-cache.js';
+import { ResponseCache, isRealTimeQuery } from '../security/response-cache.js';
 import { Tracer } from '../observability/tracer.js';
 import { RateLimiter, RateLimiterGroup } from '../security/rate-limiter.js';
 import { MemoryTemporal } from '../memory/memory-temporal.js';
@@ -330,14 +330,18 @@ export class Engine extends EventEmitter {
       JSON.stringify(agentRequest.messages),
       undefined
     );
-    const cached = this.responseCache.get(cacheKey);
+    const lastMessage = agentRequest.messages[agentRequest.messages.length - 1]?.content || '';
+    const cached = this.responseCache.get(cacheKey, lastMessage);
     if (cached) {
       return { content: cached, modelUsed: 'cache', providerUsed: 'cache' };
     }
 
     try {
       const result = await this.agent.run(agentRequest);
-      this.responseCache.set(cacheKey, result.content);
+      // Don't cache real-time queries
+      if (!isRealTimeQuery(lastMessage)) {
+        this.responseCache.set(cacheKey, result.content);
+      }
       return {
         content: result.content,
         modelUsed: result.modelUsed,

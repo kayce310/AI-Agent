@@ -5,11 +5,12 @@ title Kato Discord Bot
 echo [START] Kato Bootstrapper v1.13
 echo -------------------------
 
-:: 0. Try to clean old instances
-echo [0/3] Cleaning old instances...
-taskkill /F /IM node.exe >nul 2>&1
-taskkill /F /IM npx.exe >nul 2>&1
-timeout /t 1 /nobreak >nul
+:: 0. Kill ONLY Kato instance (by port lock 47832)
+echo [0/3] Cleaning old Kato instances only...
+for /f "tokens=5" %%p in ('netstat -ano 2^>nul ^| findstr ":47832" 2^>nul') do (
+    echo    Killing Kato PID %%p (port 47832)...
+    taskkill /F /PID %%p >nul 2>&1
+)
 echo    Done.
 
 :: 1. Kiem tra dependencies
@@ -21,10 +22,9 @@ if not exist node_modules (
     echo    Dependencies already installed.
 )
 
-:: 2. Khoi dong bot
-echo [2/3] Starting Kato Discord Bot...
-start "Kato Discord Bot" npx tsx src/scripts/start-discord.ts
-echo    Bot dang khoi dong... Kiem tra Discord de xac nhan.
-timeout /t 3 /nobreak >nul
+:: 2. Khoi dong bot IN CURRENT TERMINAL
+echo [2/3] Starting Kato Discord Bot (THIS TERMINAL)...
+echo -------------------------
+npx tsx src/scripts/start-discord.ts
 endlocal
-exit /b 0
+exit /b
