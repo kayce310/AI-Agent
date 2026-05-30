@@ -331,7 +331,9 @@ export class Engine extends EventEmitter {
       undefined
     );
     const lastMessage = agentRequest.messages[agentRequest.messages.length - 1]?.content || '';
-    const cached = this.responseCache.get(cacheKey, lastMessage);
+    const cached = !isRealTimeQuery(lastMessage)
+      ? this.responseCache.get(cacheKey, lastMessage)
+      : null;
     if (cached) {
       return { content: cached, modelUsed: 'cache', providerUsed: 'cache' };
     }
