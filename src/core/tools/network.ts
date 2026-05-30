@@ -8,90 +8,69 @@
 
 /**
  * Network Tools Plugin
- * Provides: fetch_url (Phase 2c)
+ * Provides: fetch_url (Phase 2c — Jina AI Reader)
+ * Uses Jina AI Reader (https://r.jina.ai/) for clean Markdown extraction.
+ * No API key required for basic usage. Optional JINA_API_KEY for higher rate limits.
  */
-import * as https from 'https';
-import * as http from 'http';
-import { URL } from 'url';
 import type { ToolPlugin } from './tool-registry.js';
-import { extractContent } from './content-extractor.js';
+
+const JINA_READER_PREFIX = 'https://r.jina.ai/';
 
 const plugin: ToolPlugin = {
   name: 'network',
   tools: [
     {
       name: 'fetch_url',
-      description: 'Tải nội dung từ URL. Tự động extract nội dung HTML → plain text (tối đa 3000 ký tự) để tiết kiệm token. Trả về {title, text, links, wordCount} cho HTML pages. Trả về raw content cho non-HTML.',
+      description: 'Fetch content from a URL. Uses Jina AI Reader to extract clean Markdown from web pages. Returns structured content with title, text, and links. No API key required.',
       schema: {
         type: 'object',
         properties: {
-          url: { type: 'string', description: 'URL cần fetch' },
-          timeout: { type: 'number', description: 'Timeout (ms), mặc định 30000' }
+          url: { type: 'string', description: 'URL to fetch' },
+          timeout: { type: 'number', description: 'Timeout (ms), default 30000' }
         },
         required: ['url']
       },
-      execute(args: Record<string, any>) {
-        return new Promise((resolve) => {
-          const urlStr = args.url;
-          const timeout = args.timeout || 30000;
-          const parsedUrl = new URL(urlStr);
-          const mod = parsedUrl.protocol === 'https:' ? https : http;
+      async execute(args: Record<string, any>) {
+        const urlStr = args.url;
+        const timeout = args.timeout || 30000;
 
-          const req = mod.get(urlStr, {
-            timeout,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
-            },
-          }, (res) => {
-            let data = '';
-            res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
-            res.on('end', () => {
-              const headers: Record<string, string> = {};
-              for (const [k, v] of Object.entries(res.headers)) {
-                headers[k] = Array.isArray(v) ? v.join(', ') : String(v);
-              }
-              // Detect HTML by content-type or first characters
-              const ct = (res.headers['content-type'] || '').toLowerCase();
-              const isHtml = ct.includes('text/html') || ct.includes('application/xhtml') || data.trim().startsWith('<!');
+        // Skip Jina for local/internal URLs
+        const isExternal = urlStr.startsWith('http://') || urlStr.startsWith('https://');
+        const isAlreadyJina = urlStr.includes('r.jina.ai');
+        const isLocalhost = urlStr.includes('localhost') || urlStr.includes('127.0.0.1');
 
-              let result: any;
-              if (isHtml) {
-                const extracted = extractContent(data, urlStr, ct);
-                result = {
-                  statusCode: res.statusCode,
-                  statusMessage: res.statusMessage,
-                  contentType: ct,
-                  title: extracted.title,
-                  text: extracted.text,
-                  links: extracted.links,
-                  wordCount: extracted.wordCount,
-                  contentLength: data.length,
-                  extracted: true,
-                };
-              } else {
-                result = {
-                  statusCode: res.statusCode,
-                  statusMessage: res.statusMessage,
-                  headers,
-                  contentLength: data.length,
-                  content: data.length > 100000 ? data.substring(0, 100000) + '\n\n[... content truncated at 100000 chars]' : data,
-                };
-              }
-              resolve(result);
-            });
+        const targetUrl = (isExternal && !isAlreadyJina && !isLocalhost)
+          ? `${JINA_READER_PREFIX}${urlStr}`
+          : urlStr;
+
+        const headers: Record<string, string> = {
+          'Accept': 'text/plain, application/json',
+          'X-Return-Format': 'markdown',
+        };
+
+        // Optional: use API key if available (higher rate limits)
+        if (process.env.JINA_API_KEY) {
+          headers['Authorization'] = `Bearer ${process.env.JINA_API_KEY}`;
+        }
+
+        try {
+          const response = await fetch(targetUrl, {
+            headers,
+            signal: AbortSignal.timeout(timeout),
           });
 
-          req.on('error', (err) => {
-            resolve({ error: `Network error: ${err.message}` });
-          });
+          const text = await response.text();
 
-          req.on('timeout', () => {
-            req.destroy();
-            resolve({ error: `Request timed out after ${timeout}ms` });
-          });
-        });
+          return {
+            statusCode: response.status,
+            contentType: 'text/markdown',
+            content: text,
+            sourceUrl: urlStr,
+            fetchedVia: (isExternal && !isAlreadyJina && !isLocalhost) ? 'jina' : 'direct',
+          };
+        } catch (err: any) {
+          return { error: `Fetch failed: ${err.message}` };
+        }
       }
     }
   ]

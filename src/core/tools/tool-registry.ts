@@ -264,6 +264,7 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
     skills: './skills.js',
     report: './report.js',
     system: './system.js',
+    search: './search.js',
   };
   for (const [name, modulePath] of Object.entries(pluginModules)) {
     try {
