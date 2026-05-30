@@ -337,18 +337,40 @@ export class DiscordBridge implements PlatformAdapter {
           }
 
           if (response && response.output) {
-            // Edit initial message with the response
+            const DISCORD_MAX = 1900;
+            const chunks: string[] = [];
+
+            // Split response into ≤1900 char chunks at newline boundaries
+            let remaining = response.output;
+            while (remaining.length > 0) {
+              if (remaining.length <= DISCORD_MAX) {
+                chunks.push(remaining);
+                break;
+              }
+              // Find last newline within limit
+              let splitAt = remaining.lastIndexOf('\n', DISCORD_MAX);
+              if (splitAt <= 0) splitAt = DISCORD_MAX; // no newline — hard cut
+              chunks.push(remaining.slice(0, splitAt));
+              remaining = remaining.slice(splitAt).trimStart();
+            }
+
             let editSucceeded = false;
             try {
-              await initialMsg.edit(response.output);
+              // Edit initial "processing" message with first chunk
+              await initialMsg.edit(chunks[0]);
+              // Send remaining chunks as follow-up replies
+              for (let i = 1; i < chunks.length; i++) {
+                await message.reply(chunks[i]);
+              }
               editSucceeded = true;
             } catch (editErr) {
               console.warn(`⚠️ Failed to edit message: ${editErr instanceof Error ? editErr.message : String(editErr)}`);
+              try { await initialMsg.delete(); } catch {}
               try {
-                await initialMsg.delete();
-              } catch {}
-              try {
-                await message.reply(response.output);
+                await message.reply(chunks[0]);
+                for (let i = 1; i < chunks.length; i++) {
+                  await message.reply(chunks[i]);
+                }
                 editSucceeded = true;
               } catch (replyErr) {
                 console.error(`❌ Failed to send response: ${replyErr instanceof Error ? replyErr.message : String(replyErr)}`);
@@ -356,7 +378,7 @@ export class DiscordBridge implements PlatformAdapter {
             }
 
             if (editSucceeded) {
-              console.log(`${ts()} ✅ Discord <- Gateway: response sent`);
+              console.log(`${ts()} ✅ Discord <- Gateway: response sent (${chunks.length} chunk(s))`);
             }
           } else {
             // No response — update the initial message
