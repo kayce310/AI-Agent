@@ -20,6 +20,12 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+
+// ── Resolve repo root independent of process.cwd() ──
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, '../../..'); // from src/modules/discord/ up to repo root
 
 const ts = () => {
   const d = new Date();
@@ -28,7 +34,7 @@ const ts = () => {
 
 // ── Discord Runtime Logger ──
 
-const LOG_DIR = path.join(process.cwd(), 'logs');
+const LOG_DIR = path.join(REPO_ROOT, 'logs');
 
 function ensureLogDir(): void {
   if (!fs.existsSync(LOG_DIR)) {
@@ -173,21 +179,35 @@ export class DiscordBridge implements PlatformAdapter {
       throw new Error('DISCORD_BOT_TOKEN không được tìm thấy trong file .env');
     }
 
-    // ── PID lock check ──
+    // ── PID lock check (already handled by start-discord.ts — this is a secondary guard) ──
     const PID_FILE = path.join(os.tmpdir(), 'kato-discord.pid');
     if (fs.existsSync(PID_FILE)) {
       try {
         const pid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
         if (pid !== process.pid) {
+          const isWin = process.platform === 'win32';
+          let alive = false;
           try {
-            process.kill(pid, 0);
+            if (isWin) {
+              require('child_process').execSync(`tasklist /FI "PID eq ${pid}" 2>nul | findstr /B "${pid}"`, { stdio: 'pipe' });
+              alive = true;
+            } else {
+              process.kill(pid, 0);
+              alive = true;
+            }
+          } catch {}
+          if (alive) {
             console.error(`${ts()} ⚠️ Another Kato instance (PID ${pid}) already running. Exiting.`);
             process.exit(0);
-          } catch {
+          } else {
+            // Stale lock — replace
             fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
           }
         }
-      } catch {}
+      } catch {
+        // Corrupt lock — replace
+        fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
+      }
     }
 
     await this.client.login(token);

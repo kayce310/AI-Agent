@@ -8,37 +8,19 @@
 
 /**
  * GNAP Queue — Git-Native Agent Protocol task queue
- * 
- * Uses actual git commands via child_process to persist tasks.
- * Heartbeat loop: git pull → check task → execute → git push
- * Audit log = Git history
- * 
- * Error handling:
- * - Merge conflicts detected and resolved with git merge --abort
- * - All git errors are surfaced with descriptive system errors
+ *
+ * Persists tasks as a JSON file (runtime state, not source code).
+ * No git tracking — tasks.json is ephemeral runtime data.
  */
 
-import { execSync } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-// ── Error Types ──
-
-/** Git conflict detected during merge/pull */
-export class GNAPConflictError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'GNAPConflictError';
-  }
-}
-
-/** Git operation failed */
-export class GNAPGitError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'GNAPGitError';
-  }
-}
+// ── Workspace root resolution (independent of process.cwd()) ──
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const WORKSPACE_ROOT = resolve(__dirname, '../../..'); // from src/core/gnap/ up to repo root
 
 // ── Task Interface ──
 
@@ -57,8 +39,8 @@ export class GNAPQueue {
   private taskFile: string;
   private workspaceRoot: string;
 
-  constructor(baseDir: string = '.') {
-    this.workspaceRoot = resolve(baseDir);
+  constructor(baseDir?: string) {
+    this.workspaceRoot = baseDir ? resolve(baseDir) : WORKSPACE_ROOT;
     this.taskDir = join(this.workspaceRoot, '.gnap');
     this.taskFile = join(this.taskDir, 'tasks.json');
     this.ensureTaskDir();
@@ -71,94 +53,10 @@ export class GNAPQueue {
     if (!existsSync(this.taskFile)) {
       writeFileSync(this.taskFile, JSON.stringify({ tasks: [], lastSync: 0 }, null, 2));
     }
-    // Auto-init git repo if not already a git repo
-    const gitDir = join(this.taskDir, '.git');
-    if (!existsSync(gitDir)) {
-      try {
-        execSync('git init', { cwd: this.taskDir, stdio: 'pipe' });
-        execSync('git config user.email "gnap@kato.local"', { cwd: this.taskDir, stdio: 'pipe' });
-        execSync('git config user.name "GNAP Queue"', { cwd: this.taskDir, stdio: 'pipe' });
-        // Initial commit so subsequent commits work
-        execSync('git add -A', { cwd: this.taskDir, stdio: 'pipe' });
-        try {
-          execSync('git commit -m "GNAP: init"', { cwd: this.taskDir, stdio: 'pipe' });
-        } catch {
-          // May fail if nothing to commit — ignore
-        }
-        console.log(`📦 GNAP: initialized git repo at ${this.taskDir}`);
-      } catch (err: any) {
-        console.warn(`⚠️ GNAP: could not init git repo — ${err.message}`);
-      }
-    }
   }
 
   /**
-   * Run a git command, detect conflicts, and abort if merge conflict detected.
-   * Throws GNAPConflictError or GNAPGitError on failure.
-   */
-  private runGit(cmd: string, description: string): void {
-    try {
-      execSync(cmd, { cwd: this.taskDir, stdio: 'pipe' });
-    } catch (err: any) {
-      const stderr = err.stderr?.toString() || '';
-      const stdout = err.stdout?.toString() || '';
-      const combined = stderr + stdout;
-
-      // Detect merge conflict patterns
-      const conflictPatterns = [
-        'CONFLICT',
-        'merge conflict',
-        'Merge conflict',
-        'CONFLICT (content)',
-        'Auto-merging failed',
-        'merge failed',
-        'conflict in',
-        '<<<<<<<',
-        '>>>>>>>',
-        '=======',
-        'error: cannot merge with differences',
-      ];
-
-      for (const pattern of conflictPatterns) {
-        if (combined.includes(pattern)) {
-          // Attempt to abort the merge to clean up working tree
-          try {
-            execSync('git merge --abort', { cwd: this.taskDir, stdio: 'pipe' });
-          } catch {
-            // Abort failed — working tree may be dirty, but we surface conflict anyway
-          }
-          throw new GNAPConflictError(
-            `Git ${description} detected merge conflict: ${combined.substring(0, 200)}`
-          );
-        }
-      }
-
-      // For non-conflict errors (no remote, not a repo, etc.), re-throw as GitError
-      throw new GNAPGitError(
-        `Git ${description} failed: ${combined.substring(0, 200) || err.message}`
-      );
-    }
-  }
-
-  /**
-   * Verify file exists on disk before git add, preventing ghost-file errors.
-   */
-  private gitAdd(description: string): void {
-    if (!existsSync(this.taskFile)) {
-      console.warn(`[GNAP] File not found, skipping git add: ${this.taskFile}`);
-      return;
-    }
-    // Use relative path from workspace root for git add
-    const relPath = `.gnap/tasks.json`;
-    try {
-      execSync(`git add "${relPath}"`, { cwd: this.workspaceRoot, stdio: 'pipe' });
-    } catch (err: any) {
-      console.error(`[GNAP] Git add failed: ${err.message}`);
-    }
-  }
-
-  /**
-   * Commit a task to the GNAP queue and persist via git commit.
+   * Commit a task to the GNAP queue (file-based persistence only).
    */
   async commitTask(task: Omit<GNAPTask, 'id' | 'status'>): Promise<GNAPTask> {
     const fullTask: GNAPTask = {
@@ -173,47 +71,19 @@ export class GNAPQueue {
     data.lastSync = Date.now();
     writeFileSync(this.taskFile, JSON.stringify(data, null, 2));
 
-    // Git add (with file existence check) + commit
-    this.gitAdd('add');
-    this.runGit(
-      `git commit -m "GNAP: [${fullTask.status}] ${fullTask.name}"`,
-      'commit'
-    );
-
     return fullTask;
   }
 
   /**
-   * Get task history from git log.
+   * Get task history — returns current file content (git history removed).
    */
   async getTaskHistory(): Promise<string[]> {
     try {
-      const log = execSync(`git log --oneline --all`, {
-        cwd: this.taskDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      return log.split('\n').filter(line => line.trim().length > 0);
+      const data = JSON.parse(readFileSync(this.taskFile, 'utf-8'));
+      return data.tasks.map((t: GNAPTask) => `[${t.status}] ${t.name}`);
     } catch {
-      // No git history yet — return empty
       return [];
     }
-  }
-
-  /**
-   * Pull latest tasks from remote.
-   * Throws GNAPConflictError if merge conflict detected.
-   */
-  async pull(): Promise<void> {
-    this.runGit('git pull', 'pull');
-  }
-
-  /**
-   * Push local task commits to remote.
-   * Throws GNAPConflictError or GNAPGitError on failure.
-   */
-  async push(): Promise<void> {
-    this.runGit('git push', 'push');
   }
 
   /**

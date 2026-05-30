@@ -169,6 +169,10 @@ export class KatoGateway {
    * Convert an AdapterMessage to KatoRequest and process it.
    * Returns the KatoResponse — the adapter is responsible for sending
    * the response back through its own platform-specific UI.
+   *
+   * NOTE: Do NOT call adapter.sendMessage() here — that would cause a
+   * double response. The adapter's onMessage handler already handles
+   * sending the response via its own platform-specific UI (edit, reply, etc.).
    */
   async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<KatoResponse | null> {
     try {
@@ -181,8 +185,7 @@ export class KatoGateway {
       };
 
       const response = await this.process(request);
-      // Send response back through the adapter's channel
-      await adapter.sendMessage(msg.channelId, response.output);
+      // ADAPTER handles its own UI — do NOT call sendMessage here
       return response;
     } catch (err: any) {
       console.error(`❌ Gateway: engine processing failed for ${adapter.platform}: ${err.message}`);

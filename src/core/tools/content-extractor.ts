@@ -11,6 +11,9 @@
  * Extracts plain text, title, and links from HTML content.
  * Uses regex-based stripping (no cheerio dependency) to avoid bloat.
  * Designed to wrap fetch_url output to reduce token usage.
+ *
+ * Security: Rejects binary content types to prevent token overflow from
+ * non-text responses.
  */
 
 export interface ExtractedContent {
@@ -18,6 +21,36 @@ export interface ExtractedContent {
   text: string;    // plain text, max 3000 chars
   links: string[]; // max 10 links
   wordCount: number;
+}
+
+/** Binary content patterns that should not be extracted */
+const BINARY_CONTENT_PATTERNS = [
+  /^image\//,
+  /^application\/octet/,
+  /^application\/pdf/,
+  /^application\/zip/,
+  /^application\/x-(zip|gzip|bzip|tar)/,
+  /^audio\//,
+  /^video\//,
+];
+
+/** URL extensions that indicate binary content */
+const BINARY_URL_EXTENSIONS = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|pdf|zip|gz|tar|bz2|7z|rar|bin|exe|dll|dmg|iso|mp3|mp4|avi|mov|mkv)$/i;
+
+/** Maximum length for extracted text before truncation */
+const MAX_EXTRACTED_CHARS = 5000;
+
+/**
+ * Check if content should be rejected as binary.
+ * Returns true if binary heuristics match.
+ */
+export function isBinaryContent(contentType: string, url: string): boolean {
+  const ct = (contentType || '').toLowerCase();
+  for (const pattern of BINARY_CONTENT_PATTERNS) {
+    if (pattern.test(ct)) return true;
+  }
+  if (BINARY_URL_EXTENSIONS.test(url)) return true;
+  return false;
 }
 
 /**
@@ -46,8 +79,9 @@ function stripHtml(html: string, maxChars: number = 3000): { text: string; wordC
   // Count words (non-whitespace sequences)
   const wordCount = cleaned ? cleaned.split(/\s+/).length : 0;
 
-  // Truncate
+  // Truncate to MAX_EXTRACTED_CHARS with warning
   if (cleaned.length > maxChars) {
+    console.warn(`⚠️ ContentExtractor: extracted text (${cleaned.length} chars) exceeds limit ${maxChars}, truncating`);
     cleaned = cleaned.substring(0, maxChars) + '...';
   }
 
@@ -106,12 +140,24 @@ function extractLinks(html: string, baseUrl: string, maxLinks: number = 10): str
  *
  * @param html - Raw HTML string
  * @param url  - Source URL (for resolving relative links)
+ * @param contentType - Optional Content-Type header for binary rejection
  * @returns ExtractedContent with title, plain text (max 3000 chars), links (max 10), wordCount
  */
-export function extractContent(html: string, url: string): ExtractedContent {
+export function extractContent(html: string, url: string, contentType?: string): ExtractedContent {
+  // Reject binary content early
+  if (contentType && isBinaryContent(contentType, url)) {
+    console.warn(`⚠️ ContentExtractor: skipping binary content (type: ${contentType}, url: ${url})`);
+    return { title: '', text: '[Binary content — không thể trích xuất]', links: [], wordCount: 0 };
+  }
+
   const title = extractTitle(html);
-  const { text, wordCount } = stripHtml(html, 3000);
+  const { text, wordCount } = stripHtml(html, MAX_EXTRACTED_CHARS);
   const links = extractLinks(html, url, 10);
+
+  // Log if text exceeds threshold for monitoring
+  if (wordCount > 1000) {
+    console.log(`📏 ContentExtractor: ${url} → ${text.length} chars, ${wordCount} words, ${links.length} links`);
+  }
 
   return { title, text, links, wordCount };
 }

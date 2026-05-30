@@ -1,24 +1,15 @@
 @echo off
 title Kato Discord Bot
-echo 🚀 Kato Bootstrapper v1.10
+echo 🚀 Kato Bootstrapper v1.13
 echo -------------------------
 
-:: 0. Kill cac instance cu
+:: 0. Kill cac instance cu bang port binding
 echo [0/3] Cleaning old instances...
-
-:: Kill by PID from PID file (precise, no collateral damage)
-if exist "%TEMP%\kato-discord.pid" (
-    for /f "tokens=*" %%a in (%TEMP%\kato-discord.pid) do (
-        taskkill /F /PID %%a 2>nul
-    )
-    del "%TEMP%\kato-discord.pid" 2>nul
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":47832"') do (
+    echo    Killing stale instance (PID %%p)...
+    taskkill /F /PID %%p >nul 2>&1
     timeout /t 2 /nobreak >nul
 )
-
-:: Fallback: kill by window title (legacy)
-taskkill /F /FI "WINDOWTITLE eq Kato*" /IM node.exe 2>nul
-timeout /t 1 /nobreak >nul
-
 echo    Done.
 
 :: 1. Kiem tra dependencies
@@ -32,8 +23,7 @@ if not exist node_modules (
 
 :: 2. Khoi dong bot
 echo [2/3] Starting Kato Discord Bot...
+start "Kato Discord Bot" npx tsx src/scripts/start-discord.ts
 echo    Bot dang khoi dong... Kiem tra Discord de xac nhan.
-npx tsx src/scripts/start-discord.ts
-
-echo.
-pause
+timeout /t 3 /nobreak >nul
+exit /b

@@ -58,7 +58,7 @@ const plugin: ToolPlugin = {
 
               let result: any;
               if (isHtml) {
-                const extracted = extractContent(data, urlStr);
+                const extracted = extractContent(data, urlStr, ct);
                 result = {
                   statusCode: res.statusCode,
                   statusMessage: res.statusMessage,
