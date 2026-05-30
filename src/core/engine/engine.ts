@@ -228,109 +228,16 @@ export class Engine extends EventEmitter {
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
     });
 
-    // ── Hybrid Routing: Fast/Deep mode heuristic ──
-    const isFastMode = request.fastMode === true ||
-                      (request.task != null && request.task.trim().length < 50);
+    const agentRequest: EngineRequest = { ...request, systemPrompt };
 
-    if (isFastMode && request.task) {
-      console.log(`⚡ [FAST MODE] Câu hỏi đơn giản (${request.task.length} ký tự), kích hoạt ReAct trực tiếp.`);
-    }
-
-    // ── Orchestrator path (Deep mode) ──
-    let orchestratorResult: import('./orchestrator.js').OrchestrationResult | null = null;
-    let completedTasksContext = '';
-    let fallbackCount = 0;
-
-    if (request.task && request.task.trim().length > 0 && !isFastMode) {
-      try {
-        await this.gnapQueue.commitTask({
-          name: request.task.substring(0, 100),
-          sessionId: request.sessionId,
-          timestamp: Date.now(),
-        });
-
-        orchestratorResult = await this.orchestrator.run(request.task, systemPrompt);
-
-        // Record tool calls for side-effect detection
-        if (orchestratorResult.executionReport?.results) {
-          for (const r of orchestratorResult.executionReport.results) {
-            if (r.type === 'tool') {
-              this.responseCache.recordToolCall(r.description.split('(')[0] || 'unknown');
-            }
-          }
-        }
-
-        // Save to cache (bypassed automatically if side effects detected)
-        const cacheKey = ResponseCache.buildKey(
-          request.agentName || 'default',
-          request.sessionId || 'default',
-          JSON.stringify(request.messages),
-          undefined
-        );
-        const sanitized = this.sanitizeResponse(orchestratorResult.content || '');
-        this.responseCache.set(cacheKey, sanitized);
-
-        return {
-          content: sanitized,
-          modelUsed: 'orchestrator-pipeline',
-          providerUsed: 'internal',
-        };
-      } catch (err: any) {
-        console.error(`❌ Orchestrator error:`, err.message);
-
-        evolutionEngine.recordError({
-          modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
-          errorType: 'ENGINE_ORCHESTRATOR_FAILED',
-          errorMessage: err.message,
-          stackTrace: err.stack,
-          sessionId: request.sessionId || 'unknown',
-          contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
-        }).catch(() => {});
-
-        // ── Smart Fallback: inherit completed task results ──
-        if (orchestratorResult?.executionReport?.results) {
-          const completedTasks = orchestratorResult.executionReport.results
-            .filter((r: any) => !r.error && r.output && r.output.trim().length > 0);
-          fallbackCount = completedTasks.length;
-          completedTasksContext = completedTasks
-            .map((r: any, idx: number) => `Task ${idx + 1} (${r.type}): ${r.output}`)
-            .join('\n');
-        }
-
-        if (completedTasksContext) {
-          console.log(`⚠️ [FALLBACK] Đã chuyển sang ReAct và kế thừa ${fallbackCount} kết quả từ Orchestrator`);
-        } else {
-          console.warn('⚠️ Orchestrator failed, falling back to Agent ReAct loop (no completed tasks to inherit)');
-        }
-      }
-    }
-
-    // ── Agent ReAct loop (default / fallback) ──
-    const fallbackMessage = completedTasksContext
-      ? `[SYSTEM WARNING] Orchestrator failed mid-execution. Inheriting completed task results:\n${completedTasksContext}\n\nNow continuing with Agent ReAct loop to complete remaining tasks...\n`
-      : '';
-
-    const agentRequest: EngineRequest = {
-      ...request,
-      systemPrompt,
-      messages: fallbackMessage
-        ? [
-            ...request.messages.slice(0, -1),
-            {
-              ...request.messages[request.messages.length - 1],
-              content: `${fallbackMessage}${request.messages[request.messages.length - 1].content}`
-            }
-          ]
-        : request.messages,
-    };
-
+    const lastMessage = agentRequest.messages[agentRequest.messages.length - 1]?.content || '';
     const cacheKey = ResponseCache.buildKey(
       request.agentName || 'default',
       request.sessionId || 'default',
       JSON.stringify(agentRequest.messages),
       undefined
     );
-    const lastMessage = agentRequest.messages[agentRequest.messages.length - 1]?.content || '';
+
     const cached = !isRealTimeQuery(lastMessage)
       ? this.responseCache.get(cacheKey, lastMessage)
       : null;
@@ -340,7 +247,6 @@ export class Engine extends EventEmitter {
 
     try {
       const result = await this.agent.run(agentRequest);
-      // Don't cache real-time queries
       if (!isRealTimeQuery(lastMessage)) {
         this.responseCache.set(cacheKey, result.content);
       }
@@ -351,14 +257,6 @@ export class Engine extends EventEmitter {
       };
     } catch (agentErr: any) {
       console.error(`❌ Agent error:`, agentErr.message);
-      evolutionEngine.recordError({
-        modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
-        errorType: 'ENGINE_AGENT_FAILED',
-        errorMessage: agentErr.message,
-        stackTrace: agentErr.stack,
-        sessionId: request.sessionId || 'unknown',
-        contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
-      }).catch(() => {});
       return {
         content: `❌ Lỗi khi xử lý: ${agentErr.message}`,
         modelUsed: 'none',
