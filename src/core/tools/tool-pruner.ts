@@ -11,7 +11,7 @@
 import { getDefaultRegistry } from './tool-registry.js';
 
 // ── Core Tools (always available) ──
-const CORE_TOOLS = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'];
+const CORE_TOOLS = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url', 'web_search'];
 
 // ── Tool Categories ──
 // Each category maps to a set of keywords that indicate the user needs these tools
@@ -19,6 +19,10 @@ const TOOL_CATEGORIES: Record<string, { tools: string[]; keywords: string[] }> =
   core: {
     tools: CORE_TOOLS,
     keywords: ['file', 'read', 'directory', 'folder', 'list', 'search', 'find', 'wiki', 'knowledge', 'url', 'fetch', 'http', 'web'],
+  },
+  search: {
+    tools: ['web_search'],
+    keywords: ['search', 'find', 'lookup', 'query', 'tìm', 'kiếm', 'tra cứu', 'cập nhật', 'hôm nay', 'hiện tại', 'mới nhất', 'tin tức', 'giá', 'news', 'latest', 'current', 'today', 'price'],
   },
   filesystem: {
     tools: ['list_directory', 'read_file', 'write_file', 'create_directory', 'delete_file', 'move_file', 'copy_file'],
