@@ -24,7 +24,6 @@ import { evolutionEngine } from '../evolution.js';
 import { ModelRouter, buildDefaultRouter } from '../llm/model-adapter.js';
 import { Agent, AgentConfig } from './agent.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
-import { Orchestrator } from './orchestrator.js';
 import { ModelAdapter } from '../llm/model-adapter.js';
 import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } from '../security/privilege-guard.js';
 import { ResponseCache, isRealTimeQuery } from '../security/response-cache.js';
@@ -33,8 +32,6 @@ import { RateLimiter, RateLimiterGroup } from '../security/rate-limiter.js';
 import { MemoryTemporal } from '../memory/memory-temporal.js';
 import { MemoryBlock } from '../memory/memory-log.js';
 import { MemoryAgentic } from '../memory/memory-agentic.js';
-import { GNAPQueue } from '../gnap/gnap-queue.js';
-
 const KATO_IDENTITY_FILES = [
   'KATO.md',
   'knowledge/wiki/AGENTS.md',
@@ -48,14 +45,12 @@ export class Engine extends EventEmitter {
   private katoIdentityContext: string = '';
   private toolRegistry!: ToolRegistry;
   private agent!: Agent;
-  private orchestrator!: Orchestrator;
   private hooks: HookRegistry;
   private privilegeGuard: PrivilegeGuard;
   private responseCache: ResponseCache<string>;
   private rateLimiter: RateLimiterGroup;
   private temporalMemory: MemoryTemporal;
   private agenticMemory: MemoryAgentic;
-  private gnapQueue: GNAPQueue;
 
   constructor(registry?: ProviderRegistry) {
     super();
@@ -77,7 +72,6 @@ export class Engine extends EventEmitter {
     this.rateLimiter.add('tokens', { tokensPerInterval: 100_000, intervalMs: 60_000, maxBurst: 20_000 });
     this.temporalMemory = new MemoryTemporal({ maxRetentionDays: 30 });
     this.agenticMemory = new MemoryAgentic({ maxRetentionDays: 30, allowAgentWrite: true });
-    this.gnapQueue = new GNAPQueue();
   }
 
   private sanitizeResponse(content: string): string {
@@ -108,20 +102,6 @@ export class Engine extends EventEmitter {
       debug: false,
     };
     this.agent = new Agent(agentConfig);
-
-    const orchestratorAdapter: ModelAdapter = {
-      name: 'orchestrator-router',
-      label: 'Orchestrator (ModelRouter wrapper)',
-      invoke: (messages, options) => this.modelRouter.route(messages, options),
-      estimateTokens: (messages) => this.modelRouter.estimateTokens(messages),
-      isAvailable: () => this.modelRouter.listAdapters().length > 0,
-    };
-    this.orchestrator = new Orchestrator({
-      model: orchestratorAdapter,
-      toolRegistry: this.toolRegistry,
-      hooks: this.hooks,
-      debug: false,
-    });
 
     this.agent.on('cascade', (data: any) => { this.emit('cascade', data); });
     await globalMemoryStore.init();
@@ -201,7 +181,6 @@ export class Engine extends EventEmitter {
   getPrivilegeGuard(): PrivilegeGuard { return this.privilegeGuard; }
   getTemporalMemory(): MemoryTemporal { return this.temporalMemory; }
   getAgenticMemory(): MemoryAgentic { return this.agenticMemory; }
-  getGNAPQueue(): GNAPQueue { return this.gnapQueue; }
 
   // ═══════════════════════════════════════════════════════════════
   // PHASE 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing
