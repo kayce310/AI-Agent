@@ -114,6 +114,7 @@ private maxToolCycles: number;
    * This is the main entry point — replaces Engine.process().
    */
   async run(request: EngineRequest): Promise<AgentResult> {
+    console.log(`🤖 [DEBUG] agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length}`);
     // Build messages from request
     const messages = this.buildMessages(request);
 
