@@ -24,7 +24,6 @@ import { evolutionEngine } from '../evolution.js';
 import { ModelRouter, buildDefaultRouter } from '../llm/model-adapter.js';
 import { Agent, AgentConfig } from './agent.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
-import { ModelAdapter } from '../llm/model-adapter.js';
 import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } from '../security/privilege-guard.js';
 import { ResponseCache, isRealTimeQuery } from '../security/response-cache.js';
 import { Tracer } from '../observability/tracer.js';
