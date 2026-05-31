@@ -146,10 +146,16 @@ export class KatoGateway {
    * Used for programmatic access or testing.
    */
   async process(request: KatoRequest): Promise<KatoResponse> {
+    const requestedModel = typeof request.metadata?.modelId === 'string'
+      ? String(request.metadata.modelId)
+      : typeof request.metadata?.model === 'string'
+      ? String(request.metadata.model)
+      : 'default';
+
     const engineRequest: EngineRequest = {
       sessionId: request.sessionId,
       messages: [{ role: 'user', content: request.input }],
-      modelId: 'default',
+      modelId: requestedModel || 'default',
       agentName: 'Kato',
       protocol: 'gateway',
       mentionPrefix: '',

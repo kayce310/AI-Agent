@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "lastUpdated": "2026-05-28T09:09:05.092Z",
+  "lastUpdated": "2026-05-30T15:37:00.000Z",
   "state": {
     "schemaVersion": "1.0",
     "agent": {
@@ -11,10 +11,10 @@
       "readyAt": "2026-05-28T07:24:09.064Z"
     },
     "session": {
-      "id": "session-2026-05-28T07-24-03-733Z-mpp632fqv3il",
-      "startedAt": "2026-05-28T07:24:03.733Z",
-      "updatedAt": "2026-05-28T07:24:09.067Z",
-      "currentTask": "test unified state"
+      "id": "session-2026-05-30T15-37-00-000Z-structure-audit",
+      "startedAt": "2026-05-30T15:37:00.000Z",
+      "updatedAt": "2026-05-30T15:37:00.000Z",
+      "currentTask": "structure violation audit"
     },
     "controlPlane": {
       "bootloader": "KATO.md",
@@ -27,15 +27,86 @@
       "checksum": "e691ea01d3e71bb0f08b73a99da9e1cf8b3763c84d5d34381593133b41ca69ab"
     },
     "notes": [
-      "Initialized by kato-state-manager. Agent must read AGENTS.md before READY."
+      "Structure violation audit 2026-05-30: 7 violations found (1 P1, 6 P2). See knowledge/wiki/core/structure-violations.md"
     ]
   },
-  "checkpoint": null,
+  "checkpoint": {
+    "mandatoryChecks": {
+      "beforeFileWrite": [
+        "npx tsx scripts/validate-structure.ts --strict",
+        "abort if output contains ERROR — fix first"
+      ],
+      "afterFileWrite": [
+        "kato-state-manager scan",
+        "kato-state-manager mark <file-path>",
+        "verify processed-files.json updated"
+      ],
+      "onToolCallFail": [
+        "node scripts/checkpoint-emergency.mjs",
+        "git add -A && git commit -m 'emergency: tool call failed'"
+      ]
+    },
+    "techDebt": {
+      "openItems": [
+        {
+          "id": "P1-1",
+          "priority": "P1",
+          "description": "scripts/ imports core/: kato-state-manager.ts:8 imports KatoStateManager from src/core/memory/state-manager.js — violates KATO.md scripts/ → core/ forbidden rule",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-1",
+          "priority": "P2",
+          "description": "Dead code: orchestrator.ts (259 lines) — removed from engine.ts, no runtime consumer in src/, only re-exported by index.ts:18",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-2",
+          "priority": "P2",
+          "description": "Dead code: agent-manager.ts (390 lines) — no importer in src/, @imported-by orchestrator.ts is stale",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-3",
+          "priority": "P2",
+          "description": "Dead code: boot.ts (97 lines) — only imported by kato-state-manager.ts (script, P1-1), no runtime src/ consumer",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-4",
+          "priority": "P2",
+          "description": "Dead code: decomposer.ts, plan-executor.ts, result-synthesizer.ts — only imported by orchestrator.ts (dead), re-exported by index.ts:19-21 but unused",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-5",
+          "priority": "P2",
+          "description": "Dead code: gnap-queue.ts, memory-compressor.ts, skill-runtime.ts — @imported-by engine.ts is stale, no actual importer in src/",
+          "owner": "—",
+          "targetSession": "next"
+        },
+        {
+          "id": "P2-6",
+          "priority": "P2",
+          "description": "Missing checkpoint.json and processed-files.json in knowledge/workspace/ — required by KATO.md checkpoint protocol. Fixed in current session.",
+          "owner": "—",
+          "targetSession": "current"
+        }
+      ]
+    },
+    "lastSavedAt": "2026-05-30T15:37:00.000Z",
+    "totalSaves": 1
+  },
   "processedFiles": {
     "schemaVersion": "1.0",
     "meta": {
       "description": "Track processed files to skip scanning on next session",
-      "lastUpdated": "2026-05-28T09:09:05.088Z"
+      "lastUpdated": "2026-05-30T15:37:00.000Z"
     },
     "files": [
       {
@@ -65,12 +136,42 @@
         "processedAt": "2026-05-28T09:09:05.080Z",
         "checksum": "",
         "action": "integrated"
+      },
+      {
+        "path": "knowledge/wiki/core/structure-violations.md",
+        "type": "wiki",
+        "processedAt": "2026-05-30T15:35:00.000Z",
+        "checksum": "",
+        "action": "created"
+      },
+      {
+        "path": "knowledge/workspace/checkpoint.json",
+        "type": "state",
+        "processedAt": "2026-05-30T15:36:00.000Z",
+        "checksum": "",
+        "action": "created"
+      },
+      {
+        "path": "knowledge/workspace/processed-files.json",
+        "type": "state",
+        "processedAt": "2026-05-30T15:36:00.000Z",
+        "checksum": "",
+        "action": "created"
+      },
+      {
+        "path": ".kato/state/current.json",
+        "type": "state",
+        "processedAt": "2026-05-30T15:37:00.000Z",
+        "checksum": "",
+        "action": "updated"
       }
     ],
     "stats": {
-      "totalProcessed": 4,
+      "totalProcessed": 8,
       "byType": {
-        "code": 4
+        "code": 4,
+        "wiki": 1,
+        "state": 3
       }
     }
   }

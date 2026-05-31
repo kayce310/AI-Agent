@@ -114,7 +114,7 @@ private maxToolCycles: number;
    * This is the main entry point — replaces Engine.process().
    */
   async run(request: EngineRequest): Promise<AgentResult> {
-    console.log(`🤖 [DEBUG] agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length}`);
+    console.log(`🤖 [DEBUG] agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length} model: ${request.modelId || 'default'}`);
     // Build messages from request
     const messages = this.buildMessages(request);
 
@@ -211,6 +211,7 @@ private maxToolCycles: number;
         });
 
         const modelResult = await this.modelRouter.route(messages, {
+          model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
           tools: selectedTools,
           maxTokens: 4096,
         });
