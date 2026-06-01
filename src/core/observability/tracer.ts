@@ -1,5 +1,5 @@
-/**
- * @file tracer — Observability module
+﻿/**
+ * @file tracer â€” Observability module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Tracer — O11y Tracing for Agent Lifecycle
+ * Kato Tracer â€” O11y Tracing for Agent Lifecycle
  * Phase 3.6
  *
  * Tracks every LLM invocation, tool call, memory access, and skill execution
@@ -19,7 +19,7 @@
 import { HookRegistry, HookContext, globalHooks } from '../hooks.js';
 import { evolutionEngine } from '../evolution.js';
 
-// ── Types ──────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type SpanType = 'llm' | 'tool' | 'memory' | 'skill' | 'task';
 
@@ -56,14 +56,14 @@ export interface Anomaly {
   message: string;
 }
 
-// ── Helpers ──
+// â”€â”€ Helpers â”€â”€
 
 let spanCounter = 0;
 function nextSpanId(): string {
   return `span_${Date.now()}_${++spanCounter}`;
 }
 
-// ── Tracer Class ──
+// â”€â”€ Tracer Class â”€â”€
 
 export class Tracer {
   private spans: TraceSpan[] = [];
@@ -80,7 +80,7 @@ export class Tracer {
     }
   }
 
-  // ── Span Lifecycle ──
+  // â”€â”€ Span Lifecycle â”€â”€
 
   /** Start a new span, optionally as child of the current active span */
   startSpan(name: string, type: SpanType, input?: unknown, parentId?: string): TraceSpan {
@@ -114,8 +114,8 @@ export class Tracer {
     }
 
     if (this.verbose) {
-      const status = error ? `❌` : `✅`;
-      console.log(`[Tracer] ${status} ${span.type}:${span.name} (${span.durationMs}ms)`);
+      const status = error ? `âŒ` : `âœ…`;
+      `);
     }
 
     // Feed performance data to evolution engine
@@ -165,7 +165,7 @@ export class Tracer {
     span.tags[key] = value;
   }
 
-  // ── Export / Query ──
+  // â”€â”€ Export / Query â”€â”€
 
   /** Get all spans in the buffer (newest first) */
   getSpans(): TraceSpan[] {
@@ -228,7 +228,7 @@ export class Tracer {
     };
   }
 
-  // ── Anomaly Detection ──
+  // â”€â”€ Anomaly Detection â”€â”€
 
   /** Detect anomalies based on collected spans */
   detectAnomalies(): Anomaly[] {
@@ -284,11 +284,11 @@ export class Tracer {
     return anomalies;
   }
 
-  // ── Hook Integration ──
+  // â”€â”€ Hook Integration â”€â”€
 
   /**
    * Attach to a HookRegistry and automatically start/end spans
-   * for model:invoke → model:response and tool:call → tool:result.
+   * for model:invoke â†’ model:response and tool:call â†’ tool:result.
    *
    * Also records errors from task:error and model:error.
    */
@@ -298,7 +298,7 @@ export class Tracer {
     // Track active spans by session+cycle key
     const activeSpans = new Map<string, TraceSpan>();
 
-    // ── Model invoke → response ──
+    // â”€â”€ Model invoke â†’ response â”€â”€
     target.on('model:invoke', async (ctx: HookContext) => {
       const data = ctx.data as Record<string, unknown>;
       const key = `${data.sessionId}:model:${data.cycle}`;
@@ -333,7 +333,7 @@ export class Tracer {
       }
     });
 
-    // ── Tool call → result ──
+    // â”€â”€ Tool call â†’ result â”€â”€
     // Note: this is an observer hook, not a guard.
     // Guards are registered via target.before() by the Agent.
     target.on('tool:call', async (ctx: HookContext) => {
@@ -357,7 +357,7 @@ export class Tracer {
       }
     });
 
-    // ── Task lifecycle ──
+    // â”€â”€ Task lifecycle â”€â”€
     target.on('task:start', async (ctx: HookContext) => {
       const data = ctx.data as Record<string, unknown>;
       const key = `${data.sessionId}:task`;
@@ -389,19 +389,19 @@ export class Tracer {
       }
     });
 
-    // ── Periodic anomaly check ──
+    // â”€â”€ Periodic anomaly check â”€â”€
     // Run after every tool:result
     target.on('tool:result', async (_ctx: HookContext) => {
       const anomalies = this.detectAnomalies();
       if (anomalies.length > 0 && this.verbose) {
         for (const a of anomalies) {
-          console.warn(`[Tracer] ⚠ Anomaly: ${a.message}`);
+          /* debug log removed */
         }
       }
     });
   }
 
-  // ── Private ──
+  // â”€â”€ Private â”€â”€
 
   private pushSpan(span: TraceSpan): void {
     this.spans.push(span);

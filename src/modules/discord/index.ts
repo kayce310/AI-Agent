@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Kato Discord Bridge — PlatformAdapter for Discord
  * @layer modules
  * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
@@ -84,7 +84,7 @@ function tryAcquireMessageLock(messageId: string): boolean {
         const stats = fs.statSync(lockFile);
         if (Date.now() - stats.mtimeMs > MSG_LOCK_TTL_MS) {
           fs.unlinkSync(lockFile);
-          console.log(`${ts()} ℹ️ Expired lock removed for message ${messageId}`);
+
         } else {
           return false;
         }
@@ -107,7 +107,7 @@ function releaseMessageLock(messageId: string): void {
     const lockFile = path.join(MSG_LOCK_DIR, `${messageId}.lock`);
     if (fs.existsSync(lockFile)) {
       fs.unlinkSync(lockFile);
-      console.log(`${ts()} 🔓 Lock released for message ${messageId}`);
+
     }
   } catch {}
 }
@@ -197,7 +197,7 @@ export class DiscordBridge implements PlatformAdapter {
             }
           } catch {}
           if (alive) {
-            console.error(`${ts()} ⚠️ Another Kato instance (PID ${pid}) already running. Exiting.`);
+
             process.exit(0);
           } else {
             // Stale lock — replace
@@ -212,7 +212,7 @@ export class DiscordBridge implements PlatformAdapter {
 
     await this.client.login(token);
     this.status = 'running';
-    console.log(`${ts()} ✅ Kato Discord Bot đã sẵn sàng (platform: ${this.platform})`);
+
   }
 
   /**
@@ -224,9 +224,9 @@ export class DiscordBridge implements PlatformAdapter {
     this.status = 'stopping';
     try {
       this.client.destroy();
-      console.log(`${ts()} 🔌 Discord client destroyed`);
+
     } catch (err: any) {
-      console.warn(`${ts()} ⚠️ Discord stop warning: ${err.message}`);
+
     }
 
     // Cleanup PID file
@@ -238,7 +238,7 @@ export class DiscordBridge implements PlatformAdapter {
     this.processingMessages.clear();
     this.statusMessage.clear();
     this.status = 'stopped';
-    console.log(`${ts()} ✅ Discord adapter stopped`);
+
   }
 
   /**
@@ -249,13 +249,13 @@ export class DiscordBridge implements PlatformAdapter {
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (!channel || !channel.isTextBased()) {
-        console.warn(`${ts()} ⚠️ Discord: cannot send to channel ${channelId} — not a text channel`);
+
         return null;
       }
       const sent = await (channel as any).send(content);
       return sent.id;
     } catch (err: any) {
-      console.error(`${ts()} ❌ Discord sendMessage failed: ${err.message}`);
+
       return null;
     }
   }
@@ -266,7 +266,7 @@ export class DiscordBridge implements PlatformAdapter {
 
   private registerEventHandlers(): void {
     this.client.once('clientReady', () => {
-      console.log(`${ts()} ✅ Kato Discord Bot is ready`);
+
     });
 
     this.client.on('messageCreate', async (message: Message) => {
@@ -292,19 +292,18 @@ export class DiscordBridge implements PlatformAdapter {
 
       // ── Dedup ──
       if (this.processingMessages.has(message.id)) {
-        console.log(`${ts()} ⚠️ Duplicate event for message ${message.id}, skipping`);
+
         return;
       }
 
       if (!tryAcquireMessageLock(message.id)) {
-        console.log(`${ts()} ⚠️ Cross-instance duplicate for message ${message.id}, skipping`);
+
         return;
       }
 
       this.processingMessages.add(message.id);
 
       try {
-        console.log(`${ts()} ✅ Discord -> Gateway: forwarding message (id: ${message.id})`);
 
         // Convert to AdapterMessage
         const adapterMsg: AdapterMessage = {
@@ -364,8 +363,6 @@ export class DiscordBridge implements PlatformAdapter {
               }
               editSucceeded = true;
             } catch (editErr) {
-              console.warn(`⚠️ Failed to edit message: ${editErr instanceof Error ? editErr.message : String(editErr)}`);
-              try { await initialMsg.delete(); } catch {}
               try {
                 await message.reply(chunks[0]);
                 for (let i = 1; i < chunks.length; i++) {
@@ -373,12 +370,11 @@ export class DiscordBridge implements PlatformAdapter {
                 }
                 editSucceeded = true;
               } catch (replyErr) {
-                console.error(`❌ Failed to send response: ${replyErr instanceof Error ? replyErr.message : String(replyErr)}`);
+
               }
             }
 
             if (editSucceeded) {
-              console.log(`${ts()} ✅ Discord <- Gateway: response sent (${chunks.length} chunk(s))`);
             }
           } else {
             // No response — update the initial message
@@ -388,7 +384,7 @@ export class DiscordBridge implements PlatformAdapter {
           }
         }
       } catch (err: any) {
-        console.error(`${ts()} ❌ Discord processing failed for message ${message.id}:`, err instanceof Error ? err.message : String(err));
+
       } finally {
         this.statusMessage.delete(message.channelId);
         this.processingMessages.delete(message.id);
@@ -399,3 +395,4 @@ export class DiscordBridge implements PlatformAdapter {
 }
 
 export default DiscordBridge;
+

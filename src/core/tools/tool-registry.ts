@@ -1,5 +1,5 @@
-/**
- * @file Tool Registry — Central Registry For All Tools
+﻿/**
+ * @file Tool Registry â€” Central Registry For All Tools
  * @layer core
  * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts
  * @imported-by src/core/engine/engine.ts, src/core/tools/tool-pruner.ts, src/core/tools/tools.ts
@@ -9,18 +9,18 @@
  * Phase 3.1b: AST-based auto-discovery (Micro-Task 50)
  *
  * API:
- *   registry.use(plugin)             — Register a tool plugin
- *   registry.registerAll(scanner?)   — Auto-discover & register via AST scan
- *   registry.getDefinitions()        — Get OpenAI-compatible tool definitions
- *   registry.execute(name, args)     — Execute a tool by name
- *   registry.executeToolCall(toolCall) — Backward-compat wrapper for ReAct loop
+ *   registry.use(plugin)             â€” Register a tool plugin
+ *   registry.registerAll(scanner?)   â€” Auto-discover & register via AST scan
+ *   registry.getDefinitions()        â€” Get OpenAI-compatible tool definitions
+ *   registry.execute(name, args)     â€” Execute a tool by name
+ *   registry.executeToolCall(toolCall) â€” Backward-compat wrapper for ReAct loop
  */
 
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export interface ToolSchema {
   type: 'object';
@@ -42,18 +42,18 @@ export interface ToolPlugin {
   onRegister?(registry: ToolRegistry): void;
 }
 
-// ── Forward declarations (avoid circular dep) ──
+// â”€â”€ Forward declarations (avoid circular dep) â”€â”€
 import type { ASTScanner, ScannerManifest } from './ast-scanner.js';
 
-// ── Base Constants ──
+// â”€â”€ Base Constants â”€â”€
 
 export const BASE_PATH = path.resolve(process.cwd());
 const PROCESSED_FILES_PATH = path.join(BASE_PATH, 'knowledge/workspace/processed-files.json');
 
-// ── Shared Utilities ──
+// â”€â”€ Shared Utilities â”€â”€
 
 const SAFE_PATHS = [
-  // ⚠️ ROOT repo path REMOVED — too permissive, bypasses all restrictions
+  // âš ï¸ ROOT repo path REMOVED â€” too permissive, bypasses all restrictions
   path.resolve(BASE_PATH, 'src'),
   path.resolve(BASE_PATH, 'knowledge'),
   path.resolve(BASE_PATH, 'config'),
@@ -86,7 +86,7 @@ function addProcessedFile(entry: {
     });
     secureRuntime.safeWriteFile(PROCESSED_FILES_PATH, JSON.stringify(data, null, 2));
   } catch (err) {
-    console.warn('⚠️ Could not write to processed-files.json:', (err as Error).message);
+    .message);
   }
 }
 
@@ -95,7 +95,7 @@ function toFileUrl(filePath: string): string {
   return 'file:///' + resolved;
 }
 
-// ── ToolRegistry Class ──
+// â”€â”€ ToolRegistry Class â”€â”€
 
 export class ToolRegistry {
   private toolsMap = new Map<string, Tool>();
@@ -109,7 +109,7 @@ export class ToolRegistry {
 
     for (const tool of plugin.tools) {
       if (this.toolsMap.has(tool.name)) {
-        console.warn(`⚠️ Tool "${tool.name}" already registered. Overwriting.`);
+        /* debug log removed */
       }
       this.toolsMap.set(tool.name, tool);
     }
@@ -118,7 +118,7 @@ export class ToolRegistry {
       plugin.onRegister(this);
     }
 
-    console.log(`🔧 Plugin "${plugin.name}" registered (${plugin.tools.length} tools)`);
+    `);
   }
 
   /**
@@ -192,7 +192,7 @@ export class ToolRegistry {
    * then dynamically imports and registers valid plugins.
    *
    * Uses checksum-based caching to skip re-scanning when source files
-   * have not changed — ensuring minimal cold-start overhead.
+   * have not changed â€” ensuring minimal cold-start overhead.
    *
    * @param scanner Optional ASTScanner instance (defaults to singleton)
    * @returns ScannerManifest with full scan report
@@ -207,11 +207,11 @@ export class ToolRegistry {
     // Phase 2: Report results
     if (manifest.errors.length > 0) {
       for (const err of manifest.errors) {
-        console.warn(`⚠️ AST Scanner: ${err.file} — ${err.message}`);
+        /* debug log removed */
       }
     }
     if (manifest.imported > 0) {
-      console.log(`🔍 AST Scanner: ${manifest.imported}/${manifest.discovered} plugins registered (${this.toolsMap.size} total tools)`);
+      `);
     }
 
     return manifest;
@@ -239,7 +239,7 @@ export class ToolRegistry {
   }
 }
 
-// ── Singleton Instance ──
+// â”€â”€ Singleton Instance â”€â”€
 // All built-in plugins are auto-registered here.
 // Engine imports this singleton.
 
@@ -272,10 +272,10 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
       if (mod.default && mod.default.name && mod.default.tools) {
         registry.use(mod.default);
       } else {
-        console.warn(`⚠️ Plugin "${name}" at ${modulePath} has no valid default export`);
+        /* debug log removed */
       }
     } catch (err: any) {
-      console.warn(`⚠️ Failed to load plugin "${name}" from ${modulePath}: ${err.message}`);
+      /* debug log removed */
     }
   }
   // Phase 2a: Auto-discovery via AST Scanner (Micro-Task 50)
@@ -283,13 +283,13 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
     try {
       await registry.registerAll();
     } catch (err: any) {
-      console.warn(`⚠️ AST auto-discovery skipped: ${err.message}`);
+      /* debug log removed */
     }
   }
 
-  console.log(`✅ ToolRegistry ready: ${registry.toolCount} tools registered`);
+  /* debug log removed */
 }
 
-// Re-export safe utilities only (NO raw fs/execSync — use tool-gateway.ts)
+// Re-export safe utilities only (NO raw fs/execSync â€” use tool-gateway.ts)
 export { addProcessedFile, isPathSafe, toFileUrl, secureRuntime, WORKSPACE_ROOT };
 export default ToolRegistry;

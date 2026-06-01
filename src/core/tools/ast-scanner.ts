@@ -1,25 +1,25 @@
-/**
- * @file AST Scanner — Auto-discovery Engine for Tool Plugins
+﻿/**
+ * @file AST Scanner â€” Auto-discovery Engine for Tool Plugins
  * @layer core
  * @depends-on 
  * @owner core-tools
  *
  * ZERO-TRUST: This is an ENGINE component, not a tool plugin. It reads
- * source code (.ts files) from the project's own source tree — not user
+ * source code (.ts files) from the project's own source tree â€” not user
  * data. Uses raw `fs` for performance and to avoid secureRuntime path
  * validation (which would block reading source code from outside the
  * workspace during testing).
  *
- * No runtime code execution — AST parse only (syntax-safe).
- * `crypto` is a Node.js built-in — no file I/O.
+ * No runtime code execution â€” AST parse only (syntax-safe).
+ * `crypto` is a Node.js built-in â€” no file I/O.
  *
  * INSPIRED BY Hermes Agent (Nous Research v0.14.0):
- *   tools/registry.py → _module_registers_tools() + discover_builtin_tools()
- *   Uses `ast` (Python) → adapted to `typescript` Compiler API (TS)
+ *   tools/registry.py â†’ _module_registers_tools() + discover_builtin_tools()
+ *   Uses `ast` (Python) â†’ adapted to `typescript` Compiler API (TS)
  *
  * CACHE STRATEGY:
  *   Computes a checksum of { filename + mtimeMs } for every .ts file in scanDirs.
- *   If unchanged → loads cached manifest from knowledge/workspace/.kato-ast-cache.json.
+ *   If unchanged â†’ loads cached manifest from knowledge/workspace/.kato-ast-cache.json.
  *   Only re-parses AST when content has changed (new/modified/deleted files).
  */
 
@@ -29,7 +29,7 @@ import * as crypto from 'crypto';
 import * as ts from 'typescript';
 import type { ToolPlugin, ToolRegistry } from './tool-registry.js';
 
-// ── Public Types ──
+// â”€â”€ Public Types â”€â”€
 
 /** Structured result of a complete scan + registration pass */
 export interface ScannerManifest {
@@ -48,7 +48,7 @@ export interface ScannerManifest {
 }
 
 export interface ScannedPlugin {
-  /** Plugin name — extracted from AST or cached */
+  /** Plugin name â€” extracted from AST or cached */
   name: string;
   /** Absolute path to the source file */
   sourceFile: string;
@@ -83,7 +83,7 @@ export interface ScannerConfig {
   noCache: boolean;
 }
 
-// ── Defaults ──
+// â”€â”€ Defaults â”€â”€
 
 const DEFAULT_CONFIG: Required<ScannerConfig> = {
   scanDirs: [
@@ -104,7 +104,7 @@ const DEFAULT_CONFIG: Required<ScannerConfig> = {
   noCache: false,
 };
 
-// ── Cache entry shape ──
+// â”€â”€ Cache entry shape â”€â”€
 
 interface CacheEntry {
   checksum: string;
@@ -112,7 +112,7 @@ interface CacheEntry {
   plugins: ScannedPlugin[];
 }
 
-// ── AST Scanner ──
+// â”€â”€ AST Scanner â”€â”€
 
 export class ASTScanner {
   private config: Required<ScannerConfig>;
@@ -121,9 +121,9 @@ export class ASTScanner {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  // ──────────────────────────────────────────────
-  // Public API — scan directories, return manifest
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Public API â€” scan directories, return manifest
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Scan configured directories, parse AST of candidate files,
@@ -141,12 +141,12 @@ export class ASTScanner {
     if (!this.config.noCache) {
       const cached = this.tryLoadCache(checksum);
       if (cached) {
-        console.log(`🔍 AST Scanner: cache HIT (${cached.plugins.length} plugins, ${cached.plugins.reduce((s, p) => s + p.toolCount, 0)} tools)`);
+         => s + p.toolCount, 0)} tools)`);
         return cached.plugins;
       }
     }
 
-    // 3. Cache miss → full AST scan
+    // 3. Cache miss â†’ full AST scan
     const pluginFiles = this.findCandidateFiles();
     const plugins: ScannedPlugin[] = [];
 
@@ -164,7 +164,7 @@ export class ASTScanner {
 
     const elapsed = Math.round(performance.now() - start);
     if (plugins.length > 0) {
-      console.log(`🔍 AST Scanner: cache MISS — scanned ${plugins.length} plugin files in ${elapsed}ms`);
+      /* debug log removed */
     }
 
     return plugins;
@@ -225,9 +225,9 @@ export class ASTScanner {
     return manifest;
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Checksum / Cache
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Compute a combined SHA-256 hash of all relevant .ts files:
@@ -275,7 +275,7 @@ export class ASTScanner {
       if (entry && entry.checksum === checksum) {
         return entry;
       }
-    } catch { /* corrupted or missing cache → treat as miss */ }
+    } catch { /* corrupted or missing cache â†’ treat as miss */ }
     return null;
   }
 
@@ -293,13 +293,13 @@ export class ASTScanner {
       };
       fs.writeFileSync(cacheFile, JSON.stringify(entry, null, 2), 'utf-8');
     } catch (err) {
-      console.warn(`⚠️ AST Scanner: could not write cache — ${(err as Error).message}`);
+      .message}`);
     }
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // File Discovery
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private findCandidateFiles(): string[] {
     const candidates: string[] = [];
@@ -333,9 +333,9 @@ export class ASTScanner {
     return candidates;
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // AST Parsing
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Parse a single .ts file and check whether it exports a ToolPlugin.
@@ -515,9 +515,9 @@ export class ASTScanner {
     return result;
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Helpers
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   private fileToUrl(filePath: string): string {
     const normalized = filePath.replace(/\\/g, '/');
@@ -526,7 +526,7 @@ export class ASTScanner {
   }
 }
 
-// ── Module-level singleton ──
+// â”€â”€ Module-level singleton â”€â”€
 let _defaultScanner: ASTScanner | null = null;
 
 export function getDefaultScanner(config?: Partial<ScannerConfig>): ASTScanner {
@@ -537,3 +537,4 @@ export function getDefaultScanner(config?: Partial<ScannerConfig>): ASTScanner {
 }
 
 export default ASTScanner;
+

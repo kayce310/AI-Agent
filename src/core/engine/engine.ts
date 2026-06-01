@@ -112,8 +112,7 @@ export class Engine extends EventEmitter {
           type: block.type, sessionId: block.sessionId, tags: block.tags, entities: block.entities,
         });
       }
-      console.log(`🧠 Temporal Memory: loaded ${existingBlocks.length} blocks from MemoryStore`);
-    } catch { console.warn('⚠️ Could not migrate existing blocks to Temporal Memory'); }
+    } catch { /* silent */ }
 
     this.agent.onEvent('tool:result', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
@@ -145,22 +144,21 @@ export class Engine extends EventEmitter {
       try {
         const content = await readFile(fp, 'utf8');
         identityParts.push(`--- ${fp} ---\n${content}`);
-        console.log(`🧬 Kato Identity loaded: ${fp}`);
-      } catch { console.warn(`⚠️ Could not load Kato identity file: ${fp}`); }
+      } catch { /* silent */ }
     }
     this.katoIdentityContext = identityParts.join('\n\n');
     if (process.env.KATO_WARMUP !== 'false') {
       this.warmup().catch(() => {});
     }
     const adapters = this.modelRouter.listAdapters();
-    console.log(`✅ Engine initialized with ${adapters.length} model adapter(s)`);
+    /* Engine initialized */
   }
 
   private async warmup(): Promise<void> {
     try {
       const start = Date.now();
       await this.modelRouter.route([{ role: 'user', content: 'ping' }], { maxTokens: 10 });
-      console.log(`🔥 Cold start warmup: ${Date.now() - start}ms`);
+      /* warmup complete */
     } catch { /* silent */ }
   }
 
@@ -234,7 +232,15 @@ export class Engine extends EventEmitter {
         providerUsed: result.providerUsed,
       };
     } catch (agentErr: any) {
-      console.error(`❌ Agent error:`, agentErr.message);
+      /* debug log removed */
+      evolutionEngine.recordError({
+        modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
+        errorType: 'ENGINE_AGENT_FAILED',
+        errorMessage: agentErr.message,
+        stackTrace: agentErr.stack,
+        sessionId: request.sessionId || 'unknown',
+        contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
+      }).catch(() => {});
       return {
         content: `❌ Lỗi khi xử lý: ${agentErr.message}`,
         modelUsed: 'none',

@@ -1,5 +1,5 @@
-/**
- * @file skill-runtime — Agent module
+﻿/**
+ * @file skill-runtime â€” Agent module
  * @layer core
  * @depends-on src/core/types.ts, src/core/tools/tool-registry.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,28 +7,28 @@
  */
 
 /**
- * Kato Agent — SkillRuntime (Executable Skill System)
- * Phase 3.7 — Skill Runtime
+ * Kato Agent â€” SkillRuntime (Executable Skill System)
+ * Phase 3.7 â€” Skill Runtime
  *
  * Skills are no longer just markdown context. They are executable modules with:
- * - Lifecycle hooks (load → activate → handle → deactivate)
+ * - Lifecycle hooks (load â†’ activate â†’ handle â†’ deactivate)
  * - Trigger patterns (keyword/regex matching for automatic activation)
  * - Lazy-loading from knowledge/wiki/skills/
  * - Integration with HookRegistry (skill:load / skill:unload events)
  *
  * Architecture:
- *   SkillRuntime ──load()──> SkillInstance (active)
- *         │                       │
- *         ├── load(skill)         ├── onActivate()
- *         ├── unload(name)        ├── onTask(task) → SkillResult | null
- *         └── getActiveSkills()   └── onDeactivate()
+ *   SkillRuntime â”€â”€load()â”€â”€> SkillInstance (active)
+ *         â”‚                       â”‚
+ *         â”œâ”€â”€ load(skill)         â”œâ”€â”€ onActivate()
+ *         â”œâ”€â”€ unload(name)        â”œâ”€â”€ onTask(task) â†’ SkillResult | null
+ *         â””â”€â”€ getActiveSkills()   â””â”€â”€ onDeactivate()
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { HookRegistry } from '../hooks.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export interface SkillTrigger {
   type: 'keyword' | 'regex' | 'event';
@@ -79,11 +79,11 @@ export interface ActiveSkill {
   context: SkillContext;
 }
 
-// ── Default Triggers from Frontmatter / Tags ──
+// â”€â”€ Default Triggers from Frontmatter / Tags â”€â”€
 
 /**
  * Derive default triggers from skill tags and name.
- * E.g., a skill tagged "react" → trigger keyword "react"
+ * E.g., a skill tagged "react" â†’ trigger keyword "react"
  */
 function deriveTriggers(name: string, tags: string[]): SkillTrigger[] {
   const triggers: SkillTrigger[] = [];
@@ -115,7 +115,7 @@ function deriveTriggers(name: string, tags: string[]): SkillTrigger[] {
   return triggers;
 }
 
-// ── Skill Parser ──
+// â”€â”€ Skill Parser â”€â”€
 
 /**
  * Parse frontmatter from a markdown skill file to extract metadata.
@@ -151,7 +151,7 @@ function parseSkillMetadata(content: string): { tags: string[]; version: string 
   return { tags, version };
 }
 
-// ── SkillRuntime ──
+// â”€â”€ SkillRuntime â”€â”€
 
 export class SkillRuntime {
   private skillsDirs: string[];
@@ -292,7 +292,7 @@ export class SkillRuntime {
           });
         }
         // Default: just log activation
-        console.log(`[SKILL] Activated: ${name} v${def.version}`);
+        /* debug log removed */
       },
       onTask: async (task: Task) => {
         // Default behavior: return the markdown content as context output
@@ -334,7 +334,7 @@ export class SkillRuntime {
             version: def.version,
           });
         }
-        console.log(`[SKILL] Deactivated: ${name} v${def.version}`);
+        /* debug log removed */
       },
     };
 
@@ -416,7 +416,7 @@ export class SkillRuntime {
               break;
             }
           } catch {
-            // Invalid regex — skip
+            // Invalid regex â€” skip
           }
         }
       }
@@ -453,7 +453,7 @@ export class SkillRuntime {
   }
 }
 
-// ── Singleton ──
+// â”€â”€ Singleton â”€â”€
 export const globalSkillRuntime = new SkillRuntime();
 
 export default SkillRuntime;

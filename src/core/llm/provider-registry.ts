@@ -1,13 +1,13 @@
-/**
- * @file Kato Agent — Provider Registry
+﻿/**
+ * @file Kato Agent â€” Provider Registry
  * @layer core
  * @depends-on config/providers.json, .env (NINE_ROUTER_API_BASE)
  * @imported-by src/core/llm/llm.ts, src/core/engine/engine.ts
  * @owner core-llm
  *
- * Quản lý danh sách LLM Provider. Hoàn toàn "mù" về platform.
- * Load config từ file, cung cấp interface tìm model theo ID.
- * Hỗ trợ external 9Router thông qua biến môi trường NINE_ROUTER_API_BASE.
+ * Quáº£n lÃ½ danh sÃ¡ch LLM Provider. HoÃ n toÃ n "mÃ¹" vá» platform.
+ * Load config tá»« file, cung cáº¥p interface tÃ¬m model theo ID.
+ * Há»— trá»£ external 9Router thÃ´ng qua biáº¿n mÃ´i trÆ°á»ng NINE_ROUTER_API_BASE.
  */
 
 import OpenAI from 'openai';
@@ -30,7 +30,7 @@ export interface ProviderInvokeParams {
   tool_choice?: 'auto' | 'none';
 }
 
-/** Một provider đã được khởi tạo (có OpenAI client sẵn) */
+/** Má»™t provider Ä‘Ã£ Ä‘Æ°á»£c khá»Ÿi táº¡o (cÃ³ OpenAI client sáºµn) */
 class OpenAIBackedProvider implements IProviderClient {
   public baseUrl: string;
   public models: string[];
@@ -38,7 +38,7 @@ class OpenAIBackedProvider implements IProviderClient {
 
   constructor(config: LLMProviderConfig) {
     this.baseUrl = config.baseUrl;
-    // Normalize: support cả string[] và ModelSpec[]
+    // Normalize: support cáº£ string[] vÃ  ModelSpec[]
     this.models = config.models.map((m: any) => typeof m === 'string' ? m : m.id);
     this.client = new OpenAI({
       baseURL: config.baseUrl,
@@ -76,10 +76,10 @@ export class ProviderRegistry {
     this.configPath = configPath ?? path.join(process.cwd(), 'config', 'providers.json');
   }
 
-  /** Load providers từ file YAML */
+  /** Load providers tá»« file YAML */
   loadFromConfig(): void {
     if (!fs.existsSync(this.configPath)) {
-      console.warn(`⚠️ Provider config not found at ${this.configPath}, using defaults`);
+      /* debug log removed */
       this.registerDefaultProviders();
       return;
     }
@@ -88,7 +88,7 @@ export class ProviderRegistry {
     const parsed: ProviderConfigFile = JSON.parse(raw);
 
     if (!parsed?.providers || !Array.isArray(parsed.providers)) {
-      console.warn(`⚠️ Invalid provider config format, using defaults`);
+      /* debug log removed */
       this.registerDefaultProviders();
       return;
     }
@@ -96,28 +96,28 @@ export class ProviderRegistry {
     for (const cfg of parsed.providers) {
       // If 9router config has hardcoded baseUrl but env var exists, override
       if (cfg.name === '9router' && process.env.NINE_ROUTER_API_BASE) {
-        console.log(`✅ [ProviderRegistry] Overriding 9Router baseUrl from env: ${process.env.NINE_ROUTER_API_BASE}`);
+        /* debug log removed */
         cfg.baseUrl = process.env.NINE_ROUTER_API_BASE;
       }
       this.register(cfg);
     }
 
-    console.log(`✅ ProviderRegistry: loaded ${parsed.providers.length} providers, ${this.modelToProvider.size} models`);
+    /* debug log removed */
   }
 
-  /** Đăng ký một provider */
+  /** ÄÄƒng kÃ½ má»™t provider */
   register(config: LLMProviderConfig): void {
     const provider = new OpenAIBackedProvider(config);
     this.providers.set(config.name, provider);
 
-    // Normalize models: support cả string[] và ModelSpec[]
+    // Normalize models: support cáº£ string[] vÃ  ModelSpec[]
     const modelIds = config.models.map((m: any) => typeof m === 'string' ? m : m.id);
     for (const modelId of modelIds) {
       this.modelToProvider.set(modelId, config.name);
     }
   }
 
-  /** Resolve provider cho một model ID */
+  /** Resolve provider cho má»™t model ID */
   resolve(modelId: string): { provider: IProviderClient; providerName: string } | null {
     const providerName = this.modelToProvider.get(modelId);
     if (!providerName) return null;
@@ -128,17 +128,17 @@ export class ProviderRegistry {
     return { provider, providerName };
   }
 
-  /** Kiểm tra model có tồn tại không */
+  /** Kiá»ƒm tra model cÃ³ tá»“n táº¡i khÃ´ng */
   hasModel(modelId: string): boolean {
     return this.modelToProvider.has(modelId);
   }
 
-  /** Danh sách tất cả model có sẵn */
+  /** Danh sÃ¡ch táº¥t cáº£ model cÃ³ sáºµn */
   listModels(): string[] {
     return Array.from(this.modelToProvider.keys());
   }
 
-  /** Lấy danh sách ModelSpec đầy đủ */
+  /** Láº¥y danh sÃ¡ch ModelSpec Ä‘áº§y Ä‘á»§ */
   getModelSpecs(): ModelSpec[] {
     const specs: ModelSpec[] = [];
     if (!fs.existsSync(this.configPath)) return [];
@@ -165,12 +165,12 @@ export class ProviderRegistry {
     return provider.getRawClient();
   }
 
-  /** Register default providers từ env vars (fallback khi không có config) */
+  /** Register default providers tá»« env vars (fallback khi khÃ´ng cÃ³ config) */
   private registerDefaultProviders(): void {
     // 9Router external service takes priority if configured
     const nineRouterBase = process.env.NINE_ROUTER_API_BASE;
     if (nineRouterBase) {
-      console.log(`✅ [ProviderRegistry] Using external 9Router: ${nineRouterBase}`);
+      /* debug log removed */
       this.register({
         name: '9router',
         baseUrl: nineRouterBase,

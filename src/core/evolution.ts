@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file evolution — Evolution engine
  * @layer core
  * @depends-on src/core/types.ts
@@ -100,11 +100,9 @@ export class EvolutionEngine {
       const raw = await fs.readFile(this.statePath, 'utf8');
       const parsed = JSON.parse(raw);
       this.state = this.mergeWithDefaults(parsed);
-      console.log(`🧬 Evolution Engine loaded: ${this.state.meta.totalErrorsTracked} errors, ${this.state.meta.activeRules} rules`);
     } catch {
       this.state = this.getDefaultState();
       await this.persist();
-      console.log(`🧬 Evolution Engine initialized fresh`);
     }
     this.initialized = true;
   }
@@ -119,7 +117,6 @@ export class EvolutionEngine {
     // Nếu lỗi đã tồn tại → không ghi duplicate, chỉ tăng counter
     const existing = this.state.errors.find(e => e.fingerprint === errorFingerprint);
     if (existing) {
-      console.log(`⏭️ Duplicate error (fingerprint=${errorFingerprint}), skipping`);
       return;
     }
 
@@ -155,7 +152,6 @@ export class EvolutionEngine {
     await this.evaluateRules(record);
 
     await this.persist();
-    console.log(`📝 Error recorded: ${record.errorType} @ ${record.modelId} (fingerprint=${errorFingerprint})`);
   }
 
   /** Ghi nhận một cuộc gọi model thành công */
@@ -186,7 +182,7 @@ export class EvolutionEngine {
     // Nếu tỷ lệ lỗi > 50% và đã gọi ít nhất 5 lần → skip
     const failureRate = perf.failedCalls / perf.totalCalls;
     if (perf.totalCalls >= 5 && failureRate > 0.5) {
-      console.log(`⏭️ Auto-skip ${modelId} (failure rate: ${(failureRate * 100).toFixed(1)}%)`);
+      /* auto-skip model */
       return true;
     }
 
@@ -237,7 +233,7 @@ export class EvolutionEngine {
       if (matchCount >= rule.threshold) {
         rule.active = true;
         rule.activatedAt = new Date().toISOString();
-        console.log(`🧬 Rule activated: ${rule.description} (${rule.action})`);
+        /* rule activated */
 
         // Thực thi action
         await this.executeRuleAction(rule);
@@ -249,19 +245,14 @@ export class EvolutionEngine {
   private async executeRuleAction(rule: EvolutionRule): Promise<void> {
     switch (rule.action) {
       case 'skip_model':
-        console.log(`🛑 Marking model ${rule.value} for auto-skip`);
         break;
       case 'add_cooldown':
-        console.log(`❄️ Extending cooldown to ${rule.value}h due to evolution rule`);
         break;
       case 'use_fallback':
-        console.log(`⬇️ Switching to fallback ${rule.value}`);
         break;
       case 'retry_less':
-        console.log(`🔽 Reducing max retries to ${rule.value}`);
         break;
       case 'load_skill':
-        console.log(`📚 Loading skill ${rule.value} as mitigation`);
         break;
     }
   }
@@ -273,7 +264,7 @@ export class EvolutionEngine {
       active: false,
     });
     await this.persist();
-    console.log(`📏 Rule added: ${rule.description} (threshold=${rule.threshold})`);
+
   }
 
   /** Load mặc định các rule mẫu */
@@ -364,7 +355,6 @@ export class EvolutionEngine {
       });
     });
 
-    console.log('🧬 EvolutionEngine attached to HookRegistry');
   }
 
   /** Lấy danh sách errors gần đây */

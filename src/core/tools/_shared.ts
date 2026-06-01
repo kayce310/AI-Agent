@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Shared utilities for tool plugins
  * @layer core
  * @depends-on src/core/tools/path-utils.ts
@@ -64,10 +64,10 @@ export function addProcessedFile(entry: {
     };
 
     secureRuntime.safeWriteFile('knowledge/workspace/processed-files.json', JSON.stringify(data, null, 2));
-    console.log(`📝 auto-mark processed: ${entry.path} (${entry.action})`);
+    `);
     return true;
   } catch (err: any) {
-    console.error(`❌ Failed to mark processed file: ${err.message}`);
+    /* debug log removed */
     return false;
   }
 }
@@ -101,3 +101,4 @@ export function isCommandSafe(command: string): boolean {
   const trimmed = command.trim().toLowerCase();
   return COMMAND_WHITELIST_PREFIXES.some(prefix => trimmed.startsWith(prefix));
 }
+

@@ -1,23 +1,23 @@
-/**
- * @file hooks — Event lifecycle hooks
+﻿/**
+ * @file hooks â€” Event lifecycle hooks
  * @layer core
- * @depends-on (none — standalone)
+ * @depends-on (none â€” standalone)
  * @imported-by src/core/engine/engine.ts
  * @owner core-hooks
  */
 
 /**
- * Kato Agent — HookRegistry (Event Lifecycle System)
- * Phase 3.5 — Event-driven Engine
+ * Kato Agent â€” HookRegistry (Event Lifecycle System)
+ * Phase 3.5 â€” Event-driven Engine
  *
- * Cho phép plugins can thiệp vào agent lifecycle:
- * - Logging: ghi lại mọi tool call
- * - Security: guard trước khi execute tool
- * - Memory: tự động lưu context
+ * Cho phÃ©p plugins can thiá»‡p vÃ o agent lifecycle:
+ * - Logging: ghi láº¡i má»i tool call
+ * - Security: guard trÆ°á»›c khi execute tool
+ * - Memory: tá»± Ä‘á»™ng lÆ°u context
  * - Tracing: span tracking cho o11y
  */
 
-// ── Event Types ──
+// â”€â”€ Event Types â”€â”€
 export type EventType =
   | 'task:start'
   | 'task:complete'
@@ -33,7 +33,7 @@ export type EventType =
   | 'model:error'
   | 'skill:load'
   | 'skill:unload'
-  // Phase 5.2 — Orchestrator events
+  // Phase 5.2 â€” Orchestrator events
   | 'orchestrator:decompose-start'
   | 'orchestrator:decompose-end'
   | 'orchestrator:execute-start'
@@ -41,7 +41,7 @@ export type EventType =
   | 'orchestrator:synthesize-start'
   | 'orchestrator:synthesize-end';
 
-// ── Hook Context ──
+// â”€â”€ Hook Context â”€â”€
 export interface HookContext {
   event: EventType;
   timestamp: string;
@@ -56,7 +56,7 @@ export interface AgentHook {
   priority?: number; // higher = runs first, default 0
 }
 
-// ── Guard Types ──
+// â”€â”€ Guard Types â”€â”€
 export interface GuardResult {
   allowed: boolean;
   reason?: string;
@@ -70,7 +70,7 @@ export interface AgentGuard {
   priority?: number;
 }
 
-// ── HookRegistry ──
+// â”€â”€ HookRegistry â”€â”€
 export class HookRegistry {
   private hooks = new Map<EventType, AgentHook[]>();
   private guards = new Map<EventType, AgentGuard[]>();
@@ -134,26 +134,26 @@ export class HookRegistry {
       data,
     };
 
-    // ── Guards (run first) ──
+    // â”€â”€ Guards (run first) â”€â”€
     const guards = this.guards.get(event);
     if (guards && guards.length > 0) {
       for (const guard of guards) {
         try {
           const result = await guard.handler(ctx);
           if (!result.allowed) {
-            console.warn(`[GUARD:${event}] Blocked: ${result.reason ?? 'no reason'}`);
+            /* debug log removed */
             return false;
           }
         } catch (err) {
-          console.error(`[GUARD:${event}] Error in guard:`, err);
-          // Guard error → block by default (fail-closed)
-          console.warn(`[GUARD:${event}] Blocked due to guard error`);
+          /* debug log removed */
+          // Guard error â†’ block by default (fail-closed)
+          /* debug log removed */
           return false;
         }
       }
     }
 
-    // ── Hooks ──
+    // â”€â”€ Hooks â”€â”€
     const handlers = this.hooks.get(event);
     if (!handlers || handlers.length === 0) return true;
 
@@ -161,8 +161,8 @@ export class HookRegistry {
       try {
         await hook.handler(ctx);
       } catch (err) {
-        console.error(`[HOOK:${event}] Error in handler:`, err);
-        // Don't throw — let other handlers run
+        /* debug log removed */
+        // Don't throw â€” let other handlers run
       }
     }
 
@@ -198,7 +198,7 @@ export class HookRegistry {
   }
 }
 
-// ── Singleton ──
+// â”€â”€ Singleton â”€â”€
 export const globalHooks = new HookRegistry();
 
 export default HookRegistry;

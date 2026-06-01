@@ -1,5 +1,5 @@
-/**
- * @file model-adapter — LLM adapter
+﻿/**
+ * @file model-adapter â€” LLM adapter
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,11 +7,11 @@
  */
 
 /**
- * Kato Agent — Model Adapter (Multi-Provider Abstraction)
- * Phase 3.2 — cho phép fallback chain + multi-provider.
+ * Kato Agent â€” Model Adapter (Multi-Provider Abstraction)
+ * Phase 3.2 â€” cho phÃ©p fallback chain + multi-provider.
  *
- * Mỗi adapter wrap 1 provider (9router, LiteLLM, Ollama, OpenAI, Anthropic...)
- * ModelRouter quản lý danh sách adapter và fallback khi provider down.
+ * Má»—i adapter wrap 1 provider (9router, LiteLLM, Ollama, OpenAI, Anthropic...)
+ * ModelRouter quáº£n lÃ½ danh sÃ¡ch adapter vÃ  fallback khi provider down.
  */
 
 import OpenAI from 'openai';
@@ -21,7 +21,7 @@ import { evolutionEngine } from '../evolution.js';
 import path from 'path';
 import fs from 'fs';
 
-// ── Thinking Content Stripper ────────────────────────────────────
+// â”€â”€ Thinking Content Stripper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Some LLM providers (DeepSeek, OpenRouter) embed thinking/reasoning
 // content inside the main content field. This function strips it.
 
@@ -63,7 +63,7 @@ export function stripThinkingContent(content: string): string {
   return filtered.join('\n').trim();
 }
 
-// ── Interfaces ──────────────────────────────────────────────────
+// â”€â”€ Interfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ModelOptions {
   model?: string;
@@ -91,7 +91,7 @@ export interface ModelAdapter {
   isAvailable(): boolean;
 }
 
-// ── Token Estimator ─────────────────────────────────────────────
+// â”€â”€ Token Estimator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const AVG_CHARS_PER_TOKEN = 4;
 
@@ -107,7 +107,7 @@ function estimateToolsTokens(tools: any[]): number {
   return tools.reduce((sum, t) => sum + Math.ceil(JSON.stringify(t).length / AVG_CHARS_PER_TOKEN), 0);
 }
 
-// ── Adapter 1: 9Router (legacy proxy) ───────────────────────────
+// â”€â”€ Adapter 1: 9Router (legacy proxy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class RouterAdapter implements ModelAdapter {
   readonly name = '9router';
@@ -186,7 +186,7 @@ export class RouterAdapter implements ModelAdapter {
   }
 }
 
-// ── Adapter 2: LiteLLM Proxy ────────────────────────────────────
+// â”€â”€ Adapter 2: LiteLLM Proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface LiteLLMConfig {
   baseUrl: string;
@@ -274,7 +274,7 @@ export class LiteLLMAdapter implements ModelAdapter {
   }
 }
 
-// ── Adapter 3: Ollama (Local) ───────────────────────────────────
+// â”€â”€ Adapter 3: Ollama (Local) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface OllamaConfig {
   baseUrl?: string;
@@ -352,7 +352,7 @@ export class OllamaAdapter implements ModelAdapter {
   }
 }
 
-// ── ModelRouter: Fallback Chain ─────────────────────────────────
+// â”€â”€ ModelRouter: Fallback Chain â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class ModelRouter {
   private adapters: ModelAdapter[] = [];
@@ -364,7 +364,7 @@ export class ModelRouter {
     if (!this.defaultAdapter && adapter.isAvailable()) {
       this.defaultAdapter = adapter.name;
     }
-    console.log(`🔌 ModelRouter: registered adapter "${adapter.name}" (${adapter.label})`);
+
   }
 
   setDefault(name: string): void {
@@ -396,22 +396,21 @@ export class ModelRouter {
     for (const adapter of candidates) {
       try {
         if (!adapter.isAvailable()) {
-          console.warn(`⚠️ ModelRouter: skipping "${adapter.name}" (not available)`);
+
           continue;
         }
 
-        // ── DEBUG: Log tools being sent to API ──
+        // â”€â”€ DEBUG: Log tools being sent to API â”€â”€
         const toolNames = options?.tools?.map((t: any) => t.function?.name).join(', ') || 'none';
-        console.log(`📤 ModelRouter: trying adapter "${adapter.name}" | tools: [${toolNames}] (${options?.tools?.length || 0})`);
+
         const response = await adapter.invoke(messages, options);
-        console.log(`✅ ModelRouter: success via "${adapter.name}" (model: ${response.modelUsed})`);
 
         evolutionEngine.recordSuccess(adapter.name, 0).catch(() => {});
         this.lastError.delete(adapter.name);
 
         return response;
       } catch (err: any) {
-        console.warn(`⚠️ ModelRouter: adapter "${adapter.name}" failed: ${err.message}`);
+        /* debug log removed */
         this.lastError.set(adapter.name, err.message);
 
         evolutionEngine.recordError({
@@ -452,7 +451,7 @@ export class ModelRouter {
   }
 }
 
-// ── Default Adapter Builder ─────────────────────────────────────
+// â”€â”€ Default Adapter Builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<ModelRouter> {
   const router = new ModelRouter();
@@ -463,25 +462,26 @@ export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<M
     if (reg.listModels().length > 0) {
       router.use(new RouterAdapter(reg));
       router.setDefault('9router');
-      console.log('🔌 ModelRouter: 9router adapter registered as default');
+      /* debug log removed */
     }
   } catch (err: any) {
-    console.warn(`⚠️ ModelRouter: 9router config load failed: ${err.message}`);
+    /* debug log removed */
   }
 
   const litellm = LiteLLMAdapter.fromEnv();
   if (litellm) {
     router.use(litellm);
-    console.log('🔌 ModelRouter: LiteLLM adapter registered');
+    /* debug log removed */
   }
 
   const ollama = OllamaAdapter.fromEnv();
   if (ollama) {
     router.use(ollama);
-    console.log('🔌 ModelRouter: Ollama adapter registered');
+    /* debug log removed */
   }
 
   return router;
 }
 
 export default ModelRouter;
+

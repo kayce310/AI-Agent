@@ -1,14 +1,14 @@
-/**
- * @file output-guard — Security module
+﻿/**
+ * @file output-guard â€” Security module
  * @layer core
- * @depends-on (none — standalone)
+ * @depends-on (none â€” standalone)
  * @imported-by src/core/engine/engine.ts
  * @owner core-security
  */
 
 /**
- * Kato OutputGuard — Response Validation & Sanitization
- * Phase 8.2b — Output Security
+ * Kato OutputGuard â€” Response Validation & Sanitization
+ * Phase 8.2b â€” Output Security
  *
  * Validates LLM output before returning to caller:
  * - PII/secret leakage detection
@@ -19,7 +19,7 @@
 
 import type { SecuritySeverity } from '../types.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export type OutputCheckSeverity = 'error' | 'warn' | 'info';
 
@@ -51,7 +51,7 @@ export interface OutputGuardConfig {
   autoSanitize?: boolean;
 }
 
-// ── Patterns ──
+// â”€â”€ Patterns â”€â”€
 
 const API_KEY_PATTERN = /(?:sk|pk|api[_-]?key|secret|token)[\s_-]?(?:=|:)\s*['"]?[a-zA-Z0-9_-]{20,}|(?:sk|pk)-[a-zA-Z0-9_-]{20,}/gi;
 const BEARER_PATTERN = /bearer\s+[a-zA-Z0-9._-]{20,}/gi;
@@ -60,7 +60,7 @@ const IP_PATTERN = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
 const SCRIPT_PATTERN = /<script[\s>]/gi;
 const PROCESS_ENV_PATTERN = /process\.env\.[a-zA-Z_][a-zA-Z0-9_]*/g;
 
-// ── OutputGuard ──
+// â”€â”€ OutputGuard â”€â”€
 
 export class OutputGuard {
   private config: Required<OutputGuardConfig>;
@@ -97,7 +97,7 @@ export class OutputGuard {
     this.runCustomPatterns(output, checks, sanitizeRanges);
     this.runCustomChecks(output, checks, sanitizeRanges);
 
-    // ── Sanitization ──
+    // â”€â”€ Sanitization â”€â”€
     let sanitized: string | undefined;
     if (this.config.autoSanitize && sanitizeRanges.length > 0) {
       sanitized = this.sanitize(output, sanitizeRanges);
@@ -258,21 +258,21 @@ export class OutputGuard {
 
       if (!report.passed) {
         const errors = report.checks.filter((c) => c.severity === 'error');
-        console.warn(`[OutputGuard] ⚠️ ${errors.length} output check(s) failed:`);
+         failed:`);
         for (const e of errors) {
-          console.warn(`  - [${e.name}] ${e.message}`);
+          /* debug log removed */
         }
 
         if (report.sanitized) {
           data.output = report.sanitized;
-          console.warn('[OutputGuard] Output sanitized');
+          /* debug log removed */
         }
       }
     });
   }
 }
 
-// ── Helpers ──
+// â”€â”€ Helpers â”€â”€
 
 function maskString(s: string): string {
   if (s.length <= 4) return '****';

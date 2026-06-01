@@ -1,5 +1,5 @@
-/**
- * @file decomposer — Core Engine component
+﻿/**
+ * @file decomposer â€” Core Engine component
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
  * @imported-by src/scripts/start-discord.ts
@@ -7,8 +7,8 @@
  */
 
 /**
- * Kato Agent — Decomposer (Bernstein Deterministic Orchestration)
- * Phase 5.1a — 1 LLM call → structured task list
+ * Kato Agent â€” Decomposer (Bernstein Deterministic Orchestration)
+ * Phase 5.1a â€” 1 LLM call â†’ structured task list
  *
  * Wraps any ModelAdapter to decompose a complex user task into
  * a deterministic, ordered list of sub-tasks.
@@ -23,7 +23,7 @@
 
 import { ModelAdapter, ModelResponse } from '../llm/model-adapter.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export type TaskType = 'llm' | 'tool' | 'sop' | 'parallel';
 
@@ -42,7 +42,7 @@ export interface DecompositionResult {
   reasoning?: string;
 }
 
-// ── System Prompt ──
+// â”€â”€ System Prompt â”€â”€
 
 const DECOMPOSE_SYSTEM_PROMPT = `You are a task decomposition engine.
 Given a complex user task, break it down into a structured list of sub-tasks.
@@ -55,7 +55,7 @@ Each sub-task must include:
   - expectedOutput: what this sub-task should produce
 
 Rules:
-1. Order tasks by dependency — prerequisites come first
+1. Order tasks by dependency â€” prerequisites come first
 2. Parallel tasks share the same "requires" array and can run simultaneously
 3. Keep descriptions concrete and actionable (max 200 chars each)
 4. Include contextFiles if the task references specific files
@@ -69,7 +69,7 @@ Respond ONLY with a valid JSON object:
   "reasoning": "brief explanation of decomposition strategy"
 }`;
 
-// ── Decomposer Class ──
+// â”€â”€ Decomposer Class â”€â”€
 
 export class Decomposer {
   private model: ModelAdapter;
@@ -89,7 +89,7 @@ export class Decomposer {
     const messages = this.buildMessages(task, context);
 
     if (this.debug) {
-      console.log(`📋 Decomposer: decomposing "${task.substring(0, 60)}..."`);
+
     }
 
     let lastError: string | null = null;
@@ -110,21 +110,21 @@ export class Decomposer {
         this.validate(parsed, task);
 
         if (this.debug) {
-          console.log(`📋 Decomposer: ${parsed.subTasks.length} sub-tasks created`);
+          /* debug log removed */
         }
 
         return parsed;
       } catch (err: any) {
         lastError = err.message;
         if (this.debug) {
-          console.warn(`⚠️ Decomposer attempt ${attempt + 1} failed: ${err.message}`);
+          /* debug log removed */
         }
       }
     }
 
     // Fallback: return a single "do it" task
     if (this.debug) {
-      console.warn(`⚠️ Decomposer: using fallback (single task) after error: ${lastError}`);
+
     }
 
     return {
@@ -140,7 +140,7 @@ export class Decomposer {
     };
   }
 
-  // ── Private Helpers ──
+  // â”€â”€ Private Helpers â”€â”€
 
   private buildMessages(task: string, context?: string): any[] {
     const messages: any[] = [

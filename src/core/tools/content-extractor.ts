@@ -1,12 +1,12 @@
-/**
- * @file content-extractor — Tool plugin
+﻿/**
+ * @file content-extractor â€” Tool plugin
  * @layer core
  * @depends-on
  * @owner core-tools
  */
 
 /**
- * Kato Agent — Content Extractor
+ * Kato Agent â€” Content Extractor
  *
  * Extracts plain text, title, and links from HTML content.
  * Uses regex-based stripping (no cheerio dependency) to avoid bloat.
@@ -81,7 +81,7 @@ function stripHtml(html: string, maxChars: number = 3000): { text: string; wordC
 
   // Truncate to MAX_EXTRACTED_CHARS with warning
   if (cleaned.length > maxChars) {
-    console.warn(`⚠️ ContentExtractor: extracted text (${cleaned.length} chars) exceeds limit ${maxChars}, truncating`);
+     exceeds limit ${maxChars}, truncating`);
     cleaned = cleaned.substring(0, maxChars) + '...';
   }
 
@@ -146,8 +146,8 @@ function extractLinks(html: string, baseUrl: string, maxLinks: number = 10): str
 export function extractContent(html: string, url: string, contentType?: string): ExtractedContent {
   // Reject binary content early
   if (contentType && isBinaryContent(contentType, url)) {
-    console.warn(`⚠️ ContentExtractor: skipping binary content (type: ${contentType}, url: ${url})`);
-    return { title: '', text: '[Binary content — không thể trích xuất]', links: [], wordCount: 0 };
+    `);
+    return { title: '', text: '[Binary content â€” khÃ´ng thá»ƒ trÃ­ch xuáº¥t]', links: [], wordCount: 0 };
   }
 
   const title = extractTitle(html);
@@ -156,8 +156,9 @@ export function extractContent(html: string, url: string, contentType?: string):
 
   // Log if text exceeds threshold for monitoring
   if (wordCount > 1000) {
-    console.log(`📏 ContentExtractor: ${url} → ${text.length} chars, ${wordCount} words, ${links.length} links`);
+    /* debug log removed */
   }
 
   return { title, text, links, wordCount };
 }
+

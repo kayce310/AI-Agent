@@ -1,5 +1,5 @@
-/**
- * @file orchestrator — Core Engine component
+﻿/**
+ * @file orchestrator â€” Core Engine component
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
  * @imported-by src/scripts/start-discord.ts
@@ -7,11 +7,11 @@
  */
 
 /**
- * Kato Agent — Orchestrator (Bernstein Deterministic Orchestration Pipeline)
- * Phase 5.2 — Integrate Decomposer + PlanExecutor + ResultSynthesizer
+ * Kato Agent â€” Orchestrator (Bernstein Deterministic Orchestration Pipeline)
+ * Phase 5.2 â€” Integrate Decomposer + PlanExecutor + ResultSynthesizer
  *
  * Wraps the 3-phase pipeline into a single entry point:
- *   decompose → execute → synthesize
+ *   decompose â†’ execute â†’ synthesize
  *
  * Can be used standalone or via Engine.process() when a task is provided.
  */
@@ -25,7 +25,7 @@ import { HookRegistry, globalHooks } from '../hooks.js';
 import { evolutionEngine } from '../evolution.js';
 import { executeBootSequence } from './boot.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export interface OrchestratorOptions {
   model: ModelAdapter;
@@ -41,7 +41,7 @@ export interface OrchestrationResult {
   totalDurationMs: number;
 }
 
-// ── Orchestrator Class ──
+// â”€â”€ Orchestrator Class â”€â”€
 
 export class Orchestrator {
   private decomposer: Decomposer;
@@ -97,7 +97,7 @@ export class Orchestrator {
         if (dfs(node)) {
           // Find the cycle path for better error message
           const cyclePath = this.findCyclePath(graph, node);
-          return `Circular dependency detected: ${cyclePath.join(' → ')}`;
+          return `Circular dependency detected: ${cyclePath.join(' â†’ ')}`;
         }
       }
     }
@@ -137,17 +137,17 @@ export class Orchestrator {
   }
 
   /**
-   * Run the full orchestration pipeline: decompose → execute → synthesize.
+   * Run the full orchestration pipeline: decompose â†’ execute â†’ synthesize.
    * Emits hook events at each phase for observability.
    */
   async run(task: string, context?: string): Promise<OrchestrationResult> {
-    // ── Boot sequence check ──
+    // â”€â”€ Boot sequence check â”€â”€
     const boot = await executeBootSequence(process.cwd());
     if (boot.blocked) {
       const msg = `Boot sequence blocked: ${boot.reason}`;
-      console.error(`❌ ${msg}`);
+      /* debug log removed */
       if (boot.p0Items) {
-        console.error(`   P0 items: ${boot.p0Items.map(i => `[${i.id}] ${i.description}`).join('; ')}`);
+
       }
       throw new Error(msg);
     }
@@ -155,10 +155,10 @@ export class Orchestrator {
     const startTime = Date.now();
 
     if (this.debug) {
-      console.log(`🎬 Orchestrator: running pipeline for "${task.substring(0, 60)}..."`);
+
     }
 
-    // ── Phase 1: Decompose ──
+    // â”€â”€ Phase 1: Decompose â”€â”€
     await this.hooks.emit('orchestrator:decompose-start', { task });
 
     let decomposition: DecompositionResult;
@@ -180,13 +180,13 @@ export class Orchestrator {
       subTaskCount: decomposition.subTasks.length,
     });
 
-    // ── DAG Cycle Detection ──
+    // â”€â”€ DAG Cycle Detection â”€â”€
     const cycleError = this.detectCycle(decomposition.subTasks.map(st => ({
       id: st.id,
       requires: st.requires || []
     })));
     if (cycleError) {
-      console.error(`❌ DAG Cycle Detected: ${cycleError}`);
+      /* debug log removed */
       evolutionEngine.recordError({
         modelId: 'orchestrator',
         errorType: 'ORCHESTRATOR_DAG_CYCLE',
@@ -197,7 +197,7 @@ export class Orchestrator {
       throw new Error(`DAG Cycle Detected: ${cycleError}`);
     }
 
-    // ── Phase 2: Execute ──
+    // â”€â”€ Phase 2: Execute â”€â”€
     await this.hooks.emit('orchestrator:execute-start', {
       task,
       subTaskCount: decomposition.subTasks.length,
@@ -224,7 +224,7 @@ export class Orchestrator {
       totalDurationMs: report.totalDurationMs,
     });
 
-    // ── Phase 3: Synthesize ──
+    // â”€â”€ Phase 3: Synthesize â”€â”€
     await this.hooks.emit('orchestrator:synthesize-start', { task });
 
     let content: string;
@@ -246,7 +246,7 @@ export class Orchestrator {
     const totalDurationMs = Date.now() - startTime;
 
     if (this.debug) {
-      console.log(`🎬 Orchestrator: done in ${totalDurationMs}ms (${decomposition.subTasks.length} tasks, ${report.errorCount} errors)`);
+
     }
 
     return {

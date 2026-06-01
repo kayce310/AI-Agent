@@ -1,5 +1,5 @@
-/**
- * @file result-synthesizer — Core Engine component
+﻿/**
+ * @file result-synthesizer â€” Core Engine component
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
  * @imported-by src/scripts/start-discord.ts
@@ -7,20 +7,20 @@
  */
 
 /**
- * Kato Agent — ResultSynthesizer (Execution Summary → Human Response)
- * Phase 5.1c — final LLM call to synthesize execution results
+ * Kato Agent â€” ResultSynthesizer (Execution Summary â†’ Human Response)
+ * Phase 5.1c â€” final LLM call to synthesize execution results
  *
  * Takes an ExecutionReport (from PlanExecutor) and the original task,
  * then makes one LLM call to produce a coherent human-readable response.
  *
  * This is the "synthesize" step in the Bernstein pattern:
- *   decompose → execute → synthesize
+ *   decompose â†’ execute â†’ synthesize
  */
 
 import { ModelAdapter, ModelResponse } from '../llm/model-adapter.js';
 import { ExecutionReport } from './plan-executor.js';
 
-// ── System Prompt ──
+// â”€â”€ System Prompt â”€â”€
 
 const SYNTHESIZE_SYSTEM_PROMPT = `You are a response synthesis engine.
 You are given the results of executing a multi-step plan and must produce a coherent, helpful response to the user.
@@ -34,7 +34,7 @@ CRITICAL FORMATTING RULES:
 6. If there are multiple parts, use clear section headers or bullet points
 7. Keep the response focused on what the user asked for`;
 
-// ── ResultSynthesizer Class ──
+// â”€â”€ ResultSynthesizer Class â”€â”€
 
 export class ResultSynthesizer {
   private model: ModelAdapter;
@@ -50,11 +50,9 @@ export class ResultSynthesizer {
    * Makes 1 LLM call with the report + original task as context.
    */
   async synthesize(report: ExecutionReport, originalTask: string): Promise<string> {
-    if (this.debug) {
-      console.log(`🪡 ResultSynthesizer: ${report.results.length} results, ${report.errorCount} errors`);
-    }
+    
 
-    // Edge case: single task with no errors → just return its output
+    // Edge case: single task with no errors â†’ just return its output
     if (report.results.length === 1 && report.errorCount === 0) {
       const output = report.results[0].output.trim();
       if (output.length > 0) {
@@ -82,14 +80,12 @@ export class ResultSynthesizer {
       return response.content;
     } catch (err: any) {
       // Fallback: concatenate all outputs
-      if (this.debug) {
-        console.warn(`⚠️ ResultSynthesizer LLM call failed: ${err.message}`);
-      }
+      
       return this.fallbackSynthesis(report);
     }
   }
 
-  // ── Private ──
+  // â”€â”€ Private â”€â”€
 
   private buildContext(report: ExecutionReport): string {
     const parts: string[] = [];
@@ -120,7 +116,7 @@ export class ResultSynthesizer {
     let response = parts.join('\n\n');
 
     if (errors.length > 0) {
-      response += `\n\n⚠️ Failed to complete: ${errors.join(', ')}`;
+      response += `\n\nâš ï¸ Failed to complete: ${errors.join(', ')}`;
     }
 
     return response || 'No results produced.';

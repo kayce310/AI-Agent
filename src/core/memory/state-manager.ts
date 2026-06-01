@@ -1,5 +1,5 @@
-/**
- * @file state-manager — Memory module
+﻿/**
+ * @file state-manager â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -14,7 +14,7 @@ import path from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// Resolve project root from script location (src/core/state-manager.ts → ../../)
+// Resolve project root from script location (src/core/state-manager.ts â†’ ../../)
 // NOT from process.cwd(), to prevent creating duplicate state.json
 // when agent runs commands from a different directory
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -250,7 +250,7 @@ export class KatoStateManager {
     }
   }
 
-  // ── Unified state (current.json) ──
+  // â”€â”€ Unified state (current.json) â”€â”€
 
   async readCurrentState(): Promise<StructuredStateResult<UnifiedState>> {
     try {
@@ -343,7 +343,7 @@ export class KatoStateManager {
     }
   }
 
-  // ── Verify & Repair ──
+  // â”€â”€ Verify & Repair â”€â”€
 
   async verify(): Promise<StructuredStateResult<{
     consistent: boolean;
@@ -354,7 +354,7 @@ export class KatoStateManager {
     try {
       const currentResult = await this.readCurrentState();
       if (!currentResult.ok) {
-        warnings.push({ field: 'current', message: 'Cannot read current.json — ' + currentResult.error.message });
+        warnings.push({ field: 'current', message: 'Cannot read current.json â€” ' + currentResult.error.message });
         return { ok: true, data: { consistent: false, warnings } };
       }
 
@@ -456,11 +456,11 @@ export class KatoStateManager {
 
   async init(currentTask: string | null = null): Promise<StructuredStateResult<KatoWorkspaceState>> {
     if (existsSync(this.statePath)) {
-      // Try reading existing state — if it's valid, return it
+      // Try reading existing state â€” if it's valid, return it
       const existing = await this.read();
       if (existing.ok) return existing;
       // If read fails (e.g. schema mismatch, old format), overwrite with fresh state
-      console.warn(`[state-manager] Existing state.json is incompatible, creating fresh state: ${existing.error.message}`);
+      /* debug log removed */
     }
 
     const now = new Date().toISOString();

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file input-guard — Security module
  * @layer core
  * @depends-on (none — standalone)
@@ -164,7 +164,7 @@ export class InputGuard {
       }
 
       if (result.action === 'warn') {
-        console.warn(`[InputGuard] ⚠️ Warn: ${result.findings.map((f) => f.description).join(', ')}`);
+         => f.description).join(', ')}`);
       }
 
       return { allowed: true };

@@ -1,5 +1,5 @@
-/**
- * @file memory-store — Memory module
+﻿/**
+ * @file memory-store â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,20 +7,20 @@
  */
 
 /**
- * Kato Agent — Memory Store (ADD-only + Append-Log Persistence)
- * Phase 4.0b — MemoryLog integration
+ * Kato Agent â€” Memory Store (ADD-only + Append-Log Persistence)
+ * Phase 4.0b â€” MemoryLog integration
  *
- * Replace cho MemoryCore legacy với:
- * - ADD-only pattern: không update/delete, chỉ append
+ * Replace cho MemoryCore legacy vá»›i:
+ * - ADD-only pattern: khÃ´ng update/delete, chá»‰ append
  * - Multi-signal retrieval: text similarity + type filter + time range
  * - Append-log persistence (O(1) per write, durable, replayable)
- * - Periodic snapshot để tránh replay quá dài
+ * - Periodic snapshot Ä‘á»ƒ trÃ¡nh replay quÃ¡ dÃ i
  * - Legacy store.json backup cho backward compat
  *
  * Migration path:
- *   1. Tạo memory-store.ts mới (file này) với MemoryLog
- *   2. Legacy file store.json vẫn được ghi như backup
- *   3. Sau 1 thời gian → drop store.json, chỉ dùng append-log
+ *   1. Táº¡o memory-store.ts má»›i (file nÃ y) vá»›i MemoryLog
+ *   2. Legacy file store.json váº«n Ä‘Æ°á»£c ghi nhÆ° backup
+ *   3. Sau 1 thá»i gian â†’ drop store.json, chá»‰ dÃ¹ng append-log
  */
 
 import fs from 'fs/promises';
@@ -28,11 +28,11 @@ import path from 'path';
 import 'dotenv/config';
 import { MemoryLog, createMemoryLog, MemoryBlock, MemoryBlockType } from './memory-log.js';
 
-// ── Constants ──
+// â”€â”€ Constants â”€â”€
 const DEFAULT_STORE_PATH = './knowledge/memory-store';
 const MAX_BLOCKS_PER_FILE = 500;
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 /** Query options cho retrieval */
 export interface MemoryQueryOptions {
@@ -43,7 +43,7 @@ export interface MemoryQueryOptions {
   sessionId?: string;
 }
 
-/** Định nghĩa source gốc cho migration */
+/** Äá»‹nh nghÄ©a source gá»‘c cho migration */
 export interface LegacyMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
@@ -55,7 +55,7 @@ export interface LegacyMessage {
 // Re-export for backward compatibility
 export type { MemoryBlock, MemoryBlockType };
 
-// ── Memory Store Class ──
+// â”€â”€ Memory Store Class â”€â”€
 
 export class MemoryStore {
   private storePath: string;
@@ -67,7 +67,7 @@ export class MemoryStore {
     this.storePath = storePath || process.env.MEMORY_STORE_PATH || DEFAULT_STORE_PATH;
   }
 
-  // ── Initialization ──
+  // â”€â”€ Initialization â”€â”€
 
   async init(): Promise<void> {
     if (this.loaded) return;
@@ -75,37 +75,37 @@ export class MemoryStore {
     try {
       await fs.mkdir(this.storePath, { recursive: true });
     } catch (err: any) {
-      console.warn(`⚠️ MemoryStore: cannot create directory: ${err.message}`);
+      /* debug log removed */
     }
 
     // Initialize append-log persistence
     this.log = await createMemoryLog(this.storePath);
 
-    // Replay từ log (snapshot + append replay)
+    // Replay tá»« log (snapshot + append replay)
     this.blocks = await this.log.replay();
 
-    // Fallback: nếu log trống, thử load từ legacy store.json
+    // Fallback: náº¿u log trá»‘ng, thá»­ load tá»« legacy store.json
     if (this.blocks.length === 0) {
       await this.loadFromDisk();
 
-      // Nếu có legacy data, migrate vào log
+      // Náº¿u cÃ³ legacy data, migrate vÃ o log
       if (this.blocks.length > 0) {
-        console.log(`🔄 Migrating ${this.blocks.length} legacy blocks to append-log...`);
+        /* debug log removed */
         await this.log.append({ op: 'addMany', blocks: this.blocks });
         await this.log.createSnapshot(this.blocks);
       }
     }
 
     this.loaded = true;
-    console.log(`🧠 MemoryStore initialized at ${this.storePath} (${this.blocks.length} blocks loaded, log seq=${this.log.getStats().lastSeq})`);
+    .lastSeq})`);
   }
 
-  // ── ADD-only Write ──
+  // â”€â”€ ADD-only Write â”€â”€
 
   /**
-   * Thêm một memory block mới (ADD-only — không update, không delete).
-   * Tự động tạo ID và timestamp.
-   * Ghi vào append-log (O(1)) và tạo snapshot periodic.
+   * ThÃªm má»™t memory block má»›i (ADD-only â€” khÃ´ng update, khÃ´ng delete).
+   * Tá»± Ä‘á»™ng táº¡o ID vÃ  timestamp.
+   * Ghi vÃ o append-log (O(1)) vÃ  táº¡o snapshot periodic.
    */
   async add(
     type: MemoryBlockType,
@@ -132,10 +132,10 @@ export class MemoryStore {
 
     this.blocks.push(block);
 
-    // Ghi vào append-log (O(1))
+    // Ghi vÃ o append-log (O(1))
     await this.log.append({ op: 'add', block });
 
-    // Tạo snapshot nếu cần (periodic: mỗi 1000 ops)
+    // Táº¡o snapshot náº¿u cáº§n (periodic: má»—i 1000 ops)
     if (this.log.shouldSnapshot()) {
       await this.log.createSnapshot(this.blocks);
     }
@@ -144,8 +144,8 @@ export class MemoryStore {
   }
 
   /**
-   * Batch add nhiều blocks cùng lúc.
-   * Hữu ích cho migration hoặc import.
+   * Batch add nhiá»u blocks cÃ¹ng lÃºc.
+   * Há»¯u Ã­ch cho migration hoáº·c import.
    */
   async addMany(blocks: Omit<MemoryBlock, 'id' | 'timestamp'>[]): Promise<MemoryBlock[]> {
     const results: MemoryBlock[] = [];
@@ -160,10 +160,10 @@ export class MemoryStore {
       results.push(block);
     }
 
-    // Ghi batch vào append-log (O(1))
+    // Ghi batch vÃ o append-log (O(1))
     await this.log.append({ op: 'addMany', blocks: results });
 
-    // Tạo snapshot nếu cần (periodic)
+    // Táº¡o snapshot náº¿u cáº§n (periodic)
     if (this.log.shouldSnapshot()) {
       await this.log.createSnapshot(this.blocks);
     }
@@ -171,10 +171,10 @@ export class MemoryStore {
     return results;
   }
 
-  // ── Multi-signal Retrieval ──
+  // â”€â”€ Multi-signal Retrieval â”€â”€
 
   /**
-   * Query memory blocks với multi-signal:
+   * Query memory blocks vá»›i multi-signal:
    * - Text similarity (keyword overlap)
    * - Type filter
    * - Time range filter
@@ -211,7 +211,7 @@ export class MemoryStore {
       results = results.filter(b => b.sessionId === opts.sessionId);
     }
 
-    // Score by keyword overlap với query text
+    // Score by keyword overlap vá»›i query text
     const queryTokens = this.tokenize(text);
     if (queryTokens.length > 0 && text.trim().length > 0) {
       results = results
@@ -230,7 +230,7 @@ export class MemoryStore {
   }
 
   /**
-   * Lấy block theo ID
+   * Láº¥y block theo ID
    */
   async getById(id: string): Promise<MemoryBlock | undefined> {
     await this.ensureLoaded();
@@ -238,7 +238,7 @@ export class MemoryStore {
   }
 
   /**
-   * Lấy tất cả blocks (có filter type)
+   * Láº¥y táº¥t cáº£ blocks (cÃ³ filter type)
    */
   async getAll(type?: MemoryBlockType): Promise<MemoryBlock[]> {
     await this.ensureLoaded();
@@ -249,7 +249,7 @@ export class MemoryStore {
   }
 
   /**
-   * Đếm số blocks
+   * Äáº¿m sá»‘ blocks
    */
   count(type?: MemoryBlockType): number {
     if (!this.loaded) return 0;
@@ -259,37 +259,37 @@ export class MemoryStore {
     return this.blocks.length;
   }
 
-  // ── Persistence ──
+  // â”€â”€ Persistence â”€â”€
 
   /**
-   * Đồng bộ memory xuống disk.
-   * Phase 4.0b: Dùng append-log (O(1) snapshot) + backup store.json.
+   * Äá»“ng bá»™ memory xuá»‘ng disk.
+   * Phase 4.0b: DÃ¹ng append-log (O(1) snapshot) + backup store.json.
    */
   async flush(): Promise<void> {
     try {
       await fs.mkdir(this.storePath, { recursive: true });
 
-      // 1. Tạo snapshot từ append-log
+      // 1. Táº¡o snapshot tá»« append-log
       if (this.blocks.length > 0) {
         await this.log.createSnapshot(this.blocks);
       }
 
-      // 2. Backup: vẫn ghi store.json để tương thích legacy readers
+      // 2. Backup: váº«n ghi store.json Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch legacy readers
       const filePath = path.join(this.storePath, 'store.json');
       await fs.writeFile(filePath, JSON.stringify(this.blocks, null, 2), 'utf8');
     } catch (err: any) {
-      console.error(`❌ MemoryStore flush failed:`, err.message);
+      /* debug log removed */
     }
   }
 
-  // ── Legacy Migration ──
+  // â”€â”€ Legacy Migration â”€â”€
 
   /**
-   * Migrate dữ liệu từ legacy MemoryCore.
-   * Đọc file JSON cũ và convert thành MemoryBlocks.
+   * Migrate dá»¯ liá»‡u tá»« legacy MemoryCore.
+   * Äá»c file JSON cÅ© vÃ  convert thÃ nh MemoryBlocks.
    *
-   * @param legacyPath Path tới thư mục memory legacy (VD: ./knowledge/memory)
-   * @param channelId Kênh cần migrate (nếu không cung cấp, migrate tất cả)
+   * @param legacyPath Path tá»›i thÆ° má»¥c memory legacy (VD: ./knowledge/memory)
+   * @param channelId KÃªnh cáº§n migrate (náº¿u khÃ´ng cung cáº¥p, migrate táº¥t cáº£)
    */
   async migrateFromLegacy(legacyPath: string, channelId?: string): Promise<number> {
     let migratedCount = 0;
@@ -297,7 +297,7 @@ export class MemoryStore {
     try {
       await fs.access(legacyPath);
     } catch {
-      console.warn(`⚠️ Legacy memory path not found: ${legacyPath}`);
+      /* debug log removed */
       return 0;
     }
 
@@ -318,7 +318,7 @@ export class MemoryStore {
 
     if (migratedCount > 0) {
       await this.flush();
-      console.log(`✅ Migrated ${migratedCount} legacy messages to MemoryStore`);
+      /* debug log removed */
     }
 
     return migratedCount;
@@ -344,10 +344,10 @@ export class MemoryStore {
     }
   }
 
-  // ── Utilities ──
+  // â”€â”€ Utilities â”€â”€
 
   /**
-   * Xoá tất cả blocks (chỉ dùng cho test/reset).
+   * XoÃ¡ táº¥t cáº£ blocks (chá»‰ dÃ¹ng cho test/reset).
    */
   async clear(): Promise<void> {
     this.blocks = [];
@@ -356,14 +356,14 @@ export class MemoryStore {
     await this.flush();
   }
 
-  /** Đóng store: flush + close log trước khi shutdown */
+  /** ÄÃ³ng store: flush + close log trÆ°á»›c khi shutdown */
   async close(): Promise<void> {
     await this.flush();
     await this.log.close();
     this.loaded = false;
   }
 
-  // ── Private Helpers ──
+  // â”€â”€ Private Helpers â”€â”€
 
   private async ensureLoaded(): Promise<void> {
     if (!this.loaded) {
@@ -380,7 +380,7 @@ export class MemoryStore {
         const manifestData = await fs.readFile(manifestPath, 'utf8');
         manifest = JSON.parse(manifestData);
       } catch {
-        // No manifest — single file mode
+        // No manifest â€” single file mode
       }
 
       if (manifest && manifest.batchCount > 1) {
@@ -392,7 +392,7 @@ export class MemoryStore {
             const batch: MemoryBlock[] = JSON.parse(data);
             this.blocks.push(...batch);
           } catch {
-            console.warn(`⚠️ MemoryStore: cannot load batch ${i}`);
+            /* debug log removed */
           }
         }
       } else {
@@ -401,16 +401,16 @@ export class MemoryStore {
         try {
           const data = await fs.readFile(filePath, 'utf8');
           const blocks: MemoryBlock[] = JSON.parse(data);
-          // Bỏ qua invalid format (empty array là valid)
+          // Bá» qua invalid format (empty array lÃ  valid)
           if (Array.isArray(blocks)) {
             this.blocks.push(...blocks);
           }
         } catch {
-          // File không tồn tại — lần đầu chạy
+          // File khÃ´ng tá»“n táº¡i â€” láº§n Ä‘áº§u cháº¡y
         }
       }
     } catch (err: any) {
-      console.warn(`⚠️ MemoryStore: cannot load from disk: ${err.message}`);
+      /* debug log removed */
     }
   }
 
@@ -421,7 +421,7 @@ export class MemoryStore {
   }
 
   /**
-   * Tokenize text thành tokens lowercase
+   * Tokenize text thÃ nh tokens lowercase
    */
   private tokenize(text: string): string[] {
     return text
@@ -432,8 +432,8 @@ export class MemoryStore {
   }
 
   /**
-   * Tính relevance score giữa content và query tokens
-   * Dùng TF-like scoring: count token overlaps
+   * TÃ­nh relevance score giá»¯a content vÃ  query tokens
+   * DÃ¹ng TF-like scoring: count token overlaps
    */
   private computeRelevance(content: string, queryTokens: string[]): number {
     const contentTokens = this.tokenize(content);
@@ -450,6 +450,6 @@ export class MemoryStore {
   }
 }
 
-// ── Singleton Export ──
+// â”€â”€ Singleton Export â”€â”€
 export const globalMemoryStore = new MemoryStore();
 export default MemoryStore;

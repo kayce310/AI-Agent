@@ -1,5 +1,5 @@
-/**
- * @file memory — Memory module
+﻿/**
+ * @file memory â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -8,12 +8,12 @@
 
 /**
  * Kato Multi-Layer Memory Core
- * Framework 6 Layers Claude Code - Lớp 2 Bộ Nhớ
+ * Framework 6 Layers Claude Code - Lá»›p 2 Bá»™ Nhá»›
  * 
- * Kiến trúc bộ nhớ 3 lớp:
- * 🔹 Lớp 0: RAM Cache - 20 tin nhắn gần nhất (Hot Path)
- * 🔹 Lớp 1: File System - Lịch sử đầy đủ trên đĩa cứng
- * 🔹 Lớp 2: Knowledge Wiki - Tóm tắt thông tin quan trọng dài hạn
+ * Kiáº¿n trÃºc bá»™ nhá»› 3 lá»›p:
+ * ðŸ”¹ Lá»›p 0: RAM Cache - 20 tin nháº¯n gáº§n nháº¥t (Hot Path)
+ * ðŸ”¹ Lá»›p 1: File System - Lá»‹ch sá»­ Ä‘áº§y Ä‘á»§ trÃªn Ä‘Ä©a cá»©ng
+ * ðŸ”¹ Lá»›p 2: Knowledge Wiki - TÃ³m táº¯t thÃ´ng tin quan trá»ng dÃ i háº¡n
  */
 
 import fs from 'fs/promises';
@@ -24,7 +24,7 @@ export interface Message {
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
-  /** DeepSeek thinking mode: reasoning_content phải được preserve */
+  /** DeepSeek thinking mode: reasoning_content pháº£i Ä‘Æ°á»£c preserve */
   reasoning_content?: string;
   /** Tool call ID (cho tool messages) */
   tool_call_id?: string;
@@ -44,9 +44,9 @@ export class MemoryCore {
   private async initializeStorage(): Promise<void> {
     try {
       await fs.mkdir(this.memoryPath, { recursive: true });
-      console.log(`✅ MemoryCore initialized at: ${this.memoryPath}`);
+      /* debug log removed */
     } catch (error) {
-      console.error(`❌ Failed to initialize memory storage:`, error);
+      /* debug log removed */
     }
   }
 
@@ -55,8 +55,8 @@ export class MemoryCore {
   }
 
   /**
-   * Lấy lịch sử hội thoại của kênh
-   * Tự động nạp từ đĩa nếu chưa có trong cache RAM
+   * Láº¥y lá»‹ch sá»­ há»™i thoáº¡i cá»§a kÃªnh
+   * Tá»± Ä‘á»™ng náº¡p tá»« Ä‘Ä©a náº¿u chÆ°a cÃ³ trong cache RAM
    */
   public async getChannelHistory(channelId: string): Promise<Message[]> {
     if (this.channelCache.has(channelId)) {
@@ -68,15 +68,15 @@ export class MemoryCore {
       const data = await fs.readFile(filePath, 'utf8');
       const history = JSON.parse(data) as Message[];
       
-      // Chỉ giữ 20 tin gần nhất trong RAM
+      // Chá»‰ giá»¯ 20 tin gáº§n nháº¥t trong RAM
       const trimmedHistory = history.slice(-this.MAX_RAM_MESSAGES);
       this.channelCache.set(channelId, [...trimmedHistory]);
       
-      console.log(`📥 Loaded ${trimmedHistory.length} messages for channel ${channelId}`);
+      /* debug log removed */
       return [...trimmedHistory];
 
     } catch (error) {
-      // File chưa tồn tại => kênh mới
+      // File chÆ°a tá»“n táº¡i => kÃªnh má»›i
       const emptyHistory: Message[] = [];
       this.channelCache.set(channelId, [...emptyHistory]);
       return [...emptyHistory];
@@ -84,8 +84,8 @@ export class MemoryCore {
   }
 
   /**
-   * Thêm tin nhắn vào lịch sử
-   * Lưu đồng thời vào RAM và đĩa cứng
+   * ThÃªm tin nháº¯n vÃ o lá»‹ch sá»­
+   * LÆ°u Ä‘á»“ng thá»i vÃ o RAM vÃ  Ä‘Ä©a cá»©ng
    */
   public async addMessage(channelId: string, message: Message): Promise<void> {
     const history = await this.getChannelHistory(channelId);
@@ -95,26 +95,26 @@ export class MemoryCore {
       timestamp: Date.now()
     });
 
-    // Giới hạn RAM cache
+    // Giá»›i háº¡n RAM cache
     while (history.length > this.MAX_RAM_MESSAGES) {
       history.shift();
     }
 
     this.channelCache.set(channelId, history);
 
-    // Lưu xuống đĩa bất đồng bộ
+    // LÆ°u xuá»‘ng Ä‘Ä©a báº¥t Ä‘á»“ng bá»™
     setImmediate(async () => {
       try {
         const filePath = this.getChannelFilePath(channelId);
         await fs.writeFile(filePath, JSON.stringify(history, null, 2));
       } catch (error) {
-        console.error(`❌ Failed to save channel history:`, error);
+        /* debug log removed */
       }
     });
   }
 
   /**
-   * Xóa cache RAM và load lại từ đĩa
+   * XÃ³a cache RAM vÃ  load láº¡i tá»« Ä‘Ä©a
    */
   public async reloadChannel(channelId: string): Promise<void> {
     this.channelCache.delete(channelId);
@@ -122,7 +122,7 @@ export class MemoryCore {
   }
 
   /**
-   * Lấy danh sách tất cả kênh đang có bộ nhớ
+   * Láº¥y danh sÃ¡ch táº¥t cáº£ kÃªnh Ä‘ang cÃ³ bá»™ nhá»›
    */
   public async listActiveChannels(): Promise<string[]> {
     const files = await fs.readdir(this.memoryPath);

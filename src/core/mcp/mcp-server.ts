@@ -1,5 +1,5 @@
-/**
- * @file mcp-server — MCP module
+﻿/**
+ * @file mcp-server â€” MCP module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,7 +7,7 @@
  */
 
 /**
- * MCP Server — Expose Kato internal tools as an MCP server
+ * MCP Server â€” Expose Kato internal tools as an MCP server
  * Phase 4.1b: Start an MCP server so external MCP clients can call Kato tools
  *
  * Transport: stdio (for now), could add SSE/WebSocket later
@@ -37,7 +37,7 @@ export async function startMCPServer(registry: ToolRegistry): Promise<() => Prom
     },
   );
 
-  // ── Register each Kato tool as an MCp tool ──
+  // â”€â”€ Register each Kato tool as an MCp tool â”€â”€
   const tools = registry.getAllTools();
   for (const tool of tools) {
     server.tool(
@@ -70,15 +70,15 @@ export async function startMCPServer(registry: ToolRegistry): Promise<() => Prom
     );
   }
 
-  // ── Connect transport ──
+  // â”€â”€ Connect transport â”€â”€
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.log(`🖥️  MCP Server started (stdio transport) — ${tools.length} tools exposed`);
+   â€” ${tools.length} tools exposed`);
 
   return async () => {
     await server.close();
-    console.log('🖥️  MCP Server stopped');
+    /* debug log removed */
   };
 }
 

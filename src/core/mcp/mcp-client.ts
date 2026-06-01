@@ -1,5 +1,5 @@
-/**
- * @file mcp-client — MCP module
+﻿/**
+ * @file mcp-client â€” MCP module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,7 +7,7 @@
  */
 
 /**
- * MCP Client — Kato wrapper around the Model Context Protocol SDK
+ * MCP Client â€” Kato wrapper around the Model Context Protocol SDK
  * Phase 4.1a: Connect to external MCP servers, discover tools, integrate into ToolRegistry
  *
  * Supports transports:
@@ -28,7 +28,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import type { ToolPlugin, Tool } from '../tools/tool-registry.js';
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
 export interface MCPServerConfig {
   name: string;
@@ -63,12 +63,12 @@ export interface MCPConnectionStatus {
   error?: string;
 }
 
-// ── Constants ──
+// â”€â”€ Constants â”€â”€
 
 const DEFAULT_RECONNECT_DELAY = 5_000;
 const DEFAULT_MAX_RECONNECT = 3;
 
-// ── MCP Client Manager ──
+// â”€â”€ MCP Client Manager â”€â”€
 
 export class MCPClientManager {
   private clients = new Map<string, Client>();
@@ -143,7 +143,7 @@ export class MCPClientManager {
     // Pre-cache tool list
     await this.refreshTools(name);
 
-    console.log(`🔌 MCP connected: "${name}" (${this.toolCache.get(name)?.length ?? 0} tools)`);
+    ?.length ?? 0} tools)`);
   }
 
   /**
@@ -263,7 +263,7 @@ export class MCPClientManager {
       this.transports.delete(serverName);
       this.toolCache.delete(serverName);
       this.reconnectAttempts.delete(serverName);
-      console.log(`🔌 MCP disconnected: "${serverName}"`);
+      /* debug log removed */
     }
   }
 
@@ -295,6 +295,6 @@ export class MCPClientManager {
   }
 }
 
-// ── Singleton ──
+// â”€â”€ Singleton â”€â”€
 export const globalMCPClientManager = new MCPClientManager();
 export default MCPClientManager;

@@ -1,5 +1,5 @@
-/**
- * @file Tool Pruner — Keyword-based tool selection + token estimation
+﻿/**
+ * @file Tool Pruner â€” Keyword-based tool selection + token estimation
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts
  * @owner core-tools
@@ -13,7 +13,7 @@ import { getDefaultRegistry } from './tool-registry.js';
 // ── Core Tools (always available) ──
 const CORE_TOOLS = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url', 'web_search'];
 
-// ── Tool Categories ──
+// â”€â”€ Tool Categories â”€â”€
 // Each category maps to a set of keywords that indicate the user needs these tools
 const TOOL_CATEGORIES: Record<string, { tools: string[]; keywords: string[] }> = {
   core: {
@@ -58,7 +58,7 @@ const TOOL_CATEGORIES: Record<string, { tools: string[]; keywords: string[] }> =
   },
 };
 
-// ── All registered tool names (populated after ensureToolDefinitionsLoaded) ──
+// â”€â”€ All registered tool names (populated after ensureToolDefinitionsLoaded) â”€â”€
 let _allToolNames: string[] = [];
 let _allToolDefinitions: any[] = [];
 let _loaded = false;
@@ -73,7 +73,7 @@ export async function ensureToolDefinitionsLoaded(): Promise<void> {
   _allToolNames = registry.listTools();
   _allToolDefinitions = registry.getDefinitions();
   _loaded = true;
-  console.log(`✅ [ToolPruner] Loaded ${_allToolNames.length} tool definitions`);
+  /* debug log removed */
 }
 
 /**
@@ -83,7 +83,7 @@ export async function ensureToolDefinitionsLoaded(): Promise<void> {
  */
 export function selectRelevantTools(userMessage: string): any[] {
   if (!_loaded) {
-    console.warn('⚠️ [ToolPruner] Tool definitions not loaded. Call ensureToolDefinitionsLoaded() first.');
+     first.');
     return [];
   }
 
@@ -129,3 +129,4 @@ export function estimateToolsTokenCount(tools: any[]): number {
   }
   return Math.ceil(totalChars / 4);
 }
+

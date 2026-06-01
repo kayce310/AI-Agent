@@ -45,5 +45,4 @@ export { SandboxExecutor, SandboxRequest, SandboxResult, SandboxConfig } from '.
 export * from './llm/model-adapter.js';
 export * from './types.js';
 
-console.log(`✅ Kato Agent System initialized`);
-console.log(`📚 Knowledge base ready`);
+/* Kato Agent System initialized */

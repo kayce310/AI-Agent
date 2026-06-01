@@ -1,5 +1,5 @@
-/**
- * @file memory-log — Memory module
+﻿/**
+ * @file memory-log â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
@@ -7,42 +7,42 @@
  */
 
 /**
- * Kato Agent — Memory Append-Log Persistence
- * Phase 4.0b — Thay thế full-rewrite flush() bằng append-log
+ * Kato Agent â€” Memory Append-Log Persistence
+ * Phase 4.0b â€” Thay tháº¿ full-rewrite flush() báº±ng append-log
  *
- * Vấn đề hiện tại:
- *   memory-store.ts flush() ghi toàn bộ O(n) blocks xuống disk.
- *   Với 10k+ blocks, mỗi lần flush tốn O(n) I/O và không durable (crash = mất).
+ * Váº¥n Ä‘á» hiá»‡n táº¡i:
+ *   memory-store.ts flush() ghi toÃ n bá»™ O(n) blocks xuá»‘ng disk.
+ *   Vá»›i 10k+ blocks, má»—i láº§n flush tá»‘n O(n) I/O vÃ  khÃ´ng durable (crash = máº¥t).
  *
- * Giải pháp:
- *   - Append-log: mỗi operation ghi 1 dòng JSON → O(1) per write
- *   - Replay: startup đọc log → rebuild in-memory state
- *   - Snapshot: periodic (mỗi 1000 ops) để tránh replay quá dài
- *   - Atomic write: write + fsync để durable (chống crash)
+ * Giáº£i phÃ¡p:
+ *   - Append-log: má»—i operation ghi 1 dÃ²ng JSON â†’ O(1) per write
+ *   - Replay: startup Ä‘á»c log â†’ rebuild in-memory state
+ *   - Snapshot: periodic (má»—i 1000 ops) Ä‘á»ƒ trÃ¡nh replay quÃ¡ dÃ i
+ *   - Atomic write: write + fsync Ä‘á»ƒ durable (chá»‘ng crash)
  */
 
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import path from 'path';
 
-// ── Constants ──
-const SNAPSHOT_INTERVAL = 1000; // tạo snapshot mỗi N operations
+// â”€â”€ Constants â”€â”€
+const SNAPSHOT_INTERVAL = 1000; // táº¡o snapshot má»—i N operations
 const LOG_FILENAME = 'store.log';
 const SNAPSHOT_FILENAME = 'snapshot.json';
 const MANIFEST_FILENAME = 'manifest.json';
 
-// ── Rotation Constants ──
-const MAX_LOG_FILE_SIZE = 10 * 1024 * 1024; // 10 MB — rotate khi log > 10MB
-const MAX_LOG_FILES = 5;                      // giữ tối đa 5 file archive
+// â”€â”€ Rotation Constants â”€â”€
+const MAX_LOG_FILE_SIZE = 10 * 1024 * 1024; // 10 MB â€” rotate khi log > 10MB
+const MAX_LOG_FILES = 5;                      // giá»¯ tá»‘i Ä‘a 5 file archive
 const ARCHIVE_PREFIX = 'store';               // archive file prefix
 const ARCHIVE_EXT = '.log.archive';           // archive extension
 
-// ── Types ──
+// â”€â”€ Types â”€â”€
 
-/** Loại memory block */
+/** Loáº¡i memory block */
 export type MemoryBlockType = 'human' | 'persona' | 'session' | 'task' | 'fact' | 'world';
 
-/** Một block memory bất biến (ADD-only) */
+/** Má»™t block memory báº¥t biáº¿n (ADD-only) */
 export interface MemoryBlock {
   id: string;
   type: MemoryBlockType;
@@ -50,16 +50,16 @@ export interface MemoryBlock {
   timestamp: string;   // ISO 8601
   entities?: string[];
   tags?: string[];
-  /** Optional: reference tới session này (cho session type) */
+  /** Optional: reference tá»›i session nÃ y (cho session type) */
   sessionId?: string;
-  /** Optional: link tới block khác */
+  /** Optional: link tá»›i block khÃ¡c */
   parentId?: string;
 }
 
-/** Operation types được log */
+/** Operation types Ä‘Æ°á»£c log */
 export type LogOperation = 'add' | 'addMany' | 'snapshot' | 'clear';
 
-/** Một dòng trong append-log */
+/** Má»™t dÃ²ng trong append-log */
 export interface LogEntry {
   op: LogOperation;
   block?: MemoryBlock;
@@ -78,7 +78,7 @@ interface Manifest {
   updatedAt: string;
 }
 
-// ── MemoryLog Class ──
+// â”€â”€ MemoryLog Class â”€â”€
 
 export class MemoryLog {
   private logDir: string;
@@ -91,7 +91,7 @@ export class MemoryLog {
     this.logDir = logDir;
   }
 
-  // ── Lifecycle ──
+  // â”€â”€ Lifecycle â”€â”€
 
   async init(): Promise<void> {
     await fs.mkdir(this.logDir, { recursive: true });
@@ -105,8 +105,8 @@ export class MemoryLog {
   }
 
   /**
-   * Ghi một operation vào append-log (O(1)).
-   * Atomic write: dùng write + callback để đảm bảo ghi xong mới resolve.
+   * Ghi má»™t operation vÃ o append-log (O(1)).
+   * Atomic write: dÃ¹ng write + callback Ä‘á»ƒ Ä‘áº£m báº£o ghi xong má»›i resolve.
    */
   async append(entry: Omit<LogEntry, 'seq' | 'timestamp'>): Promise<void> {
     if (!this.logStream) {
@@ -120,7 +120,7 @@ export class MemoryLog {
       seq: this.seq,
     };
 
-    // Cập nhật manifest in-memory để getStats() trả về đúng giá trị
+    // Cáº­p nháº­t manifest in-memory Ä‘á»ƒ getStats() tráº£ vá» Ä‘Ãºng giÃ¡ trá»‹
     this.manifest.lastSeq = this.seq;
     this.manifest.totalOps = this.seq;
 
@@ -143,14 +143,14 @@ export class MemoryLog {
   }
 
   /**
-   * Đồng bộ log xuống disk (flush buffer).
-   * Đảm bảo dữ liệu không mất nếu crash.
+   * Äá»“ng bá»™ log xuá»‘ng disk (flush buffer).
+   * Äáº£m báº£o dá»¯ liá»‡u khÃ´ng máº¥t náº¿u crash.
    */
   async sync(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.logStream) return resolve();
-      // Flush buffer rồi fsync file descriptor
-      // WriteStream.fd là nội bộ nhưng tồn tại sau khi stream mở (fd !== null)
+      // Flush buffer rá»“i fsync file descriptor
+      // WriteStream.fd lÃ  ná»™i bá»™ nhÆ°ng tá»“n táº¡i sau khi stream má»Ÿ (fd !== null)
       const fd = (this.logStream as any).fd;
       if (fd !== undefined && fd !== null) {
         fsSync.fsync(fd, (err) => {
@@ -158,15 +158,15 @@ export class MemoryLog {
           else resolve();
         });
       } else {
-        // Nếu chưa có fd (stream pending), đợi drain
+        // Náº¿u chÆ°a cÃ³ fd (stream pending), Ä‘á»£i drain
         this.logStream!.once('drain', () => resolve());
       }
     });
   }
 
   /**
-   * Tạo snapshot từ state hiện tại.
-   * Snapshot = ghi toàn bộ blocks hiện tại vào 1 file + reset opsSinceSnapshot.
+   * Táº¡o snapshot tá»« state hiá»‡n táº¡i.
+   * Snapshot = ghi toÃ n bá»™ blocks hiá»‡n táº¡i vÃ o 1 file + reset opsSinceSnapshot.
    */
   async createSnapshot(blocks: MemoryBlock[]): Promise<void> {
     const snapshotPath = path.join(this.logDir, SNAPSHOT_FILENAME);
@@ -178,17 +178,17 @@ export class MemoryLog {
     this.manifest.updatedAt = new Date().toISOString();
     await this.saveManifest();
 
-    // Ghi 1 dòng snapshot vào log để đánh dấu
+    // Ghi 1 dÃ²ng snapshot vÃ o log Ä‘á»ƒ Ä‘Ã¡nh dáº¥u
     await this.append({ op: 'snapshot' });
     await this.sync();
   }
 
   /**
-   * Replay toàn bộ log từ đầu.
-   * Nếu có snapshot, đọc snapshot trước, sau đó replay từ snapshot seq.
-   * Bao gồm cả các file archive sau rotation.
+   * Replay toÃ n bá»™ log tá»« Ä‘áº§u.
+   * Náº¿u cÃ³ snapshot, Ä‘á»c snapshot trÆ°á»›c, sau Ä‘Ã³ replay tá»« snapshot seq.
+   * Bao gá»“m cáº£ cÃ¡c file archive sau rotation.
    *
-   * @returns danh sách blocks đã rebuild
+   * @returns danh sÃ¡ch blocks Ä‘Ã£ rebuild
    */
   async replay(): Promise<MemoryBlock[]> {
     const snapshot = await this.tryLoadSnapshot();
@@ -228,13 +228,13 @@ export class MemoryLog {
               blocks = [];
               break;
             case 'snapshot':
-              // Snapshot marker — blocks đã được load từ snapshot file
+              // Snapshot marker â€” blocks Ä‘Ã£ Ä‘Æ°á»£c load tá»« snapshot file
               break;
           }
         }
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
-          console.warn(`⚠️ MemoryLog: cannot read log file ${logFile}: ${err.message}`);
+          /* debug log removed */
         }
       }
     }
@@ -247,8 +247,8 @@ export class MemoryLog {
 
   /**
    * Collect all log files (active + archives) sorted by timestamp (oldest first).
-   * Archives: store.<timestamp>.log.archive — sorted by timestamp ascending
-   * Active: store.log — always last
+   * Archives: store.<timestamp>.log.archive â€” sorted by timestamp ascending
+   * Active: store.log â€” always last
    */
   private async collectLogFiles(): Promise<string[]> {
     const archiveRegex = new RegExp(
@@ -277,14 +277,14 @@ export class MemoryLog {
   }
 
   /**
-   * Kiểm tra có cần tạo snapshot không (dựa trên opsSinceSnapshot).
+   * Kiá»ƒm tra cÃ³ cáº§n táº¡o snapshot khÃ´ng (dá»±a trÃªn opsSinceSnapshot).
    */
   shouldSnapshot(): boolean {
     return this.opsSinceSnapshot >= SNAPSHOT_INTERVAL;
   }
 
   /**
-   * Đóng log stream (gọi khi shutdown).
+   * ÄÃ³ng log stream (gá»i khi shutdown).
    */
   async close(): Promise<void> {
     if (this.logStream) {
@@ -293,7 +293,7 @@ export class MemoryLog {
       this.logStream = null;
     }
 
-    // Cập nhật manifest lần cuối (chỉ nếu đã init)
+    // Cáº­p nháº­t manifest láº§n cuá»‘i (chá»‰ náº¿u Ä‘Ã£ init)
     if (this.manifest) {
       this.manifest.lastSeq = this.seq;
       this.manifest.totalOps = this.seq;
@@ -302,7 +302,7 @@ export class MemoryLog {
     }
   }
 
-  // ── Private Helpers ──
+  // â”€â”€ Private Helpers â”€â”€
 
   private async loadOrCreateManifest(): Promise<Manifest> {
     const manifestPath = path.join(this.logDir, MANIFEST_FILENAME);
@@ -348,17 +348,17 @@ export class MemoryLog {
   }
 
   /**
-   * Lấy thông tin manifest hiện tại (cho debug/monitoring).
+   * Láº¥y thÃ´ng tin manifest hiá»‡n táº¡i (cho debug/monitoring).
    */
   getStats() {
     return { ...this.manifest };
   }
 
-  // ── Rotation ──
+  // â”€â”€ Rotation â”€â”€
 
   /**
-   * Kiểm tra kích thước log file.
-   * Dùng stat sync để tránh async overhead.
+   * Kiá»ƒm tra kÃ­ch thÆ°á»›c log file.
+   * DÃ¹ng stat sync Ä‘á»ƒ trÃ¡nh async overhead.
    */
   getLogFileSize(): number {
     const logPath = path.join(this.logDir, LOG_FILENAME);
@@ -371,7 +371,7 @@ export class MemoryLog {
   }
 
   /**
-   * Kiểm tra log có cần rotate không.
+   * Kiá»ƒm tra log cÃ³ cáº§n rotate khÃ´ng.
    * Rotation trigger: log file > MAX_LOG_FILE_SIZE (10MB)
    */
   shouldRotate(): boolean {
@@ -379,18 +379,18 @@ export class MemoryLog {
   }
 
   /**
-   * Thực hiện rotate log:
-   * 1. Sync dữ liệu còn lại
-   * 2. Close stream cũ
-   * 3. Rename store.log → store.<timestamp>.log.archive
-   * 4. Tạo stream mới (append mode)
-   * 5. Prune archive cũ nếu vượt quá MAX_LOG_FILES
-   * 6. Ghi dòng rotation marker vào log mới
+   * Thá»±c hiá»‡n rotate log:
+   * 1. Sync dá»¯ liá»‡u cÃ²n láº¡i
+   * 2. Close stream cÅ©
+   * 3. Rename store.log â†’ store.<timestamp>.log.archive
+   * 4. Táº¡o stream má»›i (append mode)
+   * 5. Prune archive cÅ© náº¿u vÆ°á»£t quÃ¡ MAX_LOG_FILES
+   * 6. Ghi dÃ²ng rotation marker vÃ o log má»›i
    */
   async rotate(): Promise<void> {
     if (!this.logStream) throw new Error('MemoryLog not initialized');
 
-    // 1. Sync + close stream cũ
+    // 1. Sync + close stream cÅ©
     await this.sync();
     const oldStream = this.logStream;
     this.logStream = null;
@@ -402,7 +402,7 @@ export class MemoryLog {
       });
     });
 
-    // 2. Rename store.log → store.<timestamp>.log.archive
+    // 2. Rename store.log â†’ store.<timestamp>.log.archive
     const logPath = path.join(this.logDir, LOG_FILENAME);
     const timestamp = Date.now();
     const archiveName = `${ARCHIVE_PREFIX}.${timestamp}${ARCHIVE_EXT}`;
@@ -414,7 +414,7 @@ export class MemoryLog {
       if (err.code !== 'ENOENT') throw err;
     }
 
-    // 3. Tạo stream mới
+    // 3. Táº¡o stream má»›i
     this.logStream = fsSync.createWriteStream(logPath, { flags: 'a' });
 
     // 4. Ghi rotation marker
@@ -426,17 +426,17 @@ export class MemoryLog {
     const line = JSON.stringify(marker) + '\n';
     this.logStream.write(line, 'utf8');
 
-    // 5. Cập nhật manifest
+    // 5. Cáº­p nháº­t manifest
     this.manifest.updatedAt = new Date().toISOString();
     await this.saveManifest();
 
-    // 6. Prune archive cũ
+    // 6. Prune archive cÅ©
     await this.pruneArchives();
   }
 
   /**
-   * Xóa các archive cũ nhất nếu vượt quá MAX_LOG_FILES.
-   * Giữ MAX_LOG_FILES archive gần nhất, xóa phần còn lại.
+   * XÃ³a cÃ¡c archive cÅ© nháº¥t náº¿u vÆ°á»£t quÃ¡ MAX_LOG_FILES.
+   * Giá»¯ MAX_LOG_FILES archive gáº§n nháº¥t, xÃ³a pháº§n cÃ²n láº¡i.
    */
   async pruneArchives(): Promise<string[]> {
     let files: string[];
@@ -446,7 +446,7 @@ export class MemoryLog {
       return [];
     }
 
-    // Lọc các file archive: store.<number>.log.archive
+    // Lá»c cÃ¡c file archive: store.<number>.log.archive
     const archiveRegex = new RegExp(
       `^${ARCHIVE_PREFIX}\\.\\d+${ARCHIVE_EXT.replace('.', '\\.')}$`,
     );
@@ -457,7 +457,7 @@ export class MemoryLog {
         mtime: Date.now(), // fallback
       }));
 
-    // Sắp xếp theo timestamp trong tên file
+    // Sáº¯p xáº¿p theo timestamp trong tÃªn file
     archives.sort((a, b) => {
       const tsA = parseInt(a.name.split('.')[1], 10);
       const tsB = parseInt(b.name.split('.')[1], 10);
@@ -481,9 +481,9 @@ export class MemoryLog {
   }
 
   /**
-   * Kiểm tra và rotate nếu cần.
-   * Gọi sau mỗi append hoặc sync nếu shouldRotate() == true.
-   * @returns true nếu đã rotate
+   * Kiá»ƒm tra vÃ  rotate náº¿u cáº§n.
+   * Gá»i sau má»—i append hoáº·c sync náº¿u shouldRotate() == true.
+   * @returns true náº¿u Ä‘Ã£ rotate
    */
   async checkAndRotate(): Promise<boolean> {
     if (this.shouldRotate()) {
@@ -494,11 +494,11 @@ export class MemoryLog {
   }
 }
 
-// ── Factory ──
+// â”€â”€ Factory â”€â”€
 
 /**
- * Khởi tạo MemoryLog từ store path.
- * Factory pattern để dễ test/mock.
+ * Khá»Ÿi táº¡o MemoryLog tá»« store path.
+ * Factory pattern Ä‘á»ƒ dá»… test/mock.
  */
 export async function createMemoryLog(storePath: string): Promise<MemoryLog> {
   const log = new MemoryLog(storePath);

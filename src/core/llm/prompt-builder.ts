@@ -84,7 +84,6 @@ export class PromptBuilder {
    * Xây dựng system prompt hoàn chỉnh theo 8 tầng
    */
   buildSystem(input: PromptInput): string {
-    console.time('prompt-build');
     const sections: string[] = [];
 
     // ── DATETIME ──
@@ -191,7 +190,6 @@ ${briefParts.join('\n')}
     sections.push(`IDENTITY: Bạn là ${input.agentName}. Khi user tag ${input.mentionPrefix}, đó là họ đang gọi bạn.`);
 
     const result = sections.join('\n\n');
-    console.timeEnd('prompt-build');
     return result;
   }
 

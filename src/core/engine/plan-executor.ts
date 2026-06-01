@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file plan-executor — Core Engine component
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/llm/model-adapter.ts
@@ -69,9 +69,9 @@ export class PlanExecutor {
     const levels = this.buildLevels(plan.subTasks);
 
     if (this.debug) {
-      console.log(`⚙️ PlanExecutor: ${plan.subTasks.length} tasks in ${levels.length} level(s)`);
+
       for (let i = 0; i < levels.length; i++) {
-        console.log(`   Level ${i}: ${levels[i].map(t => t.id).join(', ')}`);
+
       }
     }
 
@@ -115,7 +115,7 @@ export class PlanExecutor {
     const startedAt = new Date().toISOString();
 
     if (this.debug) {
-      console.log(`⚙️   Executing ${task.id} (${task.type}): ${task.description.substring(0, 60)}...`);
+
     }
 
     try {
@@ -258,3 +258,4 @@ Expected output: ${task.expectedOutput}`,
     return levels;
   }
 }
+

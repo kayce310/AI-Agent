@@ -1,5 +1,5 @@
-/**
- * @file Kato Gateway — Multi-Platform Orchestrator
+﻿/**
+ * @file Kato Gateway â€” Multi-Platform Orchestrator
  * @layer core
  * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
  * @imported-by src/index.ts
@@ -42,9 +42,9 @@ export class KatoGateway {
     this._engine.on(event, handler as any);
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Adapter Registration
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Register a platform adapter.
@@ -53,28 +53,28 @@ export class KatoGateway {
    */
   register(adapter: PlatformAdapter): void {
     if (this.adapters.has(adapter.platform)) {
-      console.warn(`⚠️ Gateway: adapter "${adapter.platform}" already registered, replacing`);
+      /* debug log removed */
     }
 
-    // Wire message handler: adapter → gateway → engine
+    // Wire message handler: adapter â†’ gateway â†’ engine
     // Returns KatoResponse so the adapter can handle its own platform-specific UI
     adapter.onMessage(async (msg: AdapterMessage) => {
       try {
         const response = await this.handleAdapterMessage(adapter, msg);
         return response;
       } catch (err: any) {
-        console.error(`❌ Gateway: error handling message from "${adapter.platform}": ${err.message}`);
+        /* debug log removed */
         return null;
       }
     });
 
     this.adapters.set(adapter.platform, adapter);
-    console.log(`🔌 Gateway: platform "${adapter.platform}" registered`);
+    /* debug log removed */
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Lifecycle Management
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Start a specific adapter by platform name.
@@ -82,9 +82,9 @@ export class KatoGateway {
   async startAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    console.log(`🚀 Gateway: starting "${platform}" adapter...`);
+    /* debug log removed */
     await adapter.start();
-    console.log(`✅ Gateway: "${platform}" adapter started`);
+    /* debug log removed */
   }
 
   /**
@@ -93,9 +93,9 @@ export class KatoGateway {
   async stopAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    console.log(`🛑 Gateway: stopping "${platform}" adapter...`);
+    /* debug log removed */
     await adapter.stop();
-    console.log(`✅ Gateway: "${platform}" adapter stopped`);
+    /* debug log removed */
   }
 
   /**
@@ -110,13 +110,13 @@ export class KatoGateway {
 
     const promises = Array.from(this.adapters.values()).map(async (adapter) => {
       try {
-        console.log(`🚀 Gateway: starting "${adapter.platform}" adapter...`);
+        /* debug log removed */
         await adapter.start();
         results.push(adapter.platform);
-        console.log(`✅ Gateway: "${adapter.platform}" adapter started`);
+        /* debug log removed */
       } catch (err: any) {
         errors.push({ platform: adapter.platform, error: err.message });
-        console.error(`❌ Gateway: "${adapter.platform}" adapter failed: ${err.message}`);
+        /* debug log removed */
       }
     });
 
@@ -128,18 +128,18 @@ export class KatoGateway {
    * Stop all registered adapters.
    */
   async stopAll(): Promise<void> {
-    console.log('🛑 Gateway: stopping all adapters...');
+    /* debug log removed */
     const promises = Array.from(this.adapters.values()).map(adapter =>
-      adapter.stop().catch(err => console.warn(`⚠️ Gateway: "${adapter.platform}" stop error: ${err.message}`))
+      adapter.stop().catch(() => {})
     );
     await Promise.all(promises);
     this._isRunning = false;
-    console.log('✅ Gateway: all adapters stopped');
+    /* debug log removed */
   }
 
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Message Processing
-  // ──────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Process a raw KatoRequest through the engine.
@@ -173,10 +173,10 @@ export class KatoGateway {
 
   /**
    * Convert an AdapterMessage to KatoRequest and process it.
-   * Returns the KatoResponse — the adapter is responsible for sending
+   * Returns the KatoResponse â€” the adapter is responsible for sending
    * the response back through its own platform-specific UI.
    *
-   * NOTE: Do NOT call adapter.sendMessage() here — that would cause a
+   * NOTE: Do NOT call adapter.sendMessage() here â€” that would cause a
    * double response. The adapter's onMessage handler already handles
    * sending the response via its own platform-specific UI (edit, reply, etc.).
    */
@@ -191,10 +191,10 @@ export class KatoGateway {
       };
 
       const response = await this.process(request);
-      // ADAPTER handles its own UI — do NOT call sendMessage here
+      // ADAPTER handles its own UI â€” do NOT call sendMessage here
       return response;
     } catch (err: any) {
-      console.error(`❌ Gateway: engine processing failed for ${adapter.platform}: ${err.message}`);
+      /* debug log removed */
       return null;
     }
   }

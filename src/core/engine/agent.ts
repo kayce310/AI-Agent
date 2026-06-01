@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Agent — Agent Lifecycle Orchestration
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/tools/tool-pruner.ts, src/core/llm/model-adapter.ts, src/core/hooks.ts
@@ -189,7 +189,7 @@ private maxToolCycles: number;
         // Fallback: if pruner returned empty (cache miss), use full registry
         if (selectedTools.length === 0) {
           selectedTools = this.toolRegistry.getDefinitions();
-          console.warn(`⚠️ Tool pruner returned 0 tools, fallback to full registry (${selectedTools.length} tools)`);
+          /* tool pruner empty, using full registry */
         }
 
         // Cycle >= 3: restrict to core tools only
@@ -199,9 +199,7 @@ private maxToolCycles: number;
         }
 
         const toolsTokenEstimate = estimateToolsTokenCount(selectedTools);
-        if (this.debug) {
-          console.log(`📤 Tools selected: ${selectedTools.length}/${this.toolRegistry.toolCount} (~${toolsTokenEstimate} tokens)`);
-        }
+        /* tools selected */
 
         // ── Invoke model via ModelRouter with fallback ──
         await this.hooks.emit('model:invoke', {
@@ -224,9 +222,7 @@ private maxToolCycles: number;
           cycle: toolCallCycles,
         });
 
-        if (this.debug) {
-          console.log(`📤 Router used: ${modelResult.providerUsed}/${modelResult.modelUsed} (cycle ${toolCallCycles})`);
-        }
+        /* router used */
 
         // ── Handle finish_reason ──
         if (modelResult.finishReason === 'stop') {
@@ -234,9 +230,7 @@ private maxToolCycles: number;
           finalContent = finalContent.replace(/^[\w\/\.-]+:\s*/m, '');
           finalContent = this.sanitizeFinalResponse(finalContent);
 
-          if (this.debug) {
-            console.log(`✅ Final response after ${toolCallCycles} tool cycles`);
-          }
+          /* final response */
 
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
@@ -273,12 +267,8 @@ private maxToolCycles: number;
 
           for (const toolCall of modelResult.toolCalls) {
             if (toolCall.type !== 'function') {
-              console.warn(`⚠️ Non-function tool call skipped: ${toolCall.type}`);
               continue;
             }
-
-            // ── DEBUG: Log every tool call ──
-            console.log(`🔧 TOOL_CALL: ${toolCall.function.name} | args: ${toolCall.function.arguments?.substring(0, 200) || 'none'} | cycle: ${toolCallCycles}`);
 
             const allowed = await this.hooks.emit('tool:call', {
               sessionId: request.sessionId,
@@ -301,9 +291,7 @@ private maxToolCycles: number;
 
             const toolResult = await this.toolRegistry.executeToolCall(toolCall);
 
-            // ── DEBUG: Log tool result ──
             const resultStr = JSON.stringify(toolResult);
-            console.log(`🔧 TOOL_RESULT: ${toolCall.function.name} | result_length: ${resultStr.length} | preview: ${resultStr.substring(0, 200)}`);
 
             await this.hooks.emit('tool:result', {
               sessionId: request.sessionId,
@@ -318,9 +306,7 @@ private maxToolCycles: number;
               content: JSON.stringify(toolResult),
             });
 
-            if (this.debug) {
-              console.log(`🔧 Tool ${toolCall.function.name} executed (cycle ${toolCallCycles})`);
-            }
+            /* tool executed */
           }
 
           this.emit('cascade', {
@@ -334,7 +320,6 @@ private maxToolCycles: number;
         }
 
         // ── Unknown finish_reason ──
-        console.warn(`⚠️ Unknown finish_reason: ${modelResult.finishReason}`);
         finalContent = modelResult.content ||
           (modelResult.toolCalls?.length ? '⚠️ Đang xử lý yêu cầu...' : '❌ Phản hồi không mong đợi.');
         finalContent = this.sanitizeFinalResponse(finalContent);
@@ -353,8 +338,6 @@ private maxToolCycles: number;
           error: err.message,
           cycle: toolCallCycles,
         });
-
-        console.error(`❌ Model error (cycle ${toolCallCycles}):`, err.message);
 
         evolutionEngine.recordError({
           modelId: 'unknown',
