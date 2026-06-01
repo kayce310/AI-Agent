@@ -18,7 +18,7 @@ export interface KatoRequest {
   input: string;
   userId: string;
   sessionId: string;
-  platform: 'discord' | 'terminal' | 'web' | 'api' | 'app';
+  platform: string;
   metadata?: Record<string, unknown>;
 }
 

@@ -8,6 +8,8 @@
  *   R3: Dependency Header — missing @depends-on = WARNING
  *   R4: Dead Code — exported but never imported = WARNING
  *   R5: Static Security Scan — raw fs/child_process import in tools = VIOLATION
+ *   R6: Knowledge No Executable Code — .ts/.js in knowledge/ = VIOLATION
+ *   R7: No Import from scripts/.kato — runtime code must not depend on infra = VIOLATION
  *
  * Usage: npx tsx scripts/validate-structure.ts [--strict]
  *   --strict: exit code 1 on any violation (for CI/pre-commit)
@@ -353,6 +355,49 @@ function checkKnowledgeNoExecutableCode() {
   }
 }
 
+// ── Rule 7: No Import from scripts/ or .kato/ ──
+// src/core/ and src/modules/ must never import from scripts/ or .kato/
+// Those are dev/infrastructure layers — not runtime dependencies
+function checkNoImportFromScriptsOrKato() {
+  const protectedDirs = [
+    path.join(BASE_PATH, 'src/core'),
+    path.join(BASE_PATH, 'src/modules'),
+  ];
+
+  const forbiddenPrefixes = [
+    path.join(BASE_PATH, 'scripts'),
+    path.join(BASE_PATH, '.kato'),
+  ];
+
+  for (const dir of protectedDirs) {
+    const files = getFiles(dir, ['.ts', '.js', '.tsx', '.jsx']);
+
+    for (const file of files) {
+      const content = readFile(file);
+      const imports = getImportPaths(content);
+
+      for (const imp of imports) {
+        const resolved = resolveImport(imp, file);
+        if (!resolved) continue; // skip node_modules
+
+        for (const forbidden of forbiddenPrefixes) {
+          if (resolved.startsWith(forbidden)) {
+            const relFile = path.relative(BASE_PATH, file);
+            const lineNum = content.substring(0, content.indexOf(imp)).split('\n').length;
+            violations.push({
+              rule: 'R7-ImportFromScriptsOrKato',
+              file: relFile,
+              line: lineNum,
+              message: `Import '${imp}' from scripts/.kato/ into runtime code is forbidden`,
+              severity: 'ERROR',
+            });
+          }
+        }
+      }
+    }
+  }
+}
+
 // ── Report ──
 function printReport() {
   console.log('\n🔍 Structure Validation Report');
@@ -415,6 +460,9 @@ function main() {
 
   console.log('Running R6: Knowledge No Executable Code...');
   checkKnowledgeNoExecutableCode();
+
+  console.log('Running R7: No Import from scripts/ or .kato/...');
+  checkNoImportFromScriptsOrKato();
 
   printReport();
 
