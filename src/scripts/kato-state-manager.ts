@@ -1,76 +1,86 @@
 #!/usr/bin/env node
 /**
- * @file kato-state-manager — Startup script
+ * @file kato-state-manager — Startup script (CLI bridge)
  * @layer scripts
- * @depends-on src/core/index.ts, src/modules/discord/index.ts
+ * @depends-on (none — standalone, calls core via subprocess)
  * @owner infrastructure
+ *
+ * P1-1 fix: scripts/ no longer imports from core/.
+ * Instead, delegates to core/cli/state-manager-bridge.ts via npx tsx.
  */
-import { KatoStateManager, ProcessedFile } from '../core/memory/state-manager.js';
+
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 const [, , command = 'read', ...args] = process.argv;
-const manager = new KatoStateManager();
 
-async function main(): Promise<void> {
-  const result = await runCommand(command, args);
-  console.log(JSON.stringify(result, null, 2));
-  if (!result.ok) process.exitCode = 1;
+interface StateResult {
+  ok: boolean;
+  error?: { code: string; message: string; details?: unknown };
+  [key: string]: unknown;
 }
 
-async function runCommand(commandName: string, commandArgs: string[]) {
-  switch (commandName) {
-    case 'init':
-      return manager.init(commandArgs.join(' ') || null);
-    case 'read':
-      return manager.read();
-    case 'ready': {
-      const role = commandArgs[0] ?? 'Lead AI Engineer';
-      const skills = commandArgs.slice(1);
-      return manager.markReady(role, skills);
-    }
-    case 'verify':
-      return manager.verify();
-    case 'repair':
-      return manager.repair();
-    case 'begin-tx':
-      return manager.beginTx(commandArgs.join(' ') || 'unknown');
-    case 'commit-tx':
-      return manager.commitTx(commandArgs[0] || '');
-    case 'scan':
-      return manager.scanBlueprint();
-    case 'mark': {
-      // Usage: mark <filepath> [action] [destination]
-      // Example: mark knowledge/blueprints/test.ts integrated src/test.ts
-      const filePath = commandArgs[0];
-      if (!filePath) {
-        return {
-          ok: false as const,
-          error: { code: 'MISSING_ARGUMENT', message: 'Usage: mark <filepath> [action] [destination]' },
-        };
+/**
+ * Call core state manager via subprocess to maintain layer boundary.
+ * scripts/ must not import from core/ (R2 import path integrity rule).
+ */
+function callStateManager(commandName: string, commandArgs: string[]): Promise<StateResult> {
+  return new Promise((resolve) => {
+    const bridgePath = path.join(PROJECT_ROOT, 'src/core/cli/state-manager-bridge.ts');
+    const child = spawn('npx', ['tsx', bridgePath, commandName, ...commandArgs], {
+      cwd: PROJECT_ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env },
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data: Buffer) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data: Buffer) => {
+      stderr += data.toString();
+    });
+
+    child.on('close', (code: number | null) => {
+      try {
+        const result = JSON.parse(stdout) as StateResult;
+        resolve(result);
+      } catch {
+        resolve({
+          ok: false,
+          error: {
+            code: 'PARSE_ERROR',
+            message: `Failed to parse state manager output (exit ${code})`,
+            details: { stdout: stdout.slice(0, 500), stderr: stderr.slice(0, 500) },
+          },
+        });
       }
-      const action = (commandArgs[1] || 'integrated') as ProcessedFile['action'];
-      const destination = commandArgs[2] || undefined;
-      const fileType = manager.classifyFile(filePath);
-      
-      const processedFile: ProcessedFile = {
-        path: filePath,
-        type: fileType,
-        processedAt: new Date().toISOString(),
-        checksum: '', // TODO: compute actual checksum
-        action,
-        destination,
-      };
-      return manager.markFileProcessed(processedFile);
-    }
-    default:
-      return {
-        ok: false as const,
+    });
+
+    child.on('error', (err: Error) => {
+      resolve({
+        ok: false,
         error: {
-          code: 'UNKNOWN_COMMAND',
-          message: `Unsupported command: ${commandName}`,
-          details: { supported: ['init', 'read', 'ready', 'scan', 'mark', 'verify', 'repair', 'begin-tx', 'commit-tx'] },
+          code: 'SUBPROCESS_ERROR',
+          message: `Failed to spawn state manager: ${err.message}`,
         },
-      };
-  }
+      });
+    });
+  });
+}
+
+async function main(): Promise<void> {
+  const result = await callStateManager(command, args);
+  console.log(JSON.stringify(result, null, 2));
+  if (!result.ok) process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {

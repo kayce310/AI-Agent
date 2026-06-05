@@ -10,18 +10,20 @@ echo [0/3] Cleaning old Kato instances only...
 for /f "tokens=5" %%p in ('netstat -ano ^| findstr 47832') do taskkill /F /PID %%p >nul 2>&1
 echo    Done.
 
-:: 1. Kiem tra dependencies
 echo [1/3] Checking dependencies...
 if not exist node_modules (
-    echo    Installing dependencies...
     call npm install
-) else (
-    echo    Dependencies already installed.
 )
 
+<<<<<<< HEAD
 :: 2. Khoi dong bot IN CURRENT TERMINAL
 echo [2/3] Starting Kato Discord Bot (THIS TERMINAL)...
 echo -------------------------
 npx tsx src/scripts/start-discord.ts
 endlocal
 exit /b
+=======
+echo [2/3] Starting Kato Discord Bot...
+npx tsx src/scripts/start-discord.ts
+endlocal
+>>>>>>> 3b254f4d (fix(scripts): A4 P1-1 violation — kato-state-manager subprocess bridge)

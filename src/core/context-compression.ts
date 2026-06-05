@@ -17,7 +17,7 @@
  *   - New session ID after compression to avoid context bleed
  */
 
-import { estimateTokens, shouldCompress } from './token-estimator.js';
+import { estimateTokens, shouldCompress } from './engine/token-estimator.js';
 
 export interface Message {
   role: string;
