@@ -164,7 +164,7 @@ export class InputGuard {
       }
 
       if (result.action === 'warn') {
-         => f.description).join(', ')}`);
+        // warn about findings
       }
 
       return { allowed: true };

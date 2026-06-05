@@ -83,7 +83,7 @@ export async function ensureToolDefinitionsLoaded(): Promise<void> {
  */
 export function selectRelevantTools(userMessage: string): any[] {
   if (!_loaded) {
-     first.');
+    /* initialization required */
     return [];
   }
 

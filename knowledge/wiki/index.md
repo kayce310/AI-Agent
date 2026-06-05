@@ -92,6 +92,7 @@ Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
 - [[core/llm-architecture]] - Kiến trúc Lõi LLM Universal
 - [[core/task-queue]] - Hệ thống hàng đợi tác vụ
 - [[core/architecture-decisions]] - Architecture Decision Records (ADRs)
+- [[core/deep-analysis-plan]] - Deep Analysis Plan: 16 mặt kiến trúc hệ thống
 
 ---
 

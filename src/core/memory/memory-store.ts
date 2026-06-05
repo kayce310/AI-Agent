@@ -97,7 +97,7 @@ export class MemoryStore {
     }
 
     this.loaded = true;
-    .lastSeq})`);
+
   }
 
   // â”€â”€ ADD-only Write â”€â”€

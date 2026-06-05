@@ -142,8 +142,6 @@ export class MCPClientManager {
 
     // Pre-cache tool list
     await this.refreshTools(name);
-
-    ?.length ?? 0} tools)`);
   }
 
   /**

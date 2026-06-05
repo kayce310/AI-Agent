@@ -258,7 +258,6 @@ export class OutputGuard {
 
       if (!report.passed) {
         const errors = report.checks.filter((c) => c.severity === 'error');
-         failed:`);
         for (const e of errors) {
           /* debug log removed */
         }

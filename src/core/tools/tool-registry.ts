@@ -86,7 +86,7 @@ function addProcessedFile(entry: {
     });
     secureRuntime.safeWriteFile(PROCESSED_FILES_PATH, JSON.stringify(data, null, 2));
   } catch (err) {
-    .message);
+    /* error handling */
   }
 }
 
@@ -117,8 +117,6 @@ export class ToolRegistry {
     if (plugin.onRegister) {
       plugin.onRegister(this);
     }
-
-    `);
   }
 
   /**
@@ -211,7 +209,7 @@ export class ToolRegistry {
       }
     }
     if (manifest.imported > 0) {
-      `);
+      /* debug log removed */
     }
 
     return manifest;

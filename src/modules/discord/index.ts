@@ -285,6 +285,43 @@ export class DiscordBridge implements PlatformAdapter {
         return;
       }
 
+      // ── Context Compression Command ──
+      if (message.content.toLowerCase().startsWith('/compact')) {
+        // Extract optional topic hint: /compact [topic]
+        const args = message.content.slice(8).trim();  // Remove '/compact'
+        const focusTopic = args || undefined;
+
+        // Emit compression request event — handler wired at gateway level
+        if (this.messageHandler) {
+          try {
+            await message.reply(`🗜️  Triggering context compression${focusTopic ? ` (focus: ${focusTopic})` : ''}...`);
+            
+            // Create compression request
+            const compressionRequest: AdapterMessage = {
+              messageId: message.id,
+              userId: message.author.id,
+              channelId: message.channelId,
+              text: `/compact ${focusTopic || ''}`.trim(),
+              platform: 'discord',
+              isMention: true,
+              timestamp: Date.now(),
+              metadata: {
+                isCompression: true,
+                focusTopic: focusTopic,
+              },
+            };
+
+            const response = await this.messageHandler(compressionRequest);
+            if (response && response.output) {
+              await message.reply(response.output);
+            }
+          } catch (err: any) {
+            await message.reply(`❌ Compression failed: ${err.message}`);
+          }
+        }
+        return;
+      }
+
       // ── Mention/Keyword Check ──
       const isMentioned = message.mentions.has(this.client.user!);
       const hasKatoKeyword = !isMentioned && message.content.toLowerCase().includes('kato');

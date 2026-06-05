@@ -74,7 +74,6 @@ export async function startMCPServer(registry: ToolRegistry): Promise<() => Prom
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-   â€” ${tools.length} tools exposed`);
 
   return async () => {
     await server.close();

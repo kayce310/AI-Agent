@@ -25,6 +25,8 @@ import { evolutionEngine } from '../evolution.js';
 import { Tracer } from '../observability/tracer.js';
 import { Janitor } from '../agents/janitor.js';
 import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
+import { shouldAttemptCompression, compressContext } from '../context-compression.js';
+import { estimateTokens } from './token-estimator.js';
 
 // ── Constants ──
 const MAX_TOOL_CALL_CYCLES = 10;
@@ -36,6 +38,7 @@ export interface AgentConfig {
   hooks?: HookRegistry;
   tracer?: Tracer;
   maxToolCycles?: number;
+  auxiliaryLlmCall?: (prompt: string) => Promise<string>;
   debug?: boolean;
 }
 
@@ -54,7 +57,8 @@ export class Agent extends EventEmitter {
   private toolRegistry: ToolRegistry;
   private hooks: HookRegistry;
   private tracer?: Tracer;
-private maxToolCycles: number;
+  private maxToolCycles: number;
+  private auxiliaryLlmCall?: (prompt: string) => Promise<string>;
   private debug: boolean;
   private janitor?: Janitor;
 
@@ -65,6 +69,7 @@ private maxToolCycles: number;
     this.hooks = config.hooks ?? globalHooks;
     this.tracer = config.tracer;
     this.maxToolCycles = config.maxToolCycles ?? MAX_TOOL_CALL_CYCLES;
+    this.auxiliaryLlmCall = config.auxiliaryLlmCall;
     this.debug = config.debug ?? false;
 
     // Auto-attach tracer to hooks if provided
@@ -264,6 +269,28 @@ private maxToolCycles: number;
           }
           messages.push(assistantMsg);
           toolCallCycles++;
+
+          // ── Context Compression (A3) ──
+          if (this.auxiliaryLlmCall && shouldAttemptCompression(messages)) {
+            const compressionResult = await compressContext(messages, this.auxiliaryLlmCall, {
+              maxContext: 128_000,
+              thresholdPct: 0.80,
+              tailProtect: 5,
+              focusTopic: (request as any).focusTopic,
+            });
+
+            if (compressionResult.compressed) {
+              messages.length = 0;
+              messages.push(...compressionResult.messages);
+              await this.hooks.emit('context:compressed', {
+                sessionId: request.sessionId,
+                tokensBefore: compressionResult.tokensBefore,
+                tokensAfter: compressionResult.tokensAfter,
+                newSessionId: compressionResult.sessionId,
+                cycle: toolCallCycles,
+              });
+            }
+          }
 
           for (const toolCall of modelResult.toolCalls) {
             if (toolCall.type !== 'function') {
