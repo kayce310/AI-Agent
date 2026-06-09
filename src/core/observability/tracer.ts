@@ -18,6 +18,7 @@
 
 import { HookRegistry, HookContext, globalHooks } from '../hooks.js';
 import { evolutionEngine } from '../evolution.js';
+import { Langfuse } from 'langfuse';
 
 // â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -45,6 +46,12 @@ export interface TracerConfig {
   autoAttach?: boolean;
   /** Log spans to console when ended */
   verbose?: boolean;
+  /** Langfuse credentials for cloud observability export */
+  langfuse?: {
+    secretKey: string;
+    publicKey: string;
+    baseUrl?: string;
+  };
 }
 
 export interface Anomaly {
@@ -70,10 +77,19 @@ export class Tracer {
   private bufferSize: number;
   private verbose: boolean;
   private spanStack: TraceSpan[] = []; // for nested span tracking
+  private langfuseClient: Langfuse | null = null;
 
   constructor(config?: TracerConfig) {
     this.bufferSize = config?.bufferSize ?? 200;
     this.verbose = config?.verbose ?? false;
+
+    if (config?.langfuse) {
+      this.langfuseClient = new Langfuse({
+        secretKey: config.langfuse.secretKey,
+        publicKey: config.langfuse.publicKey,
+        baseUrl: config.langfuse.baseUrl ?? 'https://cloud.langfuse.com',
+      });
+    }
 
     if (config?.autoAttach) {
       this.attachToHooks();
@@ -114,14 +130,17 @@ export class Tracer {
     }
 
     if (this.verbose) {
-      const status = error ? `âŒ` : `âœ…`;
-      `);
+      const status = error ? '❌' : '✅';
+      console.log(`[Tracer] ${status} ${span.type}:${span.name} (${span.durationMs}ms)`);
     }
 
     // Feed performance data to evolution engine
     if (span.type === 'llm' && span.tokenCount && !error) {
       evolutionEngine.recordSuccess(span.name, span.durationMs).catch(() => {});
     }
+
+    // Send to Langfuse if client is configured
+    this.exportToLangfuse(span).catch(() => {});
   }
 
   /** Convenience: run a closure inside a span */
@@ -403,6 +422,50 @@ export class Tracer {
 
   // â”€â”€ Private â”€â”€
 
+  /** Export a completed span to Langfuse (fire-and-forget, no throw) */
+  private async exportToLangfuse(span: TraceSpan): Promise<void> {
+    if (!this.langfuseClient) return;
+    try {
+      const trace = this.langfuseClient.trace({
+        id: span.parentId ?? span.id,
+        name: span.type,
+        metadata: {
+          spanId: span.id,
+          type: span.type,
+          tags: span.tags,
+        },
+      });
+
+      if (span.type === 'llm') {
+        trace.generation({
+          name: span.name,
+          startTime: new Date(span.startTime),
+          endTime: span.endTime ? new Date(span.endTime) : undefined,
+          model: span.tags?.model,
+          input: span.input,
+          output: span.output,
+          usage: span.tokenCount
+            ? { input: span.tokenCount.input, output: span.tokenCount.output }
+            : undefined,
+          level: span.error ? 'ERROR' : 'DEFAULT',
+          statusMessage: span.error,
+        });
+      } else {
+        trace.span({
+          name: span.name,
+          startTime: new Date(span.startTime),
+          endTime: span.endTime ? new Date(span.endTime) : undefined,
+          input: span.input,
+          output: span.output,
+          level: span.error ? 'ERROR' : 'DEFAULT',
+          statusMessage: span.error,
+        });
+      }
+    } catch {
+      // Silently fail — Langfuse should never crash the agent
+    }
+  }
+
   private pushSpan(span: TraceSpan): void {
     this.spans.push(span);
     // Ring buffer: keep only the last bufferSize spans
@@ -421,6 +484,7 @@ export function createAgentTracer(config?: TracerConfig): Tracer {
     bufferSize: config?.bufferSize ?? 200,
     autoAttach: config?.autoAttach ?? false,
     verbose: config?.verbose ?? false,
+    langfuse: config?.langfuse,
   });
 
   // Auto-attach if requested (uses globalHooks internally)
