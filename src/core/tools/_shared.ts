@@ -67,7 +67,7 @@ export function addProcessedFile(entry: {
     `);
     return true;
   } catch (err: any) {
-    /* debug log removed */
+    console.warn(`[Tools] addProcessedFile error: ${err.message}`);
     return false;
   }
 }

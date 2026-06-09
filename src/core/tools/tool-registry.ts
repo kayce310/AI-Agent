@@ -109,7 +109,7 @@ export class ToolRegistry {
 
     for (const tool of plugin.tools) {
       if (this.toolsMap.has(tool.name)) {
-        /* debug log removed */
+        console.warn(`[ToolRegistry] Overwriting duplicate tool: ${tool.name}`);
       }
       this.toolsMap.set(tool.name, tool);
     }
@@ -205,11 +205,11 @@ export class ToolRegistry {
     // Phase 2: Report results
     if (manifest.errors.length > 0) {
       for (const err of manifest.errors) {
-        /* debug log removed */
+        console.error(`[ToolRegistry] Plugin error: ${err}`);
       }
     }
     if (manifest.imported > 0) {
-      /* debug log removed */
+      console.log(`[ToolRegistry] Auto-discovered ${manifest.imported} plugin(s)`);
     }
 
     return manifest;
@@ -269,11 +269,12 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
       const mod = await import(modulePath);
       if (mod.default && mod.default.name && mod.default.tools) {
         registry.use(mod.default);
+        console.log(`[ToolRegistry] Loaded plugin: ${mod.default.name}`);
       } else {
-        /* debug log removed */
+        console.warn(`[ToolRegistry] Plugin ${name} has no valid default export`);
       }
     } catch (err: any) {
-      /* debug log removed */
+      console.warn(`[ToolRegistry] Failed to import plugin ${name}: ${err.message}`);
     }
   }
   // Phase 2a: Auto-discovery via AST Scanner (Micro-Task 50)
@@ -281,11 +282,11 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
     try {
       await registry.registerAll();
     } catch (err: any) {
-      /* debug log removed */
+      console.error(`[ToolRegistry] Auto-discovery failed: ${err.message}`);
     }
   }
 
-  /* debug log removed */
+  console.log(`[ToolRegistry] getDefaultRegistry complete: ${registry.getDefinitions().length} tool(s) registered`);
 }
 
 // Re-export safe utilities only (NO raw fs/execSync â€” use tool-gateway.ts)

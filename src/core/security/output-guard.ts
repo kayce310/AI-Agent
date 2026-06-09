@@ -259,12 +259,12 @@ export class OutputGuard {
       if (!report.passed) {
         const errors = report.checks.filter((c) => c.severity === 'error');
         for (const e of errors) {
-          /* debug log removed */
+          console.warn(`[OutputGuard] Blocked: ${e.rule} - ${e.message}`);
         }
 
         if (report.sanitized) {
           data.output = report.sanitized;
-          /* debug log removed */
+          console.log('[OutputGuard] Output sanitized');
         }
       }
     });

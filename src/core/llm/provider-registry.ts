@@ -79,7 +79,7 @@ export class ProviderRegistry {
   /** Load providers tá»« file YAML */
   loadFromConfig(): void {
     if (!fs.existsSync(this.configPath)) {
-      /* debug log removed */
+      console.log(`[ProviderRegistry] Config not found at ${this.configPath}, using defaults`);
       this.registerDefaultProviders();
       return;
     }
@@ -88,7 +88,7 @@ export class ProviderRegistry {
     const parsed: ProviderConfigFile = JSON.parse(raw);
 
     if (!parsed?.providers || !Array.isArray(parsed.providers)) {
-      /* debug log removed */
+      console.log('[ProviderRegistry] Invalid providers.json, using defaults');
       this.registerDefaultProviders();
       return;
     }
@@ -96,13 +96,13 @@ export class ProviderRegistry {
     for (const cfg of parsed.providers) {
       // If 9router config has hardcoded baseUrl but env var exists, override
       if (cfg.name === '9router' && process.env.NINE_ROUTER_API_BASE) {
-        /* debug log removed */
+        console.log(`[ProviderRegistry] Overriding 9router baseUrl to ${process.env.NINE_ROUTER_API_BASE}`);
         cfg.baseUrl = process.env.NINE_ROUTER_API_BASE;
       }
       this.register(cfg);
     }
 
-    /* debug log removed */
+    console.log(`[ProviderRegistry] Loaded ${this.providers.size} provider(s) with ${this.modelToProvider.size} model(s)`);
   }
 
   /** ÄÄƒng kÃ½ má»™t provider */
@@ -170,7 +170,7 @@ export class ProviderRegistry {
     // 9Router external service takes priority if configured
     const nineRouterBase = process.env.NINE_ROUTER_API_BASE;
     if (nineRouterBase) {
-      /* debug log removed */
+      console.log('[ProviderRegistry] Registering 9router provider from NINE_ROUTER_API_BASE');
       this.register({
         name: '9router',
         baseUrl: nineRouterBase,

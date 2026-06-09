@@ -75,22 +75,22 @@ export class MemoryStore {
     try {
       await fs.mkdir(this.storePath, { recursive: true });
     } catch (err: any) {
-      /* debug log removed */
+      console.error(`[MemoryStore] Failed to create store directory: ${err.message}`);
     }
 
     // Initialize append-log persistence
     this.log = await createMemoryLog(this.storePath);
 
-    // Replay tá»« log (snapshot + append replay)
+    // Replay từ log (snapshot + append replay)
     this.blocks = await this.log.replay();
 
-    // Fallback: náº¿u log trá»‘ng, thá»­ load tá»« legacy store.json
+    // Fallback: nếu log trống, thử load từ legacy store.json
     if (this.blocks.length === 0) {
       await this.loadFromDisk();
 
-      // Náº¿u cÃ³ legacy data, migrate vÃ o log
+      // Nếu có legacy data, migrate vào log
       if (this.blocks.length > 0) {
-        /* debug log removed */
+        console.log(`[MemoryStore] Migrated ${this.blocks.length} block(s) from legacy store`);
         await this.log.append({ op: 'addMany', blocks: this.blocks });
         await this.log.createSnapshot(this.blocks);
       }
@@ -278,11 +278,9 @@ export class MemoryStore {
       const filePath = path.join(this.storePath, 'store.json');
       await fs.writeFile(filePath, JSON.stringify(this.blocks, null, 2), 'utf8');
     } catch (err: any) {
-      /* debug log removed */
+      console.error(`[MemoryStore] persistToDisk failed: ${err.message}`);
     }
   }
-
-  // â”€â”€ Legacy Migration â”€â”€
 
   /**
    * Migrate dá»¯ liá»‡u tá»« legacy MemoryCore.
@@ -297,7 +295,7 @@ export class MemoryStore {
     try {
       await fs.access(legacyPath);
     } catch {
-      /* debug log removed */
+      console.log('[MemoryStore] No legacy memory directory found, skipping migration');
       return 0;
     }
 
@@ -318,7 +316,7 @@ export class MemoryStore {
 
     if (migratedCount > 0) {
       await this.flush();
-      /* debug log removed */
+      console.log(`[MemoryStore] Migration complete: ${migratedCount} channel(s)`);
     }
 
     return migratedCount;
@@ -392,7 +390,7 @@ export class MemoryStore {
             const batch: MemoryBlock[] = JSON.parse(data);
             this.blocks.push(...batch);
           } catch {
-            /* debug log removed */
+            console.warn(`[MemoryStore] Failed to load batch: ${batchPath}`);
           }
         }
       } else {
@@ -410,11 +408,8 @@ export class MemoryStore {
         }
       }
     } catch (err: any) {
-      /* debug log removed */
+      console.error(`[MemoryStore] loadFromDisk failed: ${err.message}`);
     }
-  }
-
-  private generateId(): string {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return `mem_${timestamp}_${random}`;

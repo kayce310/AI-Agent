@@ -77,7 +77,7 @@ export async function startMCPServer(registry: ToolRegistry): Promise<() => Prom
 
   return async () => {
     await server.close();
-    /* debug log removed */
+    console.log('[MCPServer] MCP server closed');
   };
 }
 

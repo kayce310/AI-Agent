@@ -234,7 +234,7 @@ export class MemoryLog {
         }
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
-          /* debug log removed */
+          console.error(`[MemoryLog] Replay error: ${err.message}`);
         }
       }
     }

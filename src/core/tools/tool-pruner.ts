@@ -73,7 +73,7 @@ export async function ensureToolDefinitionsLoaded(): Promise<void> {
   _allToolNames = registry.listTools();
   _allToolDefinitions = registry.getDefinitions();
   _loaded = true;
-  /* debug log removed */
+  console.log(`[ToolPruner] Loaded ${_allToolDefinitions.length} tool definition(s)`);
 }
 
 /**

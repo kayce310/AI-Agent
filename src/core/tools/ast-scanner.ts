@@ -164,7 +164,7 @@ export class ASTScanner {
 
     const elapsed = Math.round(performance.now() - start);
     if (plugins.length > 0) {
-      /* debug log removed */
+      console.log(`[ASTScanner] Discovered ${plugins.length} plugin(s) in ${elapsed}ms`);
     }
 
     return plugins;

@@ -292,7 +292,7 @@ export class SkillRuntime {
           });
         }
         // Default: just log activation
-        /* debug log removed */
+        console.log(`[SkillRuntime] Activated skill: ${name} v${def.version}`);
       },
       onTask: async (task: Task) => {
         // Default behavior: return the markdown content as context output
@@ -334,7 +334,7 @@ export class SkillRuntime {
             version: def.version,
           });
         }
-        /* debug log removed */
+        console.log(`[SkillRuntime] Deactivated skill: ${name}`);
       },
     };
 

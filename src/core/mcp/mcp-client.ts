@@ -261,7 +261,7 @@ export class MCPClientManager {
       this.transports.delete(serverName);
       this.toolCache.delete(serverName);
       this.reconnectAttempts.delete(serverName);
-      /* debug log removed */
+      console.log(`[MCPClient] Disconnected from "${serverName}"`);
     }
   }
 

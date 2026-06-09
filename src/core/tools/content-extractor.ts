@@ -156,7 +156,7 @@ export function extractContent(html: string, url: string, contentType?: string):
 
   // Log if text exceeds threshold for monitoring
   if (wordCount > 1000) {
-    /* debug log removed */
+    console.log(`[ContentExtractor] Large page: ${url} (${wordCount} words)`);
   }
 
   return { title, text, links, wordCount };

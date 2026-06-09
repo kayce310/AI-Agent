@@ -53,23 +53,23 @@ export class KatoGateway {
    */
   register(adapter: PlatformAdapter): void {
     if (this.adapters.has(adapter.platform)) {
-      /* debug log removed */
+      console.warn(`[Gateway] Adapter "${adapter.platform}" already registered, overwriting`);
     }
 
-    // Wire message handler: adapter â†’ gateway â†’ engine
+    // Wire message handler: adapter → gateway → engine
     // Returns KatoResponse so the adapter can handle its own platform-specific UI
     adapter.onMessage(async (msg: AdapterMessage) => {
       try {
         const response = await this.handleAdapterMessage(adapter, msg);
         return response;
       } catch (err: any) {
-        /* debug log removed */
+        console.error(`[Gateway] Error handling message from ${adapter.platform}: ${err.message}`);
         return null;
       }
     });
 
     this.adapters.set(adapter.platform, adapter);
-    /* debug log removed */
+    console.log(`[Gateway] Registered adapter: ${adapter.platform}`);
   }
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -82,9 +82,9 @@ export class KatoGateway {
   async startAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    /* debug log removed */
+    console.log(`[Gateway] Starting adapter: ${platform}`);
     await adapter.start();
-    /* debug log removed */
+    console.log(`[Gateway] Adapter started: ${platform}`);
   }
 
   /**
@@ -93,9 +93,9 @@ export class KatoGateway {
   async stopAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    /* debug log removed */
+    console.log(`[Gateway] Stopping adapter: ${platform}`);
     await adapter.stop();
-    /* debug log removed */
+    console.log(`[Gateway] Adapter stopped: ${platform}`);
   }
 
   /**
@@ -110,13 +110,13 @@ export class KatoGateway {
 
     const promises = Array.from(this.adapters.values()).map(async (adapter) => {
       try {
-        /* debug log removed */
+        console.log(`[Gateway] Starting adapter: ${adapter.platform}`);
         await adapter.start();
         results.push(adapter.platform);
-        /* debug log removed */
+        console.log(`[Gateway] Adapter started: ${adapter.platform}`);
       } catch (err: any) {
         errors.push({ platform: adapter.platform, error: err.message });
-        /* debug log removed */
+        console.error(`[Gateway] Adapter "${adapter.platform}" failed to start: ${err.message}`);
       }
     });
 
@@ -128,13 +128,13 @@ export class KatoGateway {
    * Stop all registered adapters.
    */
   async stopAll(): Promise<void> {
-    /* debug log removed */
+    console.log('[Gateway] Stopping all adapters');
     const promises = Array.from(this.adapters.values()).map(adapter =>
       adapter.stop().catch(() => {})
     );
     await Promise.all(promises);
     this._isRunning = false;
-    /* debug log removed */
+    console.log('[Gateway] All adapters stopped');
   }
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -194,7 +194,7 @@ export class KatoGateway {
       // ADAPTER handles its own UI â€” do NOT call sendMessage here
       return response;
     } catch (err: any) {
-      /* debug log removed */
+      console.error(`[Gateway] handleAdapterMessage error: ${err.message}`);
       return null;
     }
   }

@@ -460,7 +460,7 @@ export class KatoStateManager {
       const existing = await this.read();
       if (existing.ok) return existing;
       // If read fails (e.g. schema mismatch, old format), overwrite with fresh state
-      /* debug log removed */
+      console.warn('[StateManager] Existing state invalid, creating fresh state');
     }
 
     const now = new Date().toISOString();

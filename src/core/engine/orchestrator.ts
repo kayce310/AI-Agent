@@ -145,7 +145,7 @@ export class Orchestrator {
     const boot = await executeBootSequence(process.cwd());
     if (boot.blocked) {
       const msg = `Boot sequence blocked: ${boot.reason}`;
-      /* debug log removed */
+      console.error(`[Orchestrator] ${msg}`);
       if (boot.p0Items) {
 
       }
@@ -186,7 +186,7 @@ export class Orchestrator {
       requires: st.requires || []
     })));
     if (cycleError) {
-      /* debug log removed */
+      console.error(`[Orchestrator] DAG cycle detected: ${cycleError}`);
       evolutionEngine.recordError({
         modelId: 'orchestrator',
         errorType: 'ORCHESTRATOR_DAG_CYCLE',

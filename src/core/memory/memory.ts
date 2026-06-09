@@ -44,9 +44,9 @@ export class MemoryCore {
   private async initializeStorage(): Promise<void> {
     try {
       await fs.mkdir(this.memoryPath, { recursive: true });
-      /* debug log removed */
+      console.log(`[Memory] Storage initialized at ${this.memoryPath}`);
     } catch (error) {
-      /* debug log removed */
+      console.error(`[Memory] Failed to create storage directory: ${error}`);
     }
   }
 
@@ -72,7 +72,7 @@ export class MemoryCore {
       const trimmedHistory = history.slice(-this.MAX_RAM_MESSAGES);
       this.channelCache.set(channelId, [...trimmedHistory]);
       
-      /* debug log removed */
+      console.log(`[Memory] Loaded ${history.length} message(s) for channel ${channelId}`);
       return [...trimmedHistory];
 
     } catch (error) {
@@ -108,7 +108,7 @@ export class MemoryCore {
         const filePath = this.getChannelFilePath(channelId);
         await fs.writeFile(filePath, JSON.stringify(history, null, 2));
       } catch (error) {
-        /* debug log removed */
+        console.error(`[Memory] Failed to persist channel ${channelId}: ${error}`);
       }
     });
   }

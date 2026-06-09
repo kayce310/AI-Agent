@@ -141,13 +141,13 @@ export class HookRegistry {
         try {
           const result = await guard.handler(ctx);
           if (!result.allowed) {
-            /* debug log removed */
+            console.warn(`[Hooks] Guard "${guard.name}" blocked event "${event}"`);
             return false;
           }
         } catch (err) {
-          /* debug log removed */
-          // Guard error â†’ block by default (fail-closed)
-          /* debug log removed */
+          console.error(`[Hooks] Guard "${guard.name}" error on event "${event}": ${err}`);
+          // Guard error → block by default (fail-closed)
+          console.warn(`[Hooks] Event "${event}" blocked due to guard error`);
           return false;
         }
       }
@@ -161,7 +161,7 @@ export class HookRegistry {
       try {
         await hook.handler(ctx);
       } catch (err) {
-        /* debug log removed */
+        console.error(`[Hooks] Hook error on event "${event}": ${err}`);
         // Don't throw â€” let other handlers run
       }
     }

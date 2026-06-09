@@ -395,7 +395,7 @@ export class Tracer {
       const anomalies = this.detectAnomalies();
       if (anomalies.length > 0 && this.verbose) {
         for (const a of anomalies) {
-          /* debug log removed */
+          console.warn(`[Tracer] Anomaly: ${a.type} - ${a.message}`);
         }
       }
     });

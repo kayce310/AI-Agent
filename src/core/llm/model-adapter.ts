@@ -410,7 +410,7 @@ export class ModelRouter {
 
         return response;
       } catch (err: any) {
-        /* debug log removed */
+        console.warn(`[ModelRouter] Adapter "${adapter.name}" failed: ${err.message}`);
         this.lastError.set(adapter.name, err.message);
 
         evolutionEngine.recordError({
@@ -462,22 +462,22 @@ export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<M
     if (reg.listModels().length > 0) {
       router.use(new RouterAdapter(reg));
       router.setDefault('9router');
-      /* debug log removed */
+      console.log(`[ModelRouter] 9router adapter registered with ${reg.listModels().length} model(s)`);
     }
   } catch (err: any) {
-    /* debug log removed */
+    console.warn(`[ModelRouter] Failed to load config: ${err.message}`);
   }
 
   const litellm = LiteLLMAdapter.fromEnv();
   if (litellm) {
     router.use(litellm);
-    /* debug log removed */
+    console.log('[ModelRouter] LiteLLM adapter registered');
   }
 
   const ollama = OllamaAdapter.fromEnv();
   if (ollama) {
     router.use(ollama);
-    /* debug log removed */
+    console.log('[ModelRouter] Ollama adapter registered');
   }
 
   return router;

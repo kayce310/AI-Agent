@@ -232,7 +232,7 @@ export class Engine extends EventEmitter {
         providerUsed: result.providerUsed,
       };
     } catch (agentErr: any) {
-      /* debug log removed */
+      console.error(`[Engine] Agent run failed: ${agentErr.message}`);
       evolutionEngine.recordError({
         modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
         errorType: 'ENGINE_AGENT_FAILED',

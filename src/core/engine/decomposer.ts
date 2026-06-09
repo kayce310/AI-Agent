@@ -89,7 +89,7 @@ export class Decomposer {
     const messages = this.buildMessages(task, context);
 
     if (this.debug) {
-
+      console.log(`[Decomposer] Starting decomposition for task (${task.length} chars)`);
     }
 
     let lastError: string | null = null;
@@ -110,21 +110,21 @@ export class Decomposer {
         this.validate(parsed, task);
 
         if (this.debug) {
-          /* debug log removed */
+          console.log(`[Decomposer] Parsed task: ${JSON.stringify(parsed).substring(0, 200)}`);
         }
 
         return parsed;
       } catch (err: any) {
         lastError = err.message;
         if (this.debug) {
-          /* debug log removed */
+          console.log(`[Decomposer] Parse attempt failed: ${err.message}`);
         }
       }
     }
 
     // Fallback: return a single "do it" task
     if (this.debug) {
-
+      console.log('[Decomposer] All attempts exhausted, using fallback single-task decomposition');
     }
 
     return {
