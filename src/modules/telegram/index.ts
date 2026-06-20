@@ -21,6 +21,7 @@ import { PlatformAdapter, AdapterMessage, AdapterStatus, PlatformMeta } from '..
 import { Logger } from '../../core/logger.js';
 const log = new Logger({ module: 'Telegram' });
 import { ActivityReporter } from './activity-reporter.js';
+import { userManager } from './user-manager.js';
 import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -221,31 +222,112 @@ export class TelegramBridge implements PlatformAdapter {
   private registerEventHandlers(): void {
     // Handle /start command
     this.bot.command('start', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAllowed(userId)) {
+        await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
+        return;
+      }
+
+      const role = userManager.isAdmin(userId) ? '👑 Admin' : '👤 User';
       await ctx.reply(
-        '👋 Xin chào! Tôi là Coral — AI Agent.\n\n' +
-        'Gửi tin nhắn bất kỳ để tôi hỗ trợ.\n\n' +
-        'Lệnh:\n' +
-        '/models — Danh sách model\n' +
-        '/help — Trợ giúp'
+        `👋 Xin chào! Tôi là **Coral** — AI Agent.\n` +
+        `Role: ${role}\n\n` +
+        `Gửi tin nhắn bất kỳ để tôi hỗ trợ.\n\n` +
+        `Lệnh:\n` +
+        `/status — Trạng thái Coral\n` +
+        `/models — Danh sách model\n` +
+        `/help — Trợ giúp` +
+        (userManager.isAdmin(userId) ? '\n/admin — Quản lý user' : '')
       );
     });
 
     // Handle /help command
     this.bot.command('help', async (ctx) => {
-      await ctx.reply(
-        '🤖 Coral AI Agent\n\n' +
-        'Tôi có thể:\n' +
-        '• Trả lời câu hỏi\n' +
-        '• Thực thi code\n' +
-        '• Quản lý file\n' +
-        '• Tìm kiếm thông tin\n\n' +
-        'Đơn giản là gửi tin nhắn và tôi sẽ xử lý!'
-      );
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAllowed(userId)) return;
+
+      const help = [
+        '🤖 Coral AI Agent',
+        '',
+        'Tôi có thể:',
+        '• Trả lời câu hỏi',
+        '• Thực thi code',
+        '• Quản lý file',
+        '• Tìm kiếm thông tin',
+        '',
+        'Đơn giản là gửi tin nhắn và tôi sẽ xử lý!',
+        '',
+        'Lệnh:',
+        '/status — Trạng thái Coral',
+        '/models — Danh sách model',
+        '/help — Trợ giúp',
+      ];
+      if (userManager.isAdmin(userId)) {
+        help.push('', '/allow <userId> — Thêm user');
+      }
+      await ctx.reply(help.join('\n'));
     });
 
     // Handle /models command
     this.bot.command('models', async (ctx) => {
       await ctx.reply('ℹ️ Model switching được quản lý bởi gateway.');
+    });
+
+    // Handle /status command — show Coral's current state
+    this.bot.command('status', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAllowed(userId)) return;
+
+      const status = [
+        '🌊 **Coral Status**',
+        '',
+        `• Platform: Telegram`,
+        `• Role: ${userManager.isAdmin(userId) ? '👑 Admin' : '👤 User'}`,
+        `• Memory: Active`,
+        `• Uptime: ${Math.floor(process.uptime() / 60)}m`,
+      ].join('\n');
+      await ctx.reply(status);
+    });
+
+    // Handle /allow command — admin only
+    this.bot.command('allow', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAdmin(userId)) {
+        await ctx.reply('⛔ Chỉ admin mới có quyền quản lý user.');
+        return;
+      }
+
+      const args = ctx.match?.toString().trim().split(/\s+/);
+      if (!args || args.length < 1) {
+        await ctx.reply(
+          '📝 Cách dùng:\\n' +
+          '/allow <userId> — Thêm user\\n' +
+          '/allow <userId> admin — Thêm admin'
+        );
+        return;
+      }
+
+      const targetUserId = args[0];
+      const role = args[1] === 'admin' ? 'admin' : 'user';
+      userManager.registerUser(targetUserId, role);
+      await ctx.reply(`✅ Đã thêm user ${targetUserId} với role ${role}`);
+    });
+
+    // Handle /admin command — show admin panel
+    this.bot.command('admin', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAdmin(userId)) {
+        await ctx.reply('⛔ Chỉ admin mới có quyền truy cập.');
+        return;
+      }
+
+      await ctx.reply(
+        '👑 **Admin Panel**\n\n' +
+        '/status — Trạng thái\n' +
+        '/allow <userId> — Thêm user\n' +
+        '/allow <userId> admin — Thêm admin\n\n' +
+        'Để cấu hình user ban đầu, set env CORAL_TELEGRAM_USERS.'
+      );
     });
 
     // Handle all text messages
@@ -260,8 +342,19 @@ export class TelegramBridge implements PlatformAdapter {
       // Skip bot's own messages (shouldn't happen with grammy, but safety check)
       if (message.from?.is_bot) return;
 
-      // In groups/channels: only respond when mentioned or replied to
-      if (chatType === 'group' || chatType === 'supergroup' || chatType === 'channel') {
+      // ── ACCESS CONTROL (Phase 3) ──
+      if (!userManager.isAllowed(userId)) {
+        // Unknown user — send polite rejection
+        try {
+          await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
+        } catch {}
+        log.warn('Unauthorized user attempted access', { userId, username: message.from?.username });
+        return;
+      }
+
+      // In groups: only respond when mentioned or replied to
+      // Note: 'channel' type doesn't exist here — channel posts use channel_post:text handler
+      if (chatType === 'group' || chatType === 'supergroup') {
         const botInfo = this.bot.botInfo;
         const isMentioned = message.entities?.some(
           e => e.type === 'mention' && text.substring(e.offset, e.offset + e.length).includes(`@${botInfo.username}`)
@@ -361,6 +454,12 @@ export class TelegramBridge implements PlatformAdapter {
       const userId = String(message.sender_chat?.id || message.chat.id);
       const messageId = String(message.message_id);
       const text = message.text;
+
+      // ── ACCESS CONTROL for channel posts ──
+      // Channel posts are from the channel itself, not a user.
+      // For now, allow all channel posts (the channel admin is the implicit user).
+      // Future: restrict to specific channel IDs via env CORAL_TELEGRAM_CHANNELS
+
       const chatType = message.chat.type; // 'channel'
 
       // In channels: only respond when mentioned or replied to bot
