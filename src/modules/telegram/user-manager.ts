@@ -44,8 +44,11 @@ class UserManager {
 
   /**
    * Load user config from environment variable CORAL_TELEGRAM_USERS.
-   * Format: userId:role,userId:role,...
-   * Example: "123456:admin,789012:user"
+   * Format: identifier:role,identifier:role,...
+   * identifier can be numeric userId or @username
+   * Examples:
+   *   "123456:admin,789012:user"
+   *   "@kayce:admin,@family:user"
    */
   private loadFromEnv(): void {
     const config = process.env.CORAL_TELEGRAM_USERS;
@@ -55,48 +58,58 @@ class UserManager {
     }
 
     for (const entry of config.split(',')) {
-      const [userId, role] = entry.split(':');
-      if (userId && (role === 'admin' || role === 'user')) {
-        this.users.set(userId, { userId, role });
+      const [identifier, role] = entry.trim().split(':');
+      if (identifier && (role === 'admin' || role === 'user')) {
+        this.users.set(identifier.toLowerCase(), { userId: identifier, role });
       }
     }
   }
 
   /**
    * Get user info. Returns undefined if user is not in allowlist.
+   * Matches by userId OR @username.
    */
-  getUser(userId: string): TelegramUser | undefined {
-    return this.users.get(userId);
+  getUser(userId: string, username?: string): TelegramUser | undefined {
+    const direct = this.users.get(userId);
+    if (direct) return direct;
+    if (username) {
+      return this.users.get('@' + username.toLowerCase());
+    }
+    return undefined;
   }
 
   /**
    * Check if user is allowed to use Coral.
+   * Matches by userId OR @username.
    */
-  isAllowed(userId: string): boolean {
-    return this.users.has(userId);
+  isAllowed(userId: string, username?: string): boolean {
+    if (this.users.has(userId)) return true;
+    if (username && this.users.has('@' + username.toLowerCase())) return true;
+    return false;
   }
 
   /**
    * Check if user has admin role.
+   * Matches by userId OR @username.
    */
-  isAdmin(userId: string): boolean {
-    const user = this.users.get(userId);
+  isAdmin(userId: string, username?: string): boolean {
+    const user = this.getUser(userId, username);
     return user?.role === 'admin';
   }
 
   /**
    * Check if user has at least 'user' role.
    */
-  isUser(userId: string): boolean {
-    const user = this.users.get(userId);
-    return user !== undefined;
+  isUser(userId: string, username?: string): boolean {
+    return this.getUser(userId, username) !== undefined;
   }
 
   /**
    * Register a user manually (e.g. via /allow command).
+   * identifier can be numeric userId or @username.
    */
-  registerUser(userId: string, role: UserRole = 'user'): void {
-    this.users.set(userId, { userId, role });
+  registerUser(identifier: string, role: UserRole = 'user'): void {
+    this.users.set(identifier.toLowerCase(), { userId: identifier, role });
   }
 }
 

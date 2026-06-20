@@ -420,6 +420,8 @@ export class Agent extends EventEmitter {
           providerUsed: modelResult.providerUsed,
           finishReason: modelResult.finishReason,
           cycle: toolCallCycles,
+          content: modelResult.content || null,
+          reasoningContent: modelResult.reasoningContent || null,
         });
 
         /* router used */
@@ -478,6 +480,7 @@ export class Agent extends EventEmitter {
               toolName: toolCall.function.name,
               toolArgs: toolCall.function.arguments,
               cycle: toolCallCycles,
+              reasoningContent: modelResult.reasoningContent || null,
             });
 
             // If guard blocked execution, skip this tool call

@@ -45,6 +45,23 @@ const CORAL_IDENTITY_FILES = [
 
 const log = new Logger({ module: 'Engine' });
 
+/**
+ * Summarize LLM reasoning into a short reason string.
+ * Strategy: extract first sentence if ≤160 chars, else truncate to 157 chars + '...'.
+ * No external model call — pure string operation, cheap and deterministic.
+ */
+function summarizeReasoning(text: string | null | undefined): string | null {
+  if (!text) return null;
+  const cleaned = text.trim();
+  const match = cleaned.match(/^(.+?[.!?])(?:\s|$)/);
+  if (match && match[1].length <= 160) {
+    return match[1];
+  }
+  return cleaned.length > 160
+    ? cleaned.slice(0, 157) + '...'
+    : cleaned;
+}
+
 export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
   private modelRouter: ModelRouter;
@@ -62,7 +79,7 @@ export class Engine extends EventEmitter {
   private storage!: CoralStorage;
   private eventBus!: EventBus;
   private eventLogger!: StructuredLogger;
-  private pendingCallIds: Map<string, string[]> = new Map();
+  private pendingCallIds: Map<string, Array<{callId: string; decisionId: string}>> = new Map();
   private tasksWithToolCalls: Set<string> = new Set();
 
   private agentRegistry!: AgentRegistry;
@@ -179,22 +196,32 @@ export class Engine extends EventEmitter {
       // Track that this task used tools
       this.tasksWithToolCalls.add(sessionId);
 
-      // Store callId in queue for tool:result to pick up
+      // Generate decisionId for this tool call
+      const decisionId = randomUUID();
+
+      // Store callId + decisionId in queue for tool:result to pick up
       const queue = this.pendingCallIds.get(toolName) || [];
-      queue.push(callId);
+      queue.push({ callId, decisionId });
       this.pendingCallIds.set(toolName, queue);
 
-      // Emit tool_called event with callId
-      this.eventLogger.toolCall(sessionId, callId, toolName, toolArgs);
+      // Derive reasoning from upstream model response (agent.ts passes it through hook)
+      const reasoningContent = (data.reasoningContent as string | null) || null;
+      const reason = summarizeReasoning(reasoningContent) || `Tool selected (cycle ${cycle})`;
+      const reasoningSnippet = reasoningContent?.slice(0, 1000);
 
-      // Emit decision_made event (what the agent chose to do)
+      // Emit decision_made event — links reasoning to this tool call via decisionId
       const argsSummary = Object.keys(toolArgs).slice(0, 3).join(', ');
       this.eventLogger.decisionMade(
         sessionId,
+        decisionId,
         `Call ${toolName}`,
-        `Tool selected (cycle ${cycle})`,
-        `Execute ${toolName}(${argsSummary})`
+        reason,
+        `Execute ${toolName}(${argsSummary})`,
+        reasoningSnippet
       );
+
+      // Emit tool_called event with callId + decisionId
+      this.eventLogger.toolCall(sessionId, decisionId, callId, toolName, toolArgs);
     }, 90);
 
     // ═══ EVENT BUS: tool:result → tool_finished + file events ═══
@@ -204,9 +231,10 @@ export class Engine extends EventEmitter {
       const toolArgs = (data.args as Record<string, unknown>) || {};
       const result = JSON.stringify(data.result);
 
-      // Fetch callId from queue (FIFO — matches call order)
+      // Fetch callId + decisionId from queue (FIFO — matches call order)
       const queue = this.pendingCallIds.get(toolName) || [];
-      const callId = queue.shift() || randomUUID();
+      const entry = queue.shift() || { callId: randomUUID(), decisionId: randomUUID() };
+      const { callId, decisionId } = entry;
       if (queue.length === 0) this.pendingCallIds.delete(toolName);
 
       // Track tool call on cache — used for side-effect detection to prevent caching tool-heavy responses
@@ -214,7 +242,7 @@ export class Engine extends EventEmitter {
 
       // Emit tool_finished event with callId
       const success = !result.includes('"error"');
-      this.eventLogger.toolResult(sessionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
+      this.eventLogger.toolResult(sessionId, decisionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
 
       // Emit file events for file-writing tools
       const filePath = this.extractFilePath(toolName, toolArgs);
@@ -238,11 +266,18 @@ export class Engine extends EventEmitter {
       if (data.finishReason === 'stop' && data.content) {
         // Direct response path: no tools were called → emit decision_made so Mission Mode is never blind
         if (!this.tasksWithToolCalls.has(sessionId)) {
+          const decisionId = randomUUID();
+          const reasoningContent = (data.reasoningContent as string | null) || null;
+          const reason = summarizeReasoning(reasoningContent) || 'Respond directly';
+          const reasoningSnippet = reasoningContent?.slice(0, 1000);
+
           this.eventLogger.decisionMade(
             sessionId,
+            decisionId,
             'Respond directly',
-            'Enough information available',
-            'Generate response'
+            reason,
+            'Generate response',
+            reasoningSnippet
           );
         }
 

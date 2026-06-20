@@ -176,8 +176,9 @@
       "bases:Tạo cơ sở mới": false
     }
   },
-  "active": "b3227d3d891704cd",
+  "active": "cc760f4bc037b642",
   "lastOpenFiles": [
+    "tests/phase4a-decision-intelligence.test.ts",
     "tests/integration.test.ts",
     "src/core/cron/cron-scheduler.ts",
     "src/core/cron"

@@ -223,6 +223,7 @@ export class TelegramBridge implements PlatformAdapter {
     // Handle /start command
     this.bot.command('start', async (ctx) => {
       const userId = String(ctx.from?.id || 'unknown');
+      const username = ctx.from?.username;
 
       // Bootstrap: first user becomes admin when no users configured
       if (!userManager.isBootstrapped()) {
@@ -235,12 +236,12 @@ export class TelegramBridge implements PlatformAdapter {
         return;
       }
 
-      if (!userManager.isAllowed(userId)) {
+      if (!userManager.isAllowed(userId, username)) {
         await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
         return;
       }
 
-      const role = userManager.isAdmin(userId) ? '👑 Admin' : '👤 User';
+      const role = userManager.isAdmin(userId, username) ? '👑 Admin' : '👤 User';
       await ctx.reply(
         `👋 Xin chào! Tôi là **Coral** — AI Agent.\n` +
         `Role: ${role}\n\n` +
@@ -366,7 +367,9 @@ export class TelegramBridge implements PlatformAdapter {
         return;
       }
 
-      if (!userManager.isAllowed(userId)) {
+      const username = message.from?.username;
+
+      if (!userManager.isAllowed(userId, username)) {
         // Unknown user — send polite rejection
         try {
           await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
