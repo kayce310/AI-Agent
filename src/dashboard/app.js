@@ -22,6 +22,13 @@ const state = {
 const $ = (id) => document.getElementById(id);
 const $$ = (selector) => document.querySelectorAll(selector);
 
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 // ═══ WEBSOCKET ═══
 function connectWebSocket() {
   const wsUrl = $('wsUrl')?.value || 'ws://127.0.0.1:8766/ws/events';
@@ -89,6 +96,18 @@ function updateConnectionStatus(connected) {
 
 // ═══ EVENT HANDLING ═══
 function handleEvent(event) {
+  // Handle WebSocket 'init' message (array of events)
+  if (event.type === 'init' && Array.isArray(event.events)) {
+    // Load initial events
+    event.events.reverse().forEach(e => handleEvent(e));
+    return;
+  }
+
+  // Skip non-agent events
+  if (event.type === 'connected' || !event.type || !event.timestamp) {
+    return;
+  }
+
   // Add to events array
   state.events.unshift(event);
   
@@ -182,12 +201,14 @@ function updateStatusBar() {
 
 function updateTimeline(event) {
   const timeline = $('timelineBody');
+  if (!timeline) return;
   
   // Remove empty state
   const emptyState = timeline.querySelector('.empty-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
+  if (emptyState) emptyState.remove();
+  
+  // Skip events without proper data
+  if (!event || !event.timestamp || !event.type) return;
   
   // Create event item
   const item = document.createElement('div');
@@ -204,10 +225,16 @@ function updateTimeline(event) {
                    event.type === 'error' ? 'error' :
                    event.type.includes('file') ? 'file' : 'task';
   
+  const message = event.payload?.goal || 
+                  event.payload?.toolName || 
+                  event.payload?.message ||
+                  (event.payload?.result ? event.payload.result.substring(0, 100) : '') ||
+                  event.type;
+  
   item.innerHTML = `
     <span class="event-time">${time}</span>
     <span class="event-type ${typeClass}">${event.type}</span>
-    <span class="event-message">${event.payload?.goal || event.payload?.toolName || event.payload?.message || JSON.stringify(event.payload)}</span>
+    <span class="event-message">${escapeHtml(message)}</span>
   `;
   
   // Add to top
