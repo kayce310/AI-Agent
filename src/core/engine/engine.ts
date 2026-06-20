@@ -298,9 +298,31 @@ export class Engine extends EventEmitter {
     const startTime = Date.now();
     const userMessage = request.messages[request.messages.length - 1]?.content || '';
     const taskId = `task-${Date.now()}`;
+    const sessionId = request.sessionId || 'default';
     
     // Publish task_started event
     this.eventLogger.taskStarted(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task');
+
+    // ── MEMORY RECALL (Phase 1) ──
+    // Query memory store for relevant context before building prompt
+    let memoryContext: string | undefined;
+    try {
+      const memoryBlocks = await globalMemoryStore.query(userMessage, {
+        topK: 10,
+        sessionId, // Prefer session-specific memories first
+      });
+      if (memoryBlocks.length > 0) {
+        const memoryLines = memoryBlocks.map((block, i) => {
+          const timeStr = block.timestamp ? new Date(block.timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' }) : 'unknown';
+          const tags = block.tags?.length ? ` [${block.tags.join(', ')}]` : '';
+          return `${i + 1}. [${block.type}${tags}] (${timeStr}): ${block.content.substring(0, 200)}`;
+        });
+        memoryContext = memoryLines.join('\n');
+        log.info(`Memory recall: ${memoryBlocks.length} block(s) for "${userMessage.substring(0, 50)}"`);
+      }
+    } catch (err: any) {
+      log.warn(`Memory recall failed: ${err.message}`);
+    }
 
     // Build system prompt
     const promptBuilder = new PromptBuilder();
@@ -309,6 +331,7 @@ export class Engine extends EventEmitter {
       mentionPrefix: request.mentionPrefix,
       task: request.task,
       contextFiles: this.coralIdentityContext || undefined,
+      memoryContext,
       references: request.references,
       constraints: request.constraints,
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
