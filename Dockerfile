@@ -45,12 +45,14 @@ RUN mkdir -p knowledge/memory knowledge/memory-store knowledge/raw-input knowled
 
 # Expose ports (adjust as needed for your platform adapters)
 # Telegram: uses outbound connections, no port needed
-# WebSocket/Event Server: 8765
-EXPOSE 8765
+# Dashboard (optional): 8766
+EXPOSE 8766
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8765/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+# Coral uses Telegram adapter (outbound) — no HTTP endpoint for health check.
+# Docker's default process-alive monitor handles this.
+# If Dashboard server is enabled later, add a health endpoint:
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+#   CMD node -e "require('http').get('http://localhost:8766/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Environment variables (mandatory)
 ENV NODE_ENV=production
