@@ -281,16 +281,17 @@ export class Engine extends EventEmitter {
 
     this.agent.onEvent('model:response', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
+      const taskId = this.currentTaskId;
       if (data.finishReason === 'stop' && data.content) {
         // Direct response path: no tools were called → emit decision_made so Mission Mode is never blind
-        if (!this.tasksWithToolCalls.has(sessionId)) {
+        if (!this.tasksWithToolCalls.has(taskId)) {
           const decisionId = randomUUID();
           const reasoningContent = (data.reasoningContent as string | null) || null;
           const reason = summarizeReasoning(reasoningContent) || 'Respond directly';
           const reasoningSnippet = reasoningContent?.slice(0, 1000);
 
           this.eventLogger.decisionMade(
-            sessionId,
+            taskId,
             decisionId,
             'Respond directly',
             reason,
@@ -413,6 +414,7 @@ export class Engine extends EventEmitter {
     const startTime = Date.now();
     const userMessage = request.messages[request.messages.length - 1]?.content || '';
     const taskId = `task-${Date.now()}`;
+    this.currentTaskId = taskId;
     const sessionId = request.sessionId || 'default';
     
     // Publish task_started event
