@@ -5,7 +5,7 @@
  * @imported-by src/scripts/start-discord.ts, src/modules/discord/index.ts
  * @owner core-engine
  *
- * Kato Agent — Core Engine (ReAct Loop)
+ * Coral Agent — Core Engine (ReAct Loop)
  * Framework 6 Layers — Lớp Lõi (Core Domain)
  *
  * Phase 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing
@@ -33,9 +33,12 @@ import { auditLogger } from '../audit-logger.js';
 import { Tracer } from '../observability/tracer.js';
 import { RateLimiter, RateLimiterGroup, PerUserRateLimiter } from '../security/rate-limiter.js';
 import { MemoryTemporal } from '../memory/memory-temporal.js';
-import { KatoStorage, getStorage } from '../memory/sqlite-storage.js';
+import { CoralStorage, getStorage } from '../memory/sqlite-storage.js';
 import { MemoryBlock } from '../memory/memory-log.js';
-const KATO_IDENTITY_FILES = [
+import { EventBus } from '../events/bus.js';
+import { EventStore } from '../events/store.js';
+import { StructuredLogger } from '../events/logger.js';
+const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
 
@@ -45,7 +48,7 @@ export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
   private modelRouter: ModelRouter;
   private memory: MemoryCore;
-  private katoIdentityContext: string = '';
+  private coralIdentityContext: string = '';
   private toolRegistry!: ToolRegistry;
   private agent!: Agent;
   private hooks: HookRegistry;
@@ -55,7 +58,9 @@ export class Engine extends EventEmitter {
   private perUserLimiter: PerUserRateLimiter;
   private temporalMemory: MemoryTemporal;
   private agenticMemory: MemoryTemporal;
-  private storage!: KatoStorage;
+  private storage!: CoralStorage;
+  private eventBus!: EventBus;
+  private eventLogger!: StructuredLogger;
 
   private agentRegistry!: AgentRegistry;
 
@@ -84,6 +89,11 @@ export class Engine extends EventEmitter {
     this.temporalMemory = new MemoryTemporal({ maxRetentionDays: 30 });
     this.agenticMemory = new MemoryTemporal({ maxRetentionDays: 30 });
     this.storage = getStorage();
+    // Initialize event tables
+    this.storage.initEventTables();
+    const eventStore = new EventStore(this.storage.getDb());
+    this.eventBus = new EventBus(eventStore);
+    this.eventLogger = new StructuredLogger(this.eventBus);
   }
 
   private sanitizeResponse(content: string): string {
@@ -182,14 +192,14 @@ export class Engine extends EventEmitter {
     }, 100);
 
     const identityParts: string[] = [];
-    for (const fp of KATO_IDENTITY_FILES) {
+    for (const fp of CORAL_IDENTITY_FILES) {
       try {
         const content = await readFile(fp, 'utf8');
         identityParts.push(`--- ${fp} ---\n${content}`);
       } catch { /* silent */ }
     }
-    this.katoIdentityContext = identityParts.join('\n\n');
-    if (process.env.KATO_WARMUP !== 'false') {
+    this.coralIdentityContext = identityParts.join('\n\n');
+    if (process.env.CORAL_WARMUP !== 'false') {
       this.warmup().catch(() => {});
     }
     const adapters = this.modelRouter.listAdapters();
@@ -285,13 +295,20 @@ export class Engine extends EventEmitter {
    * Builds system prompt, runs agent, writes to cache if safe.
    */
   private async processInner(request: EngineRequest, cacheKey: string): Promise<EngineResponse> {
+    const startTime = Date.now();
+    const userMessage = request.messages[request.messages.length - 1]?.content || '';
+    const taskId = `task-${Date.now()}`;
+    
+    // Publish task_started event
+    this.eventLogger.taskStarted(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task');
+
     // Build system prompt
     const promptBuilder = new PromptBuilder();
     const systemPrompt = promptBuilder.buildSystem({
       agentName: request.agentName,
       mentionPrefix: request.mentionPrefix,
       task: request.task,
-      contextFiles: this.katoIdentityContext || undefined,
+      contextFiles: this.coralIdentityContext || undefined,
       references: request.references,
       constraints: request.constraints,
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
@@ -326,6 +343,10 @@ export class Engine extends EventEmitter {
         log.warn('SQLite session log failed', { error: String(e) });
       }
 
+      // Publish task_finished event
+      const duration = Date.now() - startTime;
+      this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', true, duration, result.content.substring(0, 500));
+
       return {
         content: result.content,
         modelUsed: result.modelUsed,
@@ -341,6 +362,12 @@ export class Engine extends EventEmitter {
         sessionId: request.sessionId || 'unknown',
         contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
       }).catch(() => {});
+      
+      // Publish error event
+      const duration = Date.now() - startTime;
+      this.eventLogger.error(agentErr.message, agentErr.stack, 'ENGINE_AGENT_FAILED');
+      this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', false, duration, agentErr.message);
+      
       return {
         content: `❌ Lỗi khi xử lý: ${agentErr.message}`,
         modelUsed: 'none',

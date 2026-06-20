@@ -22,8 +22,8 @@ export class StructuredLogger {
     this.bus.publish(EventFactory.taskStarted(taskId, goal));
   }
 
-  taskFinished(taskId: string, goal: string, success: boolean, duration: number): void {
-    this.bus.publish(EventFactory.taskFinished(taskId, goal, success, duration));
+  taskFinished(taskId: string, goal: string, success: boolean, duration: number, result?: string): void {
+    this.bus.publish(EventFactory.taskFinished(taskId, goal, success, duration, result));
   }
 
   toolCall(toolName: string, args: Record<string, unknown>): void {
