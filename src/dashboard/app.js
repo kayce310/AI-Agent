@@ -404,10 +404,35 @@ function init() {
   // Connect WebSocket
   connectWebSocket();
   
+  // Fetch initial data
+  fetchInitialData();
+  
   // Start session timer
   setInterval(updateStatusBar, 1000);
   
   console.log('[Dashboard] Ready');
+}
+
+async function fetchInitialData() {
+  try {
+    // Fetch recent events
+    const eventsRes = await fetch('http://127.0.0.1:8766/api/events/recent');
+    const eventsData = await eventsRes.json();
+    if (eventsData.success && eventsData.data) {
+      eventsData.data.forEach(event => handleEvent(event));
+    }
+    
+    // Fetch stats
+    const statsRes = await fetch('http://127.0.0.1:8766/api/events/stats');
+    const statsData = await statsRes.json();
+    if (statsData.success && statsData.data) {
+      console.log('[Dashboard] Stats:', statsData.data);
+    }
+    
+    console.log('[Dashboard] Initial data loaded');
+  } catch (e) {
+    console.error('[Dashboard] Failed to load initial data:', e);
+  }
 }
 
 // Start when DOM is ready
