@@ -143,4 +143,42 @@ describe('UserManager', () => {
       expect(m.isAllowed('999')).toBe(false);
     });
   });
+
+  describe('unregisterUser', () => {
+    it('should remove user from allowlist', () => {
+      manager.registerUser('999', 'user');
+      expect(manager.isAllowed('999')).toBe(true);
+      manager.unregisterUser('999');
+      expect(manager.isAllowed('999')).toBe(false);
+    });
+
+    it('should not throw on non-existent user', () => {
+      expect(() => manager.unregisterUser('nonexistent')).not.toThrow();
+    });
+  });
+
+  describe('getUserIds / getAdminIds', () => {
+    it('should return only user-role IDs', () => {
+      manager.registerUser('111', 'admin');
+      manager.registerUser('222', 'user');
+      manager.registerUser('333', 'user');
+      const users = manager.getUserIds();
+      expect(users).toContain('222');
+      expect(users).toContain('333');
+      expect(users).not.toContain('111');
+    });
+
+    it('should return only admin-role IDs', () => {
+      manager.registerUser('111', 'admin');
+      manager.registerUser('222', 'user');
+      const admins = manager.getAdminIds();
+      expect(admins).toContain('111');
+      expect(admins).not.toContain('222');
+    });
+
+    it('should return empty arrays when no users', () => {
+      expect(manager.getUserIds()).toEqual([]);
+      expect(manager.getAdminIds()).toEqual([]);
+    });
+  });
 });
