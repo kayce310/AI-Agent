@@ -90,6 +90,7 @@ interface PromptInput {
   mentionPrefix: string;
   task?: string;
   contextFiles?: string; // nội dung file context đã đọc
+  memoryContext?: string; // nội dung memory recall (từ MemoryStore.query())
   references?: RequestReference[];
   constraints?: RequestConstraints;
   historyCompressed?: string;
@@ -121,6 +122,16 @@ export class PromptBuilder {
 
     // ── IDENTITY ──
     sections.push(`Bạn là ${input.agentName}, Tác tử Điều phối (Orchestrator Agent).\nHoạt động theo Hiến pháp Coral v2.2.\n`);
+
+    // ── MEMORY CONTEXT (Phase 1) ──
+    if (input.memoryContext) {
+      sections.push(`## 🧠 TRÍ NHỚ (Memory Context)
+Đây là thông tin từ bộ nhớ của bạn. Dùng nó để hiểu context và trả lời phù hợp.
+KHÔNG cần đọc lại những file đã được inject ở trên.
+
+${input.memoryContext}
+`);
+    }
 
     // ── Tầng 1: TASK ──
     if (input.task) {
