@@ -111,6 +111,31 @@ class UserManager {
   registerUser(identifier: string, role: UserRole = 'user'): void {
     this.users.set(identifier.toLowerCase(), { userId: identifier, role });
   }
+
+  /**
+   * Remove a user from the allowlist (e.g. via /disallow command).
+   */
+  unregisterUser(identifier: string): void {
+    this.users.delete(identifier.toLowerCase());
+  }
+
+  /**
+   * Get all non-admin user IDs.
+   */
+  getUserIds(): string[] {
+    return Array.from(this.users.values())
+      .filter(u => u.role === 'user')
+      .map(u => u.userId);
+  }
+
+  /**
+   * Get all admin user IDs.
+   */
+  getAdminIds(): string[] {
+    return Array.from(this.users.values())
+      .filter(u => u.role === 'admin')
+      .map(u => u.userId);
+  }
 }
 
 export const userManager = new UserManager();

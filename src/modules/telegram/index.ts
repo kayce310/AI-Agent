@@ -26,6 +26,13 @@ import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { RateLimiter } from '../../core/security/rate-limiter.js';
+
+// Rate limiter: max 20 messages per 60s per user
+const messageLimiter = new RateLimiter('telegram', {
+  tokensPerInterval: 20,
+  intervalMs: 60000,
+});
 
 // ── Resolve repo root independent of process.cwd() ──
 const __filename = fileURLToPath(import.meta.url);
@@ -313,8 +320,8 @@ export class TelegramBridge implements PlatformAdapter {
       const args = ctx.match?.toString().trim().split(/\s+/);
       if (!args || args.length < 1) {
         await ctx.reply(
-          '📝 Cách dùng:\\n' +
-          '/allow <userId> — Thêm user\\n' +
+          '📝 Cách dùng:\n' +
+          '/allow <userId> — Thêm user\n' +
           '/allow <userId> admin — Thêm admin'
         );
         return;
@@ -324,6 +331,44 @@ export class TelegramBridge implements PlatformAdapter {
       const role = args[1] === 'admin' ? 'admin' : 'user';
       userManager.registerUser(targetUserId, role);
       await ctx.reply(`✅ Đã thêm user ${targetUserId} với role ${role}`);
+    });
+
+    // Handle /disallow command — admin only
+    this.bot.command('disallow', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAdmin(userId)) {
+        await ctx.reply('⛔ Chỉ admin mới có quyền quản lý user.');
+        return;
+      }
+
+      const args = ctx.match?.toString().trim().split(/\s+/);
+      if (!args || args.length < 1) {
+        await ctx.reply('📝 Cách dùng: /disallow <userId>');
+        return;
+      }
+
+      userManager.unregisterUser(args[0]);
+      await ctx.reply(`✅ Đã xóa user ${args[0]}`);
+    });
+
+    // Handle /users command — admin only
+    this.bot.command('users', async (ctx) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (!userManager.isAdmin(userId)) {
+        await ctx.reply('⛔ Chỉ admin mới có quyền xem danh sách user.');
+        return;
+      }
+
+      const userIds = userManager.getUserIds();
+      const adminIds = userManager.getAdminIds();
+      const lines = ['👥 **Danh sách Users**\n'];
+      lines.push('👑 **Admin:**');
+      adminIds.forEach((id: string) => lines.push(`  • ${id}`));
+      if (userIds.length > 0) {
+        lines.push('\n👤 **Users:**');
+        userIds.forEach((id: string) => lines.push(`  • ${id}`));
+      }
+      await ctx.reply(lines.join('\n'));
     });
 
     // Handle /admin command — show admin panel
@@ -375,6 +420,14 @@ export class TelegramBridge implements PlatformAdapter {
           await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
         } catch {}
         log.warn('Unauthorized user attempted access', { userId, username: message.from?.username });
+        return;
+      }
+
+      // Rate limiting — max 20 requests per 60s
+      if (!messageLimiter.tryConsume(1)) {
+        try {
+          await ctx.reply('⏳ Bot đang bận. Vui lòng thử lại sau.');
+        } catch {}
         return;
       }
 
