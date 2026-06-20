@@ -11,10 +11,10 @@
             "id": "b3227d3d891704cd",
             "type": "leaf",
             "state": {
-              "type": "empty",
+              "type": "graph",
               "state": {},
-              "icon": "lucide-file",
-              "title": "Tab mới"
+              "icon": "lucide-git-fork",
+              "title": "Xem biểu đồ"
             }
           }
         ]
@@ -178,6 +178,7 @@
   },
   "active": "b3227d3d891704cd",
   "lastOpenFiles": [
+    "tests/integration.test.ts",
     "src/core/cron/cron-scheduler.ts",
     "src/core/cron"
   ]

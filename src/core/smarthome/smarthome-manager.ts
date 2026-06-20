@@ -70,6 +70,7 @@ export class SmartHomeManager {
   /**
    * Send command to a device by ID.
    * Routes to the correct provider automatically.
+   * Retries up to 2 times on transient failures.
    */
   async command(deviceId: string, command: Record<string, unknown>): Promise<boolean> {
     const device = this.registry.get(deviceId);
@@ -84,16 +85,25 @@ export class SmartHomeManager {
       return false;
     }
 
-    try {
-      const result = await provider.command(deviceId, command);
-      if (result) {
-        this.registry.updateState(deviceId, command);
+    const MAX_RETRIES = 2;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const result = await provider.command(deviceId, command);
+        if (result) {
+          this.registry.updateState(deviceId, command);
+        }
+        return result;
+      } catch (err: any) {
+        const isLastAttempt = attempt === MAX_RETRIES;
+        if (isLastAttempt) {
+          log.error(`Command failed for ${deviceId} after ${MAX_RETRIES + 1} attempts: ${err.message}`);
+          return false;
+        }
+        log.warn(`Command attempt ${attempt + 1} failed for ${deviceId}: ${err.message}, retrying...`);
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
       }
-      return result;
-    } catch (err: any) {
-      log.error(`Command failed for ${deviceId}: ${err.message}`);
-      return false;
     }
+    return false; // unreachable but satisfies TS
   }
 
   /**
