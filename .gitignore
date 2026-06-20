@@ -268,3 +268,6 @@ Thumbs.db
 .gnap/
 .vscode/
 knowledge/memory-store-test/
+
+# Test artifacts
+.test-memory/
