@@ -27,3 +27,6 @@ export { EventWebSocket } from './websocket.js';
 
 // API
 export * from './api.js';
+
+// Agent State (Events → State reducer)
+export * from './agent-state.js';

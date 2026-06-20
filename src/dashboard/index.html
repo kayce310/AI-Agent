@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kato Agent — Dashboard v6</title>
+  <title>Kato Agent — Dashboard v7</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
@@ -22,6 +22,7 @@
       </div>
     </div>
     <div class="status-right">
+      <div class="event-count" id="eventCount">0 events</div>
       <div class="metric">
         <span class="metric-icon">⚡</span>
         <span class="metric-value" id="cpuUsage">0%</span>
@@ -110,6 +111,10 @@
             </div>
           </div>
         </div>
+        <div class="card error-card" id="errorDisplay" style="display:none">
+          <div class="card-header">❌ Last Error</div>
+          <div class="card-body" id="errorContent"></div>
+        </div>
       </div>
 
       <!-- Tasks Tab -->
@@ -158,14 +163,16 @@
         </div>
         <div class="tools-grid">
           <div class="card">
-            <div class="card-header">📊 Usage Statistics</div>
-            <div class="card-body">
-              <canvas id="toolChart"></canvas>
+            <div class="card-header">⚡ Active Tools</div>
+            <div class="card-body scrollable" id="activeToolsList">
+              <div class="empty-state">No active tools</div>
             </div>
           </div>
           <div class="card">
-            <div class="card-header">📜 Recent Calls</div>
-            <div class="card-body scrollable" id="recentToolCalls">No recent calls</div>
+            <div class="card-header">📜 Tool History</div>
+            <div class="card-body scrollable" id="toolHistoryList">
+              <div class="empty-state">No tool calls yet</div>
+            </div>
           </div>
         </div>
       </div>
@@ -177,12 +184,16 @@
         </div>
         <div class="files-grid">
           <div class="card">
-            <div class="card-header">📁 Modified Files</div>
-            <div class="card-body scrollable" id="modifiedFiles">No modified files</div>
+            <div class="card-header">📁 Recent File Changes</div>
+            <div class="card-body scrollable" id="filesList">
+              <div class="empty-state">No file changes yet</div>
+            </div>
           </div>
-          <div class="card diff-card">
-            <div class="card-header">🔍 Diff Viewer</div>
-            <div class="card-body scrollable" id="diffViewer">Select a file to view diff</div>
+          <div class="card">
+            <div class="card-header">🧠 Decisions</div>
+            <div class="card-body scrollable" id="decisionsList">
+              <div class="empty-state">No decisions recorded</div>
+            </div>
           </div>
         </div>
       </div>
@@ -251,6 +262,7 @@
         <button class="filter-btn" data-filter="tools">Tools</button>
         <button class="filter-btn" data-filter="errors">Errors</button>
         <button class="filter-btn" data-filter="files">Files</button>
+        <button class="filter-btn" data-filter="decisions">Decisions</button>
       </div>
       <div class="timeline-actions">
         <button class="action-btn" id="clearTimeline">🗑️ Clear</button>

@@ -73,6 +73,14 @@ export class DashboardServer {
       return;
     }
 
+    // ═══ API: Agent State ═══
+    if (url === '/api/state') {
+      const state = this.eventWebSocket.getState();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: state }));
+      return;
+    }
+
     // ═══ API: Events ═══
     if (url.startsWith('/api/events/')) {
       const pathname = url.replace(/^\/api\/events\//, '');
