@@ -1,0 +1,42 @@
+# ── Coral Agent — Docker Compose ──
+# Usage: docker compose up -d
+
+services:
+  coral:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coral-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist memory and knowledge across container restarts
+      - coral-memory:/app/knowledge/memory
+      - coral-memory-store:/app/knowledge/memory-store
+      - coral-raw-input:/app/knowledge/raw-input
+      - coral-raw-md:/app/knowledge/raw-md
+      # Mount blueprints for document processing
+      - ./knowledge/blueprints:/app/knowledge/blueprints:ro
+      # Mount wiki for knowledge graph
+      - ./knowledge/wiki:/app/knowledge/wiki
+    ports:
+      # WebSocket Event Server (optional)
+      - "8765:8765"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8765/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  coral-memory:
+  coral-memory-store:
+  coral-raw-input:
+  coral-raw-md:

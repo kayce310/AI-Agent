@@ -1,0 +1,52 @@
+# ── Coral Agent — Docker Ignore ──
+# Exclude files that shouldn't be in the Docker image
+
+# Dependencies (rebuilt in Docker)
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Test files
+tests/
+*.test.ts
+*.spec.ts
+
+# Memory/Session data (ephemeral — use volumes)
+.kato/
+.coral/
+data/
+knowledge/memory/
+knowledge/memory-store/
+knowledge/snapshots/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# Temporary files
+tmp/
+.tmp-*
+*.tmp
+
+# Environment files with secrets
+.env
+.env.*
+!.env.example
+
+# Docker files (don't include in image)
+Dockerfile
+docker-compose*.yml
+.dockerignore
