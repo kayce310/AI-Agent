@@ -47,12 +47,12 @@ export class SmartHomeManager {
   async discover(): Promise<Device[]> {
     const allDevices: Device[] = [];
     
-    Array.from(this.providers.entries()).forEach(async ([name, provider]) => {
+    for (const [name, provider] of Array.from(this.providers.entries())) {
       try {
         const available = await provider.isAvailable();
         if (!available) {
           log.warn(`Provider "${name}" is not available, skipping discovery`);
-          return;
+          continue;
         }
         
         const devices = await provider.discover();
@@ -62,7 +62,7 @@ export class SmartHomeManager {
       } catch (err: any) {
         log.error(`Failed to discover devices from ${name}: ${err.message}`);
       }
-    });
+    }
     
     return allDevices;
   }
