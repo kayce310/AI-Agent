@@ -143,6 +143,12 @@ async function gracefulShutdown(signal: string) {
       await engineInstance.cleanup().catch(e => console.error(`Memory cleanup error: ${e}`));
     }
 
+    // 3. Stop dashboard server
+    if (dashboardServer) {
+      console.log(`${ts()} 📊 Stopping dashboard server...`);
+      await dashboardServer.stop().catch(e => console.error(`Dashboard server error: ${e}`));
+    }
+
     console.log(`${ts()} ✅ Graceful shutdown complete`);
   } catch (err) {
     console.error(`${ts()} ❌ Error during shutdown: ${err}`);
@@ -180,6 +186,18 @@ async function start() {
   await gateway.startAdapter('telegram');
 
   console.log(`${ts()} ✅ Gateway running with ${gateway.adapterCount} adapter(s): ${gateway.registeredPlatforms.join(', ')}`);
+
+  // Start Dashboard HTTP/WS server
+  try {
+    const eventBus = engine.getEventBus();
+    if (eventBus) {
+      dashboardServer = new DashboardServer(eventBus, { port: 8766 });
+      await dashboardServer.start();
+      console.log(`${ts()} 📊 Dashboard server running on port 8766`);
+    }
+  } catch (e) {
+    console.error(`${ts()} ⚠️ Dashboard server failed to start: ${e}`);
+  }
 }
 
 start().catch(err => {

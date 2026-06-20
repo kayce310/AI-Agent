@@ -396,6 +396,10 @@ export class Engine extends EventEmitter {
     return models[0] || 'oc/deepseek-v4-flash-free';
   }
 
+  getEventBus(): EventBus {
+    return this.eventBus;
+  }
+
   // ── Graceful Cleanup ──
 
   /**

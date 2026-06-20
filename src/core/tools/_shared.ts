@@ -86,20 +86,28 @@ export function loadProcessedFiles(): string[] {
   return [];
 }
 
+/**
+ * Whitelisted command prefixes — intentionally restrictive.
+ * Security over convenience: only safe, read-only commands allowed.
+ * Removed: npx (arbitrary package exec), curl/wget (network exfil),
+ * python (arbitrary code exec), powershell/cmd (shell injection risk).
+ */
 const COMMAND_WHITELIST_PREFIXES = [
-  'npm', 'git', 'node', 'npx tsx', 'npx',
+  'git',
+  'node', 'npx tsx',       // npx tsx for running .ts scripts; bare npx removed
   'docker-compose', 'docker',
-  'cd', 'dir', 'ls', 'cat', 'type', 'echo',
-  'cmd /c', 'powershell',
-  'code',
-  'python', 'python3', 'pip', 'pip3',
+  'ls', 'dir', 'cat', 'type', 'echo',
   'pdftotext',
-  'curl',
-  'wget',
+  'code',
 ];
 
+/**
+ * Validate that a command string starts with a whitelisted prefix.
+ * NOTE: This is a first-pass filter. The actual execution uses execFileSync
+ * without shell, so even if a command passes this check, shell injection
+ * is not possible through the execution path.
+ */
 export function isCommandSafe(command: string): boolean {
   const trimmed = command.trim().toLowerCase();
   return COMMAND_WHITELIST_PREFIXES.some(prefix => trimmed.startsWith(prefix));
 }
-

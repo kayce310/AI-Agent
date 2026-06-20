@@ -5,14 +5,64 @@
  * @owner core-tools
  *
  * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
- * execSync is retained for execute_command (whitelisted shell execution).
+ * execFileSync is used instead of execSync to prevent shell injection.
  */
 
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, isCommandSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
+
+/** Validate filename contains only safe characters (no shell metacharacters) */
+function isFilenameSafe(name: string): boolean {
+  return /^[a-zA-Z0-9._\-\u00C0-\u024F\u1E00-\u1EFF\s()]+$/.test(name);
+}
+
+/** Shared logic for processing a single document via Node script */
+function processDocument(
+  absPath: string,
+  type: 'pdf' | 'document'
+): { success: boolean; mdPath?: string; error?: string } {
+  const fileName = path.basename(absPath);
+
+  if (!isFilenameSafe(fileName)) {
+    return { success: false, error: `Tên file chứa ký tự không an toàn: ${fileName}` };
+  }
+
+  const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  const tmpScriptPath = path.join(tmpDir, 'process.mjs');
+
+  try {
+    secureRuntime.safeMkdir(tmpDir);
+
+    // Escape path properly using JSON.stringify — prevents injection via single quotes
+    const pdfPathJs = absPath.replace(/\\/g, '/');
+    const scriptContent = [
+      `import { convertDocumentToMd } from ${JSON.stringify(toFileUrl(BASE_PATH) + '/src/modules/document/converter.js')};`,
+      `const result = convertDocumentToMd(${JSON.stringify(pdfPathJs)});`,
+      `process.stdout.write(JSON.stringify(result));`,
+    ].join('\n');
+
+    secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
+
+    // Use execFileSync — no shell interpretation, no injection
+    const output = execFileSync(process.execPath, [tmpScriptPath], {
+      cwd: BASE_PATH,
+      encoding: 'utf8',
+      timeout: 120000,
+      maxBuffer: 50 * 1024 * 1024,
+      windowsHide: true,
+    });
+
+    const result = JSON.parse(output.trim());
+    return { success: true, mdPath: result.mdPath };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  } finally {
+    try { secureRuntime.safeRm(tmpDir); } catch { /* cleanup best-effort */ }
+  }
+}
 
 const plugin: ToolPlugin = {
   name: 'system',
@@ -47,52 +97,24 @@ const plugin: ToolPlugin = {
         const errors: string[] = [];
 
         for (const pdfFile of pdfs) {
-          try {
-            const pdfPath = path.join(absInputDir, pdfFile.name);
-            const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-            secureRuntime.safeMkdir(tmpDir);
-            const tmpScriptPath = path.join(tmpDir, 'process.mjs');
-            const pdfPathJs = pdfPath.replace(/\\/g, '/');
-
-            const scriptContent = `
-import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/document/converter.js';
-const result = convertDocumentToMd('${pdfPathJs}');
-process.stdout.write(JSON.stringify(result));
-`;
-            secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
-            const output = execSync(`node "${tmpScriptPath}"`, { cwd: BASE_PATH, encoding: 'utf8', timeout: 120000, maxBuffer: 50 * 1024 * 1024, windowsHide: true });
-            try { secureRuntime.safeRm(tmpDir); } catch {}
-            const result = JSON.parse(output.trim());
-
+          const pdfPath = path.join(absInputDir, pdfFile.name);
+          const result = processDocument(pdfPath, 'pdf');
+          if (result.success) {
             addProcessedFile({ path: pdfPath, type: 'pdf', action: 'process_new_raw', destination: result.mdPath });
             processed.push(`✅ ${pdfFile.name} → ${result.mdPath}`);
-          } catch (err: any) {
-            errors.push(`❌ ${pdfFile.name}: ${err.message}`);
+          } else {
+            errors.push(`❌ ${pdfFile.name}: ${result.error}`);
           }
         }
 
         for (const docxFile of docxs) {
-          try {
-            const docxPath = path.join(absInputDir, docxFile.name);
-            const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now());
-            secureRuntime.safeMkdir(tmpDir);
-            const tmpScriptPath = path.join(tmpDir, 'process.mjs');
-            const docxPathJs = docxPath.replace(/\\/g, '/');
-
-            const scriptContent = `
-import { convertDocumentToMd } from '${toFileUrl(BASE_PATH)}/src/modules/document/converter.js';
-const result = convertDocumentToMd('${docxPathJs}');
-process.stdout.write(JSON.stringify(result));
-`;
-            secureRuntime.safeWriteFile(tmpScriptPath, scriptContent);
-            const output = execSync(`node "${tmpScriptPath}"`, { cwd: BASE_PATH, encoding: 'utf8', timeout: 120000, maxBuffer: 50 * 1024 * 1024, windowsHide: true });
-            try { secureRuntime.safeRm(tmpDir); } catch {}
-            const result = JSON.parse(output.trim());
-
+          const docxPath = path.join(absInputDir, docxFile.name);
+          const result = processDocument(docxPath, 'document');
+          if (result.success) {
             addProcessedFile({ path: docxPath, type: 'document', action: 'process_new_raw', destination: result.mdPath });
             processed.push(`✅ ${docxFile.name} → ${result.mdPath}`);
-          } catch (err: any) {
-            errors.push(`❌ ${docxFile.name}: ${err.message}`);
+          } else {
+            errors.push(`❌ ${docxFile.name}: ${result.error}`);
           }
         }
 
@@ -124,14 +146,28 @@ process.stdout.write(JSON.stringify(result));
         if (!isCommandSafe(cmd)) {
           return { error: `Lệnh "${cmd}" không nằm trong whitelist các lệnh được phép.` };
         }
+
+        // Parse command into program + args array
+        // This prevents shell injection since no shell is involved
+        const parts = cmd.match(/(?:[^\s"]+|"[^"]*")+/g) || [cmd];
+        const program = parts[0].replace(/^"|"$/g, '');
+        const execArgs: string[] = parts.slice(1).map((a: string) => a.replace(/^"|"$/g, ''));
+
+        // Validate program path — must be basename only, no path traversal
+        const programName = path.basename(program);
+        if (programName !== program || /\.\./.test(program)) {
+          return { error: 'Chương trình không được chứa đường dẫn hoặc ..' };
+        }
+
         try {
-          const output = execSync(cmd, {
+          const output = execFileSync(programName, execArgs, {
             cwd: BASE_PATH,
             encoding: 'utf8',
             timeout: 60000,
             maxBuffer: 1024 * 1024,
             windowsHide: true,
-            shell: 'powershell.exe'
+            // NO shell — execFileSync runs the binary directly
+            // This eliminates shell injection vectors
           });
           if (!output || output.trim().length === 0) {
             return `✅ Lệnh chạy thành công (không có output)`;
