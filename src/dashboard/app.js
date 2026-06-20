@@ -34,6 +34,7 @@
   let allEvents = [];
   let ws = null;
   let timelineFilter = 'all';
+  let viewMode = 'user';  // 'user' | 'developer'
 
   // Inspector state
   let selectedEntity = null;
@@ -54,6 +55,8 @@
   const errorDisplay = $('#error-display');
   const errorMessage = $('#error-message');
   const themeToggle = $('#theme-toggle');
+  const telemetryDebugEl = $('#telemetry-debug');
+  const viewToggleBtn = $('#view-toggle');
   const inspectorPanel = $('#inspector');
   const inspectorTitle = $('#inspector-title');
   const inspectorContent = $('#inspector-content');
@@ -63,6 +66,7 @@
   function init() {
     loadTheme();
     setupFilterButtons();
+    setupViewToggle();
     setupThemeToggle();
     setupInspector();
     connectWebSocket();
@@ -180,7 +184,13 @@
         break;
       case 'decision_made':
         agentState.recentDecisions.unshift({
-          decision: p.decision, reason: p.reason, nextAction: p.nextAction, timestamp: event.timestamp,
+          decisionId: p.decisionId,
+          decision: p.decision,
+          reason: p.reason,
+          reasoningSnippet: p.reasoningSnippet,
+          nextAction: p.nextAction,
+          taskId: p.taskId || null,
+          timestamp: event.timestamp,
         });
         if (agentState.recentDecisions.length > 20) agentState.recentDecisions.pop();
         break;
@@ -199,6 +209,7 @@
     renderNextAction();
     renderTimeline();
     renderFileChanges();
+    renderTelemetryDebug();
     renderError();
     eventCount.textContent = `${allEvents.length} events`;
   }
@@ -233,12 +244,23 @@
       return;
     }
     const isSelected = selectedEntity && selectedEntity.kind === 'decision';
-    currentDecisionEl.innerHTML = `
-      <div class="decision-item${isSelected ? ' selected' : ''}" data-decision-index="0">
-        <div class="decision-main">${escapeHtml(d.decision)}</div>
-        <div class="decision-reason">${escapeHtml(d.reason)}</div>
-      </div>
-    `;
+    let snippetHtml = '';
+    let idHtml = '';
+    if (viewMode === 'developer') {
+      if (d.decisionId) {
+        idHtml = '<div class="decision-debug-id">📋 ' + escapeHtml(d.decisionId) + (d.taskId ? ' | <span class="mono">task:</span> ' + escapeHtml(d.taskId) : '') + '</div>';
+      }
+      if (d.reasoningSnippet) {
+        snippetHtml = '<div class="decision-snippet">' + escapeHtml(d.reasoningSnippet) + '</div>';
+      }
+    }
+    currentDecisionEl.innerHTML =
+      '<div class="decision-item' + (isSelected ? ' selected' : '') + '" data-decision-index="0">' +
+        idHtml +
+        '<div class="decision-main">' + escapeHtml(d.decision) + '</div>' +
+        '<div class="decision-reason">' + escapeHtml(d.reason) + '</div>' +
+        snippetHtml +
+      '</div>';
   }
 
   function renderNextAction() {
@@ -260,12 +282,25 @@
     timelineEl.innerHTML = items.slice(0, 100).map(e => {
       const time = formatTime(e.timestamp);
       const type = e.type.replace('_', ' ');
-      const text = summarizeEvent(e);
+      const p = e.payload || {};
+      let text, devSuffix = '';
+      if (viewMode === 'developer') {
+        text = summarizeEventDev(e);
+        if (p.decisionId || p.callId || p.taskId) {
+          const ids = [];
+          if (p.taskId) ids.push('t:' + p.taskId.substring(0, 8));
+          if (p.decisionId) ids.push('d:' + p.decisionId.substring(0, 8));
+          if (p.callId) ids.push('c:' + p.callId.substring(0, 8));
+          devSuffix = ' <span class="dev-ids">' + ids.join(' ') + '</span>';
+        }
+      } else {
+        text = summarizeEvent(e);
+      }
       const isSelected = selectedEntity && selectedEntity.kind === 'event' && selectedEntity.event.id === e.id;
       return `<div class="timeline-item${isSelected ? ' selected' : ''}" data-event-id="${escapeHtml(e.id)}">
         <span class="timeline-time">${time}</span>
         <span class="timeline-type" ${getTypeAttr(e.type)}>${type}</span>
-        <span class="timeline-text">${escapeHtml(text)}</span>
+        <span class="timeline-text">${escapeHtml(text)}${devSuffix}</span>
       </div>`;
     }).join('');
   }
@@ -282,6 +317,34 @@
         <span class="file-icon ${f.event}">${icon}</span>
         <span class="file-path">${escapeHtml(f.path)}</span>
       </div>`;
+    }).join('');
+  }
+
+  function renderTelemetryDebug() {
+    if (!telemetryDebugEl) return;
+    const decisions = agentState.recentDecisions;
+    if (decisions.length === 0) {
+      telemetryDebugEl.innerHTML = '<div class="empty-state">No decisions yet</div>';
+      return;
+    }
+    telemetryDebugEl.innerHTML = decisions.slice(0, 20).map(d => {
+      const hasIds = viewMode === 'developer' && (d.decisionId || d.reasoningSnippet || d.taskId);
+      const idLine = hasIds
+        ? '<div class="telemetry-ids">' +
+          (d.decisionId ? '<span class="mono">📋 ' + escapeHtml(d.decisionId) + '</span>' : '') +
+          (d.taskId ? ' <span class="mono">task:' + escapeHtml(d.taskId) + '</span>' : '') +
+          '</div>'
+        : '';
+      const snippet = viewMode === 'developer' && d.reasoningSnippet
+        ? '<div class="telemetry-snippet">' + escapeHtml(d.reasoningSnippet.substring(0, 200)) + (d.reasoningSnippet.length > 200 ? '…' : '') + '</div>'
+        : '';
+      return '<div class="telemetry-item">' +
+        idLine +
+        '<div class="telemetry-decision">' + escapeHtml(d.decision) + '</div>' +
+        '<div class="telemetry-reason">' + escapeHtml(d.reason) + '</div>' +
+        snippet +
+        '<div class="telemetry-meta">' + formatTime(d.timestamp) + '</div>' +
+      '</div>';
     }).join('');
   }
 
@@ -430,12 +493,14 @@
 
   function renderDecisionInspector(decision) {
     inspectorTitle.textContent = 'DECISION';
-    inspectorContent.innerHTML = `
-      ${field('Decision', decision.decision)}
-      ${field('Reason', decision.reason)}
-      ${field('Next Action', decision.nextAction, 'mono')}
-      ${field('Timestamp', formatTime(decision.timestamp) + ' (' + decision.timestamp + ')')}
-    `;
+    inspectorContent.innerHTML =
+      field('Decision', decision.decision) +
+      field('Reason', decision.reason) +
+      field('Next Action', decision.nextAction, 'mono') +
+      (decision.decisionId ? field('Decision ID', decision.decisionId, 'mono') : '') +
+      (decision.taskId ? field('Task ID', decision.taskId, 'mono') : '') +
+      (decision.reasoningSnippet ? field('Reasoning Snippet', '<div class="inspector-json">' + escapeHtml(decision.reasoningSnippet) + '</div>') : '') +
+      field('Timestamp', formatTime(decision.timestamp) + ' (' + decision.timestamp + ')');
   }
 
   function renderFileInspector(file) {
@@ -504,6 +569,22 @@
     }
   }
 
+  function summarizeEventDev(e) {
+    const p = e.payload || {};
+    switch (e.type) {
+      case 'task_started': return `ID:${p.taskId || '—'} Goal:${p.goal || '—'}`;
+      case 'task_finished': return `${p.success ? '✓' : '✗'} ID:${p.taskId || '—'}`;
+      case 'tool_called': return `${p.toolName}() args:${Object.keys(p.args || {}).slice(0,2).join(',')}`;
+      case 'tool_finished': return `${p.toolName} → ${p.success ? '✓' : '✗'} (${p.durationMs || '?'}ms)`;
+      case 'decision_made': return `${p.decision || '—'} | reason:${(p.reason || '').substring(0, 60)}`;
+      case 'file_created': return `+ ${p.path}`;
+      case 'file_modified': return `~ ${p.path}`;
+      case 'file_deleted': return `− ${p.path}`;
+      case 'error': return `[${p.code || 'ERR'}] ${p.message}`;
+      default: return e.type + ' ' + JSON.stringify(p).substring(0, 80);
+    }
+  }
+
   function getTypeAttr(type) {
     if (type.startsWith('tool')) return 'tool';
     if (type.startsWith('decision')) return 'decision';
@@ -522,6 +603,18 @@
     themeToggle.addEventListener('click', () => {
       document.body.classList.toggle('light');
       localStorage.setItem('kato-theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    });
+  }
+
+  // ═══ VIEW TOGGLE (User / Developer) ═══
+  function setupViewToggle() {
+    const btn = viewToggleBtn;
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      viewMode = viewMode === 'user' ? 'developer' : 'user';
+      btn.textContent = viewMode === 'user' ? '👤 User' : '🔧 Dev';
+      btn.classList.toggle('dev-active', viewMode === 'developer');
+      renderAllFromState();
     });
   }
 

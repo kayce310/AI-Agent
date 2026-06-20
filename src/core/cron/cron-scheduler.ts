@@ -17,6 +17,8 @@ export interface CronJob {
   lastRun?: number;
   lastResult?: string;
   running: boolean;
+  /** Max execution time in ms. If exceeded, the job is considered failed. */
+  timeoutMs?: number;
 }
 
 /**
@@ -84,7 +86,18 @@ export class CronScheduler {
     job.lastRun = Date.now();
 
     try {
-      const result = await job.handler();
+      // Wrap handler with optional timeout
+      let result: string | null;
+      if (job.timeoutMs && job.timeoutMs > 0) {
+        result = await Promise.race([
+          job.handler(),
+          new Promise<string | null>((_, reject) =>
+            setTimeout(() => reject(new Error(`Job \"${name}\" timed out after ${job.timeoutMs}ms`)), job.timeoutMs)
+          ),
+        ]);
+      } else {
+        result = await job.handler();
+      }
       job.lastResult = result || 'ok';
       if (result && notifyOnSuccess) {
         return result;

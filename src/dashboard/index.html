@@ -56,12 +56,15 @@
       <div class="card timeline-card">
         <div class="card-header">
           <span class="card-label">TIMELINE</span>
-          <div class="timeline-filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="task">Task</button>
-            <button class="filter-btn" data-filter="tool">Tool</button>
-            <button class="filter-btn" data-filter="decision">Decision</button>
-            <button class="filter-btn" data-filter="file">File</button>
+          <div class="timeline-controls">
+            <div class="timeline-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="task">Task</button>
+              <button class="filter-btn" data-filter="tool">Tool</button>
+              <button class="filter-btn" data-filter="decision">Decision</button>
+              <button class="filter-btn" data-filter="file">File</button>
+            </div>
+            <button id="view-toggle" class="view-toggle" title="Toggle view">👤 User</button>
           </div>
         </div>
         <div id="timeline" class="timeline-list">
@@ -74,6 +77,17 @@
         <div class="card-label">FILE CHANGES</div>
         <div id="file-changes" class="file-list">
           <div class="empty-state">No file changes</div>
+        </div>
+      </div>
+
+      <!-- Telemetry Debug -->
+      <div class="card telemetry-card">
+        <div class="card-header">
+          <span class="card-label">TELEMETRY DEBUG</span>
+          <span class="telemetry-hint">🔧 Switch to Dev view for IDs + reasoning</span>
+        </div>
+        <div id="telemetry-debug" class="telemetry-list">
+          <div class="empty-state">No decisions yet</div>
         </div>
       </div>
 

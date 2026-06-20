@@ -34,6 +34,7 @@ export interface RecentDecision {
   reasoningSnippet?: string;
   nextAction: string;
   timestamp: number;
+  taskId?: string;
 }
 
 export interface AgentState {
@@ -148,7 +149,7 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
     }
 
     case 'decision_made': {
-      const p = event.payload as { decisionId: string; decision: string; reason: string; reasoningSnippet?: string; nextAction: string };
+      const p = event.payload as { taskId: string; decisionId: string; decision: string; reason: string; reasoningSnippet?: string; nextAction: string };
       const decision: RecentDecision = {
         decisionId: p.decisionId,
         decision: p.decision,
@@ -156,6 +157,7 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
         reasoningSnippet: p.reasoningSnippet,
         nextAction: p.nextAction,
         timestamp: event.timestamp,
+        taskId: p.taskId,
       };
       const recentDecisions = [decision, ...state.recentDecisions].slice(0, MAX_RECENT_DECISIONS);
       return { ...state, recentDecisions, timeline };

@@ -159,4 +159,43 @@ describe('CronScheduler', () => {
       expect(job.running).toBe(false);
     });
   });
+
+  describe('timeout', () => {
+    beforeEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should timeout slow jobs', { timeout: 500 }, async () => {
+      scheduler.register({
+        name: 'slow',
+        intervalMs: 60000,
+        timeoutMs: 50,
+        handler: async () => {
+          await new Promise(r => setTimeout(r, 5000));
+          return 'too late';
+        },
+        running: false,
+      });
+
+      const start = Date.now();
+      const result = await scheduler.runJob('slow');
+      const elapsed = Date.now() - start;
+      expect(elapsed).toBeLessThan(1000); // Should fail fast, not wait 5s
+      expect(result).toContain('timed out');
+      expect(result).toContain('slow');
+    });
+
+    it('should complete fast jobs with timeout', async () => {
+      scheduler.register({
+        name: 'fast',
+        intervalMs: 60000,
+        timeoutMs: 5000,
+        handler: async () => 'done early',
+        running: false,
+      });
+
+      const result = await scheduler.runJob('fast', true);
+      expect(result).toBe('done early');
+    });
+  });
 });

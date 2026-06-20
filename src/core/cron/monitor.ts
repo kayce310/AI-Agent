@@ -20,6 +20,8 @@ export interface HealthReport {
   memory: { used: string; free: string; total: string; percent: number };
   uptime: string;
   memoryStoreSize: number;
+  llmConnected: boolean;
+  errorRate: number;
   alerts: string[];
 }
 
@@ -113,6 +115,22 @@ export class SystemMonitor {
       // Memory store not initialized
     }
 
+    // LLM connectivity (placeholder — actual ping depends on provider)
+    let llmConnected = false;
+    try {
+      const endpoint = process.env.LLM_ENDPOINT || 'http://localhost:20127/v1/chat/completions';
+      const response = await fetch(endpoint, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000),
+      });
+      llmConnected = response.ok || response.status === 405; // 405 = method not allowed but server is up
+    } catch {
+      llmConnected = false;
+    }
+
+    // Error rate: count errors in last 30 min via log inspection
+    const errorRate = 0; // Base value — will be refined in future
+
     return {
       timestamp: Date.now(),
       disk: { usage: diskUsage, free: diskFree, percent: diskPercent },
@@ -124,6 +142,8 @@ export class SystemMonitor {
       },
       uptime: this.formatUptime(os.uptime()),
       memoryStoreSize,
+      llmConnected,
+      errorRate,
       alerts: [],
     };
   }

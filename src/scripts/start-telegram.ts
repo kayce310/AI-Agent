@@ -216,6 +216,7 @@ async function start() {
     cronScheduler.register({
       name: 'health-check',
       intervalMs: 6 * 60 * 60 * 1000,
+      timeoutMs: 30000, // 30s max
       handler: async () => {
         const report = await monitor.runHealthCheck();
         return report; // null if healthy, string if alert needed
@@ -227,12 +228,33 @@ async function start() {
     cronScheduler.register({
       name: 'memory-flush',
       intervalMs: 60 * 60 * 1000,
+      timeoutMs: 60000, // 1 min max
       handler: async () => {
         try {
           await engine.cleanup();
           return null; // no notification needed
         } catch (err: any) {
           return `⚠️ Memory flush failed: ${err.message}`;
+        }
+      },
+      running: false,
+    });
+
+    // Job: MemoryStore cleanup every 30 min — evict expired blocks
+    cronScheduler.register({
+      name: 'memory-cleanup',
+      intervalMs: 30 * 60 * 1000,
+      timeoutMs: 30000,
+      handler: async () => {
+        try {
+          const { globalMemoryStore } = await import('../core/memory/memory-store.js');
+          const removed = await globalMemoryStore.cleanupExpired();
+          if (removed > 0) {
+            return `🧹 MemoryStore cleanup: ${removed} expired blocks evicted`;
+          }
+          return null; // quiet if nothing removed
+        } catch (err: any) {
+          return `⚠️ Memory cleanup failed: ${err.message}`;
         }
       },
       running: false,
