@@ -499,6 +499,7 @@ export class Agent extends EventEmitter {
             await this.hooks.emit('tool:result', {
               sessionId: request.sessionId,
               toolName: toolCall.function.name,
+              args: toolCall.function.arguments,
               result: toolResult,
               cycle: toolCallCycles,
             });

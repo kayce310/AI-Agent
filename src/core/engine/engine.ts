@@ -163,13 +163,47 @@ export class Engine extends EventEmitter {
       }
     } catch { /* silent */ }
 
+    // ═══ EVENT BUS: tool:call → tool_called + decision_made ═══
+    this.agent.onEvent('tool:call', async (data) => {
+      const sessionId = (data.sessionId as string) || 'default';
+      const toolName = (data.toolName as string) || 'unknown';
+      const toolArgs = (data.toolArgs as Record<string, unknown>) || {};
+      const cycle = (data.cycle as number) || 0;
+
+      // Emit tool_called event
+      this.eventLogger.toolCall(sessionId, toolName, toolArgs);
+
+      // Emit decision_made event (what the agent chose to do)
+      const argsSummary = Object.keys(toolArgs).slice(0, 3).join(', ');
+      this.eventLogger.decisionMade(
+        sessionId,
+        `Call ${toolName}`,
+        `Tool selected (cycle ${cycle})`,
+        `Execute ${toolName}(${argsSummary})`
+      );
+    }, 90);
+
+    // ═══ EVENT BUS: tool:result → tool_finished + file events ═══
     this.agent.onEvent('tool:result', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
       const toolName = (data.toolName as string) || 'unknown';
+      const toolArgs = (data.args as Record<string, unknown>) || {};
       const result = JSON.stringify(data.result);
+      const startTime = Date.now();
 
       // Track tool call on cache — used for side-effect detection to prevent caching tool-heavy responses
       this.responseCache.recordToolCall(toolName);
+
+      // Emit tool_finished event
+      const success = !result.includes('"error"');
+      this.eventLogger.toolResult(sessionId, toolName, success, 0, toolArgs, result.substring(0, 500));
+
+      // Emit file events for file-writing tools
+      const filePath = this.extractFilePath(toolName, toolArgs);
+      if (filePath) {
+        this.eventLogger.fileCreated(sessionId, filePath);
+      }
+
       if (result && result !== 'undefined' && result !== 'null') {
         await globalMemoryStore.add('task', `Tool ${toolName}: ${result.substring(0, 500)}`, {
           tags: ['tool_result', toolName], sessionId,
@@ -421,6 +455,39 @@ export class Engine extends EventEmitter {
 
   getEventBus(): EventBus {
     return this.eventBus;
+  }
+
+  // ── File Event Helpers ──
+
+  /**
+   * Extract file path from tool name + args for file event emission.
+   * Returns the path if the tool is known to write/create files, or null.
+   */
+  private extractFilePath(toolName: string, args: Record<string, unknown>): string | null {
+    switch (toolName) {
+      case 'write_wiki_page':
+        return (args.path as string) || null;
+      case 'extract_pdf_to_md':
+      case 'extract_docx_to_md':
+        return (args.outputPath as string) || (args.path as string) || null;
+      case 'archive_document':
+        return (args.path as string) || null;
+      case 'read_file':
+      case 'list_directory':
+      case 'search_knowledge_graph':
+      case 'search_archived_md':
+      case 'quote_from_source':
+      case 'load_skill':
+      case 'list_skills':
+      case 'skill_view':
+      case 'web_search':
+      case 'fetch_url':
+      case 'execute_command':
+      case 'generate_report':
+        return null; // read-only or non-file tools
+      default:
+        return null;
+    }
   }
 
   // ── Graceful Cleanup ──

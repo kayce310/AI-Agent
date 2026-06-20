@@ -2,6 +2,7 @@
  * @file Event Factory — Create validated agent events
  * @layer core
  * @created 2026-06-20
+ * @updated 2026-06-21 — Phase 1: file events, decision_made, updated tool schemas
  */
 
 import { randomUUID } from 'crypto';
@@ -13,6 +14,10 @@ import {
   TaskFinishedSchema,
   ToolCalledSchema,
   ToolFinishedSchema,
+  FileCreatedSchema,
+  FileModifiedSchema,
+  FileDeletedSchema,
+  DecisionMadeSchema,
   MemoryWriteSchema,
   ErrorEventSchema,
 } from './types.js';
@@ -54,23 +59,57 @@ export class EventFactory {
     });
   }
 
-  static toolCalled(toolName: string, args: Record<string, unknown>, taskId?: string): AgentEvent {
+  static toolCalled(taskId: string, toolName: string, args: Record<string, unknown>): AgentEvent {
     return ToolCalledSchema.parse({
       ...this.createBase('tool_called'),
-      payload: { toolName, args, taskId },
+      payload: { taskId, toolName, args },
     });
   }
 
   static toolFinished(
+    taskId: string,
     toolName: string,
-    args: Record<string, unknown>,
-    result: string,
     success: boolean,
-    duration: number
+    durationMs: number,
+    args?: Record<string, unknown>,
+    result?: string
   ): AgentEvent {
     return ToolFinishedSchema.parse({
       ...this.createBase('tool_finished'),
-      payload: { toolName, args, result, success, duration },
+      payload: { taskId, toolName, success, durationMs, args, result },
+    });
+  }
+
+  static fileCreated(taskId: string, filePath: string): AgentEvent {
+    return FileCreatedSchema.parse({
+      ...this.createBase('file_created'),
+      payload: { taskId, path: filePath },
+    });
+  }
+
+  static fileModified(taskId: string, filePath: string): AgentEvent {
+    return FileModifiedSchema.parse({
+      ...this.createBase('file_modified'),
+      payload: { taskId, path: filePath },
+    });
+  }
+
+  static fileDeleted(taskId: string, filePath: string): AgentEvent {
+    return FileDeletedSchema.parse({
+      ...this.createBase('file_deleted'),
+      payload: { taskId, path: filePath },
+    });
+  }
+
+  static decisionMade(
+    taskId: string,
+    decision: string,
+    reason: string,
+    nextAction: string
+  ): AgentEvent {
+    return DecisionMadeSchema.parse({
+      ...this.createBase('decision_made'),
+      payload: { taskId, decision, reason, nextAction },
     });
   }
 

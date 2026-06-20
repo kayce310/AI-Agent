@@ -15,6 +15,7 @@ import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
 import { CoralGateway } from '../core/gateway/index.js';
 import { DashboardServer } from '../core/events/http-server.js';
+import { CronScheduler, SystemMonitor } from '../core/cron/index.js';
 
 // ── Timestamp Helper ──
 const ts = () => {
@@ -113,6 +114,7 @@ function releaseFileLock(): void {
 let engineInstance: Engine | null = null;
 let gatewayInstance: CoralGateway | null = null;
 let dashboardServer: DashboardServer | null = null;
+let cronScheduler: CronScheduler | null = null;
 let isShuttingDown = false;
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
@@ -137,7 +139,13 @@ async function gracefulShutdown(signal: string) {
       await gatewayInstance.stopAll().catch(e => console.error(`Gateway stop error: ${e}`));
     }
 
-    // 2. Flush memory
+    // 3. Stop cron scheduler
+    if (cronScheduler) {
+      console.log(`${ts()} ⏰ Stopping cron scheduler...`);
+      cronScheduler.stop();
+    }
+
+    // 4. Flush memory
     if (engineInstance) {
       console.log(`${ts()} 💾 Flushing memory...`);
       await engineInstance.cleanup().catch(e => console.error(`Memory cleanup error: ${e}`));
@@ -197,6 +205,43 @@ async function start() {
     }
   } catch (e) {
     console.error(`${ts()} ⚠️ Dashboard server failed to start: ${e}`);
+  }
+
+  // ── Phase 4: Cron Scheduler + System Monitor ──
+  try {
+    const monitor = new SystemMonitor();
+    cronScheduler = new CronScheduler();
+
+    // Job: Health check every 6 hours (21600000ms)
+    cronScheduler.register({
+      name: 'health-check',
+      intervalMs: 6 * 60 * 60 * 1000,
+      handler: async () => {
+        const report = await monitor.runHealthCheck();
+        return report; // null if healthy, string if alert needed
+      },
+      running: false,
+    });
+
+    // Job: Memory flush every hour (3600000ms)
+    cronScheduler.register({
+      name: 'memory-flush',
+      intervalMs: 60 * 60 * 1000,
+      handler: async () => {
+        try {
+          await engine.cleanup();
+          return null; // no notification needed
+        } catch (err: any) {
+          return `⚠️ Memory flush failed: ${err.message}`;
+        }
+      },
+      running: false,
+    });
+
+    cronScheduler.start();
+    console.log(`${ts()} ⏰ Cron scheduler started with ${cronScheduler.listJobs().length} jobs`);
+  } catch (e) {
+    console.error(`${ts()} ⚠️ Cron scheduler failed to start: ${e}`);
   }
 }
 
