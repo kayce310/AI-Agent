@@ -1,10 +1,12 @@
 /**
- * @file HTTP/WS Server — Serves events to dashboard
+ * @file HTTP/WS Server — Serves events + dashboard to browser
  * @layer infrastructure
  * @created 2026-06-20
  */
 
 import * as http from 'http';
+import * as fs from 'fs';
+import * as path from 'path';
 import { EventBus } from './bus.js';
 import { EventStore } from './store.js';
 import { StructuredLogger } from './logger.js';
@@ -37,11 +39,10 @@ export class DashboardServer {
   }
 
   private handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
-    // CORS headers for local development
+    // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Content-Type', 'application/json');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(200);
@@ -49,45 +50,75 @@ export class DashboardServer {
       return;
     }
 
-    const url = new URL(req.url || '/', `http://${req.headers.host}`);
-    const path = url.pathname;
+    const url = req.url || '/';
 
-    try {
+    // ═══ STATIC FILES (Dashboard v6) ═══
+    if (url === '/' || url === '/index.html') {
+      this.serveFile(res, 'src/dashboard/index.html', 'text/html; charset=utf-8');
+      return;
+    }
+    if (url === '/styles.css') {
+      this.serveFile(res, 'src/dashboard/styles.css', 'text/css; charset=utf-8');
+      return;
+    }
+    if (url === '/app.js') {
+      this.serveFile(res, 'src/dashboard/app.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+
+    // ═══ API: Stats ═══
+    if (url === '/api/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: { status: 'ok', timestamp: Date.now() } }));
+      return;
+    }
+
+    // ═══ API: Events ═══
+    if (url.startsWith('/api/events/')) {
+      const pathname = url.replace(/^\/api\/events\//, '');
       let response: any;
 
-      if (path === '/api/events/recent') {
-        const limit = parseInt(url.searchParams.get('limit') || '50');
-        response = this.eventApi.getRecent(limit);
-      } else if (path.startsWith('/api/events/task/')) {
-        const taskId = path.split('/api/events/task/')[1];
-        response = this.eventApi.getByTask(taskId);
-      } else if (path === '/api/events/stats') {
+      if (pathname === 'recent') {
+        response = this.eventApi.getRecent();
+      } else if (pathname === 'stats') {
         response = this.eventApi.getStats();
-      } else if (path === '/api/health') {
-        response = {
-          success: true,
-          data: { status: 'ok', timestamp: Date.now(), wsClients: this.eventWebSocket.getClientCount() }
-        };
+      } else if (pathname.startsWith('task/')) {
+        const taskId = pathname.replace('task/', '');
+        response = this.eventApi.getByTask(taskId);
       } else {
-        res.writeHead(404);
-        res.end(JSON.stringify({ success: false, error: 'Not found' }));
-        return;
+        response = { success: false, error: 'Unknown endpoint' };
       }
 
-      res.writeHead(200);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));
-    } catch (error) {
-      console.error('[DashboardServer] Request error:', error);
-      res.writeHead(500);
-      res.end(JSON.stringify({ success: false, error: 'Internal server error' }));
+      return;
     }
+
+    // 404
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Not found' }));
+  }
+
+  private serveFile(res: http.ServerResponse, filePath: string, contentType: string): void {
+    const fullPath = path.resolve(process.cwd(), filePath);
+    fs.readFile(fullPath, (err, data) => {
+      if (err) {
+        console.error(`[DashboardServer] Failed to serve ${filePath}:`, err.message);
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Internal server error');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
   }
 
   async start(): Promise<void> {
     return new Promise((resolve) => {
       this.server.listen(this.port, this.host, () => {
         console.log(`[DashboardServer] HTTP/WS server running at http://${this.host}:${this.port}`);
-        console.log(`[DashboardServer] WebSocket endpoint: ws://${this.host}:${this.port}/ws/events`);
+        console.log(`[DashboardServer] Dashboard: http://${this.host}:${this.port}`);
+        console.log(`[DashboardServer] WebSocket: ws://${this.host}:${this.port}/ws/events`);
         resolve();
       });
     });
