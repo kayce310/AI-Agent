@@ -38,6 +38,7 @@ import { MemoryBlock } from '../memory/memory-log.js';
 import { EventBus } from '../events/bus.js';
 import { EventStore } from '../events/store.js';
 import { StructuredLogger } from '../events/logger.js';
+import { randomUUID } from 'crypto';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -61,6 +62,8 @@ export class Engine extends EventEmitter {
   private storage!: CoralStorage;
   private eventBus!: EventBus;
   private eventLogger!: StructuredLogger;
+  private pendingCallIds: Map<string, string[]> = new Map();
+  private tasksWithToolCalls: Set<string> = new Set();
 
   private agentRegistry!: AgentRegistry;
 
@@ -170,8 +173,19 @@ export class Engine extends EventEmitter {
       const toolArgs = (data.toolArgs as Record<string, unknown>) || {};
       const cycle = (data.cycle as number) || 0;
 
-      // Emit tool_called event
-      this.eventLogger.toolCall(sessionId, toolName, toolArgs);
+      // Generate unique callId for this tool invocation
+      const callId = randomUUID();
+
+      // Track that this task used tools
+      this.tasksWithToolCalls.add(sessionId);
+
+      // Store callId in queue for tool:result to pick up
+      const queue = this.pendingCallIds.get(toolName) || [];
+      queue.push(callId);
+      this.pendingCallIds.set(toolName, queue);
+
+      // Emit tool_called event with callId
+      this.eventLogger.toolCall(sessionId, callId, toolName, toolArgs);
 
       // Emit decision_made event (what the agent chose to do)
       const argsSummary = Object.keys(toolArgs).slice(0, 3).join(', ');
@@ -189,14 +203,18 @@ export class Engine extends EventEmitter {
       const toolName = (data.toolName as string) || 'unknown';
       const toolArgs = (data.args as Record<string, unknown>) || {};
       const result = JSON.stringify(data.result);
-      const startTime = Date.now();
+
+      // Fetch callId from queue (FIFO — matches call order)
+      const queue = this.pendingCallIds.get(toolName) || [];
+      const callId = queue.shift() || randomUUID();
+      if (queue.length === 0) this.pendingCallIds.delete(toolName);
 
       // Track tool call on cache — used for side-effect detection to prevent caching tool-heavy responses
       this.responseCache.recordToolCall(toolName);
 
-      // Emit tool_finished event
+      // Emit tool_finished event with callId
       const success = !result.includes('"error"');
-      this.eventLogger.toolResult(sessionId, toolName, success, 0, toolArgs, result.substring(0, 500));
+      this.eventLogger.toolResult(sessionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
 
       // Emit file events for file-writing tools
       const filePath = this.extractFilePath(toolName, toolArgs);
@@ -218,6 +236,16 @@ export class Engine extends EventEmitter {
     this.agent.onEvent('model:response', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
       if (data.finishReason === 'stop' && data.content) {
+        // Direct response path: no tools were called → emit decision_made so Mission Mode is never blind
+        if (!this.tasksWithToolCalls.has(sessionId)) {
+          this.eventLogger.decisionMade(
+            sessionId,
+            'Respond directly',
+            'Enough information available',
+            'Generate response'
+          );
+        }
+
         await this.agenticMemory.addBlockForAgent('engine', {
           type: 'session', content: String(data.content).substring(0, 1000),
           tags: ['assistant_response'], sessionId,

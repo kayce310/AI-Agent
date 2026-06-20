@@ -59,15 +59,16 @@ export class EventFactory {
     });
   }
 
-  static toolCalled(taskId: string, toolName: string, args: Record<string, unknown>): AgentEvent {
+  static toolCalled(taskId: string, callId: string, toolName: string, args: Record<string, unknown>): AgentEvent {
     return ToolCalledSchema.parse({
       ...this.createBase('tool_called'),
-      payload: { taskId, toolName, args },
+      payload: { taskId, callId, toolName, args },
     });
   }
 
   static toolFinished(
     taskId: string,
+    callId: string,
     toolName: string,
     success: boolean,
     durationMs: number,
@@ -76,7 +77,7 @@ export class EventFactory {
   ): AgentEvent {
     return ToolFinishedSchema.parse({
       ...this.createBase('tool_finished'),
-      payload: { taskId, toolName, success, durationMs, args, result },
+      payload: { taskId, callId, toolName, success, durationMs, args, result },
     });
   }
 

@@ -1,294 +1,89 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kato Agent — Dashboard v7</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <title>Kato Agent — Mission Control</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- TOP STATUS BAR -->
-  <header class="status-bar">
+  <header id="status-bar">
     <div class="status-left">
-      <div class="agent-badge">
-        <span class="badge-dot" id="statusDot"></span>
-        <span class="badge-text" id="statusText">Connecting...</span>
-      </div>
-      <div class="goal-display">
-        <span class="goal-label">GOAL:</span>
-        <span class="goal-text" id="currentGoal">No active goal</span>
-      </div>
+      <span id="ws-indicator" class="ws-disconnected" title="WebSocket disconnected">●</span>
+      <span class="app-title">KATO AGENT</span>
     </div>
     <div class="status-right">
-      <div class="event-count" id="eventCount">0 events</div>
-      <div class="metric">
-        <span class="metric-icon">⚡</span>
-        <span class="metric-value" id="cpuUsage">0%</span>
-        <span class="metric-label">CPU</span>
-      </div>
-      <div class="metric">
-        <span class="metric-icon">💾</span>
-        <span class="metric-value" id="ramUsage">0MB</span>
-        <span class="metric-label">RAM</span>
-      </div>
-      <div class="metric">
-        <span class="metric-icon">🪙</span>
-        <span class="metric-value" id="tokenUsage">0</span>
-        <span class="metric-label">TOKENS</span>
-      </div>
-      <div class="metric">
-        <span class="metric-icon">💰</span>
-        <span class="metric-value" id="costUsage">$0.00</span>
-        <span class="metric-label">COST</span>
-      </div>
-      <div class="session-time">
-        <span class="metric-icon">⏱️</span>
-        <span id="sessionTime">00:00:00</span>
-      </div>
+      <span id="event-count">0 events</span>
+      <button id="theme-toggle" title="Toggle theme">◐</button>
     </div>
   </header>
 
-  <!-- MAIN LAYOUT -->
-  <div class="main-layout">
-    <!-- LEFT NAVIGATION -->
-    <nav class="left-nav">
-      <div class="nav-item active" data-tab="overview">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">Overview</span>
-      </div>
-      <div class="nav-item" data-tab="tasks">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">Tasks</span>
-      </div>
-      <div class="nav-item" data-tab="memory">
-        <span class="nav-icon">🧠</span>
-        <span class="nav-label">Memory</span>
-      </div>
-      <div class="nav-item" data-tab="tools">
-        <span class="nav-icon">🔧</span>
-        <span class="nav-label">Tools</span>
-      </div>
-      <div class="nav-item" data-tab="files">
-        <span class="nav-icon">📁</span>
-        <span class="nav-label">Files</span>
-      </div>
-      <div class="nav-item" data-tab="settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">Settings</span>
-      </div>
-    </nav>
-
-    <!-- MAIN WORKSPACE -->
-    <main class="workspace">
-      <!-- Overview Tab -->
-      <div class="tab-content active" id="tab-overview">
-        <div class="workspace-header">
-          <h2>Overview</h2>
-          <span class="header-badge">Agent Status</span>
-        </div>
-        <div class="overview-grid">
-          <div class="card goal-card">
-            <div class="card-header">🎯 Current Goal</div>
-            <div class="card-body" id="goalContent">No active goal</div>
-          </div>
-          <div class="card plan-card">
-            <div class="card-header">📝 Current Plan</div>
-            <div class="card-body" id="planContent">No active plan</div>
-          </div>
-          <div class="card actions-card">
-            <div class="card-header">⚡ Recent Actions</div>
-            <div class="card-body scrollable" id="actionsContent">No recent actions</div>
-          </div>
-          <div class="card progress-card">
-            <div class="card-header">📈 Progress</div>
-            <div class="card-body">
-              <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-              </div>
-              <div class="progress-text" id="progressText">0%</div>
-            </div>
-          </div>
-        </div>
-        <div class="card error-card" id="errorDisplay" style="display:none">
-          <div class="card-header">❌ Last Error</div>
-          <div class="card-body" id="errorContent"></div>
+  <main id="workspace">
+    <!-- ═══ F2: MISSION MODE (default) ═══ -->
+    <section id="mission-view">
+      <!-- Mission Card: Goal + Status -->
+      <div class="card mission-card">
+        <div class="card-label">CURRENT MISSION</div>
+        <div id="mission-goal" class="mission-goal">Awaiting task</div>
+        <div class="mission-status">
+          <span id="mission-status-badge" class="badge badge-idle">IDLE</span>
         </div>
       </div>
 
-      <!-- Tasks Tab -->
-      <div class="tab-content" id="tab-tasks">
-        <div class="workspace-header">
-          <h2>Tasks</h2>
-          <div class="filter-group">
+      <!-- Split: Active Tools | Current Decision -->
+      <div class="split-panel">
+        <div class="card split-left">
+          <div class="card-label">ACTIVE TOOLS</div>
+          <div id="active-tools" class="active-tools-list">
+            <div class="empty-state">No active tools</div>
+          </div>
+        </div>
+        <div class="card split-right">
+          <div class="card-label">CURRENT DECISION</div>
+          <div id="current-decision" class="current-decision">
+            <div class="empty-state">No decision yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Action -->
+      <div class="card">
+        <div class="card-label">NEXT ACTION</div>
+        <div id="next-action" class="next-action">—</div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card timeline-card">
+        <div class="card-header">
+          <span class="card-label">TIMELINE</span>
+          <div class="timeline-filters">
             <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="running">Running</button>
-            <button class="filter-btn" data-filter="completed">Completed</button>
-            <button class="filter-btn" data-filter="failed">Failed</button>
+            <button class="filter-btn" data-filter="task">Task</button>
+            <button class="filter-btn" data-filter="tool">Tool</button>
+            <button class="filter-btn" data-filter="decision">Decision</button>
+            <button class="filter-btn" data-filter="file">File</button>
           </div>
         </div>
-        <div class="task-list" id="taskList">No tasks</div>
-      </div>
-
-      <!-- Memory Tab -->
-      <div class="tab-content" id="tab-memory">
-        <div class="workspace-header">
-          <h2>Memory</h2>
-        </div>
-        <div class="memory-grid">
-          <div class="card">
-            <div class="card-header">💭 Working Memory</div>
-            <div class="card-body scrollable" id="workingMemory">Empty</div>
-          </div>
-          <div class="card">
-            <div class="card-header">📚 Long-term Memory</div>
-            <div class="card-body scrollable" id="longTermMemory">Empty</div>
-          </div>
-          <div class="card">
-            <div class="card-header">📜 Rules</div>
-            <div class="card-body scrollable" id="rulesList">No rules loaded</div>
-          </div>
-          <div class="card">
-            <div class="card-header">📄 Loaded Documents</div>
-            <div class="card-body scrollable" id="documentsList">No documents</div>
-          </div>
+        <div id="timeline" class="timeline-list">
+          <div class="empty-state">No events yet</div>
         </div>
       </div>
 
-      <!-- Tools Tab -->
-      <div class="tab-content" id="tab-tools">
-        <div class="workspace-header">
-          <h2>Tools</h2>
-        </div>
-        <div class="tools-grid">
-          <div class="card">
-            <div class="card-header">⚡ Active Tools</div>
-            <div class="card-body scrollable" id="activeToolsList">
-              <div class="empty-state">No active tools</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">📜 Tool History</div>
-            <div class="card-body scrollable" id="toolHistoryList">
-              <div class="empty-state">No tool calls yet</div>
-            </div>
-          </div>
+      <!-- File Changes -->
+      <div class="card">
+        <div class="card-label">FILE CHANGES</div>
+        <div id="file-changes" class="file-list">
+          <div class="empty-state">No file changes</div>
         </div>
       </div>
 
-      <!-- Files Tab -->
-      <div class="tab-content" id="tab-files">
-        <div class="workspace-header">
-          <h2>Files</h2>
-        </div>
-        <div class="files-grid">
-          <div class="card">
-            <div class="card-header">📁 Recent File Changes</div>
-            <div class="card-body scrollable" id="filesList">
-              <div class="empty-state">No file changes yet</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">🧠 Decisions</div>
-            <div class="card-body scrollable" id="decisionsList">
-              <div class="empty-state">No decisions recorded</div>
-            </div>
-          </div>
-        </div>
+      <!-- Error Display (hidden when no error) -->
+      <div id="error-display" class="card error-card hidden">
+        <div class="card-label">ERROR</div>
+        <div id="error-message" class="error-message"></div>
       </div>
-
-      <!-- Settings Tab -->
-      <div class="tab-content" id="tab-settings">
-        <div class="workspace-header">
-          <h2>Settings</h2>
-        </div>
-        <div class="settings-grid">
-          <div class="card">
-            <div class="card-header">🎨 Appearance</div>
-            <div class="card-body">
-              <div class="setting-row">
-                <span>Theme</span>
-                <button class="toggle-btn" id="themeToggle">🌙 Dark</button>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">🔗 Connection</div>
-            <div class="card-body">
-              <div class="setting-row">
-                <span>WebSocket URL</span>
-                <input type="text" id="wsUrl" value="ws://127.0.0.1:8766/ws/events" class="setting-input">
-              </div>
-              <div class="setting-row">
-                <span>Refresh Interval</span>
-                <select id="refreshInterval" class="setting-select">
-                  <option value="1000">1 second</option>
-                  <option value="5000" selected>5 seconds</option>
-                  <option value="10000">10 seconds</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">🔄 Reset</div>
-            <div class="card-body">
-              <button class="danger-btn" id="resetSettings">Reset to Defaults</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- RIGHT INSPECTOR -->
-    <aside class="inspector" id="inspector">
-      <div class="inspector-header">
-        <h3>Inspector</h3>
-        <button class="close-btn" id="closeInspector">×</button>
-      </div>
-      <div class="inspector-body" id="inspectorContent">
-        <div class="empty-state">Click an item to inspect</div>
-      </div>
-    </aside>
-  </div>
-
-  <!-- BOTTOM TIMELINE -->
-  <footer class="timeline">
-    <div class="timeline-header">
-      <span class="timeline-title">⏱️ Timeline</span>
-      <div class="timeline-filters">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="tasks">Tasks</button>
-        <button class="filter-btn" data-filter="tools">Tools</button>
-        <button class="filter-btn" data-filter="errors">Errors</button>
-        <button class="filter-btn" data-filter="files">Files</button>
-        <button class="filter-btn" data-filter="decisions">Decisions</button>
-      </div>
-      <div class="timeline-actions">
-        <button class="action-btn" id="clearTimeline">🗑️ Clear</button>
-        <button class="action-btn" id="exportTimeline">📤 Export</button>
-      </div>
-    </div>
-    <div class="timeline-body" id="timelineBody">
-      <div class="empty-state">Waiting for events...</div>
-    </div>
-  </footer>
-
-  <!-- AGENT CONTROLS (Floating) -->
-  <div class="agent-controls" id="agentControls">
-    <button class="control-btn resume" id="btnResume" title="Resume">▶</button>
-    <button class="control-btn pause" id="btnPause" title="Pause">⏸</button>
-    <button class="control-btn stop" id="btnStop" title="Stop">■</button>
-  </div>
-
-  <!-- APPROVAL QUEUE (Floating) -->
-  <div class="approval-queue" id="approvalQueue">
-    <div class="approval-header">
-      <span>🔔 Pending Approval</span>
-      <span class="approval-count" id="approvalCount">0</span>
-    </div>
-    <div class="approval-list" id="approvalList"></div>
-  </div>
+    </section>
+  </main>
 
   <script src="app.js"></script>
 </body>

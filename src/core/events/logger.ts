@@ -27,19 +27,20 @@ export class StructuredLogger {
     this.bus.publish(EventFactory.taskFinished(taskId, goal, success, duration, result));
   }
 
-  toolCall(taskId: string, toolName: string, args: Record<string, unknown>): void {
-    this.bus.publish(EventFactory.toolCalled(taskId, toolName, args));
+  toolCall(taskId: string, callId: string, toolName: string, args: Record<string, unknown>): void {
+    this.bus.publish(EventFactory.toolCalled(taskId, callId, toolName, args));
   }
 
   toolResult(
     taskId: string,
+    callId: string,
     toolName: string,
     success: boolean,
     durationMs: number,
     args?: Record<string, unknown>,
     result?: string
   ): void {
-    this.bus.publish(EventFactory.toolFinished(taskId, toolName, success, durationMs, args, result));
+    this.bus.publish(EventFactory.toolFinished(taskId, callId, toolName, success, durationMs, args, result));
   }
 
   fileCreated(taskId: string, filePath: string): void {

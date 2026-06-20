@@ -2,6 +2,7 @@
  * @file Agent State — Derives current state from events
  * @layer core
  * @created 2026-06-21
+ * @updated 2026-06-21 — Phase 2: callId for tool cleanup, currentTaskLabel, fallback states
  *
  * Events → State → UI (NOT Events → UI)
  * This is the single source of truth for all dashboard state.
@@ -11,9 +12,10 @@ import { AgentEvent } from './types.js';
 
 // ═══ STATE TYPES ═══
 
-export type AgentStatus = 'idle' | 'working' | 'error' | 'offline';
+export type AgentStatus = 'idle' | 'working' | 'error' | 'offline' | 'paused';
 
 export interface ActiveTool {
+  callId: string;
   toolName: string;
   args: Record<string, unknown>;
   startedAt: number;
@@ -35,7 +37,8 @@ export interface RecentDecision {
 export interface AgentState {
   status: AgentStatus;
   currentGoal: string | null;
-  currentTask: string | null;
+  currentTaskId: string | null;
+  currentTaskLabel: string | null;
   activeTools: ActiveTool[];
   recentFiles: RecentFile[];
   lastError: { message: string; code?: string; timestamp: number } | null;
@@ -49,7 +52,8 @@ export function createInitialState(): AgentState {
   return {
     status: 'idle',
     currentGoal: null,
-    currentTask: null,
+    currentTaskId: null,
+    currentTaskLabel: null,
     activeTools: [],
     recentFiles: [],
     lastError: null,
@@ -74,12 +78,13 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
 
   switch (event.type) {
     case 'task_started': {
-      const p = event.payload as { taskId: string; goal: string };
+      const p = event.payload as { taskId: string; goal: string; currentStep?: number };
       return {
         ...state,
         status: 'working',
         currentGoal: p.goal,
-        currentTask: p.taskId,
+        currentTaskId: p.taskId,
+        currentTaskLabel: p.goal, // Fallback: goal is the label until engine provides a real label
         timeline,
       };
     }
@@ -90,15 +95,16 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
         ...state,
         status: p.success ? 'idle' : 'error',
         currentGoal: null,
-        currentTask: null,
+        currentTaskId: null,
+        currentTaskLabel: null,
         timeline,
       };
     }
 
     case 'tool_called': {
-      const p = event.payload as { taskId: string; toolName: string; args: Record<string, unknown> };
-      const activeTools = [
-        { toolName: p.toolName, args: p.args, startedAt: event.timestamp },
+      const p = event.payload as { taskId: string; callId: string; toolName: string; args: Record<string, unknown> };
+      const activeTools: ActiveTool[] = [
+        { callId: p.callId, toolName: p.toolName, args: p.args, startedAt: event.timestamp },
         ...state.activeTools,
       ];
       return {
@@ -109,8 +115,8 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
     }
 
     case 'tool_finished': {
-      const p = event.payload as { toolName: string };
-      const activeTools = state.activeTools.filter(t => t.toolName !== p.toolName);
+      const p = event.payload as { callId: string };
+      const activeTools = state.activeTools.filter(t => t.callId !== p.callId);
       return {
         ...state,
         activeTools,
