@@ -67,6 +67,7 @@ export const ToolCalledSchema = BaseEventSchema.extend({
   type: z.literal('tool_called'),
   payload: z.object({
     taskId: z.string(),
+    callId: z.string(),
     toolName: z.string(),
     args: z.record(z.string(), z.unknown()),
   }),
@@ -76,6 +77,7 @@ export const ToolFinishedSchema = BaseEventSchema.extend({
   type: z.literal('tool_finished'),
   payload: z.object({
     taskId: z.string(),
+    callId: z.string(),
     toolName: z.string(),
     success: z.boolean(),
     durationMs: z.number(),
