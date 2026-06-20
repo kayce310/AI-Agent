@@ -13,6 +13,7 @@ import { Logger } from '../logger.js';
 import Engine from '../engine/engine.js';
 import { CoralRequest, CoralResponse, PlatformAdapter, AdapterMessage } from './types.js';
 import { EngineRequest, ChatMessage } from '../types.js';
+import { globalMemoryStore } from '../memory/memory-store.js';
 
 const log = new Logger({ module: 'Gateway' });
 
@@ -193,11 +194,21 @@ export class CoralGateway {
     // ── Memory: Save user message + assistant response ──
     try {
       await this._engine.saveMessage(sessionId, userMessage);
+      // Also save to MemoryStore (Phase 1.2: enables memory recall)
+      await globalMemoryStore.add('human', typeof request.input === 'string' ? request.input : JSON.stringify(request.input), {
+        tags: ['user_message', request.platform || 'unknown'],
+        sessionId,
+      });
       if (result.content) {
         await this._engine.saveMessage(sessionId, {
           role: 'assistant',
           content: result.content,
           timestamp: Date.now(),
+        });
+        // Save assistant response to MemoryStore
+        await globalMemoryStore.add('persona', result.content.substring(0, 1000), {
+          tags: ['assistant_response', request.platform || 'unknown'],
+          sessionId,
         });
       }
     } catch { /* silent — logging should never break response */ }
