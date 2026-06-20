@@ -208,6 +208,7 @@ Let me check the knowledge base for more context about the project purpose."
 | Duplicate tool calls (same tool×2) | **MEDIUM** | Add deduplication or tool-call budget |
 | No file_created/fileModified events | **MEDIUM** | Verify file event hook wiring |
 | 2 orphaned tasks | **LOW** | Add task timeout/cleanup |
+| **taskId mismatch** (decisions use session ID "8967780585" instead of task-XXX) | **HIGH** | engine.ts uses `sessionId` as taskId for decision events, but task_started uses `task-${Date.now()}`. Decisions can't be linked to parent tasks. |
 
 ### C. Recommended Architecture for Phase 4B
 
