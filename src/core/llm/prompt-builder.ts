@@ -91,6 +91,7 @@ interface PromptInput {
   task?: string;
   contextFiles?: string; // nội dung file context đã đọc
   memoryContext?: string; // nội dung memory recall (từ MemoryStore.query())
+  learningContext?: string; // nội dung tự học (từ SelfEvolutionLearner)
   references?: RequestReference[];
   constraints?: RequestConstraints;
   historyCompressed?: string;
@@ -130,6 +131,16 @@ export class PromptBuilder {
 KHÔNG cần đọc lại những file đã được inject ở trên.
 
 ${input.memoryContext}
+`);
+    }
+
+    // ── LEARNING CONTEXT (Phase 6) ──
+    if (input.learningContext) {
+      sections.push(`## 🧪 KINH NGHIỆM (Learning Context)
+Đây là kinh nghiệm từ các task tương tự trước đây.
+Tận dụng để tránh sai lầm và tăng hiệu quả.
+
+${input.learningContext}
 `);
     }
 

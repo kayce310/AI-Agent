@@ -178,20 +178,20 @@
   },
   "active": "b3227d3d891704cd",
   "lastOpenFiles": [
+    "docs/TELEMETRY_VERIFICATION.md",
+    "docs",
+    "data/coral.db-shm",
+    "data/coral.db-wal",
+    "tests/evolution-integration.test.ts",
+    "knowledge/memory-temporal/snapshot.json",
+    "_test_validate.mjs",
     "knowledge/memory-store/snapshot.json",
     "tests/memory-forgetting.test.ts",
     "REPORT_PIPELINE_FIXES.md",
     "data/integration-test.db-shm",
     "data/integration-test.db-wal",
-    "data/integration-test.db",
-    "tests/integration-event-pipeline.cjs",
-    "tests/integration-event-pipeline.ts",
-    "tests/memory-core.test.ts",
     "knowledge/wiki/core/coral-kayce-bond.md",
     "REPORT_DECISION_DATA.md",
-    "knowledge/wiki/knowledge/wiki/core/kayce.md",
-    "knowledge/wiki/knowledge/wiki/core",
-    "knowledge/wiki/knowledge/wiki",
-    "tests/prompt-builder.test.ts"
+    "knowledge/wiki/knowledge/wiki/core/kayce.md"
   ]
 }

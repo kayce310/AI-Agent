@@ -39,6 +39,8 @@ import { EventBus } from '../events/bus.js';
 import { EventStore } from '../events/store.js';
 import { StructuredLogger } from '../events/logger.js';
 import { randomUUID } from 'crypto';
+import { ExperienceStore } from '../self-evolution/experience-store.js';
+import { SelfEvolutionLearner } from '../self-evolution/learner.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -69,10 +71,20 @@ function summarizeReasoning(text: string | null | undefined): string | null {
  */
 function parseToolArgs(raw: unknown): Record<string, unknown> {
   if (!raw) return {};
-  if (typeof raw === 'object') return raw as Record<string, unknown>;
+  // Already a Record (not array, not null)
+  if (typeof raw === 'object' && !Array.isArray(raw) && raw !== null) return raw as Record<string, unknown>;
   if (typeof raw === 'string') {
-    try { return JSON.parse(raw) as Record<string, unknown>; }
-    catch { return { _raw: raw }; }
+    try {
+      const parsed = JSON.parse(raw);
+      // Must be a plain object (not array, string, number, boolean, null)
+      if (typeof parsed === 'object' && !Array.isArray(parsed) && parsed !== null) {
+        return parsed as Record<string, unknown>;
+      }
+      // Array or primitive → wrap so Zod's record() accepts it
+      return { _raw: raw, _value: parsed };
+    } catch {
+      return { _raw: raw };
+    }
   }
   return {};
 }
@@ -99,6 +111,7 @@ export class Engine extends EventEmitter {
   private currentTaskId: string = 'default';
 
   private agentRegistry!: AgentRegistry;
+  private learner!: SelfEvolutionLearner;
 
   /** In-flight promise dedup — same key = same promise */
   private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
@@ -189,6 +202,12 @@ export class Engine extends EventEmitter {
 
     this.agent.on('cascade', (data: any) => { this.emit('cascade', data); });
     await globalMemoryStore.init();
+
+    // ═══ SELF-EVOLUTION LEARNER (Phase 6) ═══
+    this.learner = new SelfEvolutionLearner(new ExperienceStore(), {
+      maxExperiences: 5,
+    });
+    log.info('Self-Evolution Learner initialized');
 
     try {
       const existingBlocks = await globalMemoryStore.getAll();
@@ -441,6 +460,17 @@ export class Engine extends EventEmitter {
       log.warn(`Memory recall failed: ${err.message}`);
     }
 
+    // ── LEARNING CONTEXT (Phase 6) ──
+    let learningContext: string | null = null;
+    try {
+      const taskStr = request.task || request.messages[request.messages.length - 1]?.content?.substring(0, 200) || '';
+      if (taskStr) {
+        learningContext = await this.learner.getContext(taskStr);
+      }
+    } catch (err: any) {
+      log.warn(`Learning context fetch failed: ${err.message}`);
+    }
+
     // Build system prompt
     const promptBuilder = new PromptBuilder();
     const systemPrompt = promptBuilder.buildSystem({
@@ -449,6 +479,7 @@ export class Engine extends EventEmitter {
       task: request.task,
       contextFiles: this.coralIdentityContext || undefined,
       memoryContext,
+      learningContext: learningContext || undefined,
       references: request.references,
       constraints: request.constraints,
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
