@@ -178,9 +178,16 @@
   },
   "active": "cc760f4bc037b642",
   "lastOpenFiles": [
+    "knowledge/wiki/knowledge/wiki/core/kayce.md",
+    "knowledge/wiki/knowledge/wiki/core",
+    "knowledge/wiki/knowledge/wiki",
+    "tests/prompt-builder.test.ts",
+    "tests/token-estimator.test.ts",
+    "tests/event-store.test.ts",
+    "tests/privilege-guard.test.ts",
+    "tests/logger.test.ts",
+    "tests/events-bus.test.ts",
     "tests/phase4a-decision-intelligence.test.ts",
-    "tests/integration.test.ts",
-    "src/core/cron/cron-scheduler.ts",
-    "src/core/cron"
+    "tests/integration.test.ts"
   ]
 }
