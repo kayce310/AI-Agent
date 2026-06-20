@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Kato Gateway â€” Multi-Platform Orchestrator
  * @layer core
  * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
@@ -9,9 +9,12 @@
  * Adapters register themselves, gateway handles lifecycle + message routing.
  */
 
+import { Logger } from '../logger.js';
 import Engine from '../engine/engine.js';
 import { KatoRequest, KatoResponse, PlatformAdapter, AdapterMessage } from './types.js';
-import { EngineRequest } from '../types.js';
+import { EngineRequest, ChatMessage } from '../types.js';
+
+const log = new Logger({ module: 'Gateway' });
 
 export class KatoGateway {
   private _engine: Engine;
@@ -53,7 +56,7 @@ export class KatoGateway {
    */
   register(adapter: PlatformAdapter): void {
     if (this.adapters.has(adapter.platform)) {
-      console.warn(`[Gateway] Adapter "${adapter.platform}" already registered, overwriting`);
+      log.warn(`Adapter "${adapter.platform}" already registered, overwriting`);
     }
 
     // Wire message handler: adapter → gateway → engine
@@ -63,13 +66,13 @@ export class KatoGateway {
         const response = await this.handleAdapterMessage(adapter, msg);
         return response;
       } catch (err: any) {
-        console.error(`[Gateway] Error handling message from ${adapter.platform}: ${err.message}`);
+        log.error(`Error handling message from ${adapter.platform}: ${err.message}`);
         return null;
       }
     });
 
     this.adapters.set(adapter.platform, adapter);
-    console.log(`[Gateway] Registered adapter: ${adapter.platform}`);
+    log.info(`Registered adapter: ${adapter.platform}`);
   }
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -82,9 +85,9 @@ export class KatoGateway {
   async startAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    console.log(`[Gateway] Starting adapter: ${platform}`);
+    log.info(`Starting adapter: ${platform}`);
     await adapter.start();
-    console.log(`[Gateway] Adapter started: ${platform}`);
+    log.info(`Adapter started: ${platform}`);
   }
 
   /**
@@ -93,9 +96,9 @@ export class KatoGateway {
   async stopAdapter(platform: string): Promise<void> {
     const adapter = this.adapters.get(platform);
     if (!adapter) throw new Error(`Adapter "${platform}" not registered`);
-    console.log(`[Gateway] Stopping adapter: ${platform}`);
+    log.info(`Stopping adapter: ${platform}`);
     await adapter.stop();
-    console.log(`[Gateway] Adapter stopped: ${platform}`);
+    log.info(`Adapter stopped: ${platform}`);
   }
 
   /**
@@ -110,13 +113,13 @@ export class KatoGateway {
 
     const promises = Array.from(this.adapters.values()).map(async (adapter) => {
       try {
-        console.log(`[Gateway] Starting adapter: ${adapter.platform}`);
+        log.info(`Starting adapter: ${adapter.platform}`);
         await adapter.start();
         results.push(adapter.platform);
-        console.log(`[Gateway] Adapter started: ${adapter.platform}`);
+        log.info(`Adapter started: ${adapter.platform}`);
       } catch (err: any) {
         errors.push({ platform: adapter.platform, error: err.message });
-        console.error(`[Gateway] Adapter "${adapter.platform}" failed to start: ${err.message}`);
+        log.error(`Adapter "${adapter.platform}" failed to start: ${err.message}`);
       }
     });
 
@@ -128,13 +131,13 @@ export class KatoGateway {
    * Stop all registered adapters.
    */
   async stopAll(): Promise<void> {
-    console.log('[Gateway] Stopping all adapters');
+    log.info('Stopping all adapters');
     const promises = Array.from(this.adapters.values()).map(adapter =>
       adapter.stop().catch(() => {})
     );
     await Promise.all(promises);
     this._isRunning = false;
-    console.log('[Gateway] All adapters stopped');
+    log.info('All adapters stopped');
   }
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -152,17 +155,52 @@ export class KatoGateway {
       ? String(request.metadata.model)
       : 'default';
 
+    // ── Memory: Load conversation history ──
+    const sessionId = request.sessionId;
+    let history: ChatMessage[] = [];
+    try {
+      history = await this._engine.getHistory(sessionId);
+    } catch { /* silent — first message for this channel */ }
+
+    // Build messages: history + current user message
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: request.input,
+      timestamp: Date.now(),
+    };
+    const messages = [...history, userMessage];
+
+    // Limit to last 20 messages (RAM-friendly, like MemoryCore)
+    const recentMessages = messages.slice(-20);
+
+    // ── Platform metadata from adapter ──
+    const adapter = this.adapters.get(request.platform);
+    const platformMeta = adapter?.platformMeta;
+
     const engineRequest: EngineRequest = {
-      sessionId: request.sessionId,
-      messages: [{ role: 'user', content: request.input }],
+      sessionId,
+      messages: recentMessages,
       modelId: requestedModel || 'default',
       agentName: 'Kato',
       protocol: 'gateway',
       mentionPrefix: '',
       task: request.input,
+      platformMeta,  // ← Engine can use this for response formatting
     };
 
     const result = await this._engine.process(engineRequest);
+
+    // ── Memory: Save user message + assistant response ──
+    try {
+      await this._engine.saveMessage(sessionId, userMessage);
+      if (result.content) {
+        await this._engine.saveMessage(sessionId, {
+          role: 'assistant',
+          content: result.content,
+          timestamp: Date.now(),
+        });
+      }
+    } catch { /* silent — logging should never break response */ }
 
     return {
       output: result.content,
@@ -194,7 +232,7 @@ export class KatoGateway {
       // ADAPTER handles its own UI â€” do NOT call sendMessage here
       return response;
     } catch (err: any) {
-      console.error(`[Gateway] handleAdapterMessage error: ${err.message}`);
+      log.error(`handleAdapterMessage error: ${err.message}`);
       return null;
     }
   }

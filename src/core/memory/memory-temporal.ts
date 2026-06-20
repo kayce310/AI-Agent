@@ -280,6 +280,23 @@ export class MemoryTemporal {
     };
   }
 
+  // ── Agentic Memory (merged from memory-agentic.ts) ──
+
+  /**
+   * Agent can add a new memory block (thin wrapper over addBlock).
+   */
+  public async addBlockForAgent(agentId: string, block: Omit<MemoryBlock, 'id' | 'timestamp'> & { id?: string; timestamp?: string }): Promise<boolean> {
+    await this.addBlock(block.content, {
+      type: block.type,
+      agentId,
+      sessionId: block.sessionId,
+      tags: block.tags,
+      entities: block.entities,
+      parentId: block.parentId,
+    });
+    return true;
+  }
+
   // ── Persistence ──
 
   /**

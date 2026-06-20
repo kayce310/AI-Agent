@@ -70,6 +70,13 @@ export interface EngineRequest {
   systemPrompt?: string;
   /** Fast mode flag — bypass Orchestrator for simple queries */
   fastMode?: boolean;
+  /** Platform metadata — max message length, PII safety, formatting hints */
+  platformMeta?: {
+    maxMessageLength?: number;
+    piiSafe?: boolean;
+    platformHint?: string;
+    supportsMarkdown?: boolean;
+  };
 }
 
 /** Đầu ra chuẩn của Engine */

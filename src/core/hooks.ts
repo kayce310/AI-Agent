@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file hooks â€” Event lifecycle hooks
  * @layer core
  * @depends-on (none â€” standalone)
@@ -17,7 +17,11 @@
  * - Tracing: span tracking cho o11y
  */
 
-// â”€â”€ Event Types â”€â”€
+import { Logger } from './logger.js';
+
+const log = new Logger({ module: 'Hooks' });
+
+// â€"â€" Event Types â€"â€"
 export type EventType =
   | 'task:start'
   | 'task:complete'
@@ -33,6 +37,7 @@ export type EventType =
   | 'model:error'
   | 'skill:load'
   | 'skill:unload'
+  | 'context:compressed'
   // Phase 5.2 â€” Orchestrator events
   | 'orchestrator:decompose-start'
   | 'orchestrator:decompose-end'
@@ -68,6 +73,7 @@ export interface AgentGuard {
   event: EventType;
   handler: GuardHandler;
   priority?: number;
+  name?: string;
 }
 
 // â”€â”€ HookRegistry â”€â”€
@@ -141,13 +147,13 @@ export class HookRegistry {
         try {
           const result = await guard.handler(ctx);
           if (!result.allowed) {
-            console.warn(`[Hooks] Guard "${guard.name}" blocked event "${event}"`);
+            log.warn(`Guard "${guard.name}" blocked event "${event}"`);
             return false;
           }
         } catch (err) {
-          console.error(`[Hooks] Guard "${guard.name}" error on event "${event}": ${err}`);
+          log.error(`Guard "${guard.name}" error on event "${event}": ${String(err)}`);
           // Guard error → block by default (fail-closed)
-          console.warn(`[Hooks] Event "${event}" blocked due to guard error`);
+          log.warn(`Event "${event}" blocked due to guard error`);
           return false;
         }
       }
@@ -161,7 +167,7 @@ export class HookRegistry {
       try {
         await hook.handler(ctx);
       } catch (err) {
-        console.error(`[Hooks] Hook error on event "${event}": ${err}`);
+        log.error(`Hook error on event "${event}": ${String(err)}`);
         // Don't throw â€” let other handlers run
       }
     }
@@ -188,8 +194,8 @@ export class HookRegistry {
    */
   summary(): Record<string, number> {
     const result: Record<string, number> = {};
-    const allEvents = new Set([...this.hooks.keys(), ...this.guards.keys()]);
-    for (const event of allEvents) {
+    const allEvents = new Set([...Array.from(this.hooks.keys()), ...Array.from(this.guards.keys())]);
+    for (const event of Array.from(allEvents)) {
       const hCount = this.hooks.get(event)?.length ?? 0;
       const gCount = this.guards.get(event)?.length ?? 0;
       result[event] = hCount + gCount;

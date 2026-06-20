@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file memory-store â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
@@ -23,12 +23,15 @@
  *   3. Sau 1 thá»i gian â†’ drop store.json, chá»‰ dÃ¹ng append-log
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import 'dotenv/config';
 import { MemoryLog, createMemoryLog, MemoryBlock, MemoryBlockType } from './memory-log.js';
+import { Logger } from '../logger.js';
 
-// â”€â”€ Constants â”€â”€
+const log = new Logger({ module: 'MemoryStore' });
+
+// ── Constants ──
 const DEFAULT_STORE_PATH = './knowledge/memory-store';
 const MAX_BLOCKS_PER_FILE = 500;
 
@@ -75,7 +78,7 @@ export class MemoryStore {
     try {
       await fs.mkdir(this.storePath, { recursive: true });
     } catch (err: any) {
-      console.error(`[MemoryStore] Failed to create store directory: ${err.message}`);
+      log.error(`Failed to create store directory: ${err.message}`);
     }
 
     // Initialize append-log persistence
@@ -90,7 +93,7 @@ export class MemoryStore {
 
       // Nếu có legacy data, migrate vào log
       if (this.blocks.length > 0) {
-        console.log(`[MemoryStore] Migrated ${this.blocks.length} block(s) from legacy store`);
+        log.info(`Migrated ${this.blocks.length} block(s) from legacy store`);
         await this.log.append({ op: 'addMany', blocks: this.blocks });
         await this.log.createSnapshot(this.blocks);
       }
@@ -278,7 +281,7 @@ export class MemoryStore {
       const filePath = path.join(this.storePath, 'store.json');
       await fs.writeFile(filePath, JSON.stringify(this.blocks, null, 2), 'utf8');
     } catch (err: any) {
-      console.error(`[MemoryStore] persistToDisk failed: ${err.message}`);
+      log.error(`persistToDisk failed: ${err.message}`);
     }
   }
 
@@ -295,7 +298,7 @@ export class MemoryStore {
     try {
       await fs.access(legacyPath);
     } catch {
-      console.log('[MemoryStore] No legacy memory directory found, skipping migration');
+      log.info('No legacy memory directory found, skipping migration');
       return 0;
     }
 
@@ -316,7 +319,7 @@ export class MemoryStore {
 
     if (migratedCount > 0) {
       await this.flush();
-      console.log(`[MemoryStore] Migration complete: ${migratedCount} channel(s)`);
+      log.info(`Migration complete: ${migratedCount} channel(s)`);
     }
 
     return migratedCount;
@@ -390,7 +393,7 @@ export class MemoryStore {
             const batch: MemoryBlock[] = JSON.parse(data);
             this.blocks.push(...batch);
           } catch {
-            console.warn(`[MemoryStore] Failed to load batch: ${batchPath}`);
+            log.warn(`Failed to load batch: ${batchPath}`);
           }
         }
       } else {
@@ -408,8 +411,11 @@ export class MemoryStore {
         }
       }
     } catch (err: any) {
-      console.error(`[MemoryStore] loadFromDisk failed: ${err.message}`);
+      log.error(`loadFromDisk failed: ${err.message}`);
     }
+  }
+
+  private generateId(): string {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 8);
     return `mem_${timestamp}_${random}`;

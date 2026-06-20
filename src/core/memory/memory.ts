@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file memory â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
@@ -19,6 +19,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import 'dotenv/config';
+import { Logger } from '../logger.js';
+
+const log = new Logger({ module: 'Memory' });
 
 export interface Message {
   role: 'user' | 'assistant' | 'system' | 'tool';
@@ -44,9 +47,9 @@ export class MemoryCore {
   private async initializeStorage(): Promise<void> {
     try {
       await fs.mkdir(this.memoryPath, { recursive: true });
-      console.log(`[Memory] Storage initialized at ${this.memoryPath}`);
+      log.info(`[Memory] Storage initialized at ${this.memoryPath}`);
     } catch (error) {
-      console.error(`[Memory] Failed to create storage directory: ${error}`);
+      log.error(`[Memory] Failed to create storage directory: ${error}`);
     }
   }
 
@@ -72,7 +75,7 @@ export class MemoryCore {
       const trimmedHistory = history.slice(-this.MAX_RAM_MESSAGES);
       this.channelCache.set(channelId, [...trimmedHistory]);
       
-      console.log(`[Memory] Loaded ${history.length} message(s) for channel ${channelId}`);
+      log.info(`[Memory] Loaded ${history.length} message(s) for channel ${channelId}`);
       return [...trimmedHistory];
 
     } catch (error) {
@@ -108,7 +111,7 @@ export class MemoryCore {
         const filePath = this.getChannelFilePath(channelId);
         await fs.writeFile(filePath, JSON.stringify(history, null, 2));
       } catch (error) {
-        console.error(`[Memory] Failed to persist channel ${channelId}: ${error}`);
+        log.error(`[Memory] Failed to persist channel ${channelId}: ${error}`);
       }
     });
   }

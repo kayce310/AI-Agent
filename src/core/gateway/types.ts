@@ -58,6 +58,27 @@ export interface AdapterMessage {
 export type AdapterStatus = 'stopped' | 'starting' | 'running' | 'error' | 'stopping';
 
 // ──────────────────────────────────────────────
+// Platform Metadata
+// ──────────────────────────────────────────────
+
+/**
+ * Platform-specific metadata — tells the Engine how to adapt responses.
+ * Inspired by Hermes Agent platform adapters.
+ */
+export interface PlatformMeta {
+  /** Max message length before splitting (Telegram: 4096, Discord: 2000, WhatsApp: 4096) */
+  maxMessageLength?: number;
+  /** Whether the platform supports PII-safe mode (mask emails, phones) */
+  piiSafe?: boolean;
+  /** Platform hint for response formatting (e.g., 'telegram', 'discord', 'slack') */
+  platformHint?: string;
+  /** Whether the platform supports markdown formatting */
+  supportsMarkdown?: boolean;
+  /** Whether the platform supports inline images */
+  supportsImages?: boolean;
+}
+
+// ──────────────────────────────────────────────
 // Platform Adapter Contract
 // ──────────────────────────────────────────────
 
@@ -74,6 +95,9 @@ export interface PlatformAdapter {
 
   /** Current adapter status */
   status: AdapterStatus;
+
+  /** Platform-specific metadata (limits, capabilities, hints) */
+  platformMeta?: PlatformMeta;
 
   /**
    * Start the adapter (connect to platform, begin listening).

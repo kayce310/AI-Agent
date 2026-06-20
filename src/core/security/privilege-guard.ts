@@ -341,20 +341,6 @@ export function createDefaultAllowRules(): PrivilegeRule[] {
 }
 
 /**
- * Rules for safe read-only mode.
- */
-export function createReadOnlyRules(): PrivilegeRule[] {
-  return [
-    { toolPattern: 'filesystem:read', effect: 'allow', reason: 'Read-only mode' },
-    { toolPattern: 'filesystem:list', effect: 'allow', reason: 'Read-only mode' },
-    { toolPattern: 'knowledge:search', effect: 'allow', reason: 'Read-only mode' },
-    { toolPattern: 'knowledge:read', effect: 'allow', reason: 'Read-only mode' },
-    { toolPattern: 'document:read', effect: 'allow', reason: 'Read-only mode' },
-    { toolPattern: '*', effect: 'deny', reason: 'Read-only mode: write operations blocked' },
-  ];
-}
-
-/**
  * Restricted-mode allow list (common safe tools).
  */
 export function createRestrictedAllowList(): string[] {
@@ -372,7 +358,6 @@ export function createRestrictedAllowList(): string[] {
 export default {
   PrivilegeGuard,
   createDefaultAllowRules,
-  createReadOnlyRules,
   createRestrictedAllowList,
   isPathSafe,
   validateToolPaths,

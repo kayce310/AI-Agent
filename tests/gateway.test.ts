@@ -48,10 +48,9 @@ describe('KatoGateway', () => {
     expect(mockAdapter.onMessage).toHaveBeenCalled();
   });
 
-  it('should warn on duplicate adapter registration', () => {
+  it('should warn on duplicate adapter registration', async () => {
     const mockEngine = { process: vi.fn() } as any;
     const gateway = new KatoGateway(mockEngine);
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const adapter: PlatformAdapter = {
       platform: 'dup',
@@ -61,6 +60,10 @@ describe('KatoGateway', () => {
       sendMessage: vi.fn().mockResolvedValue(null),
       onMessage: vi.fn(),
     };
+
+    // Spy on Logger's warn method via the gateway's internal log
+    const { Logger } = await import('../src/core/logger.js');
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
     gateway.register(adapter);
     gateway.register(adapter);
@@ -230,21 +233,22 @@ describe('KatoGateway', () => {
   });
 
   // ── Message Routing ──
+  // ── Message Routing ──
 
-  it('should route AdapterMessage through engine and send response', async () => {
+  it('should route AdapterMessage through engine and return response', async () => {
     const mockEngine = {
       process: vi.fn().mockResolvedValue({ content: 'Hello from Engine' }),
+      getHistory: vi.fn().mockResolvedValue([]),
+      saveMessage: vi.fn().mockResolvedValue(undefined),
     } as any;
-
     const gateway = new KatoGateway(mockEngine);
-    const sendMessage = vi.fn().mockResolvedValue('sent-1');
 
     const adapter: PlatformAdapter = {
       platform: 'router',
       status: 'running' as AdapterStatus,
       start: vi.fn().mockResolvedValue(undefined),
       stop: vi.fn().mockResolvedValue(undefined),
-      sendMessage,
+      sendMessage: vi.fn().mockResolvedValue('sent-1'),
       onMessage: vi.fn(),
     };
 
@@ -271,8 +275,12 @@ describe('KatoGateway', () => {
     expect(capturedHandler).not.toBeNull();
     const response = await capturedHandler!(testMsg);
 
+    // Verify memory wiring
+    expect(mockEngine.getHistory).toHaveBeenCalledWith('channel-1');
     expect(mockEngine.process).toHaveBeenCalled();
-    expect(sendMessage).toHaveBeenCalledWith('channel-1', 'Hello from Engine');
+    expect(mockEngine.saveMessage).toHaveBeenCalledTimes(2); // user + assistant
+
+    // Verify response returned (adapter handles its own UI, NOT gateway)
     expect(response).not.toBeNull();
     expect(response!.output).toBe('Hello from Engine');
   });

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Agent — Agent Lifecycle Orchestration
  * @layer core
  * @depends-on src/core/tools/tool-registry.ts, src/core/tools/tool-pruner.ts, src/core/llm/model-adapter.ts, src/core/hooks.ts
@@ -16,6 +16,7 @@
  * Maintains backward compatibility with Engine.
  */
 
+import { Logger } from '../logger.js';
 import { EventEmitter } from 'events';
 import { HookRegistry, globalHooks, EventType, GuardHandler } from '../hooks.js';
 import { ModelRouter } from '../llm/model-adapter.js';
@@ -25,11 +26,44 @@ import { evolutionEngine } from '../evolution.js';
 import { Tracer } from '../observability/tracer.js';
 import { Janitor } from '../agents/janitor.js';
 import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
-import { shouldAttemptCompression, compressContext } from '../context-compression.js';
+import { compressContext } from '../context-compression.js';
 import { estimateTokens } from './token-estimator.js';
 
+/**
+ * Find sentence boundary for clean trimming.
+ * Returns the index of the last sentence boundary (.!?\n) before maxLength.
+ * Returns -1 if no good boundary found.
+ */
+function findSentenceBoundary(text: string, maxLength: number): number {
+  if (text.length <= maxLength) return text.length;
+  
+  // Look for sentence boundaries in the last 20% of the target range
+  const searchStart = Math.max(0, maxLength - Math.floor(maxLength * 0.2));
+  const slice = text.slice(searchStart, maxLength);
+  
+  // Priority: newline > period > exclamation > question mark
+  const boundaries = [
+    { char: '\n', regex: /\n\s*\n/g },  // Paragraph break
+    { char: '.', regex: /[.!?]\s+/g },  // Sentence end
+    { char: ',', regex: /,\s+/g },      // Clause break
+  ];
+  
+  for (const { regex } of boundaries) {
+    let lastMatch = -1;
+    let match;
+    while ((match = regex.exec(slice)) !== null) {
+      lastMatch = searchStart + match.index + match[0].length;
+    }
+    if (lastMatch > 0) return lastMatch;
+  }
+  
+  return -1; // No good boundary found
+}
+
+const log = new Logger({ module: 'Agent' });
+
 // ── Constants ──
-const MAX_TOOL_CALL_CYCLES = 10;
+const MAX_TOOL_CALL_CYCLES = 15;
 
 // ── AgentConfig ──
 export interface AgentConfig {
@@ -119,7 +153,7 @@ export class Agent extends EventEmitter {
    * This is the main entry point — replaces Engine.process().
    */
   async run(request: EngineRequest): Promise<AgentResult> {
-    console.log(`🤖 [DEBUG] agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length} model: ${request.modelId || 'default'}`);
+    log.info(`agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length} model: ${request.modelId || 'default'}`);
     // Build messages from request
     const messages = this.buildMessages(request);
 
@@ -147,12 +181,141 @@ export class Agent extends EventEmitter {
     }
   }
 
+  // ── Private: Check if question is self-referential ──
+  private isSelfReferential(message: string): boolean {
+    const selfPatterns = [
+      /bạn\s+là\s+ai/i,
+      /bạn\s+thực\s+hiện\s+.*thế\s+nào/i,
+      /kiến\s+trúc/i,
+      /cấu\s+trúc/i,
+      /tools?\s+của\s+bạn/i,
+      /bạn\s+có\s+những/i,
+      /flow\s+xử\s+lý/i,
+      /quy\s+trình/i,
+      /bạn\s+làm\s+gì/i,
+      /bạn\s+biết\s+gì/i,
+      /hãy\s+giới\s+thiệu\s+bản\s+thân/i,
+      /giới\s+thiệu\s+về\s+bạn/i,
+      /who\s+are\s+you/i,
+      /your\s+architecture/i,
+      /your\s+tools/i,
+      /how\s+do\s+you\s+work/i,
+      /what\s+can\s+you\s+do/i,
+    ];
+    return selfPatterns.some(p => p.test(message));
+  }
+
+  // ── Private: Token-Aware Context Management ──
+
+  /**
+   * Check token usage and auto-compress if approaching limit.
+   * Returns true if messages were modified.
+   */
+  private async ensureTokenBudget(
+    messages: any[],
+    maxContext: number,
+    sessionId: string,
+    focusTopic?: string,
+  ): Promise<boolean> {
+    const { total } = estimateTokens(messages);
+    const usagePct = (total / maxContext) * 100;
+
+    // Under 75% — no action needed
+    if (usagePct < 75) return false;
+
+    log.info(`Token usage: ${total.toLocaleString()}/${maxContext.toLocaleString()} (${usagePct.toFixed(1)}%)`);
+
+    // 75-85%: attempt compression
+    if (usagePct < 85) {
+      if (!this.auxiliaryLlmCall) return false;
+
+      const result = await compressContext(messages, this.auxiliaryLlmCall, {
+        maxContext,
+        thresholdPct: 0.75,
+        tailProtect: 5,
+        focusTopic,
+      });
+
+      if (result.compressed) {
+        messages.length = 0;
+        messages.push(...result.messages);
+        log.info(`Compressed: ${result.tokensBefore?.toLocaleString()} → ${result.tokensAfter?.toLocaleString()} tokens`);
+        await this.hooks.emit('context:compressed', {
+          sessionId,
+          tokensBefore: result.tokensBefore,
+          tokensAfter: result.tokensAfter,
+          newSessionId: result.sessionId,
+          cycle: 0,
+        });
+        return true;
+      }
+    }
+
+    // 85%+: force compression + hard trim if still over
+    if (this.auxiliaryLlmCall) {
+      const result = await compressContext(messages, this.auxiliaryLlmCall, {
+        maxContext,
+        thresholdPct: 0.70,
+        tailProtect: 5,
+        force: true,
+        focusTopic,
+      });
+
+      if (result.compressed) {
+        messages.length = 0;
+        messages.push(...result.messages);
+        log.info(`Force compressed: ${result.tokensBefore?.toLocaleString()} → ${result.tokensAfter?.toLocaleString()} tokens`);
+      }
+    }
+
+    // Hard trim: if still over 85%, drop oldest non-system messages
+    const { total: afterCompress } = estimateTokens(messages);
+    if (afterCompress > maxContext * 0.85) {
+      const systemMsgs = messages.filter(m => m.role === 'system');
+      const nonSystem = messages.filter(m => m.role !== 'system');
+      const targetChars = Math.floor(maxContext * 0.70 * 4); // 70% budget in chars
+      let kept: any[] = [];
+      let charCount = 0;
+
+      // Keep from the end (most recent first) — BOUNDARY-AWARE
+      for (let i = nonSystem.length - 1; i >= 0; i--) {
+        const msgContent = typeof nonSystem[i].content === 'string' ? nonSystem[i].content : JSON.stringify(nonSystem[i].content || '');
+        const msgLen = msgContent.length;
+        
+        if (charCount + msgLen > targetChars) {
+          // Boundary-aware: try to cut at sentence boundary (. ! ? \n)
+          const remaining = targetChars - charCount;
+          if (remaining > 100) {
+            const cutPoint = findSentenceBoundary(msgContent, remaining);
+            if (cutPoint > 0) {
+              kept.unshift({ ...nonSystem[i], content: msgContent.slice(0, cutPoint) + '...' });
+              charCount += cutPoint + 3;
+            }
+          }
+          break;
+        }
+        kept.unshift(nonSystem[i]);
+        charCount += msgLen;
+      }
+
+      messages.length = 0;
+      messages.push(...systemMsgs, ...kept);
+
+      const { total: afterTrim } = estimateTokens(messages);
+      log.info(`Hard trimmed: ${afterCompress.toLocaleString()} → ${afterTrim.toLocaleString()} tokens (kept ${kept.length}/${nonSystem.length} messages)`);
+      return true;
+    }
+
+    return false;
+  }
+
   // ── Private: Build Messages ──
   private buildMessages(request: EngineRequest): any[] {
-    const recentMessages = request.messages.slice(-5);
+    // Use ALL messages from request (history is already loaded by Gateway)
+    // Only sanitize — don't slice, Gateway already limits to 20
     const historyMessages: any[] = [];
 
-    for (const msg of recentMessages) {
+    for (const msg of request.messages) {
       const sanitized: any = { role: msg.role };
 
       // Tool messages from ReAct cycles — content=null → placeholder
@@ -170,7 +333,6 @@ export class Agent extends EventEmitter {
       historyMessages.push(sanitized);
     }
 
-    // System prompt will be prepended by the caller
     return historyMessages;
   }
 
@@ -181,6 +343,39 @@ export class Agent extends EventEmitter {
       ? [{ role: 'system', content: systemPrompt }, ...historyMessages]
       : historyMessages;
 
+    // ── Token-aware context budget check ──
+    await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
+
+    // ── Self-referential shortcut ──
+    // If the question is about Kato itself, skip tool loop entirely
+    const lastUserMsg = historyMessages.filter((m: any) => m.role === 'user').pop()?.content || '';
+    if (this.isSelfReferential(lastUserMsg)) {
+      log.info(`Self-referential detected: "${lastUserMsg.slice(0,50)}" → direct LLM call (no tools)`);
+      try {
+        const modelResult = await this.modelRouter.route(messages, {
+          model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
+          tools: [],  // No tools — answer directly from system prompt
+          maxTokens: 4096,
+        });
+        let content = modelResult.content || '';
+        content = content.replace(/^[\w\/\.-]+:\s*/m, '');
+        content = this.sanitizeFinalResponse(content);
+
+        evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
+
+        return {
+          content,
+          modelUsed: modelResult.modelUsed,
+          providerUsed: modelResult.providerUsed,
+          toolCycles: 0,
+          finished: true,
+        };
+      } catch (err: any) {
+        // Fall through to normal ReAct loop on error
+        log.info(`Direct call failed, falling back to ReAct loop: ${err.message}`);
+      }
+    }
+
     let toolCallCycles = 0;
     let finalContent = '';
 
@@ -189,7 +384,7 @@ export class Agent extends EventEmitter {
         // ── Select relevant tools ──
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
         let selectedTools = selectRelevantTools(lastUserMsg);
-        console.log(`🔧 [DEBUG] selectRelevantTools("${lastUserMsg.slice(0,50)}") → ${selectedTools.length} tools: [${selectedTools.map((t:any) => t.function?.name).join(', ')}]`);
+        log.info(`selectRelevantTools("${lastUserMsg.slice(0,50)}") → ${selectedTools.length} tools: [${selectedTools.map((t:any) => t.function?.name).join(', ')}]`);
 
         // Fallback: if pruner returned empty (cache miss), use full registry
         if (selectedTools.length === 0) {
@@ -270,27 +465,8 @@ export class Agent extends EventEmitter {
           messages.push(assistantMsg);
           toolCallCycles++;
 
-          // ── Context Compression (A3) ──
-          if (this.auxiliaryLlmCall && shouldAttemptCompression(messages)) {
-            const compressionResult = await compressContext(messages, this.auxiliaryLlmCall, {
-              maxContext: 128_000,
-              thresholdPct: 0.80,
-              tailProtect: 5,
-              focusTopic: (request as any).focusTopic,
-            });
-
-            if (compressionResult.compressed) {
-              messages.length = 0;
-              messages.push(...compressionResult.messages);
-              await this.hooks.emit('context:compressed', {
-                sessionId: request.sessionId,
-                tokensBefore: compressionResult.tokensBefore,
-                tokensAfter: compressionResult.tokensAfter,
-                newSessionId: compressionResult.sessionId,
-                cycle: toolCallCycles,
-              });
-            }
-          }
+          // ── Token-aware context budget check (after tool call) ──
+          await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
 
           for (const toolCall of modelResult.toolCalls) {
             if (toolCall.type !== 'function') {
@@ -387,9 +563,33 @@ export class Agent extends EventEmitter {
       }
     }
 
-    // ── Max cycles exceeded ──
+    // ── Max cycles exceeded → Graceful Fallback ──
+    // Extract recent context from conversation to provide a meaningful response
+    const recentUserMessages = messages
+      .filter((m: any) => m.role === 'user')
+      .slice(-3)
+      .map((m: any) => m.content)
+      .filter(Boolean);
+    const recentAssistant = messages
+      .filter((m: any) => m.role === 'assistant' && m.content)
+      .slice(-2)
+      .map((m: any) => m.content)
+      .filter(Boolean);
+
+    let fallbackContent: string;
+    if (recentAssistant.length > 0) {
+      // We had partial answers — synthesize them
+      fallbackContent = recentAssistant[recentAssistant.length - 1];
+    } else if (recentUserMessages.length > 0) {
+      // No assistant answer yet — provide a brief helpful response
+      const lastQuestion = recentUserMessages[recentUserMessages.length - 1];
+      fallbackContent = `Câu hỏi của bạn rất chi tiết: "${lastQuestion.slice(0, 100)}"\n\nTôi đã cố gắng tìm thông tin nhưng cần thêm thời gian. Bạn có thể:\n1. Hỏi chi tiết hơn về một phần cụ thể\n2. Đặt câu hỏi đơn giản hơn\n3. Thử lại sau`;
+    } else {
+      fallbackContent = 'Xin lỗi, tôi gặp khó khăn trong việc xử lý yêu cầu này. Bạn có thể thử lại với câu hỏi đơn giản hơn.';
+    }
+
     return {
-      content: '⚠️ Đã vượt quá số lần gọi công cụ cho phép. Vui lòng thử lại với yêu cầu đơn giản hơn.',
+      content: fallbackContent,
       modelUsed: 'unknown',
       providerUsed: 'unknown',
       toolCycles: toolCallCycles,

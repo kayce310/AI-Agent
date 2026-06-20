@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file AST Scanner â€” Auto-discovery Engine for Tool Plugins
  * @layer core
  * @depends-on 
@@ -28,6 +28,9 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import * as ts from 'typescript';
 import type { ToolPlugin, ToolRegistry } from './tool-registry.js';
+import { Logger } from '../logger.js';
+
+const log = new Logger({ module: 'ASTScanner' });
 
 // â”€â”€ Public Types â”€â”€
 
@@ -141,7 +144,7 @@ export class ASTScanner {
     if (!this.config.noCache) {
       const cached = this.tryLoadCache(checksum);
       if (cached) {
-         => s + p.toolCount, 0)} tools)`);
+        log.info(`[ASTScanner] Cache hit: ${cached.plugins.length} plugins`);
         return cached.plugins;
       }
     }
@@ -164,7 +167,7 @@ export class ASTScanner {
 
     const elapsed = Math.round(performance.now() - start);
     if (plugins.length > 0) {
-      console.log(`[ASTScanner] Discovered ${plugins.length} plugin(s) in ${elapsed}ms`);
+      log.info(`[ASTScanner] Discovered ${plugins.length} plugin(s) in ${elapsed}ms`);
     }
 
     return plugins;
@@ -293,7 +296,7 @@ export class ASTScanner {
       };
       fs.writeFileSync(cacheFile, JSON.stringify(entry, null, 2), 'utf-8');
     } catch (err) {
-      .message}`);
+      log.error("Cache write failed", { error: (err as Error).message });
     }
   }
 
@@ -383,7 +386,7 @@ export class ASTScanner {
 
   private hasPluginExport(sourceFile: ts.SourceFile): boolean {
     // Skip files with syntax errors (TS Compiler API doesn't throw on parse)
-    if (sourceFile.parseDiagnostics && sourceFile.parseDiagnostics.length > 0) {
+    if ((sourceFile as any).parseDiagnostics && (sourceFile as any).parseDiagnostics.length > 0) {
       return false;
     }
     return this.extractPluginMetaInternal(sourceFile) !== null;
@@ -398,7 +401,7 @@ export class ASTScanner {
    */
   private extractPluginMetaInternal(sourceFile: ts.SourceFile): { name: string; toolCount: number; toolNames: string[] } | null {
     // Skip files with parse errors
-    if (sourceFile.parseDiagnostics && sourceFile.parseDiagnostics.length > 0) {
+    if ((sourceFile as any).parseDiagnostics && (sourceFile as any).parseDiagnostics.length > 0) {
       return null;
     }
 

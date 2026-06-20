@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file tracer â€” Observability module
  * @layer core
  * @depends-on src/core/types.ts
@@ -19,6 +19,9 @@
 import { HookRegistry, HookContext, globalHooks } from '../hooks.js';
 import { evolutionEngine } from '../evolution.js';
 import { Langfuse } from 'langfuse';
+import { Logger } from '../logger.js';
+
+const log = new Logger({ module: 'Tracer' });
 
 // â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -131,7 +134,7 @@ export class Tracer {
 
     if (this.verbose) {
       const status = error ? '❌' : '✅';
-      console.log(`[Tracer] ${status} ${span.type}:${span.name} (${span.durationMs}ms)`);
+      log.info(`[Tracer] ${status} ${span.type}:${span.name} (${span.durationMs}ms)`);
     }
 
     // Feed performance data to evolution engine
@@ -414,7 +417,7 @@ export class Tracer {
       const anomalies = this.detectAnomalies();
       if (anomalies.length > 0 && this.verbose) {
         for (const a of anomalies) {
-          console.warn(`[Tracer] Anomaly: ${a.type} - ${a.message}`);
+          log.warn(`[Tracer] Anomaly: ${a.type} - ${a.message}`);
         }
       }
     });

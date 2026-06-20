@@ -11,6 +11,7 @@
  * Phase 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing
  */
 
+import { Logger } from '../logger.js';
 import { EventEmitter } from 'events';
 import { readFile } from 'fs/promises';
 import MemoryCore from '../memory/memory.js';
@@ -23,19 +24,22 @@ import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
 import { evolutionEngine } from '../evolution.js';
 import { ModelRouter, buildDefaultRouter } from '../llm/model-adapter.js';
 import { Agent, AgentConfig } from './agent.js';
+import { AgentRegistry } from '../agents/agent-registry.js';
+import { createDelegatePlugin } from '../agents/delegate.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
 import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } from '../security/privilege-guard.js';
 import { ResponseCache, isRealTimeQuery } from '../security/response-cache.js';
+import { auditLogger } from '../audit-logger.js';
 import { Tracer } from '../observability/tracer.js';
-import { RateLimiter, RateLimiterGroup } from '../security/rate-limiter.js';
+import { RateLimiter, RateLimiterGroup, PerUserRateLimiter } from '../security/rate-limiter.js';
 import { MemoryTemporal } from '../memory/memory-temporal.js';
+import { KatoStorage, getStorage } from '../memory/sqlite-storage.js';
 import { MemoryBlock } from '../memory/memory-log.js';
-import { MemoryAgentic } from '../memory/memory-agentic.js';
 const KATO_IDENTITY_FILES = [
-  'KATO.md',
-  'knowledge/wiki/AGENTS.md',
   'knowledge/wiki/core/soul.md',
 ];
+
+const log = new Logger({ module: 'Engine' });
 
 export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
@@ -48,8 +52,15 @@ export class Engine extends EventEmitter {
   private privilegeGuard: PrivilegeGuard;
   private responseCache: ResponseCache<string>;
   private rateLimiter: RateLimiterGroup;
+  private perUserLimiter: PerUserRateLimiter;
   private temporalMemory: MemoryTemporal;
-  private agenticMemory: MemoryAgentic;
+  private agenticMemory: MemoryTemporal;
+  private storage!: KatoStorage;
+
+  private agentRegistry!: AgentRegistry;
+
+  /** In-flight promise dedup — same key = same promise */
+  private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
 
   constructor(registry?: ProviderRegistry) {
     super();
@@ -69,8 +80,10 @@ export class Engine extends EventEmitter {
     this.rateLimiter = new RateLimiterGroup();
     this.rateLimiter.add('requests', { tokensPerInterval: 60, intervalMs: 60_000, maxBurst: 10 });
     this.rateLimiter.add('tokens', { tokensPerInterval: 100_000, intervalMs: 60_000, maxBurst: 20_000 });
+    this.perUserLimiter = new PerUserRateLimiter({ tokensPerInterval: 20, intervalMs: 60_000, maxBurst: 5 });
     this.temporalMemory = new MemoryTemporal({ maxRetentionDays: 30 });
-    this.agenticMemory = new MemoryAgentic({ maxRetentionDays: 30, allowAgentWrite: true });
+    this.agenticMemory = new MemoryTemporal({ maxRetentionDays: 30 });
+    this.storage = getStorage();
   }
 
   private sanitizeResponse(content: string): string {
@@ -86,12 +99,37 @@ export class Engine extends EventEmitter {
   async init(): Promise<void> {
     this.registry.loadFromConfig();
     await evolutionEngine.init();
-    await evolutionEngine.loadDefaultRules();
+    // Note: loadDefaultRules() removed — rule system simplified out
     this.toolRegistry = await getDefaultRegistry();
     await ensureToolDefinitionsLoaded();
     evolutionEngine.attachToHooks(this.hooks);
     this.privilegeGuard.attachToHooks(this.hooks);
     this.modelRouter = await buildDefaultRouter(this.registry);
+
+    // ── CrewAI Delegation: Register specialist agents + delegate_task tool ──
+    this.agentRegistry = new AgentRegistry(this.modelRouter, this.toolRegistry);
+    const delegatePlugin = createDelegatePlugin(this.agentRegistry);
+    this.toolRegistry.use(delegatePlugin);
+    log.info(`CrewAI delegation registered: ${this.agentRegistry.listAgents().join(', ')}`);
+
+    // ── Auxiliary LLM call for context compression ──
+    // Uses a separate LLM call with lower max_tokens for summarization
+    const auxiliaryLlmCall = async (prompt: string): Promise<string> => {
+      try {
+        const response = await this.modelRouter.route(
+          [{ role: 'user', content: prompt }],
+          {
+            maxTokens: 2000,          // Summaries should be concise
+            temperature: 0.3,         // Lower temperature for factual summaries
+            // Don't pass tools — summarization doesn't need them
+          },
+        );
+        return response.content || '';
+      } catch (err: any) {
+        log.error(`Auxiliary LLM call failed: ${err.message}`);
+        return '';
+      }
+    };
 
     const agentConfig: AgentConfig = {
       modelRouter: this.modelRouter,
@@ -99,6 +137,7 @@ export class Engine extends EventEmitter {
       hooks: this.hooks,
       maxToolCycles: 10,
       debug: false,
+      auxiliaryLlmCall,            // ← Context compression now works!
     };
     this.agent = new Agent(agentConfig);
 
@@ -118,6 +157,9 @@ export class Engine extends EventEmitter {
       const sessionId = (data.sessionId as string) || 'default';
       const toolName = (data.toolName as string) || 'unknown';
       const result = JSON.stringify(data.result);
+
+      // Track tool call on cache — used for side-effect detection to prevent caching tool-heavy responses
+      this.responseCache.recordToolCall(toolName);
       if (result && result !== 'undefined' && result !== 'null') {
         await globalMemoryStore.add('task', `Tool ${toolName}: ${result.substring(0, 500)}`, {
           tags: ['tool_result', toolName], sessionId,
@@ -177,21 +219,72 @@ export class Engine extends EventEmitter {
   getCache(): ResponseCache<string> { return this.responseCache; }
   getPrivilegeGuard(): PrivilegeGuard { return this.privilegeGuard; }
   getTemporalMemory(): MemoryTemporal { return this.temporalMemory; }
-  getAgenticMemory(): MemoryAgentic { return this.agenticMemory; }
+  getAgenticMemory(): MemoryTemporal { return this.agenticMemory; }
 
   // ═══════════════════════════════════════════════════════════════
   // PHASE 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing
   // ═══════════════════════════════════════════════════════════════
 
   async process(request: EngineRequest): Promise<EngineResponse> {
-    // Rate limit check
+    // Rate limit check (global)
     if (!this.rateLimiter.tryAll(1)) {
+      auditLogger.log({ level: 'warn', category: 'rate_limit', sessionId: request.sessionId, detail: 'Global rate limit exceeded' });
       return { content: '❌ Rate limit exceeded.', modelUsed: 'none', providerUsed: 'rate-limiter' };
     }
 
-    // Cache: begin request tracking for side-effect detection
+    // Rate limit check (per-user: 20 req/min per user)
+    const userId = request.sessionId || 'anonymous';
+    if (!this.perUserLimiter.tryConsume(userId)) {
+      log.warn(`Per-user rate limit exceeded for ${userId}`);
+      auditLogger.log({ level: 'warn', category: 'rate_limit', userId, detail: 'Per-user rate limit exceeded' });
+      return { content: '❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.', modelUsed: 'none', providerUsed: 'rate-limiter' };
+    }
+
+    // Reset side-effect tracking for this request
     this.responseCache.beginRequest();
 
+    const lastMessage = request.messages[request.messages.length - 1]?.content || '';
+    if (!lastMessage.trim()) {
+      return { content: '❌ Tin nhắn trống.', modelUsed: 'none', providerUsed: 'none' };
+    }
+
+    // ── SMART CACHE: content-based key + request coalescing ──
+    const cacheKey = ResponseCache.buildKey(
+      request.modelId || 'default',
+      request.sessionId || 'default',
+      lastMessage.toLowerCase().trim(),  // Normalized for exact-match dedup
+    );
+
+    // Coalesce: if same request is in-flight, reuse its result
+    const pending = this.pendingRequests.get(cacheKey);
+    if (pending) {
+      log.info(`Coalescing duplicate request: "${lastMessage.slice(0, 50)}"`);
+      return await pending;
+    }
+
+    // Cache read: get() auto-bypasses for real-time queries (isRealTimeQuery)
+    const cachedContent = this.responseCache.get(cacheKey, lastMessage);
+    if (cachedContent) {
+      log.info(`HIT for: "${lastMessage.slice(0, 50)}"`);
+      return { content: cachedContent, modelUsed: 'cache', providerUsed: 'cache' };
+    }
+
+    // Cache MISS — create in-flight promise for coalescing
+    const resultPromise = this.processInner(request, cacheKey);
+    this.pendingRequests.set(cacheKey, resultPromise);
+
+    try {
+      return await resultPromise;
+    } finally {
+      this.pendingRequests.delete(cacheKey);
+    }
+  }
+
+  /**
+   * Inner processing logic — runs after cache miss.
+   * Builds system prompt, runs agent, writes to cache if safe.
+   */
+  private async processInner(request: EngineRequest, cacheKey: string): Promise<EngineResponse> {
     // Build system prompt
     const promptBuilder = new PromptBuilder();
     const systemPrompt = promptBuilder.buildSystem({
@@ -206,33 +299,40 @@ export class Engine extends EventEmitter {
 
     const agentRequest: EngineRequest = { ...request, systemPrompt };
 
-    const lastMessage = agentRequest.messages[agentRequest.messages.length - 1]?.content || '';
-    const cacheKey = ResponseCache.buildKey(
-      request.agentName || 'default',
-      request.sessionId || 'default',
-      JSON.stringify(agentRequest.messages),
-      undefined
-    );
-
-    const cached = !isRealTimeQuery(lastMessage)
-      ? this.responseCache.get(cacheKey, lastMessage)
-      : null;
-    if (cached) {
-      return { content: cached, modelUsed: 'cache', providerUsed: 'cache' };
-    }
-
     try {
       const result = await this.agent.run(agentRequest);
-      if (!isRealTimeQuery(lastMessage)) {
-        this.responseCache.set(cacheKey, result.content);
+
+      // Smart cache write: ONLY if no tools were called (pure LLM knowledge response)
+      // Side-effect tracking via recordToolCall() handles tool detection in ResponseCache.set()
+      if (result.toolCycles === 0) {
+        const ttl = 120_000; // 2 min TTL for pure factual responses
+        this.responseCache.set(cacheKey, result.content, ttl);
+        log.info(`Stored (no tools, TTL=${ttl/1000}s): "${result.content.slice(0, 50)}"`);
+      } else {
+        log.info(`Skipped cache (${result.toolCycles} tool cycles)`);
       }
+
+      // Log session to SQLite for persistence
+      try {
+        const sessionId = request.sessionId || 'default';
+        if (request.messages.length > 0) {
+          const lastMsg = request.messages[request.messages.length - 1];
+          this.storage.addSessionMessage(sessionId, sessionId, lastMsg.role, 
+            typeof lastMsg.content === 'string' ? lastMsg.content : String(lastMsg.content || ''), 0);
+          this.storage.addSessionMessage(sessionId, sessionId, 'assistant', 
+            result.content, 0);
+        }
+      } catch (e) {
+        log.warn('SQLite session log failed', { error: String(e) });
+      }
+
       return {
         content: result.content,
         modelUsed: result.modelUsed,
         providerUsed: result.providerUsed,
       };
     } catch (agentErr: any) {
-      console.error(`[Engine] Agent run failed: ${agentErr.message}`);
+      log.error(`Agent run failed: ${agentErr.message}`);
       evolutionEngine.recordError({
         modelId: request.messages[request.messages.length - 1]?.content?.substring(0, 100) || 'unknown',
         errorType: 'ENGINE_AGENT_FAILED',
@@ -267,6 +367,27 @@ export class Engine extends EventEmitter {
   detectFreeModel(): string {
     const models = this.listModels();
     return models[0] || 'oc/deepseek-v4-flash-free';
+  }
+
+  // ── Graceful Cleanup ──
+
+  /**
+   * Flush all memory stores and release resources.
+   * Called during graceful shutdown.
+   */
+  async cleanup(): Promise<void> {
+    log.info('Flushing memory stores...');
+    try {
+      await Promise.all([
+        this.temporalMemory.close().catch(e => log.warn('temporalMemory close failed', { error: String(e) })),
+        this.agenticMemory.close().catch(e => log.warn('agenticMemory close failed', { error: String(e) })),
+      ]);
+      // Close SQLite storage
+      try { this.storage.close(); } catch (e) { log.warn('SQLite close failed', { error: String(e) }); }
+      log.info('Memory stores flushed');
+    } catch (err) {
+      log.error('Error during memory cleanup', { error: String(err) });
+    }
   }
 }
 

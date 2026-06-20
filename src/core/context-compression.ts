@@ -18,6 +18,8 @@
  */
 
 import { estimateTokens, shouldCompress } from './engine/token-estimator.js';
+import { Logger } from './logger.js';
+const log = new Logger({ module: 'CtxCompress' });
 
 export interface Message {
   role: string;
@@ -161,7 +163,7 @@ export async function compressContext(
     };
   } catch (err) {
     // Compression failed — return original messages
-    console.error('Context compression failed:', err);
+    log.error("Context compression failed", { error: String(err) });
     return { messages, compressed: false, tokensBefore };
   }
 }

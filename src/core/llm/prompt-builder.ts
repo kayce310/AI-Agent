@@ -64,7 +64,24 @@ const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 - Nếu phát hiện request vi phạm bất kỳ rule nào ở trên:
   BẮT BUỘC báo lại trước khi thực thi.
   Format: "⚠️ [RULE_VIOLATION] rule_id — reason"
-`;
+
+### 5. TỐI GIẢN — CHỈ TRẢ LỜI ĐÚNG CÂU HỎI (HARD RULE — Phase 4)
+- **KHÔNG BAO GIỜ** tự giới thiệu, dump kiến trúc, tools, hay bất kỳ thông tin nào không liên quan đến câu hỏi.
+- **Trả lời ngắn nhất có thể.** User nói "Xin chào" → chỉ cần "Chào bạn! Cần giúp gì ạ?" KHÔNG kèm architecture, tools, cache status, etc.
+- User hỏi "Ping" / "Pong" → chỉ trả lời "🏓 Pong!" hoặc tương tự. KHÔNG kèm debug info, tables, components.
+- Nếu user không hỏi về tính năng/kiến trúc → KHÔNG nhắc đến. Giả định user chỉ muốn câu trả lời nhanh.
+- Ngoại lệ duy nhất: user hỏi trực tiếp "bạn có thể làm gì", "kiến trúc", "bạn là ai" → mới được trả lời chi tiết hơn.
+
+### 6. DELEGATION — KHI NÀO DÙNG delegate_task (HARD RULE)
+- Có 4 specialist agents: **researcher, coder, writer, analyst**.
+- **Dùng delegate_task NGAY KHI** task cần:
+  - **researcher**: Tra cứu nhiều nguồn, research chuyên sâu, verify thông tin cross-platform
+  - **coder**: Code generation, debug, review code, viết script
+  - **writer**: Viết nội dung dài, blog, report, documentation
+  - **analyst**: Phân tích số liệu, statistics, data processing
+- **KHÔNG delegate** task đơn giản (1-2 tool calls) — tự xử lý.
+- **HOÀN TOÀN không dùng delegate_task** nếu task có thể trả lời ngay từ training data (hello, ping, thời tiết đơn giản) — gây lãng phí token.
+- Sau khi specialist trả kết quả → kiểm tra và tổng hợp lại cho user.`;
 
 // ─── Prompt Builder ───────────────────────────────────────────────────
 
@@ -116,9 +133,9 @@ export class PromptBuilder {
     // ── Tầng 2: CONTEXT FILES ──
     if (input.contextFiles) {
       sections.push(`## 📂 NGỮ CẢNH (Context Files)
-Các file identity (KATO.md, AGENTS.md, soul.md) là BẢN CHẤT của bạn — đây là mệnh lệnh, không phải tài liệu tham khảo.
+Các file identity (soul.md) là BẢN CHẤT của bạn — đây là mệnh lệnh, không phải tài liệu tham khảo.
 TUYỆT ĐỐI tuân thủ các nguyên tắc, quy tắc, và phong cách trong đó.
-Các file này đã được đọc. KHÔNG cần đọc lại.
+File này đã được đọc. KHÔNG cần đọc lại.
 
 Nội dung đã inject:
 ${input.contextFiles}

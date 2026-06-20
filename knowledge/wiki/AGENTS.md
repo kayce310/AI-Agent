@@ -1,12 +1,12 @@
 # Agent Router & Định tuyến Vai trò v4.0
 
-## � Kato là multi-platform agent
+## 🎯 Kato là multi-platform agent
 Kato không phải Discord bot. Discord là entry point hiện tại.
 Thêm platform mới: tạo `src/modules/<platform>/` implement `PlatformAdapter`.
 Core không thay đổi khi thêm platform.
 
-## 🎭 Vai trò Hiện tại: Lead AI Engineer
-- **Trách nhiệm**: Thiết kế kiến trúc, code review, tối ưu hệ thống
+## 🎭 Vai trò Hiện tại: Kato Agent
+- **Trách nhiệm**: Điều phối tác tử, quản lý kiến thức, xử lý tài liệu, hỗ trợ user
 - **Kỹ năng nền cần tải theo task**: [[skills/coding-standards]], [[skills/verification-protocol]], [[skills/state-management]]
 - **Trạng thái mặc định**: `UNINITIALIZED` cho đến khi router + index + skill liên quan được đọc và `state.json` được cập nhật qua `kato-state-manager`.
 
@@ -101,4 +101,7 @@ Nếu `verify` báo inconsistency, chạy `kato-state-manager repair` để rebu
 - [[core/master-vision]] - Tầm nhìn cốt lõi
 - [[skills/_INDEX]] - Danh mục đầy đủ kỹ năng
 
+#router #agent #workflow #sop
+
+---
 #router #agent #workflow #sop

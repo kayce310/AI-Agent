@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Tool Registry â€” Central Registry For All Tools
  * @layer core
  * @depends-on src/core/tools/tool-gateway.ts, src/core/tools/_shared.ts
@@ -19,8 +19,11 @@
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
+import { Logger } from '../logger.js';
 
-// â”€â”€ Types â”€â”€
+const log = new Logger({ module: 'ToolRegistry' });
+
+// ── Types ──
 
 export interface ToolSchema {
   type: 'object';
@@ -109,7 +112,7 @@ export class ToolRegistry {
 
     for (const tool of plugin.tools) {
       if (this.toolsMap.has(tool.name)) {
-        console.warn(`[ToolRegistry] Overwriting duplicate tool: ${tool.name}`);
+        log.warn(`Overwriting duplicate tool: ${tool.name}`);
       }
       this.toolsMap.set(tool.name, tool);
     }
@@ -124,7 +127,7 @@ export class ToolRegistry {
    */
   getDefinitions(): any[] {
     const defs: any[] = [];
-    for (const tool of this.toolsMap.values()) {
+    for (const tool of Array.from(this.toolsMap.values())) {
       defs.push({
         type: 'function',
         function: {
@@ -205,11 +208,11 @@ export class ToolRegistry {
     // Phase 2: Report results
     if (manifest.errors.length > 0) {
       for (const err of manifest.errors) {
-        console.error(`[ToolRegistry] Plugin error: ${err}`);
+        log.error(`Plugin error: ${err}`);
       }
     }
     if (manifest.imported > 0) {
-      console.log(`[ToolRegistry] Auto-discovered ${manifest.imported} plugin(s)`);
+      log.info(`Auto-discovered ${manifest.imported} plugin(s)`);
     }
 
     return manifest;
@@ -269,12 +272,12 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
       const mod = await import(modulePath);
       if (mod.default && mod.default.name && mod.default.tools) {
         registry.use(mod.default);
-        console.log(`[ToolRegistry] Loaded plugin: ${mod.default.name}`);
+        log.info(`Loaded plugin: ${mod.default.name}`);
       } else {
-        console.warn(`[ToolRegistry] Plugin ${name} has no valid default export`);
+        log.warn(`Plugin ${name} has no valid default export`);
       }
     } catch (err: any) {
-      console.warn(`[ToolRegistry] Failed to import plugin ${name}: ${err.message}`);
+      log.warn(`Failed to import plugin ${name}: ${err.message}`);
     }
   }
   // Phase 2a: Auto-discovery via AST Scanner (Micro-Task 50)
@@ -282,11 +285,11 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
     try {
       await registry.registerAll();
     } catch (err: any) {
-      console.error(`[ToolRegistry] Auto-discovery failed: ${err.message}`);
+      log.error(`Auto-discovery failed: ${err.message}`);
     }
   }
 
-  console.log(`[ToolRegistry] getDefaultRegistry complete: ${registry.getDefinitions().length} tool(s) registered`);
+  log.info(`getDefaultRegistry complete: ${registry.getDefinitions().length} tool(s) registered`);
 }
 
 // Re-export safe utilities only (NO raw fs/execSync â€” use tool-gateway.ts)

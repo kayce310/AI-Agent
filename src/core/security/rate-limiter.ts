@@ -199,3 +199,82 @@ export class RateLimiterGroup {
 }
 
 export default RateLimiter;
+
+/**
+ * Per-User Rate Limiter — tracks separate limits per userId.
+ * Auto-creates limiters for new users, cleans up stale ones.
+ */
+export class PerUserRateLimiter {
+  private users: Map<string, RateLimiter> = new Map();
+  private config: RateLimiterConfig;
+  private maxUsers: number;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor(config: RateLimiterConfig, maxUsers = 100) {
+    this.config = config;
+    this.maxUsers = maxUsers;
+
+    // Cleanup stale users every 5 minutes
+    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60_000);
+  }
+
+  /**
+   * Try to consume 1 token for a specific user.
+   * Returns true if allowed.
+   */
+  tryConsume(userId: string, count: number = 1): boolean {
+    let limiter = this.users.get(userId);
+    if (!limiter) {
+      // Evict oldest if at capacity
+      if (this.users.size >= this.maxUsers) {
+        const oldest = this.users.keys().next().value;
+        if (oldest) this.users.delete(oldest);
+      }
+      limiter = new RateLimiter(`user:${userId}`, this.config);
+      this.users.set(userId, limiter);
+    }
+    return limiter.tryConsume(count);
+  }
+
+  /**
+   * Get state for a specific user.
+   */
+  getState(userId: string): RateLimitState | undefined {
+    return this.users.get(userId)?.getState();
+  }
+
+  /**
+   * Get total denied count across all users.
+   */
+  getTotalDenied(): number {
+    let total = 0;
+    for (const limiter of this.users.values()) {
+      total += limiter.getState().denied;
+    }
+    return total;
+  }
+
+  /**
+   * Remove users with no recent activity.
+   */
+  private cleanup(): void {
+    const now = Date.now();
+    const staleThreshold = 10 * 60_000; // 10 minutes
+    for (const [userId, limiter] of this.users) {
+      const state = limiter.getState();
+      if (now - state.lastRefill > staleThreshold) {
+        this.users.delete(userId);
+      }
+    }
+  }
+
+  /**
+   * Destroy cleanup interval.
+   */
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+  }
+}

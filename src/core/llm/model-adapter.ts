@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file model-adapter â€” LLM adapter
  * @layer core
  * @depends-on src/core/types.ts
@@ -15,7 +15,9 @@
  */
 
 import OpenAI from 'openai';
-import ProviderRegistry, { IProviderClient, ProviderInvokeParams } from './provider-registry.js';
+import { ProviderRegistry, IProviderClient, ProviderInvokeParams } from './provider-registry.js';
+import { Logger } from '../logger.js';
+const log = new Logger({ module: 'ModelRouter' });
 import { LLMProviderConfig, ModelSpec, ChatMessage } from '../types.js';
 import { evolutionEngine } from '../evolution.js';
 import path from 'path';
@@ -146,8 +148,9 @@ export class RouterAdapter implements ModelAdapter {
     const payload: any = {
       model: modelId,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 4096,
+      temperature: options?.temperature ?? 0.3,    // Lower = less reasoning tokens
+      max_tokens: options?.maxTokens ?? 2048,      // Reduced from 4096 for faster response
+      stream: false,
     };
     if (options?.tools && options.tools.length > 0) {
       payload.tools = options.tools;
@@ -244,8 +247,9 @@ export class LiteLLMAdapter implements ModelAdapter {
     const payload: any = {
       model: modelId,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 4096,
+      temperature: options?.temperature ?? 0.3,    // Lower = less reasoning tokens
+      max_tokens: options?.maxTokens ?? 2048,      // Reduced from 4096 for faster response
+      stream: false,
     };
     if (options?.tools && options.tools.length > 0) {
       payload.tools = options.tools;
@@ -410,7 +414,7 @@ export class ModelRouter {
 
         return response;
       } catch (err: any) {
-        console.warn(`[ModelRouter] Adapter "${adapter.name}" failed: ${err.message}`);
+        log.warn(`Adapter "${adapter.name}" failed`, { error: String(err) });
         this.lastError.set(adapter.name, err.message);
 
         evolutionEngine.recordError({
@@ -462,22 +466,22 @@ export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<M
     if (reg.listModels().length > 0) {
       router.use(new RouterAdapter(reg));
       router.setDefault('9router');
-      console.log(`[ModelRouter] 9router adapter registered with ${reg.listModels().length} model(s)`);
+      log.info(`9router adapter registered with ${reg.listModels().length} model(s)`);
     }
   } catch (err: any) {
-    console.warn(`[ModelRouter] Failed to load config: ${err.message}`);
+    log.warn("Failed to load config", { error: String(err) });
   }
 
   const litellm = LiteLLMAdapter.fromEnv();
   if (litellm) {
     router.use(litellm);
-    console.log('[ModelRouter] LiteLLM adapter registered');
+    log.info("LiteLLM adapter registered");
   }
 
   const ollama = OllamaAdapter.fromEnv();
   if (ollama) {
     router.use(ollama);
-    console.log('[ModelRouter] Ollama adapter registered');
+    log.info("Ollama adapter registered");
   }
 
   return router;

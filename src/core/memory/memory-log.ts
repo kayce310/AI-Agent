@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file memory-log â€” Memory module
  * @layer core
  * @depends-on src/core/types.ts
@@ -21,9 +21,11 @@
  *   - Atomic write: write + fsync Ä‘á»ƒ durable (chá»‘ng crash)
  */
 
-import fs from 'fs/promises';
-import fsSync from 'fs';
-import path from 'path';
+import * as fs from 'fs/promises';
+import { Logger } from '../logger.js';
+const log = new Logger({ module: 'MemoryLog' });
+import * as fsSync from 'fs';
+import * as path from 'path';
 
 // â”€â”€ Constants â”€â”€
 const SNAPSHOT_INTERVAL = 1000; // táº¡o snapshot má»—i N operations
@@ -234,7 +236,7 @@ export class MemoryLog {
         }
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
-          console.error(`[MemoryLog] Replay error: ${err.message}`);
+          log.error("Replay error", { error: String(err) });
         }
       }
     }

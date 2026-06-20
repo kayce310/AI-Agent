@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Kato Agent â€” Provider Registry
  * @layer core
  * @depends-on config/providers.json, .env (NINE_ROUTER_API_BASE)
@@ -14,6 +14,9 @@ import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 import { LLMProviderConfig, ProviderConfigFile, ModelSpec } from '../types.js';
+import { Logger } from '../logger.js';
+
+const log = new Logger({ module: 'ProviderRegistry' });
 
 export interface IProviderClient {
   baseUrl: string;
@@ -79,7 +82,7 @@ export class ProviderRegistry {
   /** Load providers tá»« file YAML */
   loadFromConfig(): void {
     if (!fs.existsSync(this.configPath)) {
-      console.log(`[ProviderRegistry] Config not found at ${this.configPath}, using defaults`);
+      log.info(`Config not found at ${this.configPath}, using defaults`);
       this.registerDefaultProviders();
       return;
     }
@@ -88,7 +91,7 @@ export class ProviderRegistry {
     const parsed: ProviderConfigFile = JSON.parse(raw);
 
     if (!parsed?.providers || !Array.isArray(parsed.providers)) {
-      console.log('[ProviderRegistry] Invalid providers.json, using defaults');
+      log.info('Invalid providers.json, using defaults');
       this.registerDefaultProviders();
       return;
     }
@@ -96,13 +99,13 @@ export class ProviderRegistry {
     for (const cfg of parsed.providers) {
       // If 9router config has hardcoded baseUrl but env var exists, override
       if (cfg.name === '9router' && process.env.NINE_ROUTER_API_BASE) {
-        console.log(`[ProviderRegistry] Overriding 9router baseUrl to ${process.env.NINE_ROUTER_API_BASE}`);
+        log.info(`Overriding 9router baseUrl to ${process.env.NINE_ROUTER_API_BASE}`);
         cfg.baseUrl = process.env.NINE_ROUTER_API_BASE;
       }
       this.register(cfg);
     }
 
-    console.log(`[ProviderRegistry] Loaded ${this.providers.size} provider(s) with ${this.modelToProvider.size} model(s)`);
+    log.info(`Loaded ${this.providers.size} provider(s) with ${this.modelToProvider.size} model(s)`);
   }
 
   /** ÄÄƒng kÃ½ má»™t provider */
@@ -170,7 +173,7 @@ export class ProviderRegistry {
     // 9Router external service takes priority if configured
     const nineRouterBase = process.env.NINE_ROUTER_API_BASE;
     if (nineRouterBase) {
-      console.log('[ProviderRegistry] Registering 9router provider from NINE_ROUTER_API_BASE');
+      log.info("Registering 9router provider from NINE_ROUTER_API_BASE");
       this.register({
         name: '9router',
         baseUrl: nineRouterBase,

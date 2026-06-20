@@ -1,120 +1,87 @@
-﻿/**
- * @file evolution — Evolution engine
+/**
+ * @file evolution — Evolution engine (simplified)
  * @layer core
  * @depends-on src/core/types.ts
  * @imported-by src/core/engine/engine.ts
  * @owner core-evolution
+ *
+ * Simplified evolution engine:
+ * - Error tracking: Records errors with fingerprint dedup
+ * - Model performance: Tracks success/failure rates per model
+ * - Auto-skip: Skips models with >50% failure rate after 5+ calls
+ * - Console logging: Logs errors to console (no disk I/O)
+ *
+ * Removed: Rule system (half-implemented, overkill for current needs)
  */
 
-/**
- * Kato Evolution Engine — Error Registry + Self-Evolution
- * 
- * [V5.2] Cơ chế mới hoàn toàn:
- * - Error Registry: Lưu mọi lỗi vào state.json với checksum để tránh trùng
- * - Self-Evolution: Khi phát hiện lỗi lặp lại, tự động điều chỉnh behavior
- * - Cascade Learning: Ghi nhớ model nào hay lỗi gì để ưu tiên/routing khác
- */
-
-import fs from 'fs/promises';
-import path from 'path';
 import { createHash } from 'node:crypto';
 import { HookRegistry, HookContext } from './hooks.js';
+import { Logger } from './logger.js';
+const log = new Logger({ module: 'Evolution' });
 
 // ─── Types ────────────────────────────────────────────────────────────
 
 export interface ErrorRecord {
-  /** MD5 hash của error message để dedup */
+  /** MD5 hash of error message for dedup */
   fingerprint: string;
-  /** Model gây lỗi */
+  /** Model that caused the error */
   modelId: string;
-  /** Tên lỗi (ví dụ: 'RATE_LIMIT', 'TOOL_EXECUTION', 'PROVIDER_DOWN', 'PARSE_ERROR') */
+  /** Error type (e.g., 'RATE_LIMIT', 'TOOL_EXECUTION', 'PROVIDER_DOWN') */
   errorType: string;
-  /** Thông báo lỗi gốc */
+  /** Original error message */
   errorMessage: string;
-  /** Full stack trace nếu có */
+  /** Full stack trace if available */
   stackTrace?: string;
   /** Timestamp */
   timestamp: string;
   /** Session ID */
   sessionId: string;
-  /** Context: đoạn request gây lỗi (truncated 200 chars) */
+  /** Context: request snippet that caused the error (truncated 200 chars) */
   contextSnippet?: string;
-  /** Hành động khắc phục (nếu có) */
-  resolution?: string;
-}
-
-export interface EvolutionRule {
-  id: string;
-  /** Pattern: regex match trên errorMessage */
-  pattern: string;
-  /** Hành động: 'skip_model', 'add_cooldown', 'use_fallback', 'retry_less', 'load_skill' */
-  action: 'skip_model' | 'add_cooldown' | 'use_fallback' | 'retry_less' | 'load_skill';
-  /** Giá trị kèm theo (vd: hours cho cooldown, limit cho retry) */
-  value?: number | string;
-  /** Số lần lỗi trước khi kích hoạt */
-  threshold: number;
-  /** Đã active chưa */
-  active: boolean;
-  activatedAt?: string;
-  /** Mô tả rule */
-  description: string;
 }
 
 export interface EvolutionState {
   version: '1.0';
-  /** Lịch sử lỗi (tối đa 1000 records) */
+  /** Error history (max 500 records) */
   errors: ErrorRecord[];
-  /** Các rule đang áp dụng */
-  rules: EvolutionRule[];
   /** Model performance tracking */
   modelPerformance: Record<string, {
     totalCalls: number;
     failedCalls: number;
     lastFailure: string | null;
     avgResponseTime: number;
-    /** Thống kê error types của model này */
+    /** Error type stats for this model */
     errorTypes: Record<string, number>;
   }>;
   /** Metadata */
   meta: {
     lastUpdated: string;
     totalErrorsTracked: number;
-    activeRules: number;
   };
 }
 
 // ─── Evolution Engine ─────────────────────────────────────────────────
 
 export class EvolutionEngine {
-  private statePath: string;
   private state: EvolutionState;
-  private initialized = false;
 
-  constructor(statePath?: string) {
-    this.statePath = statePath ?? path.resolve('knowledge/workspace/evolution.json');
+  constructor() {
     this.state = this.getDefaultState();
   }
 
   async init(): Promise<void> {
-    try {
-      const raw = await fs.readFile(this.statePath, 'utf8');
-      const parsed = JSON.parse(raw);
-      this.state = this.mergeWithDefaults(parsed);
-    } catch {
-      this.state = this.getDefaultState();
-      await this.persist();
-    }
-    this.initialized = true;
+    // No disk persistence — just console logging
+    this.state = this.getDefaultState();
   }
 
-  /** Ghi nhận lỗi mới */
+  /** Record a new error */
   async recordError(record: Omit<ErrorRecord, 'fingerprint' | 'timestamp'>): Promise<void> {
     const errorFingerprint = createHash('md5')
       .update(`${record.modelId}:${record.errorMessage}`)
       .digest('hex')
       .slice(0, 12);
 
-    // Nếu lỗi đã tồn tại → không ghi duplicate, chỉ tăng counter
+    // Skip duplicate errors
     const existing = this.state.errors.find(e => e.fingerprint === errorFingerprint);
     if (existing) {
       return;
@@ -127,12 +94,12 @@ export class EvolutionEngine {
     };
     this.state.errors.push(fullRecord);
 
-    // Giới hạn 1000 records
-    if (this.state.errors.length > 1000) {
-      this.state.errors = this.state.errors.slice(-1000);
+    // Limit to 500 records
+    if (this.state.errors.length > 500) {
+      this.state.errors = this.state.errors.slice(-500);
     }
 
-    // Cập nhật model performance
+    // Update model performance
     const perf = this.state.modelPerformance[record.modelId] || {
       totalCalls: 0,
       failedCalls: 0,
@@ -148,13 +115,11 @@ export class EvolutionEngine {
     this.state.meta.totalErrorsTracked++;
     this.state.meta.lastUpdated = fullRecord.timestamp;
 
-    // Kiểm tra xem có cần kích hoạt rule nào không
-    await this.evaluateRules(record);
-
-    await this.persist();
+    // Log to console (no disk I/O)
+    log.error(`Error recorded: ${record.modelId} - ${record.errorType}`, { message: record.errorMessage.slice(0, 100) });
   }
 
-  /** Ghi nhận một cuộc gọi model thành công */
+  /** Record a successful model call */
   async recordSuccess(modelId: string, responseTimeMs: number): Promise<void> {
     const perf = this.state.modelPerformance[modelId] || {
       totalCalls: 0,
@@ -168,42 +133,31 @@ export class EvolutionEngine {
       ? responseTimeMs
       : (perf.avgResponseTime * (perf.totalCalls - 1) + responseTimeMs) / perf.totalCalls;
     this.state.modelPerformance[modelId] = perf;
-
-    if (this.state.modelPerformance[modelId].totalCalls % 10 === 0) {
-      await this.persist();
-    }
   }
 
-  /** Kiểm tra xem model có nên bị skip không dựa trên lịch sử */
+  /** Check if a model should be skipped based on history */
   shouldSkipModel(modelId: string): boolean {
     const perf = this.state.modelPerformance[modelId];
     if (!perf || perf.totalCalls === 0) return false;
 
-    // Nếu tỷ lệ lỗi > 50% và đã gọi ít nhất 5 lần → skip
+    // Skip if failure rate > 50% after 5+ calls
     const failureRate = perf.failedCalls / perf.totalCalls;
     if (perf.totalCalls >= 5 && failureRate > 0.5) {
-      /* auto-skip model */
       return true;
     }
-
-    // Nếu có active rule skip cho model này
-    const activeRule = this.state.rules.find(r =>
-      r.active && r.action === 'skip_model' && r.value === modelId
-    );
-    if (activeRule) return true;
 
     return false;
   }
 
-  /** Lấy gợi ý routing dựa trên evolution */
+  /** Get routing advice based on evolution */
   getRoutingAdvice(): { preferredModel: string; reason: string } | null {
     const entries = Object.entries(this.state.modelPerformance);
     if (entries.length === 0) return null;
 
-    // Tìm model có tỷ lệ thành công cao nhất
+    // Find model with highest success rate
     let best: { modelId: string; score: number } = { modelId: '', score: 0 };
     for (const [modelId, perf] of entries) {
-      if (perf.totalCalls < 3) continue; // Chưa đủ data
+      if (perf.totalCalls < 3) continue; // Not enough data
       const successRate = 1 - (perf.failedCalls / perf.totalCalls);
       if (successRate > best.score) {
         best = { modelId, score: successRate };
@@ -217,107 +171,6 @@ export class EvolutionEngine {
       };
     }
     return null;
-  }
-
-  /** Đánh giá rules dựa trên lỗi vừa xảy ra */
-  private async evaluateRules(record: Omit<ErrorRecord, 'fingerprint' | 'timestamp'>): Promise<void> {
-    for (const rule of this.state.rules) {
-      if (rule.active) continue;
-
-      // Đếm số lần lỗi khớp pattern trong lịch sử
-      const pattern = new RegExp(rule.pattern, 'i');
-      const matchCount = this.state.errors.filter(e =>
-        e.errorType === record.errorType && pattern.test(e.errorMessage)
-      ).length;
-
-      if (matchCount >= rule.threshold) {
-        rule.active = true;
-        rule.activatedAt = new Date().toISOString();
-        /* rule activated */
-
-        // Thực thi action
-        await this.executeRuleAction(rule);
-      }
-    }
-  }
-
-  /** Thực thi hành động của rule */
-  private async executeRuleAction(rule: EvolutionRule): Promise<void> {
-    switch (rule.action) {
-      case 'skip_model':
-        break;
-      case 'add_cooldown':
-        break;
-      case 'use_fallback':
-        break;
-      case 'retry_less':
-        break;
-      case 'load_skill':
-        break;
-    }
-  }
-
-  /** Thêm rule mới */
-  async addRule(rule: Omit<EvolutionRule, 'active' | 'activatedAt'>): Promise<void> {
-    this.state.rules.push({
-      ...rule,
-      active: false,
-    });
-    await this.persist();
-
-  }
-
-  /** Load mặc định các rule mẫu */
-  async loadDefaultRules(): Promise<void> {
-    const defaults: Omit<EvolutionRule, 'active' | 'activatedAt'>[] = [
-      {
-        id: 'rate-limit-cooldown',
-        pattern: 'rate limit|429|Too Many Requests',
-        action: 'add_cooldown',
-        value: 12,
-        threshold: 3,
-        description: 'Rate limit xảy ra 3 lần → tăng cooldown từ 6h lên 12h',
-      },
-      {
-        id: 'provider-down-fallback',
-        pattern: 'connect ETIMEDOUT|ECONNREFUSED|ENOTFOUND|network error',
-        action: 'use_fallback',
-        value: 'openai/gpt-3.5-turbo',
-        threshold: 2,
-        description: 'Provider down 2 lần → tự động chuyển sang GPT-3.5 fallback',
-      },
-      {
-        id: 'tool-execution-retry',
-        pattern: 'Error executing|tool_call|function_call',
-        action: 'retry_less',
-        value: 1,
-        threshold: 5,
-        description: 'Tool execution lỗi 5 lần → giảm số lần retry xuống 1',
-      },
-      {
-        id: 'parse-error-skip',
-        pattern: 'Invalid API response|JSON parse|format',
-        action: 'skip_model',
-        value: '',
-        threshold: 3,
-        description: 'Parse error 3 lần → skip model đó tự động',
-      },
-    ];
-
-    for (const rule of defaults) {
-      const exists = this.state.rules.find(r => r.id === rule.id);
-      if (!exists) {
-        await this.addRule(rule);
-      }
-    }
-  }
-
-  /** Lấy thống kê evolution */
-  getStats(): EvolutionState['meta'] & { modelCount: number } {
-    return {
-      ...this.state.meta,
-      modelCount: Object.keys(this.state.modelPerformance).length,
-    };
   }
 
   /**
@@ -354,37 +207,30 @@ export class EvolutionEngine {
         contextSnippet: JSON.stringify(ctx.data).slice(0, 200),
       });
     });
-
   }
 
-  /** Lấy danh sách errors gần đây */
+  /** Get recent errors */
   getRecentErrors(limit = 10): ErrorRecord[] {
     return this.state.errors.slice(-limit).reverse();
   }
 
-  private async persist(): Promise<void> {
-    await fs.mkdir(path.dirname(this.statePath), { recursive: true });
-    await fs.writeFile(this.statePath, JSON.stringify(this.state, null, 2), 'utf8');
+  /** Get evolution stats */
+  getStats(): EvolutionState['meta'] & { modelCount: number } {
+    return {
+      ...this.state.meta,
+      modelCount: Object.keys(this.state.modelPerformance).length,
+    };
   }
 
   private getDefaultState(): EvolutionState {
     return {
       version: '1.0',
       errors: [],
-      rules: [],
       modelPerformance: {},
       meta: {
         lastUpdated: new Date().toISOString(),
         totalErrorsTracked: 0,
-        activeRules: 0,
       },
-    };
-  }
-
-  private mergeWithDefaults(parsed: any): EvolutionState {
-    return {
-      ...this.getDefaultState(),
-      ...parsed,
     };
   }
 }

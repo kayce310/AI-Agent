@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Shared utilities for tool plugins
  * @layer core
  * @depends-on src/core/tools/path-utils.ts
@@ -10,7 +10,9 @@
  */
 
 import * as path from 'path';
-import { WORKSPACE_ROOT, isPathSafe } from './path-utils.js';
+import { isPathSafe, WORKSPACE_ROOT } from './path-utils.js';
+import { Logger } from '../logger.js';
+const log = new Logger({ module: 'Tools' });
 import { secureRuntime } from './tool-gateway.js';
 
 export const BASE_PATH = WORKSPACE_ROOT;
@@ -64,10 +66,9 @@ export function addProcessedFile(entry: {
     };
 
     secureRuntime.safeWriteFile('knowledge/workspace/processed-files.json', JSON.stringify(data, null, 2));
-    `);
     return true;
   } catch (err: any) {
-    console.warn(`[Tools] addProcessedFile error: ${err.message}`);
+    log.warn("addProcessedFile error", { error: String(err) });
     return false;
   }
 }
