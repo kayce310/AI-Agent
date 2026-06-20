@@ -119,4 +119,28 @@ describe('UserManager', () => {
       expect(user?.role).toBe('admin');
     });
   });
+
+  describe('bootstrap', () => {
+    it('should allow first user as admin when no users configured', () => {
+      const result = manager.bootstrap('999');
+      expect(result).toBe(true);
+      expect(manager.isAllowed('999')).toBe(true);
+      expect(manager.isAdmin('999')).toBe(true);
+    });
+
+    it('should not bootstrap twice', () => {
+      manager.bootstrap('111');
+      const result = manager.bootstrap('222');
+      expect(result).toBe(false); // already bootstrapped
+      expect(manager.isAllowed('222')).toBe(false);
+    });
+
+    it('should not bootstrap if env users exist', () => {
+      process.env.CORAL_TELEGRAM_USERS = '123:user';
+      const m = new UserManager();
+      const result = m.bootstrap('999');
+      expect(result).toBe(false); // users already configured via env
+      expect(m.isAllowed('999')).toBe(false);
+    });
+  });
 });

@@ -2,7 +2,7 @@
  * @file Agent State — Derives current state from events
  * @layer core
  * @created 2026-06-21
- * @updated 2026-06-21 — Phase 2: callId for tool cleanup, currentTaskLabel, fallback states
+ * @updated 2026-06-21 — Phase 4A: decisionId linkage, reasoningSnippet in RecentDecision
  *
  * Events → State → UI (NOT Events → UI)
  * This is the single source of truth for all dashboard state.
@@ -28,8 +28,10 @@ export interface RecentFile {
 }
 
 export interface RecentDecision {
+  decisionId: string;
   decision: string;
   reason: string;
+  reasoningSnippet?: string;
   nextAction: string;
   timestamp: number;
 }
@@ -102,7 +104,7 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
     }
 
     case 'tool_called': {
-      const p = event.payload as { taskId: string; callId: string; toolName: string; args: Record<string, unknown> };
+      const p = event.payload as { taskId: string; decisionId: string; callId: string; toolName: string; args: Record<string, unknown> };
       const activeTools: ActiveTool[] = [
         { callId: p.callId, toolName: p.toolName, args: p.args, startedAt: event.timestamp },
         ...state.activeTools,
@@ -115,7 +117,7 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
     }
 
     case 'tool_finished': {
-      const p = event.payload as { callId: string };
+      const p = event.payload as { decisionId: string; callId: string };
       const activeTools = state.activeTools.filter(t => t.callId !== p.callId);
       return {
         ...state,
@@ -146,10 +148,12 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
     }
 
     case 'decision_made': {
-      const p = event.payload as { decision: string; reason: string; nextAction: string };
+      const p = event.payload as { decisionId: string; decision: string; reason: string; reasoningSnippet?: string; nextAction: string };
       const decision: RecentDecision = {
+        decisionId: p.decisionId,
         decision: p.decision,
         reason: p.reason,
+        reasoningSnippet: p.reasoningSnippet,
         nextAction: p.nextAction,
         timestamp: event.timestamp,
       };

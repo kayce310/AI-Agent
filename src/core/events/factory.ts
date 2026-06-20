@@ -2,7 +2,7 @@
  * @file Event Factory — Create validated agent events
  * @layer core
  * @created 2026-06-20
- * @updated 2026-06-21 — Phase 1: file events, decision_made, updated tool schemas
+ * @updated 2026-06-21 — Phase 4A: decisionId linkage, reasoningSnippet, updated tool schemas
  */
 
 import { randomUUID } from 'crypto';
@@ -59,15 +59,16 @@ export class EventFactory {
     });
   }
 
-  static toolCalled(taskId: string, callId: string, toolName: string, args: Record<string, unknown>): AgentEvent {
+  static toolCalled(taskId: string, decisionId: string, callId: string, toolName: string, args: Record<string, unknown>): AgentEvent {
     return ToolCalledSchema.parse({
       ...this.createBase('tool_called'),
-      payload: { taskId, callId, toolName, args },
+      payload: { taskId, decisionId, callId, toolName, args },
     });
   }
 
   static toolFinished(
     taskId: string,
+    decisionId: string,
     callId: string,
     toolName: string,
     success: boolean,
@@ -77,7 +78,7 @@ export class EventFactory {
   ): AgentEvent {
     return ToolFinishedSchema.parse({
       ...this.createBase('tool_finished'),
-      payload: { taskId, callId, toolName, success, durationMs, args, result },
+      payload: { taskId, decisionId, callId, toolName, success, durationMs, args, result },
     });
   }
 
@@ -104,13 +105,15 @@ export class EventFactory {
 
   static decisionMade(
     taskId: string,
+    decisionId: string,
     decision: string,
     reason: string,
-    nextAction: string
+    nextAction: string,
+    reasoningSnippet?: string
   ): AgentEvent {
     return DecisionMadeSchema.parse({
       ...this.createBase('decision_made'),
-      payload: { taskId, decision, reason, nextAction },
+      payload: { taskId, decisionId, decision, reason, reasoningSnippet, nextAction },
     });
   }
 

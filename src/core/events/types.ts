@@ -2,7 +2,7 @@
  * @file Agent Event Types — Event Sourcing Schema
  * @layer core
  * @created 2026-06-20
- * @updated 2026-06-21 — Phase 1: file events, decision_made, error codes
+ * @updated 2026-06-21 — Phase 4A: decisionId linkage, reasoningSnippet, error codes
  */
 
 import { z } from 'zod';
@@ -67,6 +67,7 @@ export const ToolCalledSchema = BaseEventSchema.extend({
   type: z.literal('tool_called'),
   payload: z.object({
     taskId: z.string(),
+    decisionId: z.string(),
     callId: z.string(),
     toolName: z.string(),
     args: z.record(z.string(), z.unknown()),
@@ -77,6 +78,7 @@ export const ToolFinishedSchema = BaseEventSchema.extend({
   type: z.literal('tool_finished'),
   payload: z.object({
     taskId: z.string(),
+    decisionId: z.string(),
     callId: z.string(),
     toolName: z.string(),
     success: z.boolean(),
@@ -116,8 +118,10 @@ export const DecisionMadeSchema = BaseEventSchema.extend({
   type: z.literal('decision_made'),
   payload: z.object({
     taskId: z.string(),
+    decisionId: z.string(),
     decision: z.string(),
     reason: z.string(),
+    reasoningSnippet: z.string().optional(),
     nextAction: z.string(),
   }),
 });

@@ -185,6 +185,7 @@ export class RouterAdapter implements ModelAdapter {
       tokenUsage: rawData.usage ? { input: rawData.usage.prompt_tokens || 0, output: rawData.usage.completion_tokens || 0 } : undefined,
       toolCalls,
       finishReason,
+      reasoningContent: choice.message?.reasoning_content || undefined,
     };
   }
 }
@@ -274,6 +275,7 @@ export class LiteLLMAdapter implements ModelAdapter {
       tokenUsage: response.usage ? { input: response.usage.prompt_tokens || 0, output: response.usage.completion_tokens || 0 } : undefined,
       toolCalls,
       finishReason: choice.finish_reason,
+      reasoningContent: (choice.message as any)?.reasoning_content || undefined,
     };
   }
 }

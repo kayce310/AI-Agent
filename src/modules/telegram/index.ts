@@ -223,6 +223,18 @@ export class TelegramBridge implements PlatformAdapter {
     // Handle /start command
     this.bot.command('start', async (ctx) => {
       const userId = String(ctx.from?.id || 'unknown');
+
+      // Bootstrap: first user becomes admin when no users configured
+      if (!userManager.isBootstrapped()) {
+        userManager.bootstrap(userId);
+        await ctx.reply(
+          `🪸 Xin chào! Tôi là **Coral** — AI Agent.\n` +
+          `Bạn là admin đầu tiên được thiết lập!\n\n` +
+          `Gửi tin nhắn bất kỳ để tôi hỗ trợ.`
+        );
+        return;
+      }
+
       if (!userManager.isAllowed(userId)) {
         await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
         return;
@@ -343,6 +355,17 @@ export class TelegramBridge implements PlatformAdapter {
       if (message.from?.is_bot) return;
 
       // ── ACCESS CONTROL (Phase 3) ──
+      // Bootstrap: first user becomes admin when no users configured
+      if (!userManager.isBootstrapped()) {
+        userManager.bootstrap(userId);
+        await ctx.reply(
+          `🪸 Xin chào! Tôi là **Coral** — AI Agent.\n` +
+          `Bạn là admin đầu tiên được thiết lập!\n\n` +
+          `Gửi tin nhắn bất kỳ để tôi hỗ trợ.`
+        );
+        return;
+      }
+
       if (!userManager.isAllowed(userId)) {
         // Unknown user — send polite rejection
         try {

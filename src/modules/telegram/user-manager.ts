@@ -19,10 +19,27 @@ export interface TelegramUser {
 
 class UserManager {
   private users: Map<string, TelegramUser> = new Map();
+  private bootstrapDone = false;
 
   constructor() {
     // Load from env or default to admin-only
     this.loadFromEnv();
+  }
+
+  /**
+   * Bootstrap: first user becomes admin when no users are configured.
+   * This allows personal bot setup without pre-configuring env.
+   */
+  bootstrap(userId: string): boolean {
+    if (this.bootstrapDone || this.users.size > 0) return false;
+    this.users.set(userId, { userId, role: 'admin' });
+    this.bootstrapDone = true;
+    return true;
+  }
+
+  /** Check if bootstrap has been done */
+  isBootstrapped(): boolean {
+    return this.users.size > 0;
   }
 
   /**
