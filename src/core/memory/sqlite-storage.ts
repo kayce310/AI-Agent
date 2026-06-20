@@ -264,6 +264,26 @@ export class KatoStorage {
   close(): void {
     this.db.close();
   }
+
+  // ═══ EVENT STORE ═══
+  initEventTables(): void {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS agent_events (
+        id TEXT PRIMARY KEY,
+        timestamp INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        metadata TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_events_type ON agent_events(type);
+      CREATE INDEX IF NOT EXISTS idx_events_timestamp ON agent_events(timestamp);
+    `);
+  }
+
+  getDb(): Database.Database {
+    return this.db;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
