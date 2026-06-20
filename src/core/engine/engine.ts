@@ -62,6 +62,21 @@ function summarizeReasoning(text: string | null | undefined): string | null {
     : cleaned;
 }
 
+/**
+ * Parse tool arguments from model adapter.
+ * OpenAI API returns toolCall.function.arguments as a JSON string,
+ * but our Zod schemas expect a Record<string, unknown> object.
+ */
+function parseToolArgs(raw: unknown): Record<string, unknown> {
+  if (!raw) return {};
+  if (typeof raw === 'object') return raw as Record<string, unknown>;
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw) as Record<string, unknown>; }
+    catch { return { _raw: raw }; }
+  }
+  return {};
+}
+
 export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
   private modelRouter: ModelRouter;
@@ -81,6 +96,7 @@ export class Engine extends EventEmitter {
   private eventLogger!: StructuredLogger;
   private pendingCallIds: Map<string, Array<{callId: string; decisionId: string}>> = new Map();
   private tasksWithToolCalls: Set<string> = new Set();
+  private currentTaskId: string = 'default';
 
   private agentRegistry!: AgentRegistry;
 
@@ -186,15 +202,16 @@ export class Engine extends EventEmitter {
     // ═══ EVENT BUS: tool:call → tool_called + decision_made ═══
     this.agent.onEvent('tool:call', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
+      const taskId = this.currentTaskId;
       const toolName = (data.toolName as string) || 'unknown';
-      const toolArgs = (data.toolArgs as Record<string, unknown>) || {};
+      const toolArgs = parseToolArgs(data.toolArgs);
       const cycle = (data.cycle as number) || 0;
 
       // Generate unique callId for this tool invocation
       const callId = randomUUID();
 
       // Track that this task used tools
-      this.tasksWithToolCalls.add(sessionId);
+      this.tasksWithToolCalls.add(taskId);
 
       // Generate decisionId for this tool call
       const decisionId = randomUUID();
@@ -212,7 +229,7 @@ export class Engine extends EventEmitter {
       // Emit decision_made event — links reasoning to this tool call via decisionId
       const argsSummary = Object.keys(toolArgs).slice(0, 3).join(', ');
       this.eventLogger.decisionMade(
-        sessionId,
+        taskId,
         decisionId,
         `Call ${toolName}`,
         reason,
@@ -221,14 +238,15 @@ export class Engine extends EventEmitter {
       );
 
       // Emit tool_called event with callId + decisionId
-      this.eventLogger.toolCall(sessionId, decisionId, callId, toolName, toolArgs);
+      this.eventLogger.toolCall(taskId, decisionId, callId, toolName, toolArgs);
     }, 90);
 
     // ═══ EVENT BUS: tool:result → tool_finished + file events ═══
     this.agent.onEvent('tool:result', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
+      const taskId = this.currentTaskId;
       const toolName = (data.toolName as string) || 'unknown';
-      const toolArgs = (data.args as Record<string, unknown>) || {};
+      const toolArgs = parseToolArgs(data.args);
       const result = JSON.stringify(data.result);
 
       // Fetch callId + decisionId from queue (FIFO — matches call order)
@@ -242,12 +260,12 @@ export class Engine extends EventEmitter {
 
       // Emit tool_finished event with callId
       const success = !result.includes('"error"');
-      this.eventLogger.toolResult(sessionId, decisionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
+      this.eventLogger.toolResult(taskId, decisionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
 
       // Emit file events for file-writing tools
       const filePath = this.extractFilePath(toolName, toolArgs);
       if (filePath) {
-        this.eventLogger.fileCreated(sessionId, filePath);
+        this.eventLogger.fileCreated(taskId, filePath);
       }
 
       if (result && result !== 'undefined' && result !== 'null') {

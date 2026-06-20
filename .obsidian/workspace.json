@@ -178,6 +178,9 @@
   },
   "active": "cc760f4bc037b642",
   "lastOpenFiles": [
+    "tests/memory-core.test.ts",
+    "knowledge/wiki/core/coral-kayce-bond.md",
+    "REPORT_DECISION_DATA.md",
     "knowledge/wiki/knowledge/wiki/core/kayce.md",
     "knowledge/wiki/knowledge/wiki/core",
     "knowledge/wiki/knowledge/wiki",
