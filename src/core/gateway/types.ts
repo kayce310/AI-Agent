@@ -14,7 +14,7 @@
 // Core Message Types
 // ──────────────────────────────────────────────
 
-export interface KatoRequest {
+export interface CoralRequest {
   input: string;
   userId: string;
   sessionId: string;
@@ -22,7 +22,7 @@ export interface KatoRequest {
   metadata?: Record<string, unknown>;
 }
 
-export interface KatoResponse {
+export interface CoralResponse {
   output: string;
   sessionId: string;
   platform: string;
@@ -38,7 +38,7 @@ export interface AdapterMessage {
   messageId: string;
   /** Platform user ID */
   userId: string;
-  /** Platform channel/chat ID (used as Kato sessionId) */
+  /** Platform channel/chat ID (used as Coral sessionId) */
   channelId: string;
   /** Raw text content */
   text: string;
@@ -87,7 +87,7 @@ export interface PlatformMeta {
  *
  * Inspired by Hermes Agent gateway/platforms/ adapters.
  * Each adapter wraps a platform SDK and translates between
- * platform-native events and Kato's AdapterMessage format.
+ * platform-native events and Coral's AdapterMessage format.
  */
 export interface PlatformAdapter {
   /** Unique platform name (discord, telegram, cli, slack, ...) */
@@ -122,8 +122,8 @@ export interface PlatformAdapter {
   /**
    * Register a handler for incoming messages.
    * The handler receives normalized AdapterMessage objects.
-   * Returns a KatoResponse that the adapter can use for platform-specific UI.
+   * Returns a CoralResponse that the adapter can use for platform-specific UI.
    * Called by the gateway after construction.
    */
-  onMessage(handler: (msg: AdapterMessage) => Promise<KatoResponse | null>): void;
+  onMessage(handler: (msg: AdapterMessage) => Promise<CoralResponse | null>): void;
 }

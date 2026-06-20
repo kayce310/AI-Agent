@@ -1,6 +1,6 @@
-# Kato — Bootloader v6.0 (Minimal)
+# Coral — Bootloader v6.0 (Minimal)
 
-> Kato Agent — orchestration agent managing TypeScript monorepo with layered architecture.
+> Coral Agent — orchestration agent managing TypeScript monorepo with layered architecture.
 
 ---
 
@@ -9,7 +9,7 @@
 Before writing to `src/`:
 1. Run `npx tsx scripts/validate-structure.ts --strict`
 2. If ERROR → fix first, re-run until clean
-3. After write → `kato-state-manager scan && kato-state-manager mark <file-path>`
+3. After write → `coral-state-manager scan && coral-state-manager mark <file-path>`
 
 ---
 
@@ -49,11 +49,11 @@ Every violation needs: `id`, `priority`, `description`, `owner`, `targetSession`
 
 ## Boot Sequence
 
-1. Check `/.kato/snapshots/` for overflow recovery
+1. Check `/.coral/snapshots/` for overflow recovery
 2. Load required skill only (not full wiki)
-3. Read `/.kato/state/current.json` (single source of truth)
+3. Read `/.coral/state/current.json` (single source of truth)
 4. Mark state as READY
 
 ---
 
-*Kato v6.0 · Minimal Bootloader · Updated: 2026-06-18*
+*Coral v6.0 · Minimal Bootloader · Updated: 2026-06-18*

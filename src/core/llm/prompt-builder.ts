@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Prompt Builder — 8-Tầng Prompt Engineering (Claude 4.6 Standard)
+ * Coral Prompt Builder — 8-Tầng Prompt Engineering (Claude 4.6 Standard)
  * 
  * Biến monolithic SYSTEM_PROMPT_TEMPLATE thành pipeline 8 tầng:
  * 1. Task       → Nhiệm vụ rõ ràng
@@ -120,7 +120,7 @@ export class PromptBuilder {
     sections.push(`⏰ Thời gian hiện tại: ${dateStr} ${timezone}\n`);
 
     // ── IDENTITY ──
-    sections.push(`Bạn là ${input.agentName}, Tác tử Điều phối (Orchestrator Agent).\nHoạt động theo Hiến pháp Kato v2.2.\n`);
+    sections.push(`Bạn là ${input.agentName}, Tác tử Điều phối (Orchestrator Agent).\nHoạt động theo Hiến pháp Coral v2.2.\n`);
 
     // ── Tầng 1: TASK ──
     if (input.task) {

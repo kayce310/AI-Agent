@@ -5,7 +5,7 @@
  * @imported-by engine.ts, gateway
  * @owner core-storage
  *
- * Unified SQLite storage for Kato Agent:
+ * Unified SQLite storage for Coral Agent:
  * - Memory: Persistent user facts/preferences across sessions
  * - Session: Full-text search over conversation history (FTS5)
  * - Todo: Task tracking with progress persistence
@@ -18,9 +18,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 const DB_DIR = path.resolve(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'kato.db');
+const DB_PATH = path.join(DB_DIR, 'coral.db');
 
-export class KatoStorage {
+export class CoralStorage {
   private db: Database.Database;
 
   constructor(dbPath: string = DB_PATH) {
@@ -342,13 +342,13 @@ export interface TodoProgress {
 }
 
 // Singleton
-let _instance: KatoStorage | null = null;
+let _instance: CoralStorage | null = null;
 
-export function getStorage(): KatoStorage {
+export function getStorage(): CoralStorage {
   if (!_instance) {
-    _instance = new KatoStorage();
+    _instance = new CoralStorage();
   }
   return _instance;
 }
 
-export default KatoStorage;
+export default CoralStorage;

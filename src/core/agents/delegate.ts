@@ -5,14 +5,14 @@
  * @imported-by src/core/tools/tool-registry.ts (registered as ToolPlugin)
  * @owner core-agents
  *
- * Provides a delegate_task tool that allows Kato to assign subtasks
+ * Provides a delegate_task tool that allows Coral to assign subtasks
  * to specialist agents. The specialist runs its own ReAct loop with
- * restricted tools, and returns the result to Kato.
+ * restricted tools, and returns the result to Coral.
  *
  * Pattern: CrewAI Delegation (sub-routine)
- * - Kato calls delegate_task(agentName, task)
+ * - Coral calls delegate_task(agentName, task)
  * - Specialist agent runs with its own tools
- * - Result returns to Kato → Kato continues orchestration
+ * - Result returns to Coral → Coral continues orchestration
  */
 
 import { AgentRegistry, SpecialistAgent, DelegationResult } from './agent-registry.js';

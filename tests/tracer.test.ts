@@ -1,5 +1,5 @@
 /**
- * Kato Tracer — O11y Tracing Tests
+ * Coral Tracer — O11y Tracing Tests
  * Phase 3.6
  *
  * Tests: span lifecycle, nested spans, ring buffer, exports, anomaly detection, hook integration.

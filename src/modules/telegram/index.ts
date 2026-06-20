@@ -1,5 +1,5 @@
 /**
- * @file Kato Telegram Bridge — PlatformAdapter for Telegram
+ * @file Coral Telegram Bridge — PlatformAdapter for Telegram
  * @layer modules
  * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
  * @imported-by src/scripts/start-telegram.ts
@@ -74,7 +74,7 @@ function logTelegramMessage(
 
 // Cross-instance dedup: lock file per message ID in temp dir
 import * as os from 'os';
-const MSG_LOCK_DIR = path.join(os.tmpdir(), 'kato-tg-locks');
+const MSG_LOCK_DIR = path.join(os.tmpdir(), 'coral-tg-locks');
 const MSG_LOCK_TTL_MS = 5 * 60 * 1000;
 
 function tryAcquireMessageLock(messageId: string): boolean {
@@ -222,7 +222,7 @@ export class TelegramBridge implements PlatformAdapter {
     // Handle /start command
     this.bot.command('start', async (ctx) => {
       await ctx.reply(
-        '👋 Xin chào! Tôi là Kato — AI Agent.\n\n' +
+        '👋 Xin chào! Tôi là Coral — AI Agent.\n\n' +
         'Gửi tin nhắn bất kỳ để tôi hỗ trợ.\n\n' +
         'Lệnh:\n' +
         '/models — Danh sách model\n' +
@@ -233,7 +233,7 @@ export class TelegramBridge implements PlatformAdapter {
     // Handle /help command
     this.bot.command('help', async (ctx) => {
       await ctx.reply(
-        '🤖 Kato AI Agent\n\n' +
+        '🤖 Coral AI Agent\n\n' +
         'Tôi có thể:\n' +
         '• Trả lời câu hỏi\n' +
         '• Thực thi code\n' +

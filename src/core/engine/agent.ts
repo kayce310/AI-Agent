@@ -5,7 +5,7 @@
  * @imported-by src/core/engine/engine.ts
  * @owner core-engine
  *
- * Kato Agent — Agent Lifecycle Orchestration
+ * Coral Agent — Agent Lifecycle Orchestration
  * Phase 3.3 — Async Engine
  *
  * Wraps the ReAct loop with:
@@ -347,7 +347,7 @@ export class Agent extends EventEmitter {
     await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
 
     // ── Self-referential shortcut ──
-    // If the question is about Kato itself, skip tool loop entirely
+    // If the question is about Coral itself, skip tool loop entirely
     const lastUserMsg = historyMessages.filter((m: any) => m.role === 'user').pop()?.content || '';
     if (this.isSelfReferential(lastUserMsg)) {
       log.info(`Self-referential detected: "${lastUserMsg.slice(0,50)}" → direct LLM call (no tools)`);

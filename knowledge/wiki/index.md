@@ -1,6 +1,6 @@
-# 📚 Kato Knowledge Base Index v4.0
+# 📚 Coral Knowledge Base Index v4.0
 
-Trung tâm bản đồ tri thức của hệ thống Kato Agent
+Trung tâm bản đồ tri thức của hệ thống Coral Agent
 
 ---
 
@@ -58,7 +58,7 @@ Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
 ### 📡 Tham chiếu Kiến trúc
 | Resource | Mô tả |
 |----------|-------|
-| [[reference/hermes-agent-analysis]] | Phân tích Hermes Agent (Nous Research v0.14.0) — tham chiếu cho Kato |
+| [[reference/hermes-agent-analysis]] | Phân tích Hermes Agent (Nous Research v0.14.0) — tham chiếu cho Coral |
 
 ### 🧠 Quản trị Tri thức
 | Skill | Mô tả |
@@ -98,8 +98,8 @@ Usage: Load chỉ skill cần thiết theo Zero Waste Token principle.
 
 ## 🌐 Gateway Layer
 - `src/core/gateway/` — Gateway Layer
-  - `types.ts`: KatoRequest, KatoResponse, PlatformAdapter
-  - `index.ts`: KatoGateway class
+  - `types.ts`: CoralRequest, CoralResponse, PlatformAdapter
+  - `index.ts`: CoralGateway class
 
 ---
 

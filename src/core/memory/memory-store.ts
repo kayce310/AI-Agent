@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Agent â€” Memory Store (ADD-only + Append-Log Persistence)
+ * Coral Agent â€” Memory Store (ADD-only + Append-Log Persistence)
  * Phase 4.0b â€” MemoryLog integration
  *
  * Replace cho MemoryCore legacy vá»›i:

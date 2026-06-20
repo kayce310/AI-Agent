@@ -1,13 +1,13 @@
-# Hermes Agent — Phân Tích Kiến Trúc & Tham Chiếu cho Kato
+# Hermes Agent — Phân Tích Kiến Trúc & Tham Chiếu cho Coral
 
 > **Nguồn:** `E:\Test\hermes-agent` (Nous Research, v0.14.0)
-> **Mục đích:** Tham chiếu đích cho Kato Agent — so sánh kiến trúc, phát hiện gap, đề xuất cải tiến.
+> **Mục đích:** Tham chiếu đích cho Coral Agent — so sánh kiến trúc, phát hiện gap, đề xuất cải tiến.
 
 ---
 
 ## 1. Tổng quan hai hệ thống
 
-| Chiều | Hermes Agent (Nous) | Kato Agent |
+| Chiều | Hermes Agent (Nous) | Coral Agent |
 |-------|--------------------|------------|
 | **Ngôn ngữ** | Python 3.13 | TypeScript (Node.js) |
 | **Kiến trúc** | Monolithic Python package với plugin system | Monorepo TypeScript với layered modules |
@@ -34,7 +34,7 @@
 - **80+ tool implementations** trong `tools/*.py`
 - Toolset system: tools được nhóm thành toolsets (core, devops, research,...) có thể enable/disable
 
-**Kato:**
+**Coral:**
 - [`src/core/tools/tool-registry.ts`](src/core/tools/tool-registry.ts) (248 LOC) — manual plugin registration
 - Mỗi tool plugin phải được import và gọi `registry.use(plugin)` thủ công
 - `getDefaultRegistry()` + `registerBuiltInPlugins()` hardcode danh sách plugins
@@ -60,7 +60,7 @@
 - **Self-improvement**: agent tự động tạo skill sau task phức tạp, skill tự cải thiện khi dùng
 - [agentskills.io](https://agentskills.io) open standard compatible
 
-**Kato:**
+**Coral:**
 - [`src/core/agents/skill-runtime.ts`](src/core/agents/skill-runtime.ts) (459 LOC) — internal skill execution engine, trigger-based
 - [`src/core/tools/skills.ts`](src/core/tools/skills.ts) — tool plugin (đã fix từ 9router → agents-skills)
 - Skills là **read-only markdown** trong `knowledge/agents-skills/` (27 SKILL.md files)
@@ -86,7 +86,7 @@
 - **StreamingContextScrubber** — state machine để scrub memory context khỏi stream chunks
 - **Prefetch + sync cycle**: `prefetch_all(user_msg)` trước turn → `sync_all(user_msg, response)` sau turn
 
-**Kato:**
+**Coral:**
 - [`src/core/memory/memory-store.ts`](src/core/memory/memory-store.ts) (451 LOC) — query-based store với relevance scoring
 - [`src/core/memory/memory-log.ts`](src/core/memory/memory-log.ts) (507 LOC) — append-only log
 - [`src/core/memory/memory-temporal.ts`](src/core/memory/memory-temporal.ts) (303 LOC) — temporal query
@@ -111,7 +111,7 @@
 - Chỉ context compression triggers rebuild
 - [`agent/prompt_builder.py`](E:\Test\hermes-agent\agent\prompt_builder.py) — modular prompt parts (SKILLS_GUIDANCE, MEMORY_GUIDANCE, TOOL_USE_ENFORCEMENT_GUIDANCE, ...)
 
-**Kato:**
+**Coral:**
 - [`src/core/llm/prompt-builder.ts`](src/core/llm/prompt-builder.ts) (242 LOC) — single buildSystem() method
 - Không có prompt tier separation
 - Không có prompt caching
@@ -133,7 +133,7 @@
 - Cross-platform conversation continuity
 - Voice memo transcription across all platforms
 
-**Kato:**
+**Coral:**
 - [`src/modules/discord/index.ts`](src/modules/discord/index.ts) (275 LOC) — Discord only
 - Không có platform adapter abstraction
 
@@ -152,7 +152,7 @@
 - [`agent/skill_bundles.py`](E:\Test\hermes-agent\agent\skill_bundles.py) — bundle nhiều steps thành một zero-context-cost turn
 - [`cron/`](E:\Test\hermes-agent\cron/) — built-in scheduler: daily reports, nightly backups, weekly audits
 
-**Kato:**
+**Coral:**
 - [`src/core/engine/orchestrator.ts`](src/core/engine/orchestrator.ts) (247 LOC) — orchestration với cycle detection
 - [`src/core/engine/decomposer.ts`](src/core/engine/decomposer.ts) (203 LOC) — task decomposition
 - [`src/core/engine/plan-executor.ts`](src/core/engine/plan-executor.ts) (260 LOC) — plan execution
@@ -179,7 +179,7 @@
   7. `vercel.py` — Vercel Sandbox
 - Modal và Daytona có **serverless persistence**: environment hibernates khi idle, wakes on demand
 
-**Kato:**
+**Coral:**
 - [`src/core/agents/sandbox-executor.ts`](src/core/agents/sandbox-executor.ts) (278 LOC) — local terminal (WSL) only
 - **Không có Docker, SSH, serverless support**
 
@@ -200,7 +200,7 @@
   5. FTS5 session search + LLM summarization cho cross-session recall
   6. Honcho dialectic user modeling (plugin)
 
-**Kato:**
+**Coral:**
 - [`src/core/evolution.ts`](src/core/evolution.ts) (400 LOC) — Evolution Engine
 - Error-driven model routing (rate limit → cooldown, provider down → fallback)
 - **Không có auto skill creation**, không có cross-session learning
@@ -222,7 +222,7 @@
 - [`tools/threat_patterns.py`](E:\Test\hermes-agent\tools\threat_patterns.py) — threat detection patterns
 - [`tools/tirith_security.py`](E:\Test\hermes-agent\tools\tirith_security.py) — Tirith policy engine
 
-**Kato:**
+**Coral:**
 - [`src/core/security/security-scanner.ts`](src/core/security/security-scanner.ts) — pattern-based scanning
 - [`src/core/security/input-guard.ts`](src/core/security/input-guard.ts) — input validation
 - [`src/core/security/output-guard.ts`](src/core/security/output-guard.ts) — output sanitization
@@ -241,7 +241,7 @@
 
 ### Source Lines of Code
 
-| Layer | Hermes Agent | Kato Agent |
+| Layer | Hermes Agent | Coral Agent |
 |-------|-------------|------------|
 | Core loop | ~12k (run_agent.py) | ~1.5k (agent.ts + engine.ts) |
 | Tools | ~25k (80+ files) | ~3k (15 files) |
@@ -254,7 +254,7 @@
 
 ---
 
-## 4. Roadmap đề xuất cho Kato
+## 4. Roadmap đề xuất cho Coral
 
 ### Phase 1 — Nền tảng (Current)
 - [✅] Skill scan paths: `knowledge/wiki/skills/` + `knowledge/agents-skills/`
@@ -286,8 +286,8 @@
 
 ## 5. Key Files tham chiếu
 
-### Hermes Agent — files mẫu cho Kato
-| File | LOC | Chức năng | Kato tương đương |
+### Hermes Agent — files mẫu cho Coral
+| File | LOC | Chức năng | Coral tương đương |
 |------|-----|-----------|-----------------|
 | [`run_agent.py`](E:\Test\hermes-agent\run_agent.py) | ~12k | Core AIAgent class | [`agent.ts`](src/core/engine/agent.ts) |
 | [`tools/registry.py`](E:\Test\hermes-agent\tools\registry.py) | 590 | Tool registry + auto-discovery | [`tool-registry.ts`](src/core/tools/tool-registry.ts) |
@@ -306,7 +306,7 @@
 ## 6. Kết luận
 
 Hermes Agent là một production-grade agent system với 5 năm phát triển từ Nous Research. 
-Kato có lợi thế về TypeScript type safety và kiến trúc gọn nhẹ (~10k LOC vs ~70k LOC),
+Coral có lợi thế về TypeScript type safety và kiến trúc gọn nhẹ (~10k LOC vs ~70k LOC),
 nhưng thiếu nhiều tính năng quan trọng mà Hermes đã có:
 
 1. **Skill ecosystem** — skills hub, auto-creation, self-improvement
@@ -317,4 +317,4 @@ nhưng thiếu nhiều tính năng quan trọng mà Hermes đã có:
 6. **Learning loop** — cross-session, auto-skill creation
 7. **Terminal backends** — Docker, SSH, serverless
 
-**Priorities cho Kato:** Tool diversity → Multi-platform → Learning loop → Subagents → Skills Hub
+**Priorities cho Coral:** Tool diversity → Multi-platform → Learning loop → Subagents → Skills Hub

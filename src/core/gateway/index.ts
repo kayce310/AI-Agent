@@ -1,5 +1,5 @@
 /**
- * @file Kato Gateway â€” Multi-Platform Orchestrator
+ * @file Coral Gateway â€” Multi-Platform Orchestrator
  * @layer core
  * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts
  * @imported-by src/index.ts
@@ -11,12 +11,12 @@
 
 import { Logger } from '../logger.js';
 import Engine from '../engine/engine.js';
-import { KatoRequest, KatoResponse, PlatformAdapter, AdapterMessage } from './types.js';
+import { CoralRequest, CoralResponse, PlatformAdapter, AdapterMessage } from './types.js';
 import { EngineRequest, ChatMessage } from '../types.js';
 
 const log = new Logger({ module: 'Gateway' });
 
-export class KatoGateway {
+export class CoralGateway {
   private _engine: Engine;
   private adapters: Map<string, PlatformAdapter> = new Map();
   private _isRunning = false;
@@ -60,7 +60,7 @@ export class KatoGateway {
     }
 
     // Wire message handler: adapter → gateway → engine
-    // Returns KatoResponse so the adapter can handle its own platform-specific UI
+    // Returns CoralResponse so the adapter can handle its own platform-specific UI
     adapter.onMessage(async (msg: AdapterMessage) => {
       try {
         const response = await this.handleAdapterMessage(adapter, msg);
@@ -145,10 +145,10 @@ export class KatoGateway {
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
-   * Process a raw KatoRequest through the engine.
+   * Process a raw CoralRequest through the engine.
    * Used for programmatic access or testing.
    */
-  async process(request: KatoRequest): Promise<KatoResponse> {
+  async process(request: CoralRequest): Promise<CoralResponse> {
     const requestedModel = typeof request.metadata?.modelId === 'string'
       ? String(request.metadata.modelId)
       : typeof request.metadata?.model === 'string'
@@ -181,7 +181,7 @@ export class KatoGateway {
       sessionId,
       messages: recentMessages,
       modelId: requestedModel || 'default',
-      agentName: 'Kato',
+      agentName: 'Coral',
       protocol: 'gateway',
       mentionPrefix: '',
       task: request.input,
@@ -210,21 +210,21 @@ export class KatoGateway {
   }
 
   /**
-   * Convert an AdapterMessage to KatoRequest and process it.
-   * Returns the KatoResponse â€” the adapter is responsible for sending
+   * Convert an AdapterMessage to CoralRequest and process it.
+   * Returns the CoralResponse â€” the adapter is responsible for sending
    * the response back through its own platform-specific UI.
    *
    * NOTE: Do NOT call adapter.sendMessage() here â€” that would cause a
    * double response. The adapter's onMessage handler already handles
    * sending the response via its own platform-specific UI (edit, reply, etc.).
    */
-  async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<KatoResponse | null> {
+  async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<CoralResponse | null> {
     try {
-      const request: KatoRequest = {
+      const request: CoralRequest = {
         input: msg.text,
         userId: msg.userId,
         sessionId: msg.channelId,
-        platform: msg.platform as KatoRequest['platform'],
+        platform: msg.platform as CoralRequest['platform'],
         metadata: msg.metadata,
       };
 

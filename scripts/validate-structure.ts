@@ -9,7 +9,7 @@
  *   R4: Dead Code — exported but never imported = WARNING
  *   R5: Static Security Scan — raw fs/child_process import in tools = VIOLATION
  *   R6: Knowledge No Executable Code — .ts/.js in knowledge/ = VIOLATION
- *   R7: No Import from scripts/.kato — runtime code must not depend on infra = VIOLATION
+ *   R7: No Import from scripts/.coral — runtime code must not depend on infra = VIOLATION
  *
  * Usage: npx tsx scripts/validate-structure.ts [--strict]
  *   --strict: exit code 1 on any violation (for CI/pre-commit)
@@ -355,10 +355,10 @@ function checkKnowledgeNoExecutableCode() {
   }
 }
 
-// ── Rule 7: No Import from scripts/ or .kato/ ──
-// src/core/ and src/modules/ must never import from scripts/ or .kato/
+// ── Rule 7: No Import from scripts/ or .coral/ ──
+// src/core/ and src/modules/ must never import from scripts/ or .coral/
 // Those are dev/infrastructure layers — not runtime dependencies
-function checkNoImportFromScriptsOrKato() {
+function checkNoImportFromScriptsOrCoral() {
   const protectedDirs = [
     path.join(BASE_PATH, 'src/core'),
     path.join(BASE_PATH, 'src/modules'),
@@ -366,7 +366,7 @@ function checkNoImportFromScriptsOrKato() {
 
   const forbiddenPrefixes = [
     path.join(BASE_PATH, 'scripts'),
-    path.join(BASE_PATH, '.kato'),
+    path.join(BASE_PATH, '.coral'),
   ];
 
   for (const dir of protectedDirs) {
@@ -385,10 +385,10 @@ function checkNoImportFromScriptsOrKato() {
             const relFile = path.relative(BASE_PATH, file);
             const lineNum = content.substring(0, content.indexOf(imp)).split('\n').length;
             violations.push({
-              rule: 'R7-ImportFromScriptsOrKato',
+              rule: 'R7-ImportFromScriptsOrCoral',
               file: relFile,
               line: lineNum,
-              message: `Import '${imp}' from scripts/.kato/ into runtime code is forbidden`,
+              message: `Import '${imp}' from scripts/.coral/ into runtime code is forbidden`,
               severity: 'ERROR',
             });
           }
@@ -440,7 +440,7 @@ function printReport() {
 
 // ── Main ──
 function main() {
-  console.log(`\n🏗️  Kato Structure Validator v1.0`);
+  console.log(`\n🏗️  Coral Structure Validator v1.0`);
   console.log(`📁 Scanning: ${BASE_PATH}\n`);
 
   console.log('Running R1: Folder Ownership...');
@@ -461,8 +461,8 @@ function main() {
   console.log('Running R6: Knowledge No Executable Code...');
   checkKnowledgeNoExecutableCode();
 
-  console.log('Running R7: No Import from scripts/ or .kato/...');
-  checkNoImportFromScriptsOrKato();
+  console.log('Running R7: No Import from scripts/ or .coral/...');
+  checkNoImportFromScriptsOrCoral();
 
   printReport();
 

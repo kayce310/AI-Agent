@@ -1,5 +1,5 @@
 /**
- * @file logger — Structured logging for Kato Agent
+ * @file logger — Structured logging for Coral Agent
  * @layer core
  * @depends-on (none — standalone)
  * @imported-by all modules
@@ -124,5 +124,5 @@ export class Logger {
   }
 }
 
-/** Default global logger (module: 'Kato') */
-export const log = new Logger({ module: 'Kato' });
+/** Default global logger (module: 'Coral') */
+export const log = new Logger({ module: 'Coral' });

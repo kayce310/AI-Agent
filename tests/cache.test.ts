@@ -1,5 +1,5 @@
 /**
- * Kato ResponseCache — Phase 8.3a Test Suite
+ * Coral ResponseCache — Phase 8.3a Test Suite
  *
  * Covers:
  * - Basic get/set/has/delete/clear

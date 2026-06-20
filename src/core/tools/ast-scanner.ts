@@ -19,7 +19,7 @@
  *
  * CACHE STRATEGY:
  *   Computes a checksum of { filename + mtimeMs } for every .ts file in scanDirs.
- *   If unchanged â†’ loads cached manifest from knowledge/workspace/.kato-ast-cache.json.
+ *   If unchanged â†’ loads cached manifest from knowledge/workspace/.coral-ast-cache.json.
  *   Only re-parses AST when content has changed (new/modified/deleted files).
  */
 
@@ -103,7 +103,7 @@ const DEFAULT_CONFIG: Required<ScannerConfig> = {
     'ast-scanner.ts',   // never scan self
   ],
   extensions: ['.ts'],
-  cachePath: path.resolve(process.cwd(), 'knowledge/workspace/.kato-ast-cache.json'),
+  cachePath: path.resolve(process.cwd(), 'knowledge/workspace/.coral-ast-cache.json'),
   noCache: false,
 };
 

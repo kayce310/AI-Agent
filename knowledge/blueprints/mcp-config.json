@@ -13,7 +13,7 @@
     },
     "knowledge": {
       "command": "npx",
-      "args": ["@kato/mcp-server-knowledge"],
+      "args": ["@coral/mcp-server-knowledge"],
       "disabled": true
     }
   }

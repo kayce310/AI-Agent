@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Tracer â€” O11y Tracing for Agent Lifecycle
+ * Coral Tracer â€” O11y Tracing for Agent Lifecycle
  * Phase 3.6
  *
  * Tracks every LLM invocation, tool call, memory access, and skill execution

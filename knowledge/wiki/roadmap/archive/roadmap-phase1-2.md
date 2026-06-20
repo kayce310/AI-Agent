@@ -3,7 +3,7 @@
 ## Nhiệm vụ hiện tại: Progressive Disclosure
 
 ### Mục tiêu
-Triển khai cơ chế "Tiết lộ lũy tiến" (Progressive Disclosure) cho skill system của Kato,
+Triển khai cơ chế "Tiết lộ lũy tiến" (Progressive Disclosure) cho skill system của Coral,
 học từ Hermes Agent (Nous Research).
 
 ### Vấn đề hiện tại
@@ -24,9 +24,9 @@ Hermes implement progressive disclosure với 3 tools:
 Hermes skills_list():
   [{ "name": "axolotl", "description": "...", "version": "1.0.0", "tags": [...] }, ...]
 
-Kato list_skills (hiện tại):
+Coral list_skills (hiện tại):
   [{ "slug": "...", "category": "...", "path": "...", "content": "<full SKILL.md>" }]
   
-Kato list_skills (mục tiêu):
+Coral list_skills (mục tiêu):
   [{ "slug": "...", "category": "...", "name": "...", "description": "...", "tags": [...] }]
 ```

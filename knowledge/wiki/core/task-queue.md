@@ -1,6 +1,6 @@
 # Task Queue Management System
 
-Module quản lý hàng đợi tác vụ tuần tự với khả năng tạm dừng / tiếp tục xử lý an toàn. Đây là thành phần lõi cơ sở của hệ thống [[Kato]].
+Module quản lý hàng đợi tác vụ tuần tự với khả năng tạm dừng / tiếp tục xử lý an toàn. Đây là thành phần lõi cơ sở của hệ thống [[Coral]].
 
 ## Đặc điểm kỹ thuật
 - ✅ FIFO Queue chuẩn

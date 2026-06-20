@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Agent â€” Model Adapter (Multi-Provider Abstraction)
+ * Coral Agent â€” Model Adapter (Multi-Provider Abstraction)
  * Phase 3.2 â€” cho phÃ©p fallback chain + multi-provider.
  *
  * Má»—i adapter wrap 1 provider (9router, LiteLLM, Ollama, OpenAI, Anthropic...)

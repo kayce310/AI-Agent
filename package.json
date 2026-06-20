@@ -1,7 +1,7 @@
 {
   "name": "ai-agent",
   "version": "1.0.0",
-  "description": "Kato Agent",
+  "description": "Coral Agent",
   "main": "src/scripts/start-telegram.ts",
   "type": "module",
   "scripts": {

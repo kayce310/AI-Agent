@@ -1,5 +1,5 @@
 /**
- * Kato Agent — Event System Tests
+ * Coral Agent — Event System Tests
  * Phase 3.5 — HookRegistry + Guards + Integration
  */
 

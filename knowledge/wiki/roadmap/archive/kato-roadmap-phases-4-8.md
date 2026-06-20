@@ -1,4 +1,4 @@
-# Kato Roadmap Phase 4-8 v2.0 — Optimized Lộ Trình
+# Coral Roadmap Phase 4-8 v2.0 — Optimized Lộ Trình
 
 > **Phân tích lại sau khi reassess codebase thực tế.**
 > Phase 3 đã hoàn thành: Tool Registry (9 plugins), memory-store (ADD-only), model-adapter (multi-provider), Agent, HookRegistry, evolution, tracer.
@@ -34,7 +34,7 @@
 | **4.0a** | memory-store: append-log persistence (thay flush full-rewrite) | 100 | 🔴 HIGH |
 | **4.0b** | ADR creation (architecture-decisions.md) | 50 | 🔴 HIGH |
 | **4.1a** | MCP client — gọi external AI tools (model_context_protocol) | 200 | 🟡 MED |
-| **4.1b** | MCP server — expose Kato tools dưới dạng MCP resources | 200 | 🟡 MED |
+| **4.1b** | MCP server — expose Coral tools dưới dạng MCP resources | 200 | 🟡 MED |
 | **4.2** | `World` block type cho memory-store + world store | 80 | 🟢 LOW |
 | **Rotation** | Memory rotation (TTL 30d, importance filter) | 100 | 🟡 MED |
 

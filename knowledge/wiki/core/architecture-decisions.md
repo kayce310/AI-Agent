@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> **Mục đích:** Ghi lại các quyết định kiến trúc quan trọng của Kato Agent,
+> **Mục đích:** Ghi lại các quyết định kiến trúc quan trọng của Coral Agent,
 > lý do chọn giải pháp, và hệ quả. Mỗi ADR là bất biến — nếu quyết định thay đổi,
 > tạo ADR mới thay vì sửa ADR cũ.
 >
@@ -121,14 +121,14 @@ Với:
 
 **Status:** Accepted  
 **Date:** 2026-05-28  
-**Context:** Ban đầu Kato chỉ hỗ trợ Discord qua `DiscordBridge` tightly-coupled:
+**Context:** Ban đầu Coral chỉ hỗ trợ Discord qua `DiscordBridge` tightly-coupled:
 - Thêm platform mới phải copy-paste code
 - Không có lifecycle management (start/stop)
 - Message handling logic lẫn trong platform code
 
 **Decision:** Implement Gateway pattern inspired by Hermes Agent:
 1. **PlatformAdapter interface** (`src/core/gateway/types.ts`) — contract: `start()`, `stop()`, `sendMessage()`, `onMessage()`
-2. **KatoGateway class** (`src/core/gateway/index.ts`) — orchestrator: `register()`, `startAll()`, `stopAll()`
+2. **CoralGateway class** (`src/core/gateway/index.ts`) — orchestrator: `register()`, `startAll()`, `stopAll()`
 3. **AdapterMessage** — normalized message envelope (`messageId`, `userId`, `channelId`, `text`, `platform`, `isMention`)
 4. **DiscordBridge** (`src/modules/discord/index.ts`) — implements PlatformAdapter cho Discord
 

@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Agent â€” HookRegistry (Event Lifecycle System)
+ * Coral Agent â€” HookRegistry (Event Lifecycle System)
  * Phase 3.5 â€” Event-driven Engine
  *
  * Cho phÃ©p plugins can thiá»‡p vÃ o agent lifecycle:

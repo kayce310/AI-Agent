@@ -25,11 +25,11 @@
 
 | Field | Value |
 |-------|-------|
-| **File** | [`src/scripts/kato-state-manager.ts:8`](d:/AI-Agent/src/scripts/kato-state-manager.ts) |
-| **Code** | `import { KatoStateManager, ProcessedFile } from '../core/memory/state-manager.js';` |
+| **File** | [`src/scripts/coral-state-manager.ts:8`](d:/AI-Agent/src/scripts/coral-state-manager.ts) |
+| **Code** | `import { CoralStateManager, ProcessedFile } from '../core/memory/state-manager.js';` |
 | **Rule** | KATO.md: `scripts/` → `core/` is ❌ forbidden — no exceptions |
 | **Impact** | Script is no longer standalone; creates untracked dependency that blocks future core refactoring |
-| **Fix** | Extract `KatoStateManager` to a shared utility, or duplicate the needed logic in the script layer |
+| **Fix** | Extract `CoralStateManager` to a shared utility, or duplicate the needed logic in the script layer |
 | **Owner** | — |
 | **Target session** | next |
 
@@ -64,7 +64,7 @@
 | Field | Value |
 |-------|-------|
 | **File** | [`src/core/engine/boot.ts`](d:/AI-Agent/src/core/engine/boot.ts) |
-| **Fact** | Only `kato-state-manager.ts` (script, P1-1) imports it. No runtime `src/` consumer. `@imported-by orchestrator.ts` is stale. |
+| **Fact** | Only `coral-state-manager.ts` (script, P1-1) imports it. No runtime `src/` consumer. `@imported-by orchestrator.ts` is stale. |
 | **Impact** | Dead code (unless script dependency is resolved) |
 | **Fix** | Delete file after resolving P1-1 |
 | **Owner** | — |
@@ -98,8 +98,8 @@
 |-------|-------|
 | **Path** | `knowledge/workspace/checkpoint.json` — does not exist |
 | **Path** | `knowledge/workspace/processed-files.json` — does not exist |
-| **Fact** | `knowledge/workspace/` contains only `evolution.json` and `.kato-ast-cache.json`. KATO.md requires these files at `knowledge/workspace/`. |
-| **Impact** | Checkpoint protocol incomplete; `kato-state-manager scan/mark` may fail |
+| **Fact** | `knowledge/workspace/` contains only `evolution.json` and `.coral-ast-cache.json`. KATO.md requires these files at `knowledge/workspace/`. |
+| **Impact** | Checkpoint protocol incomplete; `coral-state-manager scan/mark` may fail |
 | **Fix** | Create both files per KATO.md schema |
 | **Owner** | — |
 | **Target session** | next |
@@ -128,7 +128,7 @@
 src/scripts/start-discord.ts
   ├── src/modules/discord/index.ts  (DiscordBridge)
   ├── src/core/engine/engine.ts     (Engine)
-  └── src/core/gateway/index.ts     (KatoGateway)
+  └── src/core/gateway/index.ts     (CoralGateway)
 
 src/core/engine/engine.ts
   ├── src/core/memory/memory.ts

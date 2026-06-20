@@ -1,10 +1,10 @@
-# Deep Analysis Plan — Kato Agent System v6.0
+# Deep Analysis Plan — Coral Agent System v6.0
 
-> **Purpose:** Phân tích toàn diện hệ thống Kato Agent đến lớp sâu nhất, hiểu rõ từng khía cạnh kiến trúc, nguyên lý vận hành, và cách các thành phần tương tác.
+> **Purpose:** Phân tích toàn diện hệ thống Coral Agent đến lớp sâu nhất, hiểu rõ từng khía cạnh kiến trúc, nguyên lý vận hành, và cách các thành phần tương tác.
 >
 > **Methodology:** Mỗi mặt sẽ được phân tích theo cấu trúc: Khái niệm → Cấu trúc code → Nguyên lý hoạt động → Luồng dữ liệu → Điểm mạnh/yếu → Liên kết với các mặt khác.
 >
-> **Created:** 2026-06-05 | **Author:** Kato Analysis Agent
+> **Created:** 2026-06-05 | **Author:** Coral Analysis Agent
 
 ---
 
@@ -38,7 +38,7 @@ Một hệ thống agent hoàn chỉnh cần được xét trên các mặt sau:
 ### Mặt 1: Identity & Soul — Bản sắc Agent
 
 **Khái niệm:**
-Agent không chỉ là code — nó có **bản sắc** (identity) được định nghĩa qua các file triết lý. Kato định nghĩa mình là "Kato Agent — an orchestration agent managing a TypeScript monorepo with layered architecture".
+Agent không chỉ là code — nó có **bản sắc** (identity) được định nghĩa qua các file triết lý. Coral định nghĩa mình là "Coral Agent — an orchestration agent managing a TypeScript monorepo with layered architecture".
 
 **Cấu trúc:**
 - `KATO.md` — Bootloader Protocol: Control Plane, luật vận hành, checkpoint protocol
@@ -69,7 +69,7 @@ Hệ thống được tổ chức theo **6 tầng (Framework 6 Layers)** + **Pla
 ┌──────────────────────────────────────────────────────┐
 │                   GATEWAY LAYER                       │
 │          (src/core/gateway/, src/modules/)            │
-│   DiscordBridge · KatoGateway · PlatformAdapter       │
+│   DiscordBridge · CoralGateway · PlatformAdapter       │
 ├──────────────────────────────────────────────────────┤
 │                    CORE ENGINE                        │
 │  ┌──────────────────────────────────────────────────┐│
@@ -82,7 +82,7 @@ Hệ thống được tổ chức theo **6 tầng (Framework 6 Layers)** + **Pla
 │  ├──────────────────────────────────────────────────┤│
 │  │   MEMORY LAYER (memory/)                         ││
 │  │   MemoryCore · MemoryStore · MemoryTemporal      ││
-│  │   MemoryAgentic · MemoryLog · KatoStateManager   ││
+│  │   MemoryAgentic · MemoryLog · CoralStateManager   ││
 │  ├──────────────────────────────────────────────────┤│
 │  │   TOOLS LAYER (tools/)                           ││
 │  │   ToolRegistry · ToolGateway · 8 tool plugins    ││
@@ -218,7 +218,7 @@ OrchestrationResult { content, decomposition,
 ### Mặt 5: Memory Systems — Đa tầng bộ nhớ
 
 **Khái niệm:**
-Kato có **5 loại memory** phục vụ các mục đích khác nhau:
+Coral có **5 loại memory** phục vụ các mục đích khác nhau:
 
 | Loại | File | Mục đích | Lưu trữ | Ghi được bởi Agent? |
 |---|---|---|---|---|
@@ -374,7 +374,7 @@ skill:unload    │ orchestrator:execute-start/end
 ### Mặt 10: Gateway & Adapters — Multi-platform
 
 **Khái niệm:**
-KatoAgent là **platform-agnostic**. Gateway layer trừu tượng hóa platform cụ thể.
+CoralAgent là **platform-agnostic**. Gateway layer trừu tượng hóa platform cụ thể.
 
 **Cấu trúc:**
 
@@ -387,7 +387,7 @@ interface PlatformAdapter {
 }
 ```
 
-**KatoGateway:**
+**CoralGateway:**
 - `register(adapter)` — đăng ký platform adapter
 - `startAll()` — khởi động tất cả adapter
 - `broadcast(event, data)` — gửi event đến tất cả platform
@@ -468,10 +468,10 @@ knowledge/workspace/
     ├── state.json           — Runtime state (legacy)
     ├── checkpoint.json      — Checkpoint + tech debt (legacy)
     ├── processed-files.json — Files đã xử lý (legacy)
-    └── (unified: /.kato/state/current.json)
+    └── (unified: /.coral/state/current.json)
 ```
 
-**KatoStateManager (CLI tool):**
+**CoralStateManager (CLI tool):**
 - `scan` — quét tất cả file, cập nhật checksum
 - `mark <file>` — đánh dấu file đã xử lý
 - `verify` — kiểm tra consistency unified vs legacy
@@ -581,7 +581,7 @@ User Input (Discord/CLI)
 DiscordBridge ──► tạo EngineRequest
     │
     ▼
-KatoGateway ──► dispatch đến Engine
+CoralGateway ──► dispatch đến Engine
     │
     ▼
 Engine.process(request)
@@ -641,4 +641,4 @@ Gateway → DiscordBridge → send về user
 
 ---
 
-*Kato Agent v6.0 — Deep Analysis Plan · Compiled: 2026-06-05 · Next: Deep-dive từng mặt chi tiết*
+*Coral Agent v6.0 — Deep Analysis Plan · Compiled: 2026-06-05 · Next: Deep-dive từng mặt chi tiết*

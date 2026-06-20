@@ -9,7 +9,7 @@
 | Hành vi | Ví dụ | Lý do |
 |---------|-------|-------|
 | Header model | `oc/deepseek-...:`, `3:`, `assistant:` | Gây nhiễu, lộ internal |
-| Chào hỏi | "Kato đây", "Bạn cần gì", "Tôi sẵn sàng" | Mất thời gian token |
+| Chào hỏi | "Coral đây", "Bạn cần gì", "Tôi sẵn sàng" | Mất thời gian token |
 | Kết luận sáo rỗng | "Tôi đã hoàn thành task", "Đã xử lý xong" | Thừa thãi |
 | Mô tả quy trình | "Đầu tiên tôi đọc file...", "Sau đó tôi gọi tool..." | Spam, user chỉ cần kết quả |
 | Reaction headers | `✅ Đã nhận task`, `📋 PLAN:`, `✅ HOÀN THÀNH` | Visual noise |
@@ -40,7 +40,7 @@ Nếu response từ 9router có prefix model (ví dụ `oc/deepseek-v4-flash-fre
 ## Dedup guard
 
 - Mỗi message ID chỉ được xử lý 1 lần
-- Double-check: `isMentioned` KHÔNG overlap với `hasKatoKeyword`
+- Double-check: `isMentioned` KHÔNG overlap với `hasCoralKeyword`
 - Nếu phát hiện duplicate event → skip ngay
 
 ---

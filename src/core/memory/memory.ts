@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Multi-Layer Memory Core
+ * Coral Multi-Layer Memory Core
  * Framework 6 Layers Claude Code - Lá»›p 2 Bá»™ Nhá»›
  * 
  * Kiáº¿n trÃºc bá»™ nhá»› 3 lá»›p:

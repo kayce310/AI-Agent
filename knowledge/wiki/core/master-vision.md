@@ -1,9 +1,9 @@
-# Master Vision - Hệ thống Kato
+# Master Vision - Hệ thống Coral
 
 Đây là Linh hồn và Mục tiêu cốt lõi của dự án. Tất cả các quyết định kỹ thuật phải hướng về tầm nhìn này.
 
 ## ✨ Bản sắc Hệ thống
-**Kato** là một AI Agent cá nhân tự tiến hóa, được xây dựng theo nguyên tắc kiến trúc [[Framework 6 Lớp]]. Đây không phải là một chatbot thông thường, đây là một hệ thống có trí nhớ dài hạn, khả năng tự học và tự cải thiện qua thời gian.
+**Coral** là một AI Agent cá nhân tự tiến hóa, được xây dựng theo nguyên tắc kiến trúc [[Framework 6 Lớp]]. Đây không phải là một chatbot thông thường, đây là một hệ thống có trí nhớ dài hạn, khả năng tự học và tự cải thiện qua thời gian.
 
 ## 🎯 Sứ mệnh
 Xây dựng một Agent có khả năng:
@@ -29,4 +29,4 @@ Xây dựng một Agent có khả năng:
 - [[Memory Compressor]] - Thuật toán nén ngữ cảnh tối ưu token
 - [[LLM Architecture]] - Lớp giao tiếp LLM đa nền tảng
 
-#core #vision #kato
+#core #vision #coral

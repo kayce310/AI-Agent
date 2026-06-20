@@ -13,7 +13,7 @@ import * as os from 'os';
 import { execSync } from 'child_process';
 import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
-import { KatoGateway } from '../core/gateway/index.js';
+import { CoralGateway } from '../core/gateway/index.js';
 
 // ── Timestamp Helper ──
 const ts = () => {
@@ -22,7 +22,7 @@ const ts = () => {
 };
 
 // ── Single-Instance Lock via File ──
-const LOCK_FILE = path.join(os.tmpdir(), 'kato-telegram.lock');
+const LOCK_FILE = path.join(os.tmpdir(), 'coral-telegram.lock');
 
 /**
  * Kill a process by PID. Works on both Windows and Unix.
@@ -68,7 +68,7 @@ function acquireFileLock(): boolean {
       if (!isNaN(oldPid) && oldPid > 0 && oldPid !== process.pid) {
         // Check if old process is still alive
         if (isProcessAlive(oldPid)) {
-          console.log(`${ts()} 🔴 Found old Kato instance (PID ${oldPid}). Killing...`);
+          console.log(`${ts()} 🔴 Found old Coral instance (PID ${oldPid}). Killing...`);
           const killed = killProcess(oldPid);
           if (killed) {
             console.log(`${ts()} ✅ Killed old instance (PID ${oldPid})`);
@@ -110,7 +110,7 @@ function releaseFileLock(): void {
 }
 
 let engineInstance: Engine | null = null;
-let gatewayInstance: KatoGateway | null = null;
+let gatewayInstance: CoralGateway | null = null;
 let isShuttingDown = false;
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
@@ -153,7 +153,7 @@ async function gracefulShutdown(signal: string) {
 async function start() {
   // Acquire file lock — auto-kills old instance if needed
   if (!acquireFileLock()) {
-    console.error(`${ts()} ❌ Another Kato instance is still running. Exiting.`);
+    console.error(`${ts()} ❌ Another Coral instance is still running. Exiting.`);
     process.exit(1);
   }
 
@@ -162,12 +162,12 @@ async function start() {
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-  console.log(`${ts()} 🚀 Starting Kato Telegram Bot...`);
+  console.log(`${ts()} 🚀 Starting Coral Telegram Bot...`);
   const engine = new Engine();
   await engine.init();
   engineInstance = engine;
 
-  const gateway = new KatoGateway(engine);
+  const gateway = new CoralGateway(engine);
   gatewayInstance = gateway;
   const bridge = new TelegramBridge();
 

@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Agent â€” Memory Append-Log Persistence
+ * Coral Agent â€” Memory Append-Log Persistence
  * Phase 4.0b â€” Thay tháº¿ full-rewrite flush() báº±ng append-log
  *
  * Váº¥n Ä‘á» hiá»‡n táº¡i:

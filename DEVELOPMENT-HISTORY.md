@@ -1,6 +1,6 @@
-# 🏛️ Kato Agent — Lịch sử Phát triển
+# 🏛️ Coral Agent (formerly Kato) — Lịch sử Phát triển
 
-> **Kato Agent** — từ monorepo sơ khai đến agentic workspace v1.0.0.
+> **Coral Agent (formerly Kato)** — từ monorepo sơ khai đến agentic workspace v1.0.0.
 >
 > Tài liệu này ghi lại toàn bộ hành trình phát triển qua 5 phiên bản chính, được tổng hợp từ git history của các nhánh đã archived.
 
@@ -37,7 +37,7 @@ src/ (15 files)
     extract_worker.cjs / extract_worker.js
 ```
 
-**package.json:** `kato-agent v0.1.0` — MCP SDK, discord.js, dotenv, openai, pdf-parse.
+**package.json:** `coral-agent v0.1.0` — MCP SDK, discord.js, dotenv, openai, pdf-parse.
 **Tests:** ❌ Không có.
 **CLINE.md:** ❌ Không có.
 
@@ -117,7 +117,7 @@ src/ (15 files)
 ### Cấu trúc hiện tại
 
 ```
-kato-agent/
+coral-agent/
 ├── KATO.md                      # Bootloader / Operating rules
 ├── package.json                 # Dependencies
 ├── tsconfig.json                # TypeScript config

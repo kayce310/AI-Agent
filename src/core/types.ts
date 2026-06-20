@@ -7,7 +7,7 @@
  */
 
 /**
- * Kato Agent — Core Types
+ * Coral Agent — Core Types
  * Framework 6 Layers — Lớp Lõi (Core Domain)
  * 
  * Định nghĩa các interface độc lập, không phụ thuộc vào platform.

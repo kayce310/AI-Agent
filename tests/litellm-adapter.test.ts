@@ -1,5 +1,5 @@
 /**
- * Kato Agent — LiteLLMAdapter Unit Tests
+ * Coral Agent — LiteLLMAdapter Unit Tests
  * Phase 6.3: LiteLLM Gateway Integration
  * 
  * Tests for LiteLLMAdapter class in model-adapter.ts

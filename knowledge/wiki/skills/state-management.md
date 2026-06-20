@@ -1,7 +1,7 @@
 # Kỹ năng Quản lý Trạng thái (State Management)
 
 ## 🎯 Mục tiêu
-Tách Data Plane khỏi Control Plane. Agent không tự sửa JSON bằng tay; mọi thao tác trạng thái đi qua `kato-state-manager`.
+Tách Data Plane khỏi Control Plane. Agent không tự sửa JSON bằng tay; mọi thao tác trạng thái đi qua `coral-state-manager`.
 
 ---
 
@@ -10,7 +10,7 @@ Tách Data Plane khỏi Control Plane. Agent không tự sửa JSON bằng tay; 
 - State file: `knowledge/workspace/state.json`
 - Tool/CLI: `npm run state -- <command>`
 - Implementation: `src/core/state-manager.ts`
-- CLI entry: `src/scripts/kato-state-manager.ts`
+- CLI entry: `src/scripts/coral-state-manager.ts`
 
 ---
 
@@ -38,7 +38,7 @@ npm run state -- ready "Lead AI Engineer" coding-standards verification-protocol
 
 | Anti-Pattern | Giải pháp |
 |--------------|-----------|
-| ❌ Agent tự edit `state.json` | ✅ Gọi `kato-state-manager` |
+| ❌ Agent tự edit `state.json` | ✅ Gọi `coral-state-manager` |
 | ❌ Ghi state không backup | ✅ Tool tự tạo `.bak.1` |
 | ❌ Ignore checksum mismatch | ✅ Dừng và báo Structured Error JSON |
 | ❌ Chạy task khi `UNINITIALIZED` | ✅ Đọc router/index/skill rồi mark `READY` |

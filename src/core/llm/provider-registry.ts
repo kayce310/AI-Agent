@@ -1,5 +1,5 @@
 /**
- * @file Kato Agent â€” Provider Registry
+ * @file Coral Agent â€” Provider Registry
  * @layer core
  * @depends-on config/providers.json, .env (NINE_ROUTER_API_BASE)
  * @imported-by src/core/llm/llm.ts, src/core/engine/engine.ts

@@ -1,5 +1,5 @@
 /**
- * Kato Agent — MemoryLog Unit Tests
+ * Coral Agent — MemoryLog Unit Tests
  * Phase 4.0d — Test append-log persistence: init, append, replay, snapshot
  */
 
@@ -14,7 +14,7 @@ describe('MemoryLog', () => {
   let log: MemoryLog;
 
   beforeEach(async () => {
-    logDir = path.join(os.tmpdir(), `kato-memlog-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    logDir = path.join(os.tmpdir(), `Coral-memlog-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     log = await createMemoryLog(logDir);
   });
 

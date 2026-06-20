@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
-import { KatoGateway } from '../src/core/gateway/index.js';
+import { CoralGateway } from '../src/core/gateway/index.js';
 import { PlatformAdapter, AdapterMessage, AdapterStatus } from '../src/core/gateway/types.js';
 
-describe('KatoGateway', () => {
+describe('CoralGateway', () => {
   // ── Basic Message Processing ──
 
-  it('should normalize KatoRequest and return KatoResponse', async () => {
+  it('should normalize CoralRequest and return CoralResponse', async () => {
     const mockEngine = {
       process: vi.fn().mockResolvedValue({ content: 'Hello from Engine' }),
     } as any;
 
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
     const request = {
       input: 'Hello',
       userId: 'user-1',
@@ -30,7 +30,7 @@ describe('KatoGateway', () => {
 
   it('should register a platform adapter', () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const mockAdapter: PlatformAdapter = {
       platform: 'test-platform',
@@ -50,7 +50,7 @@ describe('KatoGateway', () => {
 
   it('should warn on duplicate adapter registration', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'dup',
@@ -74,7 +74,7 @@ describe('KatoGateway', () => {
 
   it('should retrieve a registered adapter by platform name', () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'retrievable',
@@ -92,7 +92,7 @@ describe('KatoGateway', () => {
 
   it('should return undefined for unregistered adapter', () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
     expect(gateway.getAdapter('nonexistent')).toBeUndefined();
   });
 
@@ -100,7 +100,7 @@ describe('KatoGateway', () => {
 
   it('should start a specific adapter', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'lifecycle',
@@ -119,7 +119,7 @@ describe('KatoGateway', () => {
 
   it('should stop a specific adapter', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'stoppable',
@@ -138,14 +138,14 @@ describe('KatoGateway', () => {
 
   it('should throw when starting unregistered adapter', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     await expect(gateway.startAdapter('ghost')).rejects.toThrow('not registered');
   });
 
   it('should start all registered adapters', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter1: PlatformAdapter = {
       platform: 'adapter-a',
@@ -180,7 +180,7 @@ describe('KatoGateway', () => {
 
   it('should report failed adapters during startAll', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const goodAdapter: PlatformAdapter = {
       platform: 'good',
@@ -213,7 +213,7 @@ describe('KatoGateway', () => {
 
   it('should stop all adapters', async () => {
     const mockEngine = { process: vi.fn() } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'cleanup',
@@ -241,7 +241,7 @@ describe('KatoGateway', () => {
       getHistory: vi.fn().mockResolvedValue([]),
       saveMessage: vi.fn().mockResolvedValue(undefined),
     } as any;
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'router',
@@ -265,7 +265,7 @@ describe('KatoGateway', () => {
       messageId: 'msg-1',
       userId: 'user-1',
       channelId: 'channel-1',
-      text: 'Hello Kato',
+      text: 'Hello Coral',
       platform: 'router',
       isMention: true,
       timestamp: Date.now(),
@@ -290,7 +290,7 @@ describe('KatoGateway', () => {
       process: vi.fn().mockRejectedValue(new Error('Engine failure')),
     } as any;
 
-    const gateway = new KatoGateway(mockEngine);
+    const gateway = new CoralGateway(mockEngine);
 
     const adapter: PlatformAdapter = {
       platform: 'error-handler',
