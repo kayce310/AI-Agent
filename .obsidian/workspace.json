@@ -176,21 +176,22 @@
       "bases:Tạo cơ sở mới": false
     }
   },
-  "active": "cc760f4bc037b642",
+  "active": "b3227d3d891704cd",
   "lastOpenFiles": [
+    "knowledge/memory-store/snapshot.json",
+    "tests/memory-forgetting.test.ts",
+    "REPORT_PIPELINE_FIXES.md",
+    "data/integration-test.db-shm",
+    "data/integration-test.db-wal",
+    "data/integration-test.db",
+    "tests/integration-event-pipeline.cjs",
+    "tests/integration-event-pipeline.ts",
     "tests/memory-core.test.ts",
     "knowledge/wiki/core/coral-kayce-bond.md",
     "REPORT_DECISION_DATA.md",
     "knowledge/wiki/knowledge/wiki/core/kayce.md",
     "knowledge/wiki/knowledge/wiki/core",
     "knowledge/wiki/knowledge/wiki",
-    "tests/prompt-builder.test.ts",
-    "tests/token-estimator.test.ts",
-    "tests/event-store.test.ts",
-    "tests/privilege-guard.test.ts",
-    "tests/logger.test.ts",
-    "tests/events-bus.test.ts",
-    "tests/phase4a-decision-intelligence.test.ts",
-    "tests/integration.test.ts"
+    "tests/prompt-builder.test.ts"
   ]
 }

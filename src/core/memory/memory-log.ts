@@ -56,6 +56,12 @@ export interface MemoryBlock {
   sessionId?: string;
   /** Optional: link tá»›i block khÃ¡c */
   parentId?: string;
+  /** Time-to-live in milliseconds from creation — auto-evicts after expiry */
+  ttl?: number;
+  /** ISO 8601 timestamp when this block expires (calculated from ttl) */
+  expiresAt?: string;
+  /** Importance score 0.0–1.0 — higher = survives cleanup longer */
+  importance?: number;
 }
 
 /** Operation types Ä‘Æ°á»£c log */

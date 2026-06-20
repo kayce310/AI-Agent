@@ -118,19 +118,29 @@ export class MemoryStore {
       tags?: string[];
       sessionId?: string;
       parentId?: string;
+      /** Time-to-live in ms — auto-evicted after expiry */
+      ttl?: number;
+      /** Importance score 0.0–1.0 */
+      importance?: number;
     },
   ): Promise<MemoryBlock> {
     await this.ensureLoaded();
+
+    const now = new Date().toISOString();
+    const expiresAt = opts?.ttl ? new Date(Date.now() + opts.ttl).toISOString() : undefined;
 
     const block: MemoryBlock = {
       id: this.generateId(),
       type,
       content,
-      timestamp: new Date().toISOString(),
+      timestamp: now,
       entities: opts?.entities?.length ? opts.entities : undefined,
       tags: opts?.tags?.length ? opts.tags : undefined,
       sessionId: opts?.sessionId || undefined,
       parentId: opts?.parentId || undefined,
+      ttl: opts?.ttl || undefined,
+      expiresAt,
+      importance: opts?.importance || undefined,
     };
 
     this.blocks.push(block);
@@ -238,6 +248,44 @@ export class MemoryStore {
   async getById(id: string): Promise<MemoryBlock | undefined> {
     await this.ensureLoaded();
     return this.blocks.find(b => b.id === id);
+  }
+
+  /**
+   * Get only non-expired blocks.
+   * Filters out any block whose expiresAt is in the past.
+   * Blocks without expiresAt are always included.
+   */
+  async getActive(): Promise<MemoryBlock[]> {
+    await this.ensureLoaded();
+    const now = Date.now();
+    return this.blocks.filter(b => {
+      if (!b.expiresAt) return true; // no expiry = always active
+      return new Date(b.expiresAt).getTime() > now;
+    });
+  }
+
+  /**
+   * Remove all expired blocks from memory.
+   * Returns count of removed blocks.
+   * Called from cron for periodic cleanup.
+   */
+  async cleanupExpired(): Promise<number> {
+    await this.ensureLoaded();
+    const now = Date.now();
+    const before = this.blocks.length;
+    this.blocks = this.blocks.filter(b => {
+      if (!b.expiresAt) return true; // no expiry = keep
+      return new Date(b.expiresAt).getTime() > now;
+    });
+    const removed = before - this.blocks.length;
+
+    // Also cleanup from append-log
+    if (removed > 0) {
+      // Re-snapshot to reflect cleanup in log
+      await this.log.createSnapshot(this.blocks);
+    }
+
+    return removed;
   }
 
   /**
