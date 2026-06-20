@@ -14,6 +14,7 @@ import { execSync } from 'child_process';
 import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
 import { CoralGateway } from '../core/gateway/index.js';
+import { DashboardServer } from '../core/events/http-server.js';
 
 // ── Timestamp Helper ──
 const ts = () => {
@@ -111,6 +112,7 @@ function releaseFileLock(): void {
 
 let engineInstance: Engine | null = null;
 let gatewayInstance: CoralGateway | null = null;
+let dashboardServer: DashboardServer | null = null;
 let isShuttingDown = false;
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
