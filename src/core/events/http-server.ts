@@ -12,6 +12,8 @@ import { EventStore } from './store.js';
 import { StructuredLogger } from './logger.js';
 import { EventWebSocket } from './websocket.js';
 import { EventApi } from './api.js';
+import { McpTrace } from './mcp-trace.js';
+import { CostTracker } from './cost-tracker.js';
 import { MemoryAPI } from '../memory/MemoryAPI.js';
 import { MemoryStore } from '../memory/MemoryStore.js';
 
@@ -25,6 +27,8 @@ export class DashboardServer {
   private server: http.Server;
   private eventWebSocket: EventWebSocket;
   private eventApi: EventApi;
+  private mcpTrace: McpTrace;
+  private costTracker: CostTracker;
   private memoryApi: MemoryAPI | undefined;
   private port: number;
   private host: string;
@@ -35,6 +39,8 @@ export class DashboardServer {
     this.memoryApi = options.memoryApi;
 
     this.eventApi = new EventApi(eventBus);
+    this.mcpTrace = new McpTrace(eventBus);
+    this.costTracker = new CostTracker(eventBus, { budgetUsd: 10 });
 
     this.server = http.createServer((req, res) => {
       this.handleRequest(req, res).catch(err => {
@@ -208,6 +214,47 @@ export class DashboardServer {
       const response = this.eventApi.getGraph(taskId);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));
+      return;
+    }
+
+    // ═══ API: MCP Trace ═══
+    if (url === '/api/mcp/trace' || url.startsWith('/api/mcp/trace?')) {
+      const params = new URL(url, 'http://localhost').searchParams;
+      const limit = parseInt(params.get('limit') || '500', 10);
+      const toolName = params.get('tool') || undefined;
+      const response = this.mcpTrace.buildTrace(limit, toolName);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
+      return;
+    }
+
+    // ═══ COST TRACKING ═══
+    if (url === '/api/cost/session' || url.startsWith('/api/cost/session?')) {
+      const sessionCost = this.costTracker.getSessionCost();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: sessionCost }));
+      return;
+    }
+    if (url === '/api/cost/budget') {
+      const budget = this.costTracker.getBudgetStatus();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: budget }));
+      return;
+    }
+    if (url === '/api/cost/alerts' || url.startsWith('/api/cost/alerts?')) {
+      const p = new URL(url, 'http://localhost').searchParams;
+      const lim = parseInt(p.get('limit') || '20', 10);
+      const alerts = this.costTracker.getAlerts(lim);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: alerts }));
+      return;
+    }
+    if (url === '/api/cost/records' || url.startsWith('/api/cost/records?')) {
+      const p = new URL(url, 'http://localhost').searchParams;
+      const lim = parseInt(p.get('limit') || '50', 10);
+      const records = this.costTracker.getRecentRecords(lim);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: records }));
       return;
     }
 

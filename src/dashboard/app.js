@@ -376,7 +376,7 @@
     renderTimeline();
     renderFileChanges();
     renderTelemetryDebug();
-    if (currentTab === 'trace') renderTrace();
+     if (currentTab === 'trace') { renderTrace(); renderMcpTrace(); renderCost(); }
     if (currentTab === 'focus') {
       renderFocus();
       updateConfidenceBar();
@@ -810,12 +810,68 @@
 
   // ═══ RENDER GRAPH ═══
   async function renderGraph() {
-    const taskId = agentState.currentTaskId || lastCompletedTaskId;
+    const selectEl = document.getElementById('graph-task-select');
+    const taskId = selectEl?.value || agentState.currentTaskId || lastCompletedTaskId;
     const graphView = document.getElementById('graph-view');
+    const refreshBtn = document.getElementById('graph-refresh-btn');
     
     if (!taskId) {
-      graphView.innerHTML = '<div class="empty-state">No task selected</div>';
+      // Show placeholder but don't destroy DOM (keep header/selector intact)
+      const placeholder = document.getElementById('graph-empty-placeholder');
+      const svg = document.getElementById('graph-svg');
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (svg) svg.style.display = 'none';
+      // Still populate the dropdown
+      if (selectEl) {
+        try {
+          const res = await fetch('/api/events/recent');
+          const json = await res.json();
+          if (json.success && json.data) {
+            const taskSet = new Set();
+            for (const e of json.data) {
+              if (e.payload?.taskId) taskSet.add(e.payload.taskId);
+            }
+            const taskIds = Array.from(taskSet).sort().reverse();
+            selectEl.innerHTML = '<option value="">-- Select Task --</option>';
+            for (const id of taskIds) {
+              selectEl.innerHTML += `<option value="${escapeHtml(id)}">${escapeHtml(id.substring(0, 30))}</option>`;
+            }
+            selectEl.onchange = () => { if (selectEl.value) renderGraph(); };
+          }
+        } catch (e) {}
+      }
       return;
+    }
+
+    // Populate dropdown with available tasks
+    if (selectEl) {
+      try {
+        const res = await fetch('/api/events/recent');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const taskSet = new Set();
+          for (const e of json.data) {
+            if (e.payload?.taskId) taskSet.add(e.payload.taskId);
+          }
+          const taskIds = Array.from(taskSet).sort().reverse();
+          selectEl.innerHTML = '<option value="">-- Select Task --</option>';
+          for (const id of taskIds) {
+            selectEl.innerHTML += `<option value="${escapeHtml(id)}">${escapeHtml(id.substring(0, 30))}</option>`;
+          }
+          if (taskId && taskIds.includes(taskId)) selectEl.value = taskId;
+          // Wire up selection change
+          selectEl.onchange = () => {
+            if (selectEl.value) renderGraph();
+          };
+        }
+      } catch (e) {
+        // Non-critical
+      }
+    }
+    
+    // Wire up refresh button
+    if (refreshBtn) {
+      refreshBtn.onclick = () => renderGraph();
     }
 
     try {
@@ -824,8 +880,9 @@
       const json = await res.json();
       
       if (!json.success || !json.data) {
-        document.getElementById('graph-task-info').innerHTML = 
-          `<span class="graph-task-id">${taskId}</span><span class="graph-node-count">0 nodes</span>`;
+        document.getElementById('graph-task-id').textContent = taskId;
+        document.getElementById('graph-node-count').textContent = '0 nodes';
+        document.getElementById('graph-edge-count').textContent = '0 edges';
         drawEmptyGraph();
         return;
       }
@@ -843,6 +900,12 @@
         }));
       }
 
+      // Hide placeholder, show SVG
+      const ph = document.getElementById('graph-empty-placeholder');
+      if (ph) ph.classList.add('hidden');
+      const svgEl = document.getElementById('graph-svg');
+      if (svgEl) svgEl.style.display = '';
+      
       drawGraph(graph);
     } catch (err) {
       console.error('[renderGraph]', err);
@@ -991,6 +1054,8 @@
     
     if (tab === 'trace') {
       renderTrace();
+       renderMcpTrace();
+      renderCost();
     } else if (tab === 'focus') {
       renderFocus();
     } else if (tab === 'memory') {
@@ -1072,6 +1137,169 @@
       .catch(err => {
         traceContainer.innerHTML = `<div class="empty-state">Error loading trace: ${escapeHtml(err.message)}</div>`;
       });
+  }
+
+  /**
+   * Render MCP Trace — tool call stats + timeline
+   */
+  function renderMcpTrace() {
+    const statsEl = document.getElementById('mcp-trace-stats');
+    const timelineEl = document.getElementById('mcp-trace-timeline');
+    const summaryEl = document.getElementById('mcp-trace-summary');
+    const filterEl = document.getElementById('mcp-trace-tool-filter');
+    if (!statsEl || !timelineEl) return;
+
+    const toolFilter = filterEl?.value || 'all';
+    const url = toolFilter === 'all' ? '/api/mcp/trace?limit=200' : `/api/mcp/trace?limit=200&tool=${encodeURIComponent(toolFilter)}`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success || !data.data) {
+          statsEl.innerHTML = '<div class="empty-state">No tool trace data</div>';
+          timelineEl.innerHTML = '';
+          if (summaryEl) summaryEl.textContent = '—';
+          return;
+        }
+
+        const { stats, timeline, summary } = data.data;
+
+        // Summary line
+        if (summaryEl) {
+          summaryEl.textContent = `${summary.totalCalls} calls \u00B7 ${summary.uniqueToolCount} tools \u00B7 ${(summary.overallSuccessRate * 100).toFixed(0)}% ok \u00B7 avg ${summary.avgDurationMs.toFixed(0)}ms`;
+        }
+
+        // Populate filter dropdown
+        if (filterEl) {
+          const current = filterEl.value;
+          filterEl.innerHTML = '<option value="all">All Tools</option>';
+          for (const s of stats) {
+            filterEl.innerHTML += `<option value="${escapeHtml(s.toolName)}">${escapeHtml(s.toolName)} (${s.totalCount})</option>`;
+          }
+          filterEl.value = current;
+        }
+
+        // Render stats cards
+        let statsHtml = '<div class="mcp-stats-grid">';
+        for (const s of stats) {
+          const barW = Math.min(s.avgDurationMs / 10, 100);
+          statsHtml += `<div class="mcp-stat-card" data-tool="${escapeHtml(s.toolName)}">
+            <div class="mcp-stat-name">\uD83D\uDD27 ${escapeHtml(s.toolName)}</div>
+            <div class="mcp-stat-row"><span>Calls:</span><span>${s.totalCount}</span></div>
+            <div class="mcp-stat-row"><span>Success:</span><span class="${s.successRate >= 0.8 ? 'color-ok' : 'color-warn'}">${(s.successRate * 100).toFixed(0)}%</span></div>
+            <div class="mcp-stat-row"><span>Avg:</span><span>${s.avgDurationMs.toFixed(0)}ms</span></div>
+            <div class="mcp-stat-row"><span>P95:</span><span>${s.p95DurationMs.toFixed(0)}ms</span></div>
+            <div class="mcp-stat-row"><span>Min/Max:</span><span>${s.minDurationMs}ms / ${s.maxDurationMs}ms</span></div>
+            <div class="mcp-stat-bar"><div class="mcp-stat-bar-fill" style="width:${barW}%"></div></div>
+          </div>`;
+        }
+        statsHtml += '</div>';
+        statsEl.innerHTML = statsHtml;
+
+        // Render timeline (newest first, show top 50)
+        const visible = timeline.slice(0, 50);
+        let timelineHtml = '<div class="mcp-timeline-list">';
+        const maxDur = Math.max(...visible.map(t => t.durationMs), 1);
+        for (const call of visible) {
+          const barPct = (call.durationMs / maxDur * 100).toFixed(1);
+          const statusIcon = call.success ? '\u2705' : '\u274C';
+          const argsPreview = call.args ? JSON.stringify(call.args).substring(0, 80) : '\u2014';
+          const resultPreview = call.result ? call.result.substring(0, 120) : '\u2014';
+
+          timelineHtml += `<div class="mcp-timeline-item ${call.success ? '' : 'mcp-timeline-fail'}">
+            <div class="mcp-tl-header">
+              <span class="mcp-tl-toolname">${statusIcon} ${escapeHtml(call.toolName)}</span>
+              <span class="mcp-tl-duration">${call.durationMs}ms</span>
+            </div>
+            <div class="mcp-tl-bar-track">
+              <div class="mcp-tl-bar-fill ${call.success ? 'mcp-tl-bar-ok' : 'mcp-tl-bar-fail'}" style="width:${barPct}%"></div>
+            </div>
+            <details class="mcp-tl-details">
+              <summary>Args & Result</summary>
+              <div class="mcp-tl-args"><strong>Args:</strong> <code>${escapeHtml(argsPreview)}</code></div>
+              <div class="mcp-tl-result"><strong>Result:</strong> <code>${escapeHtml(resultPreview)}</code></div>
+            </details>
+          </div>`;
+        }
+        timelineHtml += '</div>';
+        timelineEl.innerHTML = timelineHtml;
+
+        // Attach filter change handler
+        if (filterEl) {
+          filterEl.onchange = () => renderMcpTrace();
+        }
+      })
+      .catch(err => {
+        statsEl.innerHTML = `<div class="empty-state">Error: ${escapeHtml(err.message)}</div>`;
+      });
+  }
+
+  /**
+   * Render COST panel — budget, spending, alerts
+   */
+  function renderCost() {
+    fetch('/api/cost/session')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const s = data.data;
+        const budgetEl = document.getElementById('cost-budget-value');
+        const barEl = document.getElementById('cost-progress-bar');
+        const pctEl = document.getElementById('cost-budget-pct');
+        if (budgetEl) budgetEl.textContent = `$${s.totalCostUsd.toFixed(4)}`;
+        fetch('/api/cost/budget').then(r => r.json()).then(bd => {
+          if (!bd.success) return;
+          const b = bd.data;
+          if (barEl) {
+            barEl.style.width = `${Math.min(b.pct, 100)}%`;
+            barEl.className = `cost-progress-fill ${b.pct >= 90 ? 'cost-danger' : b.pct >= 70 ? 'cost-warn' : 'cost-ok'}`;
+          }
+          if (pctEl) pctEl.textContent = `${b.pct.toFixed(1)}% used`;
+          if (budgetEl) budgetEl.textContent = `$${b.spentUsd.toFixed(4)} / $${b.budgetUsd}`;
+        }).catch(() => {});
+        const spentEl = document.getElementById('cost-spent-value');
+        const remainEl = document.getElementById('cost-remaining');
+        if (spentEl) spentEl.textContent = `$${s.totalCostUsd.toFixed(4)}`;
+        if (remainEl) remainEl.textContent = `${s.totalCalls} API calls`;
+        const callsEl = document.getElementById('cost-calls-value');
+        const tokensEl = document.getElementById('cost-tokens');
+        if (callsEl) callsEl.textContent = s.totalCalls;
+        if (tokensEl) tokensEl.textContent = `${(s.totalInput + s.totalOutput).toLocaleString()} tokens (in: ${s.totalInput.toLocaleString()}, out: ${s.totalOutput.toLocaleString()})`;
+        const modelEl = document.getElementById('cost-by-model');
+        if (modelEl && s.byModel && Object.keys(s.byModel).length > 0) {
+          let html = '<div class="cost-model-grid">';
+          for (const [model, info] of Object.entries(s.byModel)) {
+            html += `<div class="cost-model-item">
+              <div class="cost-model-name">${escapeHtml(model)}</div>
+              <div class="cost-model-calls">${info.calls} calls</div>
+              <div class="cost-model-cost">$${info.cost.toFixed(4)}</div>
+              <div class="cost-model-tokens">${info.input.toLocaleString()} in / ${info.output.toLocaleString()} out</div>
+            </div>`;
+          }
+          html += '</div>';
+          modelEl.innerHTML = html;
+        }
+        const summaryEl = document.getElementById('cost-summary');
+        if (summaryEl) {
+          const tok = s.totalInput + s.totalOutput;
+          summaryEl.textContent = `${s.totalCalls} calls \u00B7 $${s.totalCostUsd.toFixed(4)} spent \u00B7 ${tok.toLocaleString()} tokens`;
+        }
+      })
+      .catch(() => {});
+    fetch('/api/cost/alerts')
+      .then(r => r.json())
+      .then(data => {
+        const alertsEl = document.getElementById('cost-alerts');
+        if (!alertsEl || !data.success || !data.data?.length) return;
+        let html = '<div class="cost-alert-list">';
+        for (const alert of data.data.slice(-5)) {
+          const icon = alert.severity === 'critical' ? '\u{1F534}' : alert.severity === 'warning' ? '\u{1F7E1}' : '\u{1F535}';
+          html += `<div class="cost-alert-item cost-alert-${alert.severity}">${icon} ${escapeHtml(alert.message)}</div>`;
+        }
+        html += '</div>';
+        alertsEl.innerHTML = html;
+      })
+      .catch(() => {});
   }
 
   function renderDecisionCard(decision, decisionIndex) {

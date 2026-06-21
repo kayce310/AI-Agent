@@ -120,6 +120,59 @@
       <div id="trace-container" class="trace-container">
         <div class="empty-state">Select a task to view cognitive trace</div>
       </div>
+
+      <!-- ═══ MCP Trace Panel ═══ -->
+      <div id="mcp-trace-section" class="mcp-trace-section">
+        <div class="card mcp-trace-header">
+          <div class="card-row">
+            <span class="card-label">MCP TRACE</span>
+            <div class="mcp-trace-controls">
+              <select id="mcp-trace-tool-filter" class="mcp-trace-select">
+                <option value="all">All Tools</option>
+              </select>
+              <span id="mcp-trace-summary" class="mcp-trace-summary">—</span>
+            </div>
+          </div>
+        </div>
+        <div id="mcp-trace-stats" class="mcp-trace-stats">
+          <div class="empty-state">No tool trace data yet</div>
+        </div>
+        <div id="mcp-trace-timeline" class="mcp-trace-timeline">
+          <div class="empty-state">Run an agent task to see tool call timeline</div>
+        </div>
+      </div>
+      <!-- ═══ COST PANEL ═══ -->
+      <div id="cost-section" class="cost-section">
+        <div class="card cost-header">
+          <div class="card-row">
+            <span class="card-label">COST TRACKING</span>
+            <span id="cost-summary" class="cost-summary">—</span>
+          </div>
+        </div>
+        <div class="cost-grid">
+          <div class="cost-card">
+            <div class="cost-card-label">Budget</div>
+            <div id="cost-budget-value" class="cost-card-value">$10.00</div>
+            <div class="cost-progress-track">
+              <div id="cost-progress-bar" class="cost-progress-fill" style="width:0%"></div>
+            </div>
+            <div id="cost-budget-pct" class="cost-card-sub">0% used</div>
+          </div>
+          <div class="cost-card">
+            <div class="cost-card-label">Total Spent</div>
+            <div id="cost-spent-value" class="cost-card-value">$0.00</div>
+            <div id="cost-remaining" class="cost-card-sub">$10.00 remaining</div>
+          </div>
+          <div class="cost-card">
+            <div class="cost-card-label">API Calls</div>
+            <div id="cost-calls-value" class="cost-card-value">0</div>
+            <div id="cost-tokens" class="cost-card-sub">0 tokens</div>
+          </div>
+        </div>
+        <div id="cost-by-model" class="cost-model-breakdown"></div>
+        <div id="cost-alerts" class="cost-alerts"></div>
+      </div>
+
     </section>
 
     <!-- ═══ F4: FOCUS MODE — 4-PART LAYOUT ═══ -->
@@ -247,7 +300,8 @@
           <span id="memory-graph-count" class="memory-graph-count">0 links</span>
         </div>
         <svg id="memory-graph-svg" class="memory-graph-svg" width="100%" height="120"></svg>
-      </div>
+      
+        <div id="graph-empty-placeholder" class="empty-state hidden">No task selected</div></div>
     </section>
 
     <!-- ═══ F6: GRAPH VIEW ═══ -->
@@ -256,6 +310,10 @@
       <div class="card graph-header">
         <div class="card-label">COGNITIVE GRAPH</div>
         <div id="graph-task-info" class="graph-task-info">
+          <select id="graph-task-select" class="graph-task-select">
+            <option value="">-- Select Task --</option>
+          </select>
+          <button id="graph-refresh-btn" class="graph-refresh-btn" title="Refresh">⟳</button>
           <span id="graph-task-id" class="graph-task-id">—</span>
           <span id="graph-node-count" class="graph-node-count">0 nodes</span>
           <span id="graph-edge-count" class="graph-edge-count">0 edges</span>
