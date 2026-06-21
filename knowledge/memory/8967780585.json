@@ -1,16 +1,6 @@
 [
   {
     "role": "user",
-    "content": "bạn nhớ dữ liệu trò chuyện trước đó không Coral",
-    "timestamp": 1782014845775
-  },
-  {
-    "role": "assistant",
-    "content": "Dạ, tôi nhớ được một phần. Từ memory context, tôi thấy:\n\n- Bạn là **Kayce** — người phát triển tôi\n- Bạn đã hỏi tôi những câu hỏi về bản thân, session memory, và liệu tôi có thể giống Jarvis không\n- Tôi đã trả lời tôi là Coral, một AI agent đa năng\n\nTuy nhiên, **tôi không có truy cập vào nội dung chi tiết của những cuộc trò chuyện đó** — chỉ biết là các tin nhắn đã xảy ra vào những thời điểm nhất định hôm nay.\n\nNếu bạn cần tôi nhớ lại những chi tiết cụ thể từ các task trước đó (code đã viết, yêu cầu đã thực hiện, decisions đã đưa ra), bạn có thể nhắc lại hoặc cung cấp context. Tôi sẽ tiếp tục từ đó.\n\nCần giúp gì bây giờ?",
-    "timestamp": 1782014845775
-  },
-  {
-    "role": "user",
     "content": "bạn có thể làm những gì hiện tại? so với Jarvis?",
     "timestamp": 1782015147200
   },
@@ -98,5 +88,23 @@
     "role": "assistant",
     "content": "# ✅ **HOÀN THÀNH RESEARCH!** 🎉\n\nĐây là toàn bộ kết quả nghiên cứu. Tôi đã làm **3 việc** cụ thể:\n\n---\n\n## 📚 **1. Wiki Page: Thiết Bị IoT Giá Rẻ**\n👉 `knowledge/wiki/iot/cheap-iot-devices-research.md`\n\n**Thiết bị được recommend (giá <$30):**\n\n| Thiết Bị | Giá | Use Case cho Coral |\n|-----------|-----|-------------------|\n| **ESP32** 🔥 | $5-8 | Board chính + MQTT + Sensors |\n| DHT11 | $1-2 | Nhiệt độ/Độ ẩm |\n| Relay 5V | $0.5-1 | Điều khiển thiết bị 220V |\n| PIR Motion | $1-2 | Phát hiện người |\n| *Tổng cho 3 node* | **~$23** | 3 ESP32 + 3 Sensors + 3 Relay |\n\n---\n\n## 📚 **2. Wiki Page: Implementation Guide**\n👉 `knowledge/wiki/iot/esp32-implementation-guide.md`\n\nBao gồm **từ A→Z**:\n- ✅ Sơ đồ mạch (wiring diagram)\n- ✅ Full code Arduino (MQTT + DHT + Relay)\n- ✅ Python bridge (Coral ↔ MQTT)\n- ✅ Test script\n- ✅ Troubleshooting guide\n\n---\n\n## 🧠 **3. Kiến Trúc Tích Hợp Coral → IoT**\n\n```\nUser (Telegram)\n    │ \"Bật đèn phòng khách\"\n    ▼\n[Coral AI Agent]\n    │ Parse: intent=\"light_on\", room=\"living\"\n    ▼\n[MQTT] coral/commands/relay1 → ON\n    │\n    ▼\n[ESP32] → Relay → 220V Light ON\n    │\n    ▼\n[Feedback] coral/sensors/status → \"OK\"\n    │\n    ▼\n[Telegram] \"Đã bật đèn phòng khách ✅\"\n```\n\n---\n\n**Next step:** Bạn muốn làm gì trước?\n1. 🛒 **Đặt hàng linh kiện** (ESP32 + DHT11 + Relay)\n2. 💻 **Setup MQTT Broker** (Docker/Home Assistant)\n3. ⚙️ **Flash firmware thử nghiệm**\n4. 🔌 **Tích hợp Telegram Bot**\n\nHay muốn tôi **tạo Roadmap chi tiết** từng ngày cho 2 tuần tới?",
     "timestamp": 1782038675710
+  },
+  {
+    "role": "user",
+    "content": "nghiên cứu về việc tích hợp bạn lên máy tính nhúng làm sever 24/7. Khả năng tích hợp, khả năng nâng cấp, debug,... mọi khia cạnh",
+    "timestamp": 1782038992099
+  },
+  {
+    "role": "assistant",
+    "content": "Bây giờ tôi có đủ dữ liệu. Để tôi tạo wiki page tổng hợp tất cả research này.",
+    "timestamp": 1782038992099
+  }
+]dback] coral/sensors/status → \"OK\"\n    │\n    ▼\n[Telegram] \"Đã bật đèn phòng khách ✅\"\n```\n\n---\n\n**Next step:** Bạn muốn làm gì trước?\n1. 🛒 **Đặt hàng linh kiện** (ESP32 + DHT11 + Relay)\n2. 💻 **Setup MQTT Broker** (Docker/Home Assistant)\n3. ⚙️ **Flash firmware thử nghiệm**\n4. 🔌 **Tích hợp Telegram Bot**\n\nHay muốn tôi **tạo Roadmap chi tiết** từng ngày cho 2 tuần tới?",
+    "timestamp": 1782038675710
+  },
+  {
+    "role": "user",
+    "content": "nghiên cứu về việc tích hợp bạn lên máy tính nhúng làm sever 24/7. Khả năng tích hợp, khả năng nâng cấp, debug,... mọi khia cạnh",
+    "timestamp": 1782038992099
   }
 ]

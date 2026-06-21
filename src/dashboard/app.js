@@ -116,7 +116,7 @@
         try {
           const msg = JSON.parse(e.data);
           if (msg.type === 'init' || msg.type === 'event') {
-            if (msg.state) agentState = msg.state;
+            if (msg.state) Object.assign(agentState, msg.state);  // Merge, don't replace
             if (msg.event) {
               allEvents = [msg.event, ...allEvents].slice(0, 200);
             }
@@ -157,7 +157,7 @@
 
       if (stateRes.ok) {
         const stateData = await stateRes.json();
-        if (stateData.data) agentState = stateData.data;
+        if (stateData.data) Object.assign(agentState, stateData.data);  // Merge, don't replace
       }
 
       if (eventsRes.ok) {
@@ -1197,6 +1197,14 @@
 
   function renderFocus() {
     const taskId = agentState.currentTaskId || lastCompletedTaskId;
+    
+    // Update status badge (always, regardless of taskId)
+    const statusEl = document.getElementById('focus-status');
+    if (statusEl) {
+      const badge = STATUS_BADGES[agentState.status] || STATUS_BADGES.idle;
+      statusEl.textContent = badge.label;
+      statusEl.className = `focus-status ${badge.class}`;
+    }
     
     if (!taskId) {
       document.getElementById('focus-thought').textContent = 'Awaiting reasoning...';
