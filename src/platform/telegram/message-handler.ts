@@ -1,6 +1,7 @@
 import { SessionManager, SessionState } from './session-manager';
 import { ObservabilityIntegration } from '../../observability/integration';
 import { Logger } from '../../core/logger';
+import { CoralAgentLoop } from '../../core/agent/agent-loop';
 
 const logger = new Logger({ module: 'TelegramHandler' });
 
@@ -31,11 +32,22 @@ export class TelegramMessageHandler {
   private sessionManager: SessionManager;
   private observability: ObservabilityIntegration | null;
   private coralAgent: any;
+  private agentLoop: CoralAgentLoop;
 
   constructor(coralAgent: any, observability?: ObservabilityIntegration) {
     this.sessionManager = new SessionManager();
     this.observability = observability || null;
     this.coralAgent = coralAgent;
+    this.agentLoop = new CoralAgentLoop(logger, async (prompt: string, context: string, stepLabel: string) => {
+      // Execute a step through the coral agent's handleMessage
+      return await coralAgent.handleMessage(
+        'agent-loop-' + stepLabel,
+        prompt
+      );
+    }, {
+      maxSteps: 5,
+      timeoutPerStepMs: 60000
+    });
   }
 
   /**
@@ -97,10 +109,32 @@ Gửi tin nhắn bất kỳ để tôi hỗ trợ.`;
       }
 
       // Route to Coral agent (stateless, doesn't know about sessions)
-      const agentResponse = await this.coralAgent.handleMessage(
-        session.sessionId,
-        text
-      );
+      // But first check if this is a complex task for the agent loop
+      let agentResponse: string;
+
+      if (this.agentLoop.isComplexTask(text)) {
+        logger.info(`[${userId}] Complex task detected, routing to agent loop`);
+        const loopResult = await this.agentLoop.execute(
+          text,
+          `Session: ${session.sessionId}\nUser: ${userId}`
+        );
+
+        if (loopResult.success) {
+          agentResponse = loopResult.result;
+        } else {
+          // Fallback to regular agent on failure
+          logger.warn(`[${userId}] Agent loop failed, falling back to regular agent: ${loopResult.error}`);
+          agentResponse = await this.coralAgent.handleMessage(
+            session.sessionId,
+            text
+          );
+        }
+      } else {
+        agentResponse = await this.coralAgent.handleMessage(
+          session.sessionId,
+          text
+        );
+      }
 
       // Update activity timestamp
       this.sessionManager.updateLastActivity(userId);
