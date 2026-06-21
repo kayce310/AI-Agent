@@ -47,6 +47,26 @@ export interface AgentState {
   lastError: { message: string; code?: string; timestamp: number } | null;
   recentDecisions: RecentDecision[];
   timeline: AgentEvent[];
+  
+  // ═══ FRONTEND-ONLY STATE (not persisted, rebuilt on each WS message) ═══
+  // Priority 1: Streaming reasoning
+  streamingText?: string;
+  streamIndex?: number;
+  streamTimer?: NodeJS.Timeout | null;
+  
+  // Priority 2: Event counter (resets per task)
+  eventCount?: number;
+  
+  // Priority 3: Tool duration tracking
+  toolStartTime?: number | null;
+  toolTimer?: NodeJS.Timeout | null;
+  
+  // Priority 4: Confidence bar
+  lastConfidence?: number | null;
+  
+  // Priority 5: Focus pause/resume buffer
+  focusPaused?: boolean;
+  focusEventBuffer?: AgentEvent[];
 }
 
 // ═══ INITIAL STATE ═══
@@ -62,6 +82,17 @@ export function createInitialState(): AgentState {
     lastError: null,
     recentDecisions: [],
     timeline: [],
+    
+    // Frontend-only fields
+    streamingText: '',
+    streamIndex: 0,
+    streamTimer: null,
+    eventCount: 0,
+    toolStartTime: null,
+    toolTimer: null,
+    lastConfidence: null,
+    focusPaused: false,
+    focusEventBuffer: [],
   };
 }
 
@@ -88,6 +119,7 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
         currentGoal: p.goal,
         currentTaskId: p.taskId,
         currentTaskLabel: p.goal, // Fallback: goal is the label until engine provides a real label
+        eventCount: 0,  // Reset event counter on new task
         timeline,
       };
     }

@@ -180,7 +180,8 @@
     }
     
     // Increment event counter (Priority 2) — after pause check
-    agentState.eventCount++;
+    // Backend sends eventCount, but we also increment locally for real-time UI
+    agentState.eventCount = (agentState.eventCount || 0) + 1;
     eventCount.textContent = `${agentState.eventCount} events`;
     
     const p = event.payload || {};
@@ -381,6 +382,10 @@
       updateConfidenceBar();
     }
     if (currentTab === 'graph') renderGraph();
+    // Memory: refresh list when on memory tab (new events → new memories)
+    if (currentTab === 'memory') {
+      document.dispatchEvent(new CustomEvent('memory-refresh'));
+    }
   }
 
   function renderMission() {
@@ -958,6 +963,7 @@
     tabMissionBtn?.addEventListener('click', () => switchTab('mission'));
     tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
     document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
+    document.getElementById('tab-memory')?.addEventListener('click', () => switchTab('memory'));
     document.getElementById('tab-graph')?.addEventListener('click', () => switchTab('graph'));
     
     // Setup pause button (Priority 5)
@@ -974,17 +980,22 @@
     tabMissionBtn?.classList.toggle('active', tab === 'mission');
     tabTraceBtn?.classList.toggle('active', tab === 'trace');
     document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
+    document.getElementById('tab-memory')?.classList.toggle('active', tab === 'memory');
     document.getElementById('tab-graph')?.classList.toggle('active', tab === 'graph');
     
     missionView?.classList.toggle('hidden', tab !== 'mission');
     traceView?.classList.toggle('hidden', tab !== 'trace');
     document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
+    document.getElementById('memory-view')?.classList.toggle('hidden', tab !== 'memory');
     document.getElementById('graph-view')?.classList.toggle('hidden', tab !== 'graph');
     
     if (tab === 'trace') {
       renderTrace();
     } else if (tab === 'focus') {
       renderFocus();
+    } else if (tab === 'memory') {
+      // Signal memory tab to load (handled by memory-tab.js)
+      document.dispatchEvent(new CustomEvent('memory-tab-activated'));
     } else if (tab === 'graph') {
       renderGraph();
     }

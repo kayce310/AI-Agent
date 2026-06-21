@@ -16,6 +16,7 @@
       <button id="tab-mission" class="tab-btn active" data-tab="mission">MISSION</button>
       <button id="tab-trace" class="tab-btn" data-tab="trace">🧠 TRACE</button>
       <button id="tab-focus" class="tab-btn" data-tab="focus">⚡ FOCUS</button>
+      <button id="tab-memory" class="tab-btn" data-tab="memory">💾 MEMORY</button>
       <button id="tab-graph" class="tab-btn" data-tab="graph">🔗 GRAPH</button>
     </div>
     <div class="status-right">
@@ -170,7 +171,86 @@
       </div>
     </section>
 
-    <!-- ═══ F5: GRAPH VIEW ═══ -->
+    <!-- ═══ F5: MEMORY MODE — 3-PANEL LAYOUT ═══ -->
+    <section id="memory-view" class="memory-view hidden">
+      <!-- Top: Search + Filter Bar -->
+      <div class="memory-search-bar">
+        <div class="memory-search-input-wrap">
+          <span class="memory-search-icon">🔍</span>
+          <input id="memory-search-input" type="text" class="memory-search-input" placeholder="Search memories..." />
+        </div>
+        <div class="memory-filter-chips" id="memory-filter-chips">
+          <button class="memory-chip active" data-filter="all">All</button>
+          <button class="memory-chip" data-filter="fact">Fact</button>
+          <button class="memory-chip" data-filter="belief">Belief</button>
+          <button class="memory-chip" data-filter="preference">Preference</button>
+          <button class="memory-chip" data-filter="skill">Skill</button>
+          <button class="memory-chip" data-filter="summary">Summary</button>
+        </div>
+        <div class="memory-filter-extras">
+          <button id="memory-filter-toggle" class="memory-filter-toggle" title="Advanced filters">⚙️</button>
+          <span id="memory-count" class="memory-count">0 memories</span>
+        </div>
+      </div>
+
+      <!-- Advanced Filters (collapsible) -->
+      <div id="memory-advanced-filters" class="memory-advanced-filters hidden">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Confidence</label>
+            <input id="memory-filter-conf-min" type="range" min="0" max="1" step="0.1" value="0" />
+            <span id="memory-filter-conf-label">0 - 1.0</span>
+          </div>
+          <div class="filter-group">
+            <label>Importance</label>
+            <input id="memory-filter-imp-min" type="range" min="0" max="1" step="0.1" value="0" />
+            <span id="memory-filter-imp-label">0 - 1.0</span>
+          </div>
+          <div class="filter-group">
+            <label>Sort</label>
+            <select id="memory-filter-sort">
+              <option value="score">Score</option>
+              <option value="confidence">Confidence</option>
+              <option value="importance">Importance</option>
+              <option value="createdAt">Created</option>
+              <option value="lastAccessedAt">Last Accessed</option>
+            </select>
+          </div>
+          <button id="memory-filter-apply" class="memory-filter-apply">Apply</button>
+        </div>
+      </div>
+
+      <!-- 3-Panel Layout -->
+      <div class="memory-main">
+        <!-- Panel 1: Memory List (left) -->
+        <div class="memory-panel-left">
+          <div id="memory-list" class="memory-list">
+            <div class="empty-state">No memories yet. Run some tasks!</div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Memory Detail (right) -->
+        <div class="memory-panel-right">
+          <div id="memory-detail" class="memory-detail">
+            <div class="memory-detail-empty">
+              <div class="memory-detail-empty-icon">🧠</div>
+              <div class="memory-detail-empty-text">Select a memory to inspect</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Graph footer -->
+      <div class="memory-mini-graph">
+        <div class="memory-mini-graph-header">
+          <span class="memory-mini-graph-title">Memory Graph</span>
+          <span id="memory-graph-count" class="memory-graph-count">0 links</span>
+        </div>
+        <svg id="memory-graph-svg" class="memory-graph-svg" width="100%" height="120"></svg>
+      </div>
+    </section>
+
+    <!-- ═══ F6: GRAPH VIEW ═══ -->
     <section id="graph-view" class="hidden">
       <!-- Graph Header: Task Context -->
       <div class="card graph-header">
@@ -228,5 +308,6 @@
   </main>
 
   <script src="app.js"></script>
+  <script src="memory-tab.js"></script>
 </body>
 </html>

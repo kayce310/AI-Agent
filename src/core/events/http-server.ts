@@ -12,33 +12,42 @@ import { EventStore } from './store.js';
 import { StructuredLogger } from './logger.js';
 import { EventWebSocket } from './websocket.js';
 import { EventApi } from './api.js';
+import { MemoryAPI } from '../memory/MemoryAPI.js';
+import { MemoryStore } from '../memory/MemoryStore.js';
 
 export interface DashboardServerOptions {
   port?: number;
   host?: string;
+  memoryApi?: MemoryAPI;
 }
 
 export class DashboardServer {
   private server: http.Server;
   private eventWebSocket: EventWebSocket;
   private eventApi: EventApi;
+  private memoryApi: MemoryAPI | undefined;
   private port: number;
   private host: string;
 
   constructor(eventBus: EventBus, options: DashboardServerOptions = {}) {
     this.port = options.port || 8766;
     this.host = options.host || '127.0.0.1';
+    this.memoryApi = options.memoryApi;
 
     this.eventApi = new EventApi(eventBus);
 
     this.server = http.createServer((req, res) => {
-      this.handleRequest(req, res);
+      this.handleRequest(req, res).catch(err => {
+        console.error('[DashboardServer] Request handler error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Internal server error' }));
+      });
     });
 
     this.eventWebSocket = new EventWebSocket(this.server, eventBus);
   }
 
-  private handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
+  private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -79,6 +88,76 @@ export class DashboardServer {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, data: state }));
       return;
+    }
+
+    // ═══ MEMORY TAB JS ═══
+    if (url === '/memory-tab.js') {
+      this.serveFile(res, 'src/dashboard/memory-tab.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+
+    // ═══ API: Memory ═══
+    if (url.startsWith('/api/memory') && this.memoryApi) {
+      if (url === '/api/memory/stats') {
+        this.sendJson(res, this.memoryApi.stats());
+        return;
+      }
+      if (url === '/api/memory/list' || url.startsWith('/api/memory/list?')) {
+        this.sendJson(res, this.memoryApi.list(url));
+        return;
+      }
+      if (url === '/api/memory/graph') {
+        this.sendJson(res, this.memoryApi.graph());
+        return;
+      }
+
+      // POST/PATCH/DELETE handling
+      if (req.method === 'POST') {
+        const body = await this.readBody(req);
+        
+        if (url === '/api/memory') {
+          this.sendJson(res, this.memoryApi.create(body));
+          return;
+        }
+        // POST /api/memory/:id/pin, /unpin, /forget, /promote, /link
+        const postMatch = url.match(/^\/api\/memory\/([^/]+)\/([a-z]+)$/);
+        if (postMatch) {
+          const [_, id, action] = postMatch;
+          switch (action) {
+            case 'pin': this.sendJson(res, this.memoryApi.pin(id)); return;
+            case 'unpin': this.sendJson(res, this.memoryApi.unpin(id)); return;
+            case 'forget': this.sendJson(res, this.memoryApi.forget(id)); return;
+            case 'promote': this.sendJson(res, this.memoryApi.promote(id, body)); return;
+            case 'link': this.sendJson(res, this.memoryApi.link(id, body)); return;
+          }
+        }
+      }
+
+      if (req.method === 'PATCH') {
+        const patchMatch = url.match(/^\/api\/memory\/([^/]+)$/);
+        if (patchMatch) {
+          const body = await this.readBody(req);
+          this.sendJson(res, this.memoryApi.update(patchMatch[1], body));
+          return;
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        const delMatch = url.match(/^\/api\/memory\/([^/]+)$/);
+        if (delMatch) {
+          this.sendJson(res, this.memoryApi.delete(delMatch[1]));
+          return;
+        }
+      }
+
+      // GET /api/memory/:id (single item)
+      const getMatch = url.match(/^\/api\/(?:memory|memories)\/([^/]+)$/);
+      if (getMatch && req.method === 'GET') {
+        this.sendJson(res, this.memoryApi.get(getMatch[1]));
+        return;
+      }
+
+      // If memory API was matched but no route handled, continue to default
     }
 
     // ═══ API: Events ═══
@@ -148,6 +227,26 @@ export class DashboardServer {
       }
       res.writeHead(200, { 'Content-Type': contentType });
       res.end(data);
+    });
+  }
+
+  /**
+   * Send JSON response (helper)
+   */
+  private sendJson(res: http.ServerResponse, data: any): void {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(data));
+  }
+
+  /**
+   * Read request body as string
+   */
+  private readBody(req: http.IncomingMessage): Promise<string> {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+      req.on('end', () => resolve(body));
+      req.on('error', reject);
     });
   }
 

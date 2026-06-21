@@ -15,6 +15,9 @@ import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
 import { CoralGateway } from '../core/gateway/index.js';
 import { DashboardServer } from '../core/events/http-server.js';
+import { MemoryStore } from '../core/memory/MemoryStore.js';
+import { MemoryAPI } from '../core/memory/MemoryAPI.js';
+import { MemoryExtractor } from '../core/memory/MemoryExtractor.js';
 import { CronScheduler, SystemMonitor } from '../core/cron/index.js';
 
 // ── Timestamp Helper ──
@@ -114,6 +117,7 @@ function releaseFileLock(): void {
 let engineInstance: Engine | null = null;
 let gatewayInstance: CoralGateway | null = null;
 let dashboardServer: DashboardServer | null = null;
+let memoryStore: MemoryStore | null = null;
 let cronScheduler: CronScheduler | null = null;
 let isShuttingDown = false;
 
@@ -155,6 +159,12 @@ async function gracefulShutdown(signal: string) {
     if (dashboardServer) {
       console.log(`${ts()} 📊 Stopping dashboard server...`);
       await dashboardServer.stop().catch(e => console.error(`Dashboard server error: ${e}`));
+    }
+
+    // 5. Shutdown memory store (flush to disk)
+    if (memoryStore) {
+      console.log(`${ts()} 💾 Saving memory store...`);
+      memoryStore.shutdown();
     }
 
     console.log(`${ts()} ✅ Graceful shutdown complete`);
@@ -202,7 +212,21 @@ async function start() {
   try {
     const eventBus = engine.getEventBus();
     if (eventBus) {
-      dashboardServer = new DashboardServer(eventBus, { port: 8766 });
+      // Initialize Memory System
+      const ms = new MemoryStore();
+      memoryStore = ms; // Save for shutdown
+      const memoryApi = new MemoryAPI(ms);
+      const memoryExtractor = new MemoryExtractor(ms, eventBus);
+      memoryExtractor.start();
+
+      // Extract from existing history
+      const recentEvents = eventBus.getRecent(200);
+      const extracted = memoryExtractor.extractFromHistory(recentEvents);
+      if (extracted.extracted > 0 || extracted.beliefs > 0) {
+        console.log(`${ts()} 🧠 Memory extraction: ${extracted.extracted} new, ${extracted.reinforced} reinforced, ${extracted.beliefs} beliefs`);
+      }
+
+      dashboardServer = new DashboardServer(eventBus, { port: 8766, memoryApi });
       await dashboardServer.start();
       console.log(`${ts()} 📊 Dashboard server running on port 8766`);
     }

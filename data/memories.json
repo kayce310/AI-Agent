@@ -1,0 +1,2288 @@
+[
+  {
+    "id": "91a886a7-8b01-4f4d-a4f5-a3f01ef63b30",
+    "type": "fact",
+    "content": "Completed task: @kato310_bot test dashboard — phase 4 bugs (176460ms)",
+    "source": {
+      "taskId": "task-1782040570000"
+    },
+    "confidence": 0.788530251648603,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975960,
+    "lastAccessedAt": 1782056975960,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "dedea9b9-81a0-4f24-9388-245a17c5ae76",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"/**\\n * @file trace-builder.test.ts — Phase 4C: Trace Engine\\n * @test buildCognitiveTrace — constructs CognitiveTrace from event stream\\n */\\nimport { describe, expect, it } from 'vitest'",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "read_file",
+      "decisionId": "c20cadff-4774-4c84-977a-94ebcebcd5ca"
+    },
+    "confidence": 0.82596641917621,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975961,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "93effceb-2968-4c09-bb26-dfa2c3e33f24",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me check the event-related tests to understand how well the events/dashboard systems are covered.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "c20cadff-4774-4c84-977a-94ebcebcd5ca"
+    },
+    "confidence": 0.5879914027065408,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975961,
+    "lastAccessedAt": 1782056975961,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f130ff6e-a101-466f-8d6e-046c77ce6e4a",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me check the event-related tests to understand how well the events/dashboard systems are covered.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "8c86d561-1e0d-412d-8c20-da9a812381c3"
+    },
+    "confidence": 0.5879914027065408,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975961,
+    "lastAccessedAt": 1782056975961,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "35ff2204-81da-40e9-9e87-0979f298d056",
+    "type": "skill",
+    "content": "Tool \"search_knowledge_graph\" returned: {\"keyword\":\"dashboard test\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "search_knowledge_graph",
+      "decisionId": "4f90564c-387c-441a-9461-a62dd4c29d86"
+    },
+    "confidence": 0.8294526848478228,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7c2f9da9-78a5-45a9-a6d8-af39b9ccf72d",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Now I have a good understanding of the entire dashboard codebase.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "4f90564c-387c-441a-9461-a62dd4c29d86"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a23b1e34-6f68-4c70-b2c5-83d87cd3e6c8",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"agent-loop.test.ts\",\"type\":\"file\"},{\"name\":\"agent-state-frontend-fields.test.ts\",\"type\":\"file\"},{\"name\":\"ast-scanner.test.ts\",\"type\":\"file\"},{\"name\":\"cache.test.ts\",\"type\":\"file\"},{\"name\":\"c",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "list_directory",
+      "decisionId": "aff4d375-4a62-4ccf-b3d7-3ef814a794c1"
+    },
+    "confidence": 0.7251894036528306,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "cbf1e834-034d-42b9-b0a4-38a0e7d2d3bd",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Now I have a good understanding of the entire dashboard codebase.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "aff4d375-4a62-4ccf-b3d7-3ef814a794c1"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "245772b1-10a4-4d63-8b28-e992be45cb7d",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the agent-state.ts to understand how state is built and reduced, and the store.ts for event storage.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "faadf835-441c-4824-9346-6ab054476b14"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c7f459a1-ea3d-45c1-a5da-193055619d51",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the agent-state.ts to understand how state is built and reduced, and the store.ts for event storage.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "45b9ac26-e916-4b6f-bd94-71678ee5bc29"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "55030b5d-bc8c-47ee-b30c-1bef53c4ed60",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"/**\\n * @file Agent State — Derives current state from events\\n * @layer core\\n * @created 2026-06-21\\n * @updated 2026-06-21 — Phase 4A: decisionId linkage, reasoningSnippet in RecentDeci",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "read_file",
+      "decisionId": "eb9ff2ee-02fd-4ed8-812a-eb3e6e11efd8"
+    },
+    "confidence": 0.8259664258025563,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "04a5b0f9-2657-42cc-8af0-4132ee2a2b80",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the agent-state.ts to understand how state is built and reduced, and the store.ts for event storage.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "eb9ff2ee-02fd-4ed8-812a-eb3e6e11efd8"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "37dbc2e0-ad79-4a9f-b142-b56cdb859182",
+    "type": "preference",
+    "content": "Decision: Call read_file — Reason: Let me now look at the trace-builder and bus to understand the data flow better.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "8937c8ab-b444-4f52-a073-e0449e7872e0"
+    },
+    "confidence": 0.8978023462637207,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782059973045,
+    "accessCount": 21,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a803412c-bbb5-4877-9e80-58fc9f7ff68f",
+    "type": "preference",
+    "content": "Decision: Call read_file — Reason: Let me now look at the trace-builder and bus to understand the data flow better.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "0731c71e-5f9e-45ea-8837-0b912fbaf080"
+    },
+    "confidence": 0.897933800105229,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782059976788,
+    "accessCount": 30,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "905e0648-19e8-496b-895e-f7f8c20050a3",
+    "type": "preference",
+    "content": "Decision: Call read_file — Reason: Let me now look at the trace-builder and bus to understand the data flow better.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "a2fc68b3-9eb9-4a1f-ada8-fc609dd0fa21"
+    },
+    "confidence": 0.8926294192138801,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782059975740,
+    "accessCount": 3,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8d6f8c62-5186-4313-8f74-9cc9cd5a6017",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"/**\\n * @file HTTP/WS Server — Serves events + dashboard to browser\\n * @layer infrastructure\\n * @created 2026-06-20\\n */\\n\\nimport * as http from 'http';\\nimport * as fs from 'fs';\\nimpo",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "read_file",
+      "decisionId": "fd67b2c0-bcfd-4934-8e53-4bcdb3064944"
+    },
+    "confidence": 0.8259664258025563,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "b4ec5711-a3b0-4eca-a7dc-f88de32b8bd7",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the backend code to understand how events are generated and served, and check the graph-builder and API files for potential bugs.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "fd67b2c0-bcfd-4934-8e53-4bcdb3064944"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "75713cfd-8f98-42eb-8ab6-6be199e37554",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the backend code to understand how events are generated and served, and check the graph-builder and API files for potential bugs.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "bc6060cf-b1b2-4e76-83a7-1779590c7437"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "418fcd27-f443-4eac-bfed-250c9185b74d",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me look at the backend code to understand how events are generated and served, and check the graph-builder and API files for potential bugs.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "d924944f-c602-490f-8c60-40b2b2e8dfe0"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "dfa83392-f9bd-47e6-ba8a-4883f2c43ae9",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me read all the dashboard files to understand what we're testing.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "5c4cc921-93c6-49b1-ae1b-fd140fbe25c1"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d852d832-3c46-4df5-8d8c-6eed80b0fa7c",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"/**\\r\\n * @file Kato Agent — Mission Control Dashboard\\r\\n * @version 9.2.0 — Phase 4D.5: Dashboard Architecture Consolidation\\r\\n * \\r\\n * Architecture: Events → API → UI\\r\\n * Trace buil",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "read_file",
+      "decisionId": "1a4944d2-49ee-468a-a736-1ddb28282db4"
+    },
+    "confidence": 0.8259664258025563,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "93ae6301-8489-4674-9ee8-c52130580a38",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me read all the dashboard files to understand what we're testing.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "1a4944d2-49ee-468a-a736-1ddb28282db4"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a90d549b-65fe-4fe6-939d-4484f5fa45bb",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me read all the dashboard files to understand what we're testing.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "4ae77372-88ad-4cec-a4ae-a4de27e4e29c"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "01be9aca-c58a-4557-bd55-6a32e6d9f66d",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Now I see the bigger picture.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "aaf0a3a1-8d31-4ac7-89f8-07f15d8745e4"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "aaacd57e-94d0-4419-b218-50706262f8d9",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Now I see the bigger picture.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "ea7b2e91-5365-4397-808f-6886ced36bd9"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "803f30f5-7655-4733-8674-f14754054b9b",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Let me look at the project structure more.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "2751cf97-c058-4ac0-998e-a98120d4102c"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "80c2cd45-6d15-40a6-9c5a-ba95a3476f43",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me look at the project structure more.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "20463095-bdcb-4a3b-b8eb-5a1a4abc7aec"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c66ae842-bce8-4ecd-b846-f352e852758e",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me look at the project structure more.",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "fdd8c014-ae5b-44b7-add7-9128613b58cc"
+    },
+    "confidence": 0.5879914083671598,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "73c8342f-53d1-4c4b-ae92-be505a2fd313",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\".coral\",\"type\":\"directory\"},{\"name\":\".dockerignore\",\"type\":\"file\"},{\"name\":\".env\",\"type\":\"file\"},{\"name\":\".env.example\",\"type\":\"file\"},{\"name\":\".git\",\"type\":\"directory\"},{\"name\":\".github\",\"t",
+    "source": {
+      "taskId": "task-1782040570000",
+      "tool": "list_directory",
+      "decisionId": "ef0b83bb-1c3f-4bea-9287-c251096ead1f"
+    },
+    "confidence": 0.7251894036528306,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e8d77539-0f77-462d-ba2e-a4a589fabc3d",
+    "type": "preference",
+    "content": "Decision: Call list_directory — Reason: The user is messaging about testing a dashboard for \"phase 4 bugs\".",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "ef0b83bb-1c3f-4bea-9287-c251096ead1f"
+    },
+    "confidence": 0.8967645996954564,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782059974286,
+    "accessCount": 6,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "00094e6f-0d45-4f39-a352-b776f1107b1c",
+    "type": "preference",
+    "content": "Decision: Call search_knowledge_graph — Reason: The user is messaging about testing a dashboard for \"phase 4 bugs\".",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "264e596b-6cb0-41f9-8591-96438522e1bd"
+    },
+    "confidence": 0.8886993051940958,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a41bd998-0d58-4520-9645-70e3ef1776c5",
+    "type": "preference",
+    "content": "Decision: Call search_knowledge_graph — Reason: The user is messaging about testing a dashboard for \"phase 4 bugs\".",
+    "source": {
+      "taskId": "task-1782040570000",
+      "decisionId": "876eb557-3650-4070-8c53-41abddaf7de1"
+    },
+    "confidence": 0.8970261040303235,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782059972677,
+    "accessCount": 7,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d074b512-d044-4255-ae5e-b8b89acb8e02",
+    "type": "fact",
+    "content": "Completed task: 📨 send_message: \"to telegram: \"@kato310_bot test...\"\" (54846ms)",
+    "source": {
+      "taskId": "task-1782040513578"
+    },
+    "confidence": 0.7885302624931969,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975962,
+    "lastAccessedAt": 1782056975962,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "3a7e5dda-49ea-451b-be9e-11f4a3f6da16",
+    "type": "belief",
+    "content": "Belief: Tool \"read_file\" is frequently relied upon across tasks. Tool \"read_file\" returned: {\"content\":\"/**\\n * @file Coral Telegram Bridge — PlatformAdapter for Telegram\\n * @layer modules\\n * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts\\n * @imported-by src/scripts/star",
+    "source": {
+      "taskId": "task-1782040513578",
+      "tool": "read_file"
+    },
+    "confidence": 0.6883053603574184,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c487bd22-f7b0-4593-aa76-01cdffa6e154",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"/**\\n * @file Coral Telegram Bridge — PlatformAdapter for Telegram\\n * @layer modules\\n * @depends-on src/core/engine/engine.ts, src/core/gateway/types.ts\\n * @imported-by src/scripts/star",
+    "source": {
+      "taskId": "task-1782040513578",
+      "tool": "read_file",
+      "decisionId": "b5e18a9d-9c52-427e-8d5c-09161555a4dc"
+    },
+    "confidence": 0.8259664324289023,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "432972e4-87d9-44ba-a47a-5794605553cc",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me look at the start-telegram script to understand how it works, and also the telegram index.ts to see how messages are handled.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "b5e18a9d-9c52-427e-8d5c-09161555a4dc"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f9da6cf7-05ec-4c88-bf82-c69616ea7602",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Let me look at the start-telegram script to understand how it works, and also the telegram index.ts to see how messages are handled.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "87f78cf1-5bb2-451f-a0f9-989add99e5ca"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "73c78207-b87e-424a-bc00-02d40a47b5df",
+    "type": "belief",
+    "content": "Belief: Tool \"list_directory\" is frequently relied upon across tasks. Tool \"list_directory\" returned: [{\"name\":\"core\",\"type\":\"directory\"},{\"name\":\"dashboard\",\"type\":\"directory\"},{\"name\":\"modules\",\"type\":\"directory\"},{\"name\":\"observability\",\"type\":\"directory\"},{\"name\":\"platform\",\"type\":\"directory\"},{\"n",
+    "source": {
+      "taskId": "task-1782040513578",
+      "tool": "list_directory"
+    },
+    "confidence": 0.6883053603574184,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "list_directory"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "49378b20-048e-49ba-b4c6-68817daf28fe",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: I see the project is a Telegram bot using the grammy library.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "45faa92d-7226-42a6-ac81-feec6bdcc18a"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "884683e8-76f0-4533-a1ff-68a29cf3b83f",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: I see the project is a Telegram bot using the grammy library.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "c7b8f15c-6b3d-43f5-bf4c-d9051d5078dd"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7ddc0c34-9627-418a-82d4-17ea6fcb4495",
+    "type": "preference",
+    "content": "Decision: Call read_file — Reason: Looking at the task, the user wants me to \"📨 send_message: 'to telegram: @kato310_bot test...'\".",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "efaaae51-a3a4-46e2-a1cf-f68288d423a8"
+    },
+    "confidence": 0.8923132764230197,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782059975189,
+    "accessCount": 2,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d7244e54-1c22-44d1-84f2-3e63c06e8d0f",
+    "type": "preference",
+    "content": "Decision: Call list_directory — Reason: Looking at the task, the user wants me to \"📨 send_message: 'to telegram: @kato310_bot test...'\".",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "157816f4-8374-4a3b-8db8-a72ba99315e0"
+    },
+    "confidence": 0.8964338226387782,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782059972245,
+    "accessCount": 6,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f2d272b4-b5f2-4e55-b2c1-c115dfdda268",
+    "type": "belief",
+    "content": "Belief: Tool \"search_knowledge_graph\" is frequently relied upon across tasks. Tool \"search_knowledge_graph\" returned: {\"keyword\":\"send message telegram bot script\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1782040513578",
+      "tool": "search_knowledge_graph"
+    },
+    "confidence": 0.6883053603574184,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8e352fe8-20bc-40e9-83c2-7e02107a6ec2",
+    "type": "preference",
+    "content": "Decision: Call search_knowledge_graph — Reason: The user wants me to send a message to Telegram.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "275bde65-dce0-4659-ba20-ce324c88ec53"
+    },
+    "confidence": 0.8950496133054964,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782059974885,
+    "accessCount": 3,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4a32ded1-d7a7-4a66-a6cb-ffdd7162067f",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\".coral\",\"type\":\"directory\"},{\"name\":\".dockerignore\",\"type\":\"file\"},{\"name\":\".env\",\"type\":\"file\"},{\"name\":\".env.example\",\"type\":\"file\"},{\"name\":\".git\",\"type\":\"directory\"},{\"name\":\".github\",\"t",
+    "source": {
+      "taskId": "task-1782040513578",
+      "tool": "list_directory",
+      "decisionId": "dcf28902-939c-4bf9-a67f-64d85315fe28"
+    },
+    "confidence": 0.725189410634261,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1c10b228-2561-4d75-a70b-510480382fbe",
+    "type": "preference",
+    "content": "Decision: Call list_directory — Reason: The user wants me to send a message to Telegram.",
+    "source": {
+      "taskId": "task-1782040513578",
+      "decisionId": "dcf28902-939c-4bf9-a67f-64d85315fe28"
+    },
+    "confidence": 0.8960493654381259,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782059959685,
+    "accessCount": 4,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "preference",
+      "user"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "5cf11d28-3088-418b-9c90-268d58eb3c84",
+    "type": "fact",
+    "content": "Completed task: @kato310_bot (5484ms)",
+    "source": {
+      "taskId": "task-1782040289813"
+    },
+    "confidence": 0.7885302679154937,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "3e1e9290-1fe7-48b1-b8a4-348c71278bf5",
+    "type": "fact",
+    "content": "Decision: Respond directly — Reason: Respond directly",
+    "source": {
+      "taskId": "task-1782040289813",
+      "decisionId": "a2178f2a-0a8a-49cf-945d-ae666401359d"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8114396d-ca21-4322-9275-1bb1fde764d7",
+    "type": "fact",
+    "content": "Completed task: bạn còn đó không? (4421ms)",
+    "source": {
+      "taskId": "task-1782039778145"
+    },
+    "confidence": 0.7885302679154937,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "96012b93-b190-4bcf-a36e-8ed2ef2b6300",
+    "type": "fact",
+    "content": "Decision: Respond directly — Reason: Respond directly",
+    "source": {
+      "taskId": "task-1782039778145",
+      "decisionId": "f4917bde-236d-4bcf-98e5-e476c9e1ce2b"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ba30dcba-f240-4f4a-81be-27eaa8dbc2a7",
+    "type": "fact",
+    "content": "Completed task: tôi cần bạn offline (7347ms)",
+    "source": {
+      "taskId": "task-1782039729247"
+    },
+    "confidence": 0.7885302679154937,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "430edfe8-40d8-48aa-877c-03b9fb323ff0",
+    "type": "fact",
+    "content": "Decision: Respond directly — Reason: Respond directly",
+    "source": {
+      "taskId": "task-1782039729247",
+      "decisionId": "a33b77eb-f56d-422e-b796-a608bccb99e6"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "68294468-caf9-4e0c-ba73-08979a088001",
+    "type": "fact",
+    "content": "Completed task: nghiên cứu về việc tích hợp bạn lên máy tính nhúng làm sever 24/7. Khả năng tích hợp, khả năng nâng cấp, debug,... mọi khia cạnh (231114ms)",
+    "source": {
+      "taskId": "task-1782038760983"
+    },
+    "confidence": 0.7885302679154937,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1aa61ea0-fa51-4b62-89f7-ed121b47e797",
+    "type": "fact",
+    "content": "Decision: Call write_wiki_page — Reason: Tool selected (cycle 10)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "4d30047d-ac62-4442-8d64-19adc3096a21"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c1612a5b-d5bc-4696-8342-2f3fb848db92",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Now let me also look at the tsconfig and a few source files to understand system requirements.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "32a153ca-6aeb-4a73-a550-c3bf903544f5"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "18495d10-14df-4470-b7bb-45bff66f331f",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me also look at the tsconfig and a few source files to understand system requirements.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "4c80c249-1166-4606-aef5-897981b8df9c"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e1cffb6a-e9b0-476b-a46b-b8f1e8cfc5fb",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"{\\r\\n  \\\"compilerOptions\\\": {\\r\\n    \\\"target\\\": \\\"ES2022\\\",\\r\\n    \\\"module\\\": \\\"NodeNext\\\",\\r\\n    \\\"moduleResolution\\\": \\\"NodeNext\\\",\\r\\n    \\\"lib\\\": [\\\"ES2022\\\", \\\"DOM\\\"],\\r\\n    \\\"out",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "read_file",
+      "decisionId": "1dd42a1c-1b5a-46f3-9f7d-aaa446298c06"
+    },
+    "confidence": 0.737470028954377,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "296f46db-271a-4f65-b551-71369197c61c",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Now let me also look at the tsconfig and a few source files to understand system requirements.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "1dd42a1c-1b5a-46f3-9f7d-aaa446298c06"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7bc6feeb-0678-41c1-bd98-c2b5bf10bfe0",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"# ── Coral Agent — Docker Compose ──\\n# Usage: docker compose up -d\\n\\nservices:\\n  coral:\\n    build:\\n      context: .\\n      dockerfile: Dockerfile\\n    container_name: coral-agent\\n   ",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "read_file",
+      "decisionId": "3f21efe8-1b3f-4a1d-9305-7cec8762e392"
+    },
+    "confidence": 0.737470028954377,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7b12977b-d1ac-4475-9dc0-cae1f462e80d",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Interesting!",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "3f21efe8-1b3f-4a1d-9305-7cec8762e392"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a99b22c5-b7b3-4a10-9cc2-e4bc0721037f",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"# ── Coral Agent — Multi-stage Docker Build ──\\n# Stage 1: Dependencies + Build\\n\\nFROM node:22-alpine AS builder\\n\\nWORKDIR /app\\n\\n# Install build deps required by better-sqlite3 native ",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "read_file",
+      "decisionId": "100dd90b-8159-4f32-bbd9-599d54f1b89f"
+    },
+    "confidence": 0.737470028954377,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d8831f43-faec-45d6-8f80-c4f2f6262e13",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Interesting!",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "100dd90b-8159-4f32-bbd9-599d54f1b89f"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "25cc3f9f-6467-453d-87f4-264f02529720",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"{\\n  \\\"name\\\": \\\"ai-agent\\\",\\n  \\\"version\\\": \\\"1.0.0\\\",\\n  \\\"description\\\": \\\"Coral Agent\\\",\\n  \\\"main\\\": \\\"src/scripts/start-telegram.ts\\\",\\n  \\\"type\\\": \\\"module\\\",\\n  \\\"scripts\\\": {\\n   ",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "read_file",
+      "decisionId": "b80949d2-5697-4e13-a1dc-b98f045980bd"
+    },
+    "confidence": 0.737470028954377,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e33cbcc5-3834-48cb-ad09-75fdc222e1d5",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Interesting!",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "b80949d2-5697-4e13-a1dc-b98f045980bd"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6c0800fc-81db-42d1-89db-634fd730858e",
+    "type": "skill",
+    "content": "Tool \"search_knowledge_graph\" returned: {\"keyword\":\"coral architecture tech stack node typescript\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "search_knowledge_graph",
+      "decisionId": "ba007f7f-56fb-45f7-9a73-cfbc9a68cd3a"
+    },
+    "confidence": 0.8294526898385587,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "52fa4be0-d181-44f6-b268-26507e418e60",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Let me look at what exists in the project structure, especially any existing configuration or deployment files.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "ba007f7f-56fb-45f7-9a73-cfbc9a68cd3a"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "76ecfc9d-47dd-4a3b-99b4-c867e6190d1c",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Let me look at what exists in the project structure, especially any existing configuration or deployment files.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "0e8ed850-addb-458a-bbee-c984eedc0e5c"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "637e8cb1-4ceb-4ee2-9905-ef48753cda33",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Excellent!",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "1ed484ce-d9ed-4fbf-ab60-441c1c2a1625"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "34eaae3b-676b-4465-89f2-0a9c2af94b50",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Excellent!",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "1e20dd6e-17c0-4a73-bf81-7c4dc81aebc9"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "2c37de0a-212a-4783-93fa-39963c630802",
+    "type": "skill",
+    "content": "Tool \"web_search\" returned: \"**Answer:** Ollama provides an open-source LLM server with an API compatible with OpenAI, suitable for local inference. It lacks enterprise features like governance and access control. Use it for exp",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "web_search",
+      "decisionId": "56885fa6-b4d0-428b-bddc-2d439d59c3c0"
+    },
+    "confidence": 0.8294526898385587,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "web_search"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "962d1acc-0324-404c-ad6a-d7a8ef755a21",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Let me fetch some more detailed power consumption data and the Intel N100 comparison.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "56885fa6-b4d0-428b-bddc-2d439d59c3c0"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ffefbad4-2ae4-4f07-9c52-80d317c8cbad",
+    "type": "skill",
+    "content": "Tool \"fetch_url\" returned: {\"statusCode\":200,\"contentType\":\"text/markdown\",\"content\":\"Title: Is an Intel N100 a better value than a Raspberry Pi? - Jeff Geerling\\n\\nURL Source: https://www.jeffgeerling.com/blog/2025/intel-n100-",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "fetch_url",
+      "decisionId": "a3cf90e6-e0b3-4106-9741-1e65adc68731"
+    },
+    "confidence": 0.8259664324289023,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "fetch_url"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "07ec0ec8-e177-4252-9cad-6a6a987d2bca",
+    "type": "fact",
+    "content": "Decision: Call fetch_url — Reason: Let me fetch some more detailed power consumption data and the Intel N100 comparison.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "a3cf90e6-e0b3-4106-9741-1e65adc68731"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f690c47e-0ee0-4007-9c00-bc1eb2f85acc",
+    "type": "fact",
+    "content": "Decision: Call fetch_url — Reason: Let me fetch some more detailed power consumption data and the Intel N100 comparison.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "3f309cbb-9b86-4d9f-b2a2-50d1bbd4a6cb"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1555abfa-1851-47e5-b2fd-0ab7a1e028e8",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Now let me research more about deploying Node.js/TypeScript servers on these boards, power consumption, reliability for 24/7, and upgrade/debug approaches.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "d1ea6a47-9285-4df4-b059-61f2bca3322b"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "32c77b53-f5b4-4d29-887b-460c2408c46f",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Now let me research more about deploying Node.js/TypeScript servers on these boards, power consumption, reliability for 24/7, and upgrade/debug approaches.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "b598ca14-fc01-4243-b271-b93ebb100707"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "96c57242-18d4-4d7a-9a04-bdc91ecc2d33",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Now let me research more about deploying Node.js/TypeScript servers on these boards, power consumption, reliability for 24/7, and upgrade/debug approaches.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "97c68a9b-fb0e-415a-8288-b7f87c053bfd"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "5796428b-fe11-46bf-982d-183a18df384a",
+    "type": "skill",
+    "content": "Tool \"web_search\" returned: \"**Answer:** Raspberry Pi 5 costs €75-110, Orange Pi 5 is €65-150, and Radxa Rock 5B is more expensive. Orange Pi 5 has better performance than Raspberry Pi 5.\\n\\n**Search Results for:** \\\"Orange Pi 5",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "web_search",
+      "decisionId": "5f592360-be33-49b8-80cd-63b489aee1a5"
+    },
+    "confidence": 0.8322022508597597,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782059970158,
+    "accessCount": 1,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "web_search"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "341c63a1-a668-4349-9d67-433e6a8b7d19",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Good.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "5f592360-be33-49b8-80cd-63b489aee1a5"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f111e980-9029-4997-a969-e0c930337f83",
+    "type": "fact",
+    "content": "Decision: Call fetch_url — Reason: Good.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "37162f8c-49fe-4db7-8a68-8ee0fae8008b"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "25707818-f7bf-4dfd-a46f-2b92d80605d3",
+    "type": "fact",
+    "content": "Decision: Call fetch_url — Reason: Good.",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "a386560e-7404-4467-8d55-178e64160678"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8a4efce2-e5da-4c54-b594-80f9db2ba14a",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "01a17bee-388e-452c-ae70-53d4bacbc495"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e69fea83-ef52-41a9-8b13-826ce22b858f",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "8359f717-b1be-4f30-bce8-51a74faf432f"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d629cce1-ffdb-478a-ae5e-1a5a274f2008",
+    "type": "fact",
+    "content": "Decision: Call web_search — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "e1acf39a-a4a1-454c-8688-89a0be4c342e"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d1f83f6e-3fbc-4170-8ff8-d0b6586e9ff6",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "c888114b-0afe-48be-a86e-d0e823775bda"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a8656a5f-f359-4f9b-b66e-8f8386fc365f",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "d09a5236-686c-48e8-98fb-8fb147f74911"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "66349b9e-b192-4a8e-9345-21fa2e2b7eed",
+    "type": "skill",
+    "content": "Tool \"search_knowledge_graph\" returned: {\"keyword\":\"embedded server 24/7 máy tính nhúng\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1782038760983",
+      "tool": "search_knowledge_graph",
+      "decisionId": "77520090-92aa-4a47-9210-28e5255e683a"
+    },
+    "confidence": 0.7405827587844274,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "462403dc-996b-45b3-9a65-9f8f7f532a76",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1782038760983",
+      "decisionId": "77520090-92aa-4a47-9210-28e5255e683a"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6e40c3bf-6de3-4977-8f94-2b09b5384278",
+    "type": "fact",
+    "content": "Completed task: ? bạn làm chưa? có vẻ bạn  đang chưa có khả năng thực hiện các task liên tục  đúng không? Coral (275514ms)",
+    "source": {
+      "taskId": "task-1782038400194"
+    },
+    "confidence": 0.7885302679154937,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "b7517d48-446b-4d0c-bafa-038c506bf070",
+    "type": "skill",
+    "content": "Tool \"write_wiki_page\" returned: {\"success\":true,\"path\":\"knowledge\\\\wiki\\\\iot\\\\esp32-implementation-guide.md\"}",
+    "source": {
+      "taskId": "task-1782038400194",
+      "tool": "write_wiki_page",
+      "decisionId": "db6a27b0-92e1-4d5b-af81-de826b8cced5"
+    },
+    "confidence": 0.7702060691358045,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 1,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "write_wiki_page"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ea2441be-b195-4b66-97e4-1ca1d7d41369",
+    "type": "fact",
+    "content": "Decision: Call write_wiki_page — Reason: Tool selected (cycle 5)",
+    "source": {
+      "taskId": "task-1782038400194",
+      "decisionId": "db6a27b0-92e1-4d5b-af81-de826b8cced5"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "775fba23-36b8-4ab3-a1fa-cd581a91b2b6",
+    "type": "fact",
+    "content": "Decision: Call write_wiki_page — Reason: Tool selected (cycle 4)",
+    "source": {
+      "taskId": "task-1782038400194",
+      "decisionId": "d875066f-3d55-4dcc-9f31-2675e76d44a3"
+    },
+    "confidence": 0.587991414027779,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "fa249a34-b289-43b3-9ed6-f5240daac1ec",
+    "type": "belief",
+    "content": "Belief: Tool \"fetch_url\" is frequently relied upon across tasks. Tool \"fetch_url\" returned: {\"statusCode\":200,\"contentType\":\"text/markdown\",\"content\":\"Title: How MCP2MQTT Bridges AI And IoT: Real-Time Control With MQTT & EMQX\\n\\nURL Source: https://zediot.com/blog/mcp2mqtt-ai-control-iot\\n\\n",
+    "source": {
+      "taskId": "task-1782038400194",
+      "tool": "fetch_url"
+    },
+    "confidence": 0.6883053603574184,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "fetch_url"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6e366296-e21a-4898-bbb9-9291300eccc8",
+    "type": "skill",
+    "content": "Tool \"fetch_url\" returned: {\"statusCode\":200,\"contentType\":\"text/markdown\",\"content\":\"Title: How MCP2MQTT Bridges AI And IoT: Real-Time Control With MQTT & EMQX\\n\\nURL Source: https://zediot.com/blog/mcp2mqtt-ai-control-iot\\n\\n",
+    "source": {
+      "taskId": "task-1782038400194",
+      "tool": "fetch_url",
+      "decisionId": "cc6edd40-a468-49eb-967e-fb7bbb9c57b2"
+    },
+    "confidence": 0.737470028954377,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1782056975963,
+    "lastAccessedAt": 1782056975963,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "fetch_url"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "5dd4468a-050c-47d6-9ca4-86f4f1452962",
+    "type": "fact",
+    "content": "Decision: Respond directly — Reason: Respond directly",
+    "source": {
+      "taskId": "task-1782058036186",
+      "decisionId": "3e4dd5c3-3c64-4303-9e3a-1550418b2829"
+    },
+    "confidence": 0.5936029178748545,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1782058039910,
+    "lastAccessedAt": 1782058039910,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e4b0aff6-781e-4396-a14d-e0267e2291c3",
+    "type": "fact",
+    "content": "Completed task: @kato310_bot (3981ms)",
+    "source": {
+      "taskId": "task-1782058036186"
+    },
+    "confidence": 0.7938993923879678,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1782058040168,
+    "lastAccessedAt": 1782058040168,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "dormant",
+    "pinned": false,
+    "archived": false
+  }
+]
