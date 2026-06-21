@@ -29,6 +29,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { RateLimiter } from '../../core/security/rate-limiter.js';
+import { isComplexTask } from '../../core/agent/react-loop.js';
 
 // Rate limiter: max 20 messages per 60s per user
 const messageLimiter = new RateLimiter('telegram', {
@@ -173,6 +174,14 @@ export class TelegramBridge implements PlatformAdapter {
     this.bot = new Bot(token);
     this.reporter = new ActivityReporter(this.bot);
     this.registerEventHandlers();
+  }
+
+  /**
+   * Initialize the message handler wrapper (with streaming support)
+   * Called after gateway registration to wire up TelegramMessageHandler
+   */
+  initializeMessageHandlerWrapper(coralAgent: any): void {
+    this.messageHandlerWrapper = new TelegramMessageHandler(coralAgent);
   }
 
   // ──────────────────────────────────────────────
@@ -491,8 +500,9 @@ export class TelegramBridge implements PlatformAdapter {
         if (this.messageHandler) {
           // Send "processing" indicator
           let processingMsgId: number | null = null;
+          let processingMsgText = '⏳ Đang xử lý...';
           try {
-            const processingMsg = await this.bot.api.sendMessage(chatId, '⏳ Đang xử lý...');
+            const processingMsg = await this.bot.api.sendMessage(chatId, processingMsgText);
             processingMsgId = processingMsg.message_id;
           } catch {}
 
@@ -503,8 +513,30 @@ export class TelegramBridge implements PlatformAdapter {
             this.sessionManager.markIntroSent(userId);
           }
 
-          // Get agent response
-          const agentResponse = await this.messageHandler(adapterMsg);
+          // Check if we can use streaming (via messageHandlerWrapper)
+          let agentResponse;
+
+          if (this.messageHandlerWrapper && isComplexTask(text)) {
+            this.messageHandlerWrapper.setStreamResponder(async (update: string) => {
+              if (processingMsgId && update !== processingMsgText) {
+                try {
+                  await this.bot.api.editMessageText(chatId, processingMsgId, update.slice(0, 4096));
+                  processingMsgText = update;
+                } catch {}
+              }
+            });
+
+            const wrappedResponse = await this.messageHandlerWrapper.handleMessage({
+              userId,
+              text,
+              chatId,
+              messageId,
+            });
+            agentResponse = { output: wrappedResponse.text };
+            this.messageHandlerWrapper.clearStreamResponder();
+          } else {
+            agentResponse = await this.messageHandler(adapterMsg);
+          }
 
           // Update activity timestamp
           this.sessionManager.updateLastActivity(userId);
@@ -609,8 +641,9 @@ export class TelegramBridge implements PlatformAdapter {
         if (this.messageHandler) {
           // Send "processing" indicator
           let processingMsgId: number | null = null;
+          let processingMsgText = '⏳ Đang xử lý...';
           try {
-            const processingMsg = await this.bot.api.sendMessage(chatId, '⏳ Đang xử lý...');
+            const processingMsg = await this.bot.api.sendMessage(chatId, processingMsgText);
             processingMsgId = processingMsg.message_id;
           } catch {}
 
@@ -621,8 +654,30 @@ export class TelegramBridge implements PlatformAdapter {
             this.sessionManager.markIntroSent(userId);
           }
 
-          // Get agent response
-          const agentResponse = await this.messageHandler(adapterMsg);
+          // Check if we can use streaming (via messageHandlerWrapper)
+          let agentResponse;
+
+          if (this.messageHandlerWrapper && isComplexTask(text)) {
+            this.messageHandlerWrapper.setStreamResponder(async (update: string) => {
+              if (processingMsgId && update !== processingMsgText) {
+                try {
+                  await this.bot.api.editMessageText(chatId, processingMsgId, update.slice(0, 4096));
+                  processingMsgText = update;
+                } catch {}
+              }
+            });
+
+            const wrappedResponse = await this.messageHandlerWrapper.handleMessage({
+              userId,
+              text,
+              chatId,
+              messageId,
+            });
+            agentResponse = { output: wrappedResponse.text };
+            this.messageHandlerWrapper.clearStreamResponder();
+          } else {
+            agentResponse = await this.messageHandler(adapterMsg);
+          }
 
           // Update activity timestamp
           this.sessionManager.updateLastActivity(userId);

@@ -135,6 +135,26 @@ export class SessionManager {
   }
 
   /**
+   * Get or create a session for a user
+   * Creates a new session if none exists for the given userId
+   */
+  createSession(userId: string): SessionState {
+    const existing = this.getSession(userId);
+    if (existing) return existing;
+
+    const session: SessionState = {
+      sessionId: `session-${userId}-${Date.now()}`,
+      userId,
+      lastActivity: Date.now(),
+      introSent: false,
+      createdAt: Date.now(),
+    };
+
+    this.sessions.set(userId, session);
+    return session;
+  }
+
+  /**
    * Get session for user (without TTL check)
    */
   getSession(userId: string): SessionState | undefined {

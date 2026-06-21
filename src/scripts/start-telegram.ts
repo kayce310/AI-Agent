@@ -190,6 +190,9 @@ async function start() {
   // Register adapter → wires message handler
   gateway.register(bridge);
 
+  // Initialize message handler wrapper with streaming support (Phase 2)
+  bridge.initializeMessageHandlerWrapper(engine);
+
   // Start adapter (connects to Telegram)
   await gateway.startAdapter('telegram');
 

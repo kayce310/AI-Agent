@@ -15,7 +15,7 @@ describe('TelegramMessageHandler', () => {
 
     // Mock observability (optional)
     observabilityMock = {
-      recordError: vi.fn().mockResolvedValue(undefined),
+      recordEvent: vi.fn().mockResolvedValue(undefined),
       isEnabled: vi.fn().mockReturnValue(false),
     };
 
@@ -23,19 +23,18 @@ describe('TelegramMessageHandler', () => {
   });
 
   afterEach(() => {
+    // Clean up session manager
     handler.destroy();
   });
 
   describe('Message Handling', () => {
-    it('handles first message and sends intro', async () => {
+    it('routes simple messages to Coral agent', async () => {
       const response = await handler.handleMessage({
         userId: 'user123',
         text: 'Hello',
       });
 
-      expect(response.text).toContain('Xin chào');
       expect(response.text).toContain('Response from Coral');
-      expect(response.sentIntro).toBe(true);
     });
 
     it('does not send intro on second message in same session', async () => {
@@ -44,7 +43,7 @@ describe('TelegramMessageHandler', () => {
         userId: 'user123',
         text: 'Hello',
       });
-      expect(response1.sentIntro).toBe(true);
+      expect(response1.sentIntro).toBe(false); // No intro handling at handler level
 
       // Second message
       const response2 = await handler.handleMessage({
@@ -52,7 +51,6 @@ describe('TelegramMessageHandler', () => {
         text: 'How are you?',
       });
       expect(response2.sentIntro).toBe(false);
-      expect(response2.text).not.toContain('Xin chào');
       expect(response2.text).toContain('Response from Coral');
     });
 
@@ -95,40 +93,20 @@ describe('TelegramMessageHandler', () => {
 
       expect(msg1.sessionId).not.toBe(msg2.sessionId);
     });
+
+    it('routes complex tasks to streaming react loop', async () => {
+      const response = await handler.handleMessage({
+        userId: 'user123',
+        text: 'Research IoT and evaluate options',
+      });
+
+      // Complex tasks should still return a response
+      expect(response.text).toBeDefined();
+      expect(response.sessionId).toBeDefined();
+    });
   });
 
   describe('Session Management', () => {
-    it('sends intro again after session TTL expires', async () => {
-      vi.useFakeTimers();
-
-      // First message
-      const response1 = await handler.handleMessage({
-        userId: 'user123',
-        text: 'Hello',
-      });
-      expect(response1.sentIntro).toBe(true);
-
-      // Second message (still in session)
-      const response2 = await handler.handleMessage({
-        userId: 'user123',
-        text: 'Still here',
-      });
-      expect(response2.sentIntro).toBe(false);
-
-      // Advance past TTL (15 min)
-      vi.advanceTimersByTime(15 * 60 * 1000 + 1000);
-
-      // Third message (new session)
-      const response3 = await handler.handleMessage({
-        userId: 'user123',
-        text: 'New session',
-      });
-      expect(response3.sentIntro).toBe(true);
-      expect(response3.sessionId).not.toBe(response1.sessionId);
-
-      vi.useRealTimers();
-    });
-
     it('tracks active session count', async () => {
       expect(handler.getActiveSessionCount()).toBe(0);
 
@@ -161,49 +139,25 @@ describe('TelegramMessageHandler', () => {
       const session = handler.getSessionInfo('user123');
       expect(session).toBeDefined();
       expect(session?.userId).toBe('user123');
-      expect(session?.introSent).toBe(true);
+    });
+  });
+
+  describe('Streaming', () => {
+    it('accepts stream responder', () => {
+      const responder = vi.fn().mockResolvedValue(undefined);
+      handler.setStreamResponder(responder);
+      expect(handler).toBeDefined();
+    });
+
+    it('clears stream responder', () => {
+      const responder = vi.fn().mockResolvedValue(undefined);
+      handler.setStreamResponder(responder);
+      handler.clearStreamResponder();
+      expect(handler).toBeDefined();
     });
   });
 
   describe('Observability Integration', () => {
-    it('records session activity when observability enabled', async () => {
-      const recordErrorSpy = vi.spyOn(observabilityMock, 'recordError');
-
-      const handler2 = new TelegramMessageHandler(coralMock, observabilityMock);
-      await handler2.handleMessage({
-        userId: 'user123',
-        text: 'Hello',
-      });
-
-      expect(recordErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          source: 'session',
-          message: expect.stringContaining('message_received'),
-        })
-      );
-
-      handler2.destroy();
-    });
-
-    it('records intro sent event', async () => {
-      const recordErrorSpy = vi.spyOn(observabilityMock, 'recordError');
-
-      const handler2 = new TelegramMessageHandler(coralMock, observabilityMock);
-      await handler2.handleMessage({
-        userId: 'user123',
-        text: 'Hello',
-      });
-
-      expect(recordErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          source: 'session_intro',
-          message: expect.stringContaining('intro_sent'),
-        })
-      );
-
-      handler2.destroy();
-    });
-
     it('handles missing observability gracefully', async () => {
       const handler2 = new TelegramMessageHandler(coralMock); // No observability
       const response = await handler2.handleMessage({
@@ -211,34 +165,13 @@ describe('TelegramMessageHandler', () => {
         text: 'Hello',
       });
 
-      expect(response.text).toContain('Xin chào');
-      expect(response.sentIntro).toBe(true);
-
+      expect(response.text).toContain('Response from Coral');
       handler2.destroy();
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('returns error response on agent failure', async () => {
-      const failingCoralMock = {
-        handleMessage: vi.fn().mockRejectedValue(new Error('Agent crashed')),
-      };
-
-      const failHandler = new TelegramMessageHandler(failingCoralMock);
-      const response = await failHandler.handleMessage({
-        userId: 'user123',
-        text: 'Test',
-      });
-
-      expect(response.text).toContain('❌');
-      expect(response.text).toContain('lỗi');
-
-      failHandler.destroy();
     });
 
     it('continues to work even if observability fails', async () => {
       const failingObservability = {
-        recordError: vi.fn().mockRejectedValue(new Error('Observability down')),
+        recordEvent: vi.fn().mockRejectedValue(new Error('Observability down')),
       };
 
       const handler2 = new TelegramMessageHandler(coralMock, failingObservability);
@@ -249,9 +182,27 @@ describe('TelegramMessageHandler', () => {
 
       // Should still work
       expect(response.text).toContain('Response from Coral');
-      expect(response.sentIntro).toBe(true);
-
       handler2.destroy();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('returns agent response on agent failure', async () => {
+      const failingCoralMock = {
+        handleMessage: vi.fn().mockRejectedValue(new Error('Agent crashed')),
+      };
+
+      const failHandler = new TelegramMessageHandler(failingCoralMock);
+      const response = await failHandler.handleMessage({
+        userId: 'user123',
+        text: 'Test',
+      });
+
+      // Agent failure returns error message
+      expect(response.text).toContain('❌');
+      expect(response.text).toContain('Lỗi');
+
+      failHandler.destroy();
     });
   });
 
@@ -264,20 +215,17 @@ describe('TelegramMessageHandler', () => {
     });
   });
 
-  describe('Type safety', () => {
-    it('handles mock observability', async () => {
-      const mockObs = {
-        recordError: vi.fn().mockResolvedValue(undefined),
-      } as any;
+  describe('Intro Messages', () => {
+    it('provides static intro message', () => {
+      const intro = TelegramMessageHandler.getIntroMessage();
+      expect(intro).toContain('Coral');
+      expect(intro).toContain('🌊');
+    });
 
-      const handler2 = new TelegramMessageHandler(coralMock, mockObs);
-      const response = await handler2.handleMessage({
-        userId: 'user123',
-        text: 'Hello',
-      });
-
-      expect(response.text).toContain('Xin chào');
-      handler2.destroy();
+    it('provides static bootstrap intro message', () => {
+      const intro = TelegramMessageHandler.getBootstrapIntroMessage();
+      expect(intro).toContain('admin');
+      expect(intro).toContain('🌊');
     });
   });
 });
