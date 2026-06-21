@@ -401,18 +401,47 @@ export class Agent extends EventEmitter {
         const toolsTokenEstimate = estimateToolsTokenCount(selectedTools);
         /* tools selected */
 
-        // ── Invoke model via ModelRouter with fallback ──
+        // ── Invoke model via ModelRouter with streaming support (Phase 4E-B.3) ──
         await this.hooks.emit('model:invoke', {
           sessionId: request.sessionId,
           toolCount: selectedTools.length,
           cycle: toolCallCycles,
         });
 
-        const modelResult = await this.modelRouter.route(messages, {
+        let modelResult: any;
+        const modelOptions = {
           model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
           tools: selectedTools,
           maxTokens: 4096,
-        });
+        };
+
+        // Try streaming first, fallback to regular invoke on error
+        try {
+          if ((this.modelRouter as any).getAdapter('9router')?.invokeStreaming) {
+            const adapter = (this.modelRouter as any).getAdapter('9router');
+            const taskId = request.sessionId;
+            
+            modelResult = await adapter.invokeStreaming(
+              messages,
+              taskId,
+              (chunk: string, isFinal: boolean) => {
+                // Emit reasoning_updated via hooks so listeners can forward to EventBus
+                this.hooks.emit('reasoning:update', {
+                  sessionId: taskId,
+                  chunk,
+                  isFinal,
+                });
+              },
+              modelOptions
+            );
+          } else {
+            // Fallback: regular invoke
+            modelResult = await this.modelRouter.route(messages, modelOptions);
+          }
+        } catch (err: any) {
+          log.warn(`[STREAMING] Failed, falling back to invoke(): ${err.message}`);
+          modelResult = await this.modelRouter.route(messages, modelOptions);
+        }
 
         await this.hooks.emit('model:response', {
           sessionId: request.sessionId,

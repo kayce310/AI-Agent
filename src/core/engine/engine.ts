@@ -201,6 +201,21 @@ export class Engine extends EventEmitter {
     this.agent = new Agent(agentConfig);
 
     this.agent.on('cascade', (data: any) => { this.emit('cascade', data); });
+    
+    // Phase 4E-B.3: Hook reasoning:update events from Agent streaming
+    this.agent.onEvent('reasoning:update', (data: any) => {
+      const taskId = this.currentTaskId;
+      const chunk = (data.chunk as string) || '';
+      const isFinal = (data.isFinal as boolean) || false;
+      
+      if (taskId && chunk) {
+        this.structuredLogger.reasoningUpdated(taskId, chunk, isFinal);
+        if (isFinal) {
+          console.log(`[ENGINE] Reasoning complete for task ${taskId}: ${chunk.length} chars`);
+        }
+      }
+    });
+    
     await globalMemoryStore.init();
 
     // ═══ SELF-EVOLUTION LEARNER (Phase 6) ═══
