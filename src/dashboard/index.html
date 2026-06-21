@@ -121,43 +121,52 @@
       </div>
     </section>
 
-    <!-- ═══ F4: FOCUS MODE — REASONING-CENTRIC ═══ -->
-    <section id="focus-view" class="focus-reasoning-centric hidden">
-      <!-- FOCUS Header with Pause Control -->
+    <!-- ═══ F4: FOCUS MODE — 4-PART LAYOUT ═══ -->
+    <section id="focus-view" class="focus-view hidden">
+      <!-- PART 1: HEADER -->
       <div class="focus-header">
-        <span class="card-label">⚡ FOCUS</span>
-        <button id="focus-pause-btn" title="Pause/Resume FOCUS updates">PAUSE</button>
-      </div>
-
-      <!-- PRIMARY: Current Thought (60% viewport) -->
-      <div class="focus-thought-container">
-        <div class="focus-thought" id="focus-thought">
-          Awaiting reasoning...
+        <span class="focus-title">⚡ FOCUS</span>
+        <div class="focus-controls">
+          <span id="focus-status" class="focus-status">IDLE</span>
+          <button id="focus-pause-btn" class="focus-pause-btn" title="Pause/Resume">PAUSE</button>
         </div>
       </div>
 
-      <!-- PREDICTION: Next Action + Confidence -->
-      <div class="focus-prediction-section">
-        <div class="prediction-action" id="focus-prediction-action">
-          Evaluating next action...
-        </div>
-        <div class="prediction-confidence" id="focus-prediction-confidence">
-          <div id="focus-confidence-bar" class="focus-confidence-bar"></div>
-          <span style="position: relative; z-index: 1;">Confidence: —</span>
-        </div>
+      <!-- PART 2: REASONING PANEL (scrollable) -->
+      <div class="focus-reasoning-panel">
+        <div id="focus-thought" class="focus-thought">Awaiting reasoning...</div>
       </div>
 
-      <!-- SECONDARY: Active Tool -->
-      <div class="focus-tool-section">
-        <div class="tool-display" id="focus-tool-display">
-          No tool running
+      <!-- PART 3: BOTTOM ROW (3 equal cards) -->
+      <div class="focus-bottom-row">
+        <!-- Card 1: Prediction -->
+        <div class="focus-card">
+          <div class="focus-card-title">Next Action</div>
+          <div id="focus-prediction-action" class="focus-card-content">Evaluating...</div>
+          <div id="focus-prediction-confidence" class="focus-card-meta">Confidence: —</div>
         </div>
-      </div>
 
-      <!-- TERTIARY: Goal + Status Context -->
-      <div class="focus-context-footer">
-        <span class="context-goal" id="focus-context-goal">—</span>
-        <span class="context-status" id="focus-context-status">—</span>
+        <!-- Card 2: Tool -->
+        <div class="focus-card">
+          <div class="focus-card-title">Active Tool</div>
+          <div id="focus-tool-display" class="focus-card-content">No tool running</div>
+          <div id="focus-tool-duration" class="focus-card-meta">—</div>
+        </div>
+
+        <!-- Card 3: Context -->
+        <div class="focus-card">
+          <div class="focus-card-title">Mission Context</div>
+          <div class="focus-card-content">
+            <div class="focus-context-row">
+              <span class="focus-context-label">Goal:</span>
+              <span id="focus-context-goal" class="focus-context-value">—</span>
+            </div>
+            <div class="focus-context-row">
+              <span class="focus-context-label">Status:</span>
+              <span id="focus-context-status" class="focus-context-value">—</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
