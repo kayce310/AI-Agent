@@ -88,5 +88,15 @@
     "role": "assistant",
     "content": "Dạ, tôi đã hoàn thành research rất toàn diện về các thiết bị IoT giá rẻ. Bây giờ tôi sẽ tổng hợp lại toàn bộ kiến thức và tạo wiki page cho bạn.\n\n## 📊 **TỔNG HỢP RESEARCH - THIẾT BỊ IOT GIÁ RẺ**\n\nTôi sẽ tạo một wiki page chi tiết với tất cả thông tin đã research:",
     "timestamp": 1782038116020
+  },
+  {
+    "role": "user",
+    "content": "? bạn làm chưa? có vẻ bạn  đang chưa có khả năng thực hiện các task liên tục  đúng không? Coral",
+    "timestamp": 1782038675710
+  },
+  {
+    "role": "assistant",
+    "content": "# ✅ **HOÀN THÀNH RESEARCH!** 🎉\n\nĐây là toàn bộ kết quả nghiên cứu. Tôi đã làm **3 việc** cụ thể:\n\n---\n\n## 📚 **1. Wiki Page: Thiết Bị IoT Giá Rẻ**\n👉 `knowledge/wiki/iot/cheap-iot-devices-research.md`\n\n**Thiết bị được recommend (giá <$30):**\n\n| Thiết Bị | Giá | Use Case cho Coral |\n|-----------|-----|-------------------|\n| **ESP32** 🔥 | $5-8 | Board chính + MQTT + Sensors |\n| DHT11 | $1-2 | Nhiệt độ/Độ ẩm |\n| Relay 5V | $0.5-1 | Điều khiển thiết bị 220V |\n| PIR Motion | $1-2 | Phát hiện người |\n| *Tổng cho 3 node* | **~$23** | 3 ESP32 + 3 Sensors + 3 Relay |\n\n---\n\n## 📚 **2. Wiki Page: Implementation Guide**\n👉 `knowledge/wiki/iot/esp32-implementation-guide.md`\n\nBao gồm **từ A→Z**:\n- ✅ Sơ đồ mạch (wiring diagram)\n- ✅ Full code Arduino (MQTT + DHT + Relay)\n- ✅ Python bridge (Coral ↔ MQTT)\n- ✅ Test script\n- ✅ Troubleshooting guide\n\n---\n\n## 🧠 **3. Kiến Trúc Tích Hợp Coral → IoT**\n\n```\nUser (Telegram)\n    │ \"Bật đèn phòng khách\"\n    ▼\n[Coral AI Agent]\n    │ Parse: intent=\"light_on\", room=\"living\"\n    ▼\n[MQTT] coral/commands/relay1 → ON\n    │\n    ▼\n[ESP32] → Relay → 220V Light ON\n    │\n    ▼\n[Feedback] coral/sensors/status → \"OK\"\n    │\n    ▼\n[Telegram] \"Đã bật đèn phòng khách ✅\"\n```\n\n---\n\n**Next step:** Bạn muốn làm gì trước?\n1. 🛒 **Đặt hàng linh kiện** (ESP32 + DHT11 + Relay)\n2. 💻 **Setup MQTT Broker** (Docker/Home Assistant)\n3. ⚙️ **Flash firmware thử nghiệm**\n4. 🔌 **Tích hợp Telegram Bot**\n\nHay muốn tôi **tạo Roadmap chi tiết** từng ngày cho 2 tuần tới?",
+    "timestamp": 1782038675710
   }
 ]
