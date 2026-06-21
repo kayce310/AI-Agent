@@ -16,6 +16,7 @@
       <button id="tab-mission" class="tab-btn active" data-tab="mission">MISSION</button>
       <button id="tab-trace" class="tab-btn" data-tab="trace">🧠 TRACE</button>
       <button id="tab-focus" class="tab-btn" data-tab="focus">⚡ FOCUS</button>
+      <button id="tab-graph" class="tab-btn" data-tab="graph">🔗 GRAPH</button>
     </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
@@ -157,6 +158,51 @@
         <div class="card-label">REASONING</div>
         <div id="focus-reasoning" class="focus-reasoning">
           <div class="empty-state">Awaiting reasoning...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ F5: GRAPH VIEW ═══ -->
+    <section id="graph-view" class="hidden">
+      <!-- Graph Header: Task Context -->
+      <div class="card graph-header">
+        <div class="card-label">COGNITIVE GRAPH</div>
+        <div id="graph-task-info" class="graph-task-info">
+          <span id="graph-task-id" class="graph-task-id">—</span>
+          <span id="graph-node-count" class="graph-node-count">0 nodes</span>
+          <span id="graph-edge-count" class="graph-edge-count">0 edges</span>
+        </div>
+      </div>
+
+      <!-- SVG Canvas -->
+      <div id="graph-container" class="graph-container">
+        <svg id="graph-svg" class="graph-svg" width="100%" height="600"></svg>
+      </div>
+
+      <!-- Legend -->
+      <div class="card graph-legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-node decision-node">●</span>
+            <span class="legend-label">Decision</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-node tool-node">●</span>
+            <span class="legend-label">Tool</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-node artifact-node">●</span>
+            <span class="legend-label">Artifact</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-edge" style="border-top: 2px solid var(--accent)"></span>
+            <span class="legend-label">Caused</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-edge" style="border-top: 2px solid var(--text-dim)"></span>
+            <span class="legend-label">Produced</span>
+          </div>
         </div>
       </div>
     </section>

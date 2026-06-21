@@ -226,13 +226,9 @@
     renderTimeline();
     renderFileChanges();
     renderTelemetryDebug();
-    renderError();
-    eventCount.textContent = `${allEvents.length} events`;
-    
-    // Update Focus Mode if active
-    if (currentTab === 'focus') {
-      renderFocus();
-    }
+    if (currentTab === 'trace') renderTrace();
+    if (currentTab === 'focus') renderFocus();
+    if (currentTab === 'graph') renderGraph();
   }
 
   function renderMission() {
@@ -655,11 +651,162 @@
     });
   }
 
+  // ═══ RENDER GRAPH ═══
+  async function renderGraph() {
+    const taskId = currentTaskId || lastCompletedTaskId;
+    const graphView = document.getElementById('graph-view');
+    
+    if (!taskId) {
+      graphView.innerHTML = '<div class="empty-state">No task selected</div>';
+      return;
+    }
+
+    try {
+      // Fetch graph from API
+      const res = await fetch(`/api/graph/${taskId}`);
+      const json = await res.json();
+      
+      if (!json.success || !json.data) {
+        document.getElementById('graph-task-info').innerHTML = 
+          `<span class="graph-task-id">${taskId}</span><span class="graph-node-count">0 nodes</span>`;
+        drawEmptyGraph();
+        return;
+      }
+
+      const graph = json.data;
+      document.getElementById('graph-task-id').textContent = taskId;
+      document.getElementById('graph-node-count').textContent = `${graph.nodes.length} nodes`;
+      document.getElementById('graph-edge-count').textContent = `${graph.edges.length} edges`;
+
+      if (viewMode !== 'developer') {
+        // Filter for user mode: hide IDs
+        graph.nodes = graph.nodes.map(n => ({
+          ...n,
+          label: n.label.replace(/:[a-z0-9-]+$/i, ''), // Strip IDs
+        }));
+      }
+
+      drawGraph(graph);
+    } catch (err) {
+      console.error('[renderGraph]', err);
+      document.getElementById('graph-svg').innerHTML = 
+        `<text x="50%" y="50%" text-anchor="middle">Error loading graph</text>`;
+    }
+  }
+
+  function drawEmptyGraph() {
+    const svg = document.getElementById('graph-svg');
+    svg.innerHTML = `
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="var(--text-dim)" />
+        </marker>
+      </defs>
+      <text x="50%" y="50%" text-anchor="middle" fill="var(--text-dim)" dy=".3em">
+        No graph data available
+      </text>
+    `;
+  }
+
+  function drawGraph(graph) {
+    const svg = document.getElementById('graph-svg');
+    const width = svg.clientWidth || 800;
+    const height = 600;
+    
+    // Clear SVG
+    svg.innerHTML = '';
+
+    // Add defs
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML = `
+      <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="var(--text-dim)" />
+      </marker>
+    `;
+    svg.appendChild(defs);
+
+    // Simple layout: arrange nodes vertically by type
+    const nodePositions = new Map();
+    let y = 60;
+    const nodesByType = { decision: [], tool: [], artifact: [] };
+    
+    for (const node of graph.nodes) {
+      nodesByType[node.type]?.push(node);
+    }
+
+    // Layout: decisions in column 1, tools in column 2, artifacts in column 3
+    const cols = { decision: 100, tool: 350, artifact: 600 };
+    let counts = { decision: 0, tool: 0, artifact: 0 };
+
+    for (const node of graph.nodes) {
+      const x = cols[node.type] || 100;
+      const nodeY = 60 + counts[node.type] * 100;
+      nodePositions.set(node.id, { x, y: nodeY });
+      counts[node.type]++;
+    }
+
+    // Draw edges
+    for (const edge of graph.edges) {
+      const from = nodePositions.get(edge.from);
+      const to = nodePositions.get(edge.to);
+      
+      if (!from || !to) continue;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', from.x);
+      line.setAttribute('y1', from.y);
+      line.setAttribute('x2', to.x);
+      line.setAttribute('y2', to.y);
+      line.setAttribute('class', `graph-edge ${edge.relation}-edge`);
+      svg.appendChild(line);
+    }
+
+    // Draw nodes
+    for (const node of graph.nodes) {
+      const pos = nodePositions.get(node.id);
+      if (!pos) continue;
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', `graph-node ${node.type}-node`);
+      g.setAttribute('data-id', node.id);
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', pos.x);
+      circle.setAttribute('cy', pos.y);
+      circle.setAttribute('r', 16);
+      g.appendChild(circle);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', pos.x);
+      text.setAttribute('y', pos.y);
+      text.setAttribute('class', 'graph-node-label');
+      
+      const label = node.label.substring(0, 12);
+      text.textContent = label;
+      g.appendChild(text);
+
+      // Tooltip on hover
+      g.addEventListener('mouseenter', (e) => {
+        showNodeTooltip(e, node);
+      });
+
+      svg.appendChild(g);
+    }
+  }
+
+  function showNodeTooltip(e, node) {
+    // Dev mode: show full node info
+    if (viewMode === 'developer') {
+      console.log(`[${node.type}] ${node.label}`, node);
+    }
+  }
+
   // ═══ TABS ═══
   function setupTabs() {
     tabMissionBtn?.addEventListener('click', () => switchTab('mission'));
     tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
     document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
+    document.getElementById('tab-graph')?.addEventListener('click', () => switchTab('graph'));
   }
 
   function switchTab(tab) {
@@ -669,15 +816,19 @@
     tabMissionBtn?.classList.toggle('active', tab === 'mission');
     tabTraceBtn?.classList.toggle('active', tab === 'trace');
     document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
+    document.getElementById('tab-graph')?.classList.toggle('active', tab === 'graph');
     
     missionView?.classList.toggle('hidden', tab !== 'mission');
     traceView?.classList.toggle('hidden', tab !== 'trace');
     document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
+    document.getElementById('graph-view')?.classList.toggle('hidden', tab !== 'graph');
     
     if (tab === 'trace') {
       renderTrace();
     } else if (tab === 'focus') {
       renderFocus();
+    } else if (tab === 'graph') {
+      renderGraph();
     }
   }
 

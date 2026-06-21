@@ -6,6 +6,7 @@
 
 import { EventBus } from './bus.js';
 import { buildCognitiveTrace } from './trace-builder.js';
+import { traceToGraph } from './graph-builder.js';
 
 export interface EventApiResponse {
   success: boolean;
@@ -82,6 +83,32 @@ export class EventApi {
       const trace = buildCognitiveTrace(taskId, events);
 
       return { success: true, data: trace };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * GET /api/graph/:taskId
+   * Build cognitive graph (causal decision graph) from trace
+   */
+  getGraph(taskId: string): EventApiResponse {
+    try {
+      if (!taskId || typeof taskId !== 'string') {
+        return {
+          success: false,
+          error: 'Invalid taskId',
+        };
+      }
+
+      const events = this.bus.getRecent(1000);
+      const trace = buildCognitiveTrace(taskId, events);
+      const graph = traceToGraph(taskId, trace);
+
+      return { success: true, data: graph };
     } catch (error) {
       return {
         success: false,

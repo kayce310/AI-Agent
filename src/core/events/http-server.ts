@@ -117,6 +117,21 @@ export class DashboardServer {
       return;
     }
 
+    // ═══ API: Graph ═══
+    if (url.startsWith('/api/graph/')) {
+      const taskId = url.replace(/^\/api\/graph\//, '');
+      if (!taskId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Missing taskId' }));
+        return;
+      }
+
+      const response = this.eventApi.getGraph(taskId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
+      return;
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: false, error: 'Not found' }));
