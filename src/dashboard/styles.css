@@ -139,7 +139,8 @@ body {
   transition: margin-right 0.25s ease;
 }
 
-#trace-view.hidden, #mission-view.hidden {
+#trace-view.hidden, #mission-view.hidden,
+#focus-view.hidden, #graph-view.hidden {
   display: none;
 }
 
