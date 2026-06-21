@@ -57,9 +57,9 @@ describe('StreamingReActLoop', () => {
       expect(streamEvents.length).toBeGreaterThan(0);
       const eventTypes = streamEvents.map(e => e.type);
       expect(eventTypes).toContain('decompose');
-      expect(eventTypes).toContain('step_start');
+      expect(eventTypes).toContain('synthesis');
       expect(eventTypes).toContain('step_complete');
-      expect(eventTypes).toContain('synthesize');
+      expect(eventTypes).toContain('synthesis');
       expect(eventTypes).toContain('complete');
     });
 

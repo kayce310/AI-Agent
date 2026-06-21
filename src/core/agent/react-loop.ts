@@ -31,15 +31,15 @@
 import { Logger } from '../logger';
 
 export type StreamEventType = 
-  | 'decompose'      // Đang phân tích
-  | 'step_start'     // Bắt đầu bước
-  | 'step_complete'  // Hoàn thành bước
-  | 'step_skip'      // Bỏ qua bước
-  | 'tool_call'      // Tool đang chạy
-  | 'tool_result'    // Tool hoàn thành
-  | 'synthesize'     // Đang tổng hợp
-  | 'error'          // Lỗi
-  | 'complete';      // Hoàn thành
+  | 'decompose'     // Đang phân tích
+  | 'step_start'    // Bắt đầu bước
+  | 'step_complete' // Hoàn thành bước
+  | 'step_skip'     // Bỏ qua bước
+  | 'tool_call'     // Gọi tool
+  | 'tool_result'   // Kết quả tool
+  | 'synthesis'     // Đang tổng hợp
+  | 'error'         // Lỗi
+  | 'complete';     // Hoàn thành
 
 export interface StreamEvent {
   type: StreamEventType;
@@ -323,13 +323,11 @@ export class StreamingReActLoop {
         iterationsUsed = i + 1;
       }
 
-      // ── Phase 3: Synthesize ──
       await this.emit({
-        type: 'synthesize',
+        type: 'synthesis',
         message: '📝 Đang tổng hợp kết quả...',
         timestamp: Date.now()
       });
-
       const finalResult = await this.synthesizeFinal(
         userRequest,
         steps,
@@ -557,16 +555,26 @@ export function isComplexTask(userRequest: string): boolean {
   const complexKeywords = [
     'research', 'analyze', 'evaluate', 'compare',
     'recommend', 'summarize', 'combine', 'synthesize',
-    'review', 'assess'
+    'review', 'assess',
+    'nghiên cứu', 'phân tích', 'đánh giá', 'so sánh',
+    'đề xuất', 'tổng hợp', 'kiểm tra', 'khảo sát'
   ];
   const sequentialIndicators = [
     ' then ', ' and ', ' next ', ' after ',
-    ' first ', ' also ', ' followed by '
+    ' first ', ' also ', ' followed by ',
+    ' và ', ' sau đó ', ' tiếp theo ', ' rồi '
   ];
 
   const lower = userRequest.toLowerCase();
-  const keywordCount = complexKeywords.filter(kw => lower.includes(kw)).length;
-  const hasSequential = sequentialIndicators.some(ind => lower.includes(ind));
+  // Normalize Vietnamese diacritics for matching
+  const normalizeVn = (s: string) => s
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'd');
+  const normalized = normalizeVn(lower);
+  const normalizedKeywords = complexKeywords.map(kw => normalizeVn(kw));
+  const normalizedSequential = sequentialIndicators.map(ind => normalizeVn(ind));
+  const keywordCount = normalizedKeywords.filter(kw => normalized.includes(kw)).length;
+  const hasSequential = normalizedSequential.some(ind => normalized.includes(ind));
   const isLong = userRequest.length > 100;
 
   return keywordCount >= 2 || hasSequential || isLong;
