@@ -228,6 +228,11 @@
     renderTelemetryDebug();
     renderError();
     eventCount.textContent = `${allEvents.length} events`;
+    
+    // Update Focus Mode if active
+    if (currentTab === 'focus') {
+      renderFocus();
+    }
   }
 
   function renderMission() {
@@ -646,6 +651,7 @@
   function setupTabs() {
     tabMissionBtn?.addEventListener('click', () => switchTab('mission'));
     tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
+    document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
   }
 
   function switchTab(tab) {
@@ -654,12 +660,16 @@
     
     tabMissionBtn?.classList.toggle('active', tab === 'mission');
     tabTraceBtn?.classList.toggle('active', tab === 'trace');
+    document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
     
     missionView?.classList.toggle('hidden', tab !== 'mission');
     traceView?.classList.toggle('hidden', tab !== 'trace');
+    document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
     
     if (tab === 'trace') {
       renderTrace();
+    } else if (tab === 'focus') {
+      renderFocus();
     }
   }
 
@@ -866,6 +876,89 @@
     if (!decision || !decision.artifacts[artIdx]) return;
     const artifact = decision.artifacts[artIdx];
     selectEntity({ kind: 'trace-artifact', artifact, decisionId: decision.decisionId }, item);
+  }
+
+  function renderFocus() {
+    const taskId = currentTaskId || lastCompletedTaskId;
+    const focusTaskId = document.getElementById('focus-task-id');
+    const focusTaskStatus = document.getElementById('focus-task-status');
+    const focusGoal = document.getElementById('focus-goal');
+    const focusDecision = document.getElementById('focus-decision');
+    const focusTool = document.getElementById('focus-tool');
+    const focusReasoning = document.getElementById('focus-reasoning');
+    
+    if (!taskId) {
+      focusGoal.innerHTML = '<div class="empty-state">No task running</div>';
+      focusDecision.innerHTML = '<div class="empty-state">No decision yet</div>';
+      focusTool.innerHTML = '<div class="empty-state">No tool running</div>';
+      focusReasoning.innerHTML = '<div class="empty-state">Awaiting reasoning...</div>';
+      focusTaskId.textContent = '—';
+      focusTaskStatus.textContent = '—';
+      return;
+    }
+    
+    // Update header
+    focusTaskId.textContent = taskId;
+    const taskEvent = allEvents.find(e => e.payload?.taskId === taskId && (e.type === 'task_started' || e.type === 'task_finished'));
+    focusTaskStatus.textContent = taskEvent?.type === 'task_finished' ? (taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED') : '⚡ RUNNING';
+    
+    // Goal
+    const startEvent = allEvents.find(e => e.payload?.taskId === taskId && e.type === 'task_started');
+    focusGoal.textContent = startEvent?.payload?.goal || 'Goal unknown';
+    
+    // Current decision (reasoning-first priority)
+    const latestDecisionEvent = allEvents
+      .filter(e => e.payload?.taskId === taskId && e.type === 'decision_made')
+      .sort((a, b) => b.timestamp - a.timestamp)[0];
+    
+    if (latestDecisionEvent) {
+      const d = latestDecisionEvent.payload;
+      let decisionHtml = `<div class="focus-decision-text">${escapeHtml(d.decision)}</div>`;
+      
+      // Reasoning-first: reasoningSnippet > reason > fallback
+      if (d.reasoningSnippet) {
+        decisionHtml += `<div class="focus-reasoning-snippet">${escapeHtml(d.reasoningSnippet.substring(0, 200))}${d.reasoningSnippet.length > 200 ? '…' : ''}</div>`;
+      } else if (d.reason) {
+        decisionHtml += `<div class="focus-reason">${escapeHtml(d.reason)}</div>`;
+      } else {
+        decisionHtml += `<div class="empty-state">Agent is thinking...</div>`;
+      }
+      
+      focusDecision.innerHTML = decisionHtml;
+    } else {
+      focusDecision.innerHTML = '<div class="empty-state">No decision yet</div>';
+    }
+    
+    // Active tool
+    const latestToolEvent = allEvents
+      .filter(e => e.payload?.taskId === taskId && (e.type === 'tool_called' || e.type === 'tool_finished'))
+      .sort((a, b) => b.timestamp - a.timestamp)[0];
+    
+    if (latestToolEvent && latestToolEvent.type === 'tool_called') {
+      const t = latestToolEvent.payload;
+      focusTool.innerHTML = `
+        <div class="tool-name">🔧 ${escapeHtml(t.toolName)}</div>
+        <div class="tool-status">Running... (${new Date(latestToolEvent.timestamp).toLocaleTimeString()})</div>
+      `;
+    } else if (latestToolEvent && latestToolEvent.type === 'tool_finished') {
+      const t = latestToolEvent.payload;
+      const status = t.success ? '✓ Success' : '✗ Failed';
+      focusTool.innerHTML = `
+        <div class="tool-name">${t.success ? '✓' : '✗'} ${escapeHtml(t.toolName)}</div>
+        <div class="tool-status">${status} (${t.durationMs || '?'}ms)</div>
+      `;
+    } else {
+      focusTool.innerHTML = '<div class="empty-state">No tool running</div>';
+    }
+    
+    // Reasoning display
+    if (latestDecisionEvent?.payload?.reasoningSnippet) {
+      focusReasoning.textContent = latestDecisionEvent.payload.reasoningSnippet;
+      focusReasoning.classList.add('thinking');
+    } else {
+      focusReasoning.innerHTML = '<div class="empty-state">Awaiting reasoning...</div>';
+      focusReasoning.classList.remove('thinking');
+    }
   }
 
   // ═══ FILTERS ═══

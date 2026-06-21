@@ -15,6 +15,7 @@
     <div class="status-center">
       <button id="tab-mission" class="tab-btn active" data-tab="mission">MISSION</button>
       <button id="tab-trace" class="tab-btn" data-tab="trace">🧠 TRACE</button>
+      <button id="tab-focus" class="tab-btn" data-tab="focus">⚡ FOCUS</button>
     </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
@@ -116,6 +117,47 @@
       <!-- Trace Container -->
       <div id="trace-container" class="trace-container">
         <div class="empty-state">Select a task to view cognitive trace</div>
+      </div>
+    </section>
+
+    <!-- ═══ F4: FOCUS MODE ═══ -->
+    <section id="focus-view" class="hidden">
+      <!-- Focus Header: Task + Status -->
+      <div class="card focus-header">
+        <div class="focus-task-row">
+          <div class="focus-task-id" id="focus-task-id">—</div>
+          <div class="focus-task-status" id="focus-task-status">—</div>
+        </div>
+      </div>
+
+      <!-- Goal Card -->
+      <div class="card focus-goal-card">
+        <div class="card-label">GOAL</div>
+        <div id="focus-goal" class="focus-goal">Awaiting task</div>
+      </div>
+
+      <!-- Active Decision Card (reasoning-first) -->
+      <div class="card focus-decision-card">
+        <div class="card-label">DECISION</div>
+        <div id="focus-decision" class="focus-decision">
+          <div class="empty-state">No decision yet</div>
+        </div>
+      </div>
+
+      <!-- Active Tool Card -->
+      <div class="card focus-tool-card">
+        <div class="card-label">ACTIVE TOOL</div>
+        <div id="focus-tool" class="focus-tool">
+          <div class="empty-state">No tool running</div>
+        </div>
+      </div>
+
+      <!-- Real-time Reasoning Display -->
+      <div class="card focus-reasoning-card">
+        <div class="card-label">REASONING</div>
+        <div id="focus-reasoning" class="focus-reasoning">
+          <div class="empty-state">Awaiting reasoning...</div>
+        </div>
       </div>
     </section>
 

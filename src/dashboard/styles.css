@@ -384,6 +384,116 @@ body {
   color: var(--bg);
 }
 
+/* ═══ FOCUS MODE ═══ */
+.focus-header {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.focus-task-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.focus-task-id {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.focus-task-status {
+  color: var(--text-dim);
+}
+
+/* Focus Goal Card */
+.focus-goal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.focus-goal {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  word-wrap: break-word;
+}
+
+/* Focus Decision Card (reasoning-first) */
+.focus-decision-card {
+  background: var(--bg-card);
+  border: 1px solid var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.focus-decision {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Focus Tool Card */
+.focus-tool-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.focus-tool {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.focus-tool .tool-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.focus-tool .tool-status {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+/* Focus Reasoning Card */
+.focus-reasoning-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 100px;
+}
+
+.focus-reasoning {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: var(--font-mono);
+}
+
+.focus-reasoning.thinking {
+  color: var(--accent);
+  opacity: 0.8;
+}
+
 /* ═══ INSPECTOR PANEL ═══ */
 .inspector-panel {
   position: fixed;
