@@ -7,7 +7,7 @@
  */
 
 import { promises as fs } from 'fs';
-import { resolve, dirname } from 'path';
+import { resolve } from 'path';
 import { randomUUID } from 'crypto';
 
 export interface Event {
@@ -35,8 +35,8 @@ export interface Snapshot {
 
 export class EventStore {
   private logDir: string;
-  private snapshotThreshold: number = 1000; // Snapshot every 1000 events
-  private eventSequences: Map<string, number> = new Map(); // Track sequence per session
+  private snapshotThreshold: number = 1000;
+  private eventSequences: Map<string, number> = new Map();
 
   constructor(logDir: string = './data/events') {
     this.logDir = logDir;
@@ -49,9 +49,6 @@ export class EventStore {
 
   /**
    * Append event to log
-   * - Generate sequence number for ordering
-   * - Persist to session log file
-   * - Check if snapshot needed
    */
   async append(event: Omit<Event, 'id' | 'sequence' | 'timestamp'>): Promise<Event> {
     const sequence = (this.eventSequences.get(event.sessionId) ?? 0) + 1;
@@ -64,11 +61,9 @@ export class EventStore {
       timestamp: Date.now(),
     };
 
-    // Persist to session log
     const logFile = resolve(this.logDir, `session-${event.sessionId}.jsonl`);
     await fs.appendFile(logFile, JSON.stringify(fullEvent) + '\n');
 
-    // Check if snapshot needed
     if (sequence % this.snapshotThreshold === 0) {
       await this.rotateSnapshot(event.sessionId);
     }
@@ -77,15 +72,13 @@ export class EventStore {
   }
 
   /**
-   * Query events for a session
-   * - Paginated: cursor-based for large datasets
-   * - Filter by type, timestamp range
+   * Query events for a session (cursor-based pagination)
    */
   async query(
     sessionId: string,
     options: {
       limit?: number;
-      cursor?: string; // Last event ID for pagination
+      cursor?: string;
       type?: Event['type'];
       startTime?: number;
       endTime?: number;
@@ -103,18 +96,15 @@ export class EventStore {
         .filter(Boolean)
         .map(line => JSON.parse(line));
     } catch (err) {
-      // Log doesn't exist yet
       return { events: [] };
     }
 
-    // Find cursor position if provided
     let startIdx = 0;
     if (cursor) {
       const cursorIdx = events.findIndex(e => e.id === cursor);
       startIdx = cursorIdx >= 0 ? cursorIdx + 1 : 0;
     }
 
-    // Filter by type and time range
     let filtered = events.slice(startIdx);
     if (type) {
       filtered = filtered.filter(e => e.type === type);
@@ -126,7 +116,6 @@ export class EventStore {
       filtered = filtered.filter(e => e.timestamp <= endTime);
     }
 
-    // Paginate
     const page = filtered.slice(0, limit);
     const nextCursor = page.length === limit && filtered.length > limit
       ? page[page.length - 1]?.id
@@ -137,8 +126,6 @@ export class EventStore {
 
   /**
    * Create snapshot for session
-   * - Captures current state at sequence N
-   * - Used to avoid replaying 10k+ events on restart
    */
   async rotateSnapshot(sessionId: string): Promise<Snapshot> {
     const snapshot: Snapshot = {
@@ -146,7 +133,7 @@ export class EventStore {
       sessionId,
       timestamp: Date.now(),
       eventCount: this.eventSequences.get(sessionId) ?? 0,
-      state: {}, // TODO: capture engine state
+      state: {},
     };
 
     const snapshotFile = resolve(
@@ -161,7 +148,6 @@ export class EventStore {
 
   /**
    * Get latest snapshot for session
-   * - Used for fast recovery on startup
    */
   async getLatestSnapshot(sessionId: string): Promise<Snapshot | null> {
     const snapshotDir = resolve(this.logDir, 'snapshots');
@@ -180,9 +166,7 @@ export class EventStore {
   }
 
   /**
-   * Verify event ordering for a session
-   * - Check sequence numbers are contiguous
-   * - Return any gaps
+   * Verify event ordering
    */
   async verifyOrdering(sessionId: string): Promise<{ isValid: boolean; gaps: number[] }> {
     const { events } = await this.query(sessionId, { limit: 10000 });
@@ -201,7 +185,7 @@ export class EventStore {
   }
 
   /**
-   * Cleanup: Archive old sessions (>30 days)
+   * Archive old sessions (>30 days)
    */
   async archiveOldSessions(daysThreshold: number = 30): Promise<string[]> {
     const cutoff = Date.now() - daysThreshold * 24 * 60 * 60 * 1000;
@@ -214,7 +198,6 @@ export class EventStore {
       const filePath = resolve(this.logDir, file);
       const stat = await fs.stat(filePath);
       if (stat.mtime.getTime() < cutoff) {
-        // Move to archive
         const archiveDir = resolve(this.logDir, 'archive');
         await fs.mkdir(archiveDir, { recursive: true });
         await fs.rename(filePath, resolve(archiveDir, file));
@@ -226,7 +209,7 @@ export class EventStore {
   }
 
   /**
-   * Export events as JSON (for debugging/analysis)
+   * Export events as JSON
    */
   async export(sessionId: string): Promise<Event[]> {
     const { events } = await this.query(sessionId, { limit: 100000 });
@@ -234,7 +217,7 @@ export class EventStore {
   }
 
   /**
-   * Get metrics for observability dashboard
+   * Get metrics for dashboard
    */
   async getMetrics(): Promise<{
     totalSessions: number;
