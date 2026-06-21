@@ -67,4 +67,11 @@ export class StructuredLogger {
   error(message: string, stack?: string, code?: string): void {
     this.bus.publish(EventFactory.error(message, stack, code));
   }
+
+  reasoningUpdated(taskId: string, chunk: string, isFinal: boolean): void {
+    // Phase 4E-B: Live reasoning streaming
+    // Emit to EventBus immediately (no persistence for chunks)
+    // Only final reasoning is persisted to SQLite
+    this.bus.publish(EventFactory.reasoningUpdated(taskId, chunk, isFinal));
+  }
 }

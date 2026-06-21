@@ -188,6 +188,80 @@ export class RouterAdapter implements ModelAdapter {
       reasoningContent: choice.message?.reasoning_content || undefined,
     };
   }
+
+  // Phase 4E-B: Streaming support for reasoning_updated events
+  async invokeStreaming(messages: any[], taskId: string, onStreamChunk: (chunk: string, isFinal: boolean) => void, options?: ModelOptions): Promise<ModelResponse> {
+    const modelId = options?.model || this.modelId;
+    const resolved = this.registry.resolve(modelId);
+    if (!resolved) {
+      throw new Error(`Model "${modelId}" not available`);
+    }
+
+    const payload: any = {
+      model: modelId,
+      messages,
+      temperature: options?.temperature ?? 0.3,
+      max_tokens: options?.maxTokens ?? 2048,
+      stream: true,
+    };
+    if (options?.tools && options.tools.length > 0) {
+      payload.tools = options.tools;
+      payload.tool_choice = 'auto';
+    }
+
+    const response = await resolved.provider.invoke(payload);
+    
+    if (!response || typeof response[Symbol.asyncIterator] !== 'function') {
+      throw new Error('Provider did not return a streaming response');
+    }
+
+    let accumulated = '';
+    let finishReason = '';
+    let toolCalls: any[] | undefined;
+    let tokenUsage: { input: number; output: number } | undefined;
+
+    for await (const chunk of response) {
+      const delta = chunk.choices?.[0]?.delta;
+      const text = delta?.content || '';
+
+      if (text) {
+        accumulated += text;
+        const startTime = Date.now();
+        onStreamChunk(accumulated, false);
+        const latency = Date.now() - startTime;
+        if (latency > 500) {
+          console.warn(`[STREAM_LATENCY] WARNING: ${latency}ms > 500ms threshold for task ${taskId}`);
+        } else {
+          console.log(`[STREAM_LATENCY] ${latency}ms (chunk: ${text.length} chars, accumulated: ${accumulated.length} chars)`);
+        }
+      }
+
+      if (chunk.choices?.[0]?.finish_reason) {
+        finishReason = chunk.choices[0].finish_reason;
+        toolCalls = chunk.choices[0].message?.tool_calls || undefined;
+      }
+
+      if (chunk.usage) {
+        tokenUsage = { input: chunk.usage.prompt_tokens || 0, output: chunk.usage.completion_tokens || 0 };
+      }
+    }
+
+    // Final streaming event
+    onStreamChunk(accumulated, true);
+    console.log(`[STREAM_COMPLETE] task ${taskId}: ${accumulated.length} chars in final reasoning`);
+
+    let content = accumulated.replace(/^[\w\/\.-]+:\s*/m, '');
+    content = stripThinkingContent(content);
+
+    return {
+      content,
+      modelUsed: modelId,
+      providerUsed: resolved.providerName,
+      tokenUsage,
+      toolCalls,
+      finishReason,
+    };
+  }
 }
 
 // â”€â”€ Adapter 2: LiteLLM Proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

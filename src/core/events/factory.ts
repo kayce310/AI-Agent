@@ -130,4 +130,15 @@ export class EventFactory {
       payload: { message, stack, code, context },
     });
   }
+
+  static reasoningUpdated(taskId: string, chunk: string, isFinal: boolean): AgentEvent {
+    // Phase 4E-B: Live reasoning streaming
+    // chunk is always the FULL accumulated text, not delta
+    return {
+      id: randomUUID(),
+      timestamp: Date.now(),
+      type: 'reasoning_updated',
+      payload: { taskId, chunk, isFinal },
+    } as AgentEvent;
+  }
 }
