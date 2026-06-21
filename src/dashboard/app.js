@@ -265,22 +265,30 @@
       return;
     }
     const isSelected = selectedEntity && selectedEntity.kind === 'decision';
-    let snippetHtml = '';
     let idHtml = '';
+    let reasoningHtml = '';
+    
+    // Developer mode: show IDs
     if (viewMode === 'developer') {
       if (d.decisionId) {
         idHtml = '<div class="decision-debug-id">📋 ' + escapeHtml(d.decisionId) + (d.taskId ? ' | <span class="mono">task:</span> ' + escapeHtml(d.taskId) : '') + '</div>';
       }
-      if (d.reasoningSnippet) {
-        snippetHtml = '<div class="decision-snippet">' + escapeHtml(d.reasoningSnippet) + '</div>';
-      }
     }
+    
+    // Reasoning-first priority: reasoningSnippet > reason > fallback
+    if (d.reasoningSnippet) {
+      reasoningHtml = '<div class="decision-reasoning-priority">' + escapeHtml(d.reasoningSnippet.substring(0, 300)) + (d.reasoningSnippet.length > 300 ? '…' : '') + '</div>';
+    } else if (d.reason) {
+      reasoningHtml = '<div class="decision-reason">' + escapeHtml(d.reason) + '</div>';
+    } else {
+      reasoningHtml = '<div class="decision-thinking">Agent is thinking...</div>';
+    }
+    
     currentDecisionEl.innerHTML =
       '<div class="decision-item' + (isSelected ? ' selected' : '') + '" data-decision-index="0">' +
         idHtml +
         '<div class="decision-main">' + escapeHtml(d.decision) + '</div>' +
-        '<div class="decision-reason">' + escapeHtml(d.reason) + '</div>' +
-        snippetHtml +
+        reasoningHtml +
       '</div>';
   }
 

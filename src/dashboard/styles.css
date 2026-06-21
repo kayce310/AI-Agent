@@ -384,6 +384,63 @@ body {
   color: var(--bg);
 }
 
+/* ═══ DECISION CARD (Reasoning-First) ═══ */
+.decision-item {
+  padding: 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.decision-item:hover {
+  background: var(--bg-hover);
+}
+
+.decision-item.selected {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+}
+
+.decision-debug-id {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+
+.decision-main {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.decision-reasoning-priority {
+  font-size: 12px;
+  color: var(--accent);
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  padding: 8px;
+  background: var(--accent-bg);
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+.decision-reason {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.decision-thinking {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 6px;
+}
+
 /* ═══ FOCUS MODE ═══ */
 .focus-header {
   background: var(--bg-card);
