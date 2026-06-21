@@ -22,6 +22,8 @@ import { Logger } from '../../core/logger.js';
 const log = new Logger({ module: 'Telegram' });
 import { ActivityReporter } from './activity-reporter.js';
 import { userManager } from './user-manager.js';
+import { TelegramMessageHandler } from '../../platform/telegram/message-handler.js';
+import { SessionManager } from '../../platform/telegram/session-manager.js';
 import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -156,9 +158,12 @@ export class TelegramBridge implements PlatformAdapter {
   private messageHandler: ((msg: AdapterMessage) => Promise<any>) | null = null;
   private processingMessages: Set<string> = new Set();
   private reporter: ActivityReporter;
+  private sessionManager: SessionManager;
+  private messageHandlerWrapper: TelegramMessageHandler | null = null;
 
   constructor() {
     cleanupOldLocks();
+    this.sessionManager = new SessionManager();
 
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) {
@@ -202,6 +207,12 @@ export class TelegramBridge implements PlatformAdapter {
     } catch {}
 
     this.processingMessages.clear();
+    
+    // Clean up session manager
+    try {
+      this.sessionManager.destroy();
+    } catch {}
+
     this.status = 'stopped';
   }
 
@@ -235,11 +246,10 @@ export class TelegramBridge implements PlatformAdapter {
       // Bootstrap: first user becomes admin when no users configured
       if (!userManager.isBootstrapped()) {
         userManager.bootstrap(userId);
-        await ctx.reply(
-          `🪸 Xin chào! Tôi là **Coral** — AI Agent.\n` +
-          `Bạn là admin đầu tiên được thiết lập!\n\n` +
-          `Gửi tin nhắn bất kỳ để tôi hỗ trợ.`
-        );
+        // Mark intro as sent in session
+        this.sessionManager.getOrCreateSession(userId);
+        this.sessionManager.markIntroSent(userId);
+        await ctx.reply(TelegramMessageHandler.getBootstrapIntroMessage());
         return;
       }
 
@@ -248,17 +258,30 @@ export class TelegramBridge implements PlatformAdapter {
         return;
       }
 
-      const role = userManager.isAdmin(userId, username) ? '👑 Admin' : '👤 User';
-      await ctx.reply(
-        `👋 Xin chào! Tôi là **Coral** — AI Agent.\n` +
-        `Role: ${role}\n\n` +
-        `Gửi tin nhắn bất kỳ để tôi hỗ trợ.\n\n` +
-        `Lệnh:\n` +
-        `/status — Trạng thái Coral\n` +
-        `/models — Danh sách model\n` +
-        `/help — Trợ giúp` +
-        (userManager.isAdmin(userId) ? '\n/admin — Quản lý user' : '')
-      );
+      // Check if user needs intro (session-aware)
+      const needsIntro = !this.sessionManager.getSession(userId) || 
+                          !this.sessionManager.getSession(userId)?.introSent;
+
+      if (needsIntro) {
+        // Send intro and mark as sent
+        await ctx.reply(TelegramMessageHandler.getIntroMessage());
+        this.sessionManager.getOrCreateSession(userId);
+        this.sessionManager.markIntroSent(userId);
+      } else {
+        // Returning user
+        const role = userManager.isAdmin(userId, username) ? '👑 Admin' : '👤 User';
+        await ctx.reply(
+          `👋 Chào lại ${username || 'bạn'}! Role: ${role}\\n\\n` +
+          `Lệnh:\\n` +
+          `/status — Trạng thái Coral\\n` +
+          `/models — Danh sách model\\n` +
+          `/help — Trợ giúp` +
+          (userManager.isAdmin(userId) ? '\\n/admin — Quản lý user' : '')
+        );
+      }
+
+      // Update activity timestamp
+      this.sessionManager.updateLastActivity(userId);
     });
 
     // Handle /help command
@@ -397,25 +420,22 @@ export class TelegramBridge implements PlatformAdapter {
       const text = message.text;
       const chatType = message.chat.type; // 'private', 'group', 'supergroup', 'channel'
 
-      // Skip bot's own messages (shouldn't happen with grammy, but safety check)
+      // Skip bot's own messages
       if (message.from?.is_bot) return;
 
-      // ── ACCESS CONTROL (Phase 3) ──
-      // Bootstrap: first user becomes admin when no users configured
+      // ── ACCESS CONTROL ──
+      // Bootstrap: first user becomes admin
       if (!userManager.isBootstrapped()) {
         userManager.bootstrap(userId);
-        await ctx.reply(
-          `🪸 Xin chào! Tôi là **Coral** — AI Agent.\n` +
-          `Bạn là admin đầu tiên được thiết lập!\n\n` +
-          `Gửi tin nhắn bất kỳ để tôi hỗ trợ.`
-        );
+        this.sessionManager.getOrCreateSession(userId);
+        this.sessionManager.markIntroSent(userId);
+        await ctx.reply(TelegramMessageHandler.getBootstrapIntroMessage());
         return;
       }
 
       const username = message.from?.username;
 
       if (!userManager.isAllowed(userId, username)) {
-        // Unknown user — send polite rejection
         try {
           await ctx.reply('Xin lỗi, Coral chỉ dành cho người dùng được phép. 🌊');
         } catch {}
@@ -423,7 +443,7 @@ export class TelegramBridge implements PlatformAdapter {
         return;
       }
 
-      // Rate limiting — max 20 requests per 60s
+      // Rate limiting
       if (!messageLimiter.tryConsume(1)) {
         try {
           await ctx.reply('⏳ Bot đang bận. Vui lòng thử lại sau.');
@@ -432,7 +452,6 @@ export class TelegramBridge implements PlatformAdapter {
       }
 
       // In groups: only respond when mentioned or replied to
-      // Note: 'channel' type doesn't exist here — channel posts use channel_post:text handler
       if (chatType === 'group' || chatType === 'supergroup') {
         const botInfo = this.bot.botInfo;
         const isMentioned = message.entities?.some(
@@ -443,11 +462,15 @@ export class TelegramBridge implements PlatformAdapter {
         if (!isMentioned && !isReplyToBot) return;
       }
 
-      // Dedup
+      // ── DEDUPLICATION (cross-instance + session-aware) ──
       if (this.processingMessages.has(messageId)) return;
       if (!tryAcquireMessageLock(messageId)) return;
 
       this.processingMessages.add(messageId);
+
+      // Get or create session (TTL-based)
+      const session = this.sessionManager.getOrCreateSession(userId);
+      const isNewSession = !session.introSent;
 
       // Start activity reporter
       this.reporter.start(chatId, messageId);
@@ -460,7 +483,7 @@ export class TelegramBridge implements PlatformAdapter {
           channelId: chatId,
           text,
           platform: 'telegram',
-          isMention: true, // In Telegram DMs, all messages are relevant
+          isMention: true,
           timestamp: Date.now(),
         };
 
@@ -473,27 +496,39 @@ export class TelegramBridge implements PlatformAdapter {
             processingMsgId = processingMsg.message_id;
           } catch {}
 
-          const response = await this.messageHandler(adapterMsg);
+          // If new session, send intro before agent response
+          let response = '';
+          if (isNewSession) {
+            response = TelegramMessageHandler.getIntroMessage() + '\n\n';
+            this.sessionManager.markIntroSent(userId);
+          }
+
+          // Get agent response
+          const agentResponse = await this.messageHandler(adapterMsg);
+
+          // Update activity timestamp
+          this.sessionManager.updateLastActivity(userId);
 
           // Try to edit the processing message with the actual response
-          if (response && response.output) {
+          if (agentResponse && agentResponse.output) {
+            const fullResponse = response + agentResponse.output;
             try {
               if (processingMsgId) {
-                await this.bot.api.editMessageText(chatId, processingMsgId, response.output.slice(0, 4096));
+                await this.bot.api.editMessageText(chatId, processingMsgId, fullResponse.slice(0, 4096));
                 // If response is longer than 4096, send remaining chunks
-                if (response.output.length > 4096) {
-                  const remaining = this.splitMessage(response.output.slice(4096));
+                if (fullResponse.length > 4096) {
+                  const remaining = this.splitMessage(fullResponse.slice(4096));
                   for (const chunk of remaining) {
                     await ctx.reply(chunk);
                   }
                 }
               } else {
-                const chunks = this.splitMessage(response.output);
+                const chunks = this.splitMessage(fullResponse);
                 for (const chunk of chunks) { await ctx.reply(chunk); }
               }
             } catch {
               // Edit failed, send new messages
-              const chunks = this.splitMessage(response.output);
+              const chunks = this.splitMessage(fullResponse);
               for (const chunk of chunks) { await ctx.reply(chunk); }
             }
 
@@ -501,9 +536,9 @@ export class TelegramBridge implements PlatformAdapter {
             logTelegramMessage(
               userId,
               text,
-              response.output,
-              response.metadata?.inputTokens as number | undefined,
-              response.metadata?.outputTokens as number | undefined
+              fullResponse,
+              agentResponse.metadata?.inputTokens as number | undefined,
+              agentResponse.metadata?.outputTokens as number | undefined
             );
           } else {
             // Delete "processing" message if no response
@@ -534,11 +569,6 @@ export class TelegramBridge implements PlatformAdapter {
       const messageId = String(message.message_id);
       const text = message.text;
 
-      // ── ACCESS CONTROL for channel posts ──
-      // Channel posts are from the channel itself, not a user.
-      // For now, allow all channel posts (the channel admin is the implicit user).
-      // Future: restrict to specific channel IDs via env CORAL_TELEGRAM_CHANNELS
-
       const chatType = message.chat.type; // 'channel'
 
       // In channels: only respond when mentioned or replied to bot
@@ -555,6 +585,10 @@ export class TelegramBridge implements PlatformAdapter {
       if (!tryAcquireMessageLock(messageId)) return;
 
       this.processingMessages.add(messageId);
+
+      // Get or create session (TTL-based, channel-scoped)
+      const session = this.sessionManager.getOrCreateSession(userId);
+      const isNewSession = !session.introSent;
 
       // Start activity reporter
       this.reporter.start(chatId, messageId);
@@ -580,32 +614,44 @@ export class TelegramBridge implements PlatformAdapter {
             processingMsgId = processingMsg.message_id;
           } catch {}
 
-          const response = await this.messageHandler(adapterMsg);
+          // If new session, send intro before agent response
+          let response = '';
+          if (isNewSession) {
+            response = TelegramMessageHandler.getIntroMessage() + '\n\n';
+            this.sessionManager.markIntroSent(userId);
+          }
+
+          // Get agent response
+          const agentResponse = await this.messageHandler(adapterMsg);
+
+          // Update activity timestamp
+          this.sessionManager.updateLastActivity(userId);
 
           // Try to edit the processing message with the actual response
-          if (response && response.output) {
+          if (agentResponse && agentResponse.output) {
+            const fullResponse = response + agentResponse.output;
             try {
               if (processingMsgId) {
-                await this.bot.api.editMessageText(chatId, processingMsgId, response.output.slice(0, 4096));
-                if (response.output.length > 4096) {
-                  const remaining = this.splitMessage(response.output.slice(4096));
+                await this.bot.api.editMessageText(chatId, processingMsgId, fullResponse.slice(0, 4096));
+                if (fullResponse.length > 4096) {
+                  const remaining = this.splitMessage(fullResponse.slice(4096));
                   for (const chunk of remaining) { await ctx.reply(chunk); }
                 }
               } else {
-                const chunks = this.splitMessage(response.output);
+                const chunks = this.splitMessage(fullResponse);
                 for (const chunk of chunks) { await ctx.reply(chunk); }
               }
             } catch {
-              const chunks = this.splitMessage(response.output);
+              const chunks = this.splitMessage(fullResponse);
               for (const chunk of chunks) { await ctx.reply(chunk); }
             }
 
             logTelegramMessage(
               userId,
               text,
-              response.output,
-              response.metadata?.inputTokens as number | undefined,
-              response.metadata?.outputTokens as number | undefined
+              fullResponse,
+              agentResponse.metadata?.inputTokens as number | undefined,
+              agentResponse.metadata?.outputTokens as number | undefined
             );
           } else {
             if (processingMsgId) {

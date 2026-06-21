@@ -25,11 +25,12 @@ export interface TelegramResponse {
  * - Record session events to observability
  * - Route messages to stateless Coral agent
  * - Preserve UX continuity across agent restarts
+ * - Platform-agnostic (used by TelegramBridge and tests)
  */
 export class TelegramMessageHandler {
   private sessionManager: SessionManager;
   private observability: ObservabilityIntegration | null;
-  private coralAgent: any; // Will be injected
+  private coralAgent: any;
 
   constructor(coralAgent: any, observability?: ObservabilityIntegration) {
     this.sessionManager = new SessionManager();
@@ -38,13 +39,46 @@ export class TelegramMessageHandler {
   }
 
   /**
+   * Get the intro message text (static for use by TelegramBridge commands)
+   */
+  static getIntroMessage(): string {
+    return `🪸 Xin chào! Tôi là Coral, trợ lý AI của bạn. Tôi sẽ giúp bạn với:
+• 🌤️ Thời tiết & cảnh báo
+• 📅 Lịch sử & nhắc nhở
+• 🏠 Điều khiển nhà thông minh
+• 💡 Tư vấn và học tập
+• ...và nhiều việc khác
+
+Bắt đầu bằng cách hỏi tôi gì đó!`;
+  }
+
+  /**
+   * Get the session intro for a returning user
+   */
+  static getReturningIntroMessage(username?: string): string {
+    const name = username || 'bạn';
+    return `👋 Chào ${name}! Chúng ta lại gặp nhau rồi. Cần tôi giúp gì không?`;
+  }
+
+  /**
+   * Get admin bootstrap intro
+   */
+  static getBootstrapIntroMessage(): string {
+    return `🪸 Xin chào! Tôi là **Coral** — AI Agent.
+Bạn là admin đầu tiên được thiết lập!
+
+Gửi tin nhắn bất kỳ để tôi hỗ trợ.`;
+  }
+
+  /**
    * Main entry point for handling Telegram messages
+   * Returns { text, sessionId, sentIntro }
    */
   async handleMessage(message: TelegramMessage): Promise<TelegramResponse> {
     const { userId, text } = message;
 
     try {
-      // Get or create session
+      // Get or create session (with TTL check)
       const session = this.sessionManager.getOrCreateSession(userId);
       const isNewSession = !session.introSent;
 
@@ -55,7 +89,7 @@ export class TelegramMessageHandler {
 
       // Send intro only if first time in session
       if (!session.introSent) {
-        response = this.getIntroMessage();
+        response = TelegramMessageHandler.getIntroMessage() + '\n\n';
         this.sessionManager.markIntroSent(userId);
 
         await this.recordIntroSent(session);
@@ -89,19 +123,20 @@ export class TelegramMessageHandler {
   }
 
   /**
-   * Get intro message for new sessions
+   * Check if user needs intro (for /start command)
    */
-  private getIntroMessage(): string {
-    return `🪸 Xin chào! Tôi là Coral, trợ lý AI của bạn. Tôi sẽ giúp bạn với:
-- 🌤️ Thời tiết & cảnh báo
-- 📅 Lịch sử & nhắc nhở
-- 🏠 Điều khiển nhà thông minh
-- 💡 Tư vấn và học tập
-- ...và nhiều việc khác
+  needsIntro(userId: string): boolean {
+    const session = this.sessionManager.getSession(userId);
+    return !session || !session.introSent;
+  }
 
-Bắt đầu bằng cách hỏi tôi gì đó! 
-
-`;
+  /**
+   * Mark intro as sent for a user (for /start command)
+   */
+  markIntroSentForUser(userId: string): void {
+    this.sessionManager.getOrCreateSession(userId);
+    this.sessionManager.markIntroSent(userId);
+    this.sessionManager.updateLastActivity(userId);
   }
 
   /**
@@ -148,7 +183,23 @@ Bắt đầu bằng cách hỏi tôi gì đó!
       });
     } catch (error) {
       logger.warn('Failed to record intro sent:', error);
-      // Non-blocking
+    }
+  }
+
+  /**
+   * Record command event
+   */
+  async recordCommand(userId: string, command: string): Promise<void> {
+    if (!this.observability) return;
+
+    try {
+      await this.observability.recordError({
+        source: 'command',
+        message: `cmd:${userId}:${command}`,
+        context: { userId, command },
+      });
+    } catch (error) {
+      logger.warn('Failed to record command:', error);
     }
   }
 
@@ -164,6 +215,13 @@ Bắt đầu bằng cách hỏi tôi gì đó!
    */
   getActiveSessionCount(): number {
     return this.sessionManager.getActiveCount();
+  }
+
+  /**
+   * Get the underlying session manager (for bridge integration)
+   */
+  getSessionManager(): SessionManager {
+    return this.sessionManager;
   }
 
   /**

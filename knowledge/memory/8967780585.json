@@ -68,5 +68,15 @@
     "role": "assistant",
     "content": "## 🗺️ **Nếu tôi có truy cập Google Maps (hoặc tương tự):**\n\n### **Tôi sẽ làm theo quy trình này:**\n\n1. **Xác nhận thông tin từ bạn:**\n   - Vị trí hiện tại của bạn (nếu chưa biết)\n   - Vị trí A cụ thể (địa chỉ, tên địa điểm, tọa độ)\n   - Phương tiện di chuyển (xe máy, ô tô, đi bộ, xe buýt)\n   - Ưu tiên (đường nhanh nhất, an toàn nhất, ít tắc nhất)\n\n2. **Gọi Google Maps API:**\n   - Fetch route từ vị trí hiện tại → vị trí A\n   - Lấy thông tin: Khoảng cách, thời gian, đường đi chi tiết\n\n3. **Phân tích & tối ưu:**\n   - Check điều kiện giao thông realtime\n   - Cảnh báo tắc đường, tai nạn nếu có\n   - So sánh 2-3 tuyến đường thay thế\n\n4. **Trả lời bạn:**\n   - **Chỉ dẫn rõ ràng**: \"Đi thẳng Võ Văn Tần → rẽ phải Sư Vạn Hạnh → ...\"\n   - **Thông tin hữu ích**: Khoảng cách, thời gian, điểm mốc quan trọng\n   - **Cảnh báo**: Tắc đường, đoạn đường nguy hiểm, thời tiết ảnh hưởng\n   - **Gợi ý**: Thời điểm khởi hành tốt nhất, nơi dừng nghỉ\n\n5. **Hỗ trợ liên tục:**\n   - Cập nhật realtime nếu bạn gặp tắc đường\n   - Đề xuất route thay thế nếu cần\n   - Nhắc nhở các milepost quan trọng\n\n---\n\n### **Format output tôi sẽ dùng:**\n\n```\n🗺️ HƯỚNG DẪN ĐI VỀ [VỊ TRỊ A]\n\n📍 Điểm xuất phát: [Hiện tại]\n📍 Điểm đích: [Vị trí A]\n\n📊 Thông tin:\n- Khoảng cách: X km\n- Thời gian: Y phút (điều kiện bình thường)\n- Phương tiện: [Xe máy/Ô tô/Xe buýt]\n\n🛣️ TUYẾN ĐƯỜNG:\n1. Đi thẳng [Đường 1] → [Điểm mốc]\n2. Rẽ [Phải/Trái] vào [Đường 2] → [Điểm mốc]\n3. ...\n\n⚠️ CẢNH BÁO:\n- Tắc đường lúc [Giờ]\n- Đoạn [X] có nhiều khúc cua\n- Thời tiết ảnh hưởng...\n\n💡 GỢI Ý:\n- Khởi hành lúc [Giờ] để tránh tắc\n- Dừng nghỉ ở [Địa điểm]\n```\n\n---\n\n**Tl;dr**: Tôi sẽ trở thành **GPS + Navigation Assistant** của bạn — chỉ dẫn đường chi tiết, cảnh báo rủi ro, tối ưu thời gian. 🚗📍",
     "timestamp": 1782025474266
+  },
+  {
+    "role": "user",
+    "content": "Chào buổi tối Coral",
+    "timestamp": 1782037827207
+  },
+  {
+    "role": "assistant",
+    "content": "Chào buổi tối Kayce! ☺️ Cần tôi giúp gì không?",
+    "timestamp": 1782037827208
   }
 ]
