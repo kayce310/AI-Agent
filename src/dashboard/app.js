@@ -32,6 +32,17 @@
     lastError: null,
     recentDecisions: [],
     timeline: [],
+    
+    // FOCUS Tab Streaming (Phase 4E-B)
+    focusPaused: false,
+    focusEventBuffer: [],
+    toolTimer: null,
+    toolStartTime: null,
+    streamingText: '',
+    streamIndex: 0,
+    streamTimer: null,
+    eventCount: 0,
+    lastConfidence: null
   };
   let allEvents = [];
   let ws = null;
@@ -162,6 +173,16 @@
 
   // ═══ LOCAL STATE REDUCER (fallback) ═══
   function applyEvent(event) {
+    // Increment event counter (Priority 2)
+    agentState.eventCount++;
+    eventCount.textContent = `${agentState.eventCount} events`;
+    
+    // Buffer events while paused (Priority 5)
+    if (agentState.focusPaused) {
+      agentState.focusEventBuffer.push(event);
+      return;  // Don't render yet
+    }
+    
     const p = event.payload || {};
     switch (event.type) {
       case 'task_started':
@@ -169,35 +190,53 @@
         agentState.currentGoal = p.goal || null;
         agentState.currentTaskId = p.taskId || null;
         agentState.currentTaskLabel = p.goal || null;
-        traceTaskId = p.taskId || null;  // Update trace context
+        agentState.eventCount = 0;  // Reset counter on new task
+        eventCount.textContent = '0 events';
+        traceTaskId = p.taskId || null;
         break;
+        
       case 'task_finished':
         agentState.status = p.success ? 'idle' : 'error';
         agentState.currentGoal = null;
         agentState.currentTaskId = null;
         agentState.currentTaskLabel = null;
-        if (p.taskId) lastCompletedTaskId = p.taskId;  // Track for fallback
+        if (p.taskId) lastCompletedTaskId = p.taskId;
         break;
+        
       case 'tool_called':
         agentState.activeTools.unshift({
           callId: p.callId, toolName: p.toolName, args: p.args || {}, startedAt: event.timestamp,
         });
+        // Start tool timer (Priority 3)
+        agentState.toolStartTime = event.timestamp;
+        if (agentState.toolTimer) clearInterval(agentState.toolTimer);
+        agentState.toolTimer = setInterval(updateToolDuration, 100);
         break;
+        
       case 'tool_finished':
         agentState.activeTools = agentState.activeTools.filter(t => t.callId !== p.callId);
+        // Stop tool timer
+        if (agentState.toolTimer) {
+          clearInterval(agentState.toolTimer);
+          agentState.toolTimer = null;
+        }
         break;
+        
       case 'file_created':
         agentState.recentFiles.unshift({ path: p.path, event: 'created', timestamp: event.timestamp });
         if (agentState.recentFiles.length > 50) agentState.recentFiles.pop();
         break;
+        
       case 'file_modified':
         agentState.recentFiles.unshift({ path: p.path, event: 'modified', timestamp: event.timestamp });
         if (agentState.recentFiles.length > 50) agentState.recentFiles.pop();
         break;
+        
       case 'file_deleted':
         agentState.recentFiles.unshift({ path: p.path, event: 'deleted', timestamp: event.timestamp });
         if (agentState.recentFiles.length > 50) agentState.recentFiles.pop();
         break;
+        
       case 'decision_made':
         agentState.recentDecisions.unshift({
           decisionId: p.decisionId,
@@ -207,9 +246,20 @@
           nextAction: p.nextAction,
           taskId: p.taskId || null,
           timestamp: event.timestamp,
+          confidence: p.confidence || null,
         });
+        // Store confidence for bar animation (Priority 4)
+        agentState.lastConfidence = p.confidence || null;
         if (agentState.recentDecisions.length > 20) agentState.recentDecisions.pop();
         break;
+        
+      case 'reasoning_updated':
+        // Handle streaming reasoning (Priority 1)
+        agentState.streamingText = p.fullReasoning || '';
+        agentState.streamIndex = 0;
+        startStreamingReasoning();
+        break;
+        
       case 'error':
         agentState.status = 'error';
         agentState.lastError = { message: p.message, code: p.code, timestamp: event.timestamp };
@@ -218,6 +268,105 @@
   }
 
   // ═══ RENDER ═══
+  
+  // Streaming reasoning (Priority 1)
+  function startStreamingReasoning() {
+    // Clear existing stream timer
+    if (agentState.streamTimer) clearTimeout(agentState.streamTimer);
+    
+    const thoughtEl = document.getElementById('focus-thought');
+    if (!thoughtEl) return;
+    
+    // Fade out previous text
+    thoughtEl.style.opacity = '0.5';
+    
+    // Stream new text character by character
+    agentState.streamIndex = 0;
+    streamNextChar();
+  }
+  
+  function streamNextChar() {
+    if (agentState.streamIndex >= agentState.streamingText.length) {
+      // Streaming complete
+      const thoughtEl = document.getElementById('focus-thought');
+      if (thoughtEl) {
+        thoughtEl.style.opacity = '1';
+        thoughtEl.classList.remove('streaming');
+      }
+      return;
+    }
+    
+    const thoughtEl = document.getElementById('focus-thought');
+    if (!thoughtEl) return;
+    
+    // Add next character
+    const text = agentState.streamingText.substring(0, agentState.streamIndex + 1);
+    thoughtEl.textContent = text;
+    thoughtEl.classList.add('streaming');
+    thoughtEl.style.opacity = '1';
+    
+    agentState.streamIndex++;
+    
+    // Schedule next char (30ms = ~33 chars/sec, natural typing speed)
+    agentState.streamTimer = setTimeout(streamNextChar, 30);
+  }
+  
+  // Tool duration timer (Priority 3)
+  function updateToolDuration() {
+    if (!agentState.toolStartTime) return;
+    
+    const toolEl = document.getElementById('focus-tool-display');
+    if (!toolEl) return;
+    
+    const elapsed = Date.now() - agentState.toolStartTime;
+    const seconds = (elapsed / 1000).toFixed(1);
+    
+    // Update tool display with live timer
+    const toolName = agentState.activeTools[0]?.toolName || 'Unknown';
+    toolEl.innerHTML = `<span class="tool-icon">🔧</span><span class="tool-name">${escapeHtml(toolName)}</span><span class="tool-status">Running... (${seconds}s ⏱)</span>`;
+  }
+  
+  // Confidence bar animation (Priority 4)
+  function updateConfidenceBar() {
+    const confidenceEl = document.getElementById('focus-prediction-confidence');
+    if (!confidenceEl) return;
+    
+    if (agentState.lastConfidence === null || agentState.lastConfidence === undefined) {
+      confidenceEl.textContent = 'Confidence: —';
+      confidenceEl.style.backgroundColor = 'transparent';
+      return;
+    }
+    
+    const percent = Math.round(agentState.lastConfidence * 100);
+    confidenceEl.textContent = `Confidence: ${percent}%`;
+    
+    // Animate bar width
+    const barEl = document.getElementById('focus-confidence-bar');
+    if (barEl) {
+      barEl.style.width = `${agentState.lastConfidence * 100}%`;
+      // Color: cyan if >= 0.5, amber if < 0.5
+      barEl.style.backgroundColor = agentState.lastConfidence >= 0.5 ? 'var(--accent)' : '#ffb700';
+    }
+  }
+  
+  // Pause/Resume control (Priority 5)
+  function togglePauseFocus() {
+    agentState.focusPaused = !agentState.focusPaused;
+    
+    const pauseBtn = document.getElementById('focus-pause-btn');
+    if (pauseBtn) {
+      pauseBtn.textContent = agentState.focusPaused ? 'RESUME' : 'PAUSE';
+      pauseBtn.style.borderColor = agentState.focusPaused ? 'var(--accent)' : 'var(--border)';
+    }
+    
+    // If resuming, flush buffered events
+    if (!agentState.focusPaused && agentState.focusEventBuffer.length > 0) {
+      const buffered = agentState.focusEventBuffer.splice(0);
+      buffered.forEach(e => applyEvent(e));
+      renderAllFromState();
+    }
+  }
+
   function renderAllFromState() {
     renderMission();
     renderActiveTools();
@@ -227,7 +376,10 @@
     renderFileChanges();
     renderTelemetryDebug();
     if (currentTab === 'trace') renderTrace();
-    if (currentTab === 'focus') renderFocus();
+    if (currentTab === 'focus') {
+      renderFocus();
+      updateConfidenceBar();
+    }
     if (currentTab === 'graph') renderGraph();
   }
 
@@ -807,6 +959,12 @@
     tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
     document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
     document.getElementById('tab-graph')?.addEventListener('click', () => switchTab('graph'));
+    
+    // Setup pause button (Priority 5)
+    const pauseBtn = document.getElementById('focus-pause-btn');
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', togglePauseFocus);
+    }
   }
 
   function switchTab(tab) {
@@ -1051,87 +1209,59 @@
     }
 
     // PRIMARY: Current Thought (reasoning-first, no truncation)
-    const latestDecision = allEvents
-      .filter(e => e.payload?.taskId === taskId && e.type === 'decision_made')
-      .sort((a, b) => b.timestamp - a.timestamp)[0];
-
-    if (latestDecision) {
-      const d = latestDecision.payload;
-      const reasoning = d.reasoningSnippet || d.reason || 'Agent is thinking...';
-      
-      const thoughtEl = document.getElementById('focus-thought');
-      thoughtEl.textContent = reasoning;
-      thoughtEl.classList.add('updated');
-      
-      // Remove animation class after animation completes
-      setTimeout(() => thoughtEl.classList.remove('updated'), 400);
+    // Priority 1: Use streaming text if available, otherwise use latest decision
+    const thoughtEl = document.getElementById('focus-thought');
+    
+    if (agentState.streamingText) {
+      // Streaming in progress or just received — text already being rendered by startStreamingReasoning()
+      // Don't override it here
     } else {
-      document.getElementById('focus-thought').textContent = 'Awaiting reasoning...';
+      // Fallback: use latest decision reasoning
+      const latestDecision = agentState.recentDecisions[0];
+      
+      if (latestDecision) {
+        const reasoning = latestDecision.reasoningSnippet || latestDecision.reason || 'Agent is thinking...';
+        thoughtEl.textContent = reasoning;
+        thoughtEl.classList.add('updated');
+        setTimeout(() => thoughtEl.classList.remove('updated'), 400);
+      } else {
+        thoughtEl.textContent = 'Awaiting reasoning...';
+      }
     }
 
     // PREDICTION: Next Action + Confidence (only real event data, no heuristics)
+    const latestDecision = agentState.recentDecisions[0];
+    
     if (latestDecision) {
-      const nextAction = latestDecision.payload.decision || 'Evaluating next action...';
+      const nextAction = latestDecision.decision || 'Evaluating next action...';
       document.getElementById('focus-prediction-action').textContent = `Next: ${nextAction}`;
-      
-      // Confidence: Only render if it exists in event payload
-      const confidence = latestDecision.payload.confidence;
-      const confidenceEl = document.getElementById('focus-prediction-confidence');
-      
-      if (confidence !== undefined && confidence !== null) {
-        const percent = Math.round(confidence * 100);
-        confidenceEl.textContent = `Confidence: ${percent}%`;
-      } else {
-        confidenceEl.textContent = 'Confidence: —';
-      }
     } else {
       document.getElementById('focus-prediction-action').textContent = 'Evaluating next action...';
-      document.getElementById('focus-prediction-confidence').textContent = 'Confidence: —';
     }
 
-    // SECONDARY: Active Tool
-    const latestTool = allEvents
-      .filter(e => e.payload?.taskId === taskId && 
-        (e.type === 'tool_called' || e.type === 'tool_finished'))
-      .sort((a, b) => b.timestamp - a.timestamp)[0];
-
-    if (latestTool) {
-      const toolName = latestTool.payload.toolName;
-      const isRunning = latestTool.type === 'tool_called';
-      const duration = latestTool.payload.durationMs || 0;
-      
-      let toolHtml = `<span class="tool-icon">🔧</span>`;
-      toolHtml += `<span class="tool-name">${escapeHtml(toolName)}</span>`;
-      
-      if (isRunning) {
-        toolHtml += `<span class="tool-status">Running... (${duration}ms)</span>`;
-      } else {
-        const status = latestTool.payload.success ? '✓' : '✗';
-        toolHtml += `<span class="tool-status">${status} ${duration}ms</span>`;
+    // SECONDARY: Active Tool (Priority 3: with live duration timer)
+    if (agentState.activeTools.length > 0) {
+      const tool = agentState.activeTools[0];
+      // Tool display updated live by updateToolDuration() every 100ms
+      // Just ensure it's visible
+      if (!document.getElementById('focus-tool-display').textContent.includes('🔧')) {
+        updateToolDuration();
       }
-      
-      document.getElementById('focus-tool-display').innerHTML = toolHtml;
     } else {
       document.getElementById('focus-tool-display').textContent = 'No tool running';
     }
 
     // TERTIARY: Context (Goal + Status)
-    const taskEvent = allEvents.find(e => 
-      e.payload?.taskId === taskId && 
-      (e.type === 'task_started' || e.type === 'task_finished')
-    );
-    
-    const goal = allEvents.find(e => 
-      e.payload?.taskId === taskId && e.type === 'task_started'
-    )?.payload?.goal;
-
-    document.getElementById('focus-context-goal').textContent = goal || '—';
+    const goal = agentState.currentGoal || agentState.currentTaskLabel || '—';
+    document.getElementById('focus-context-goal').textContent = goal;
     
     let status = '—';
-    if (taskEvent?.type === 'task_finished') {
-      status = taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED';
-    } else if (taskEvent?.type === 'task_started') {
+    if (agentState.status === 'idle') {
+      status = '✓ COMPLETED';
+    } else if (agentState.status === 'working') {
       status = '⚡ RUNNING';
+    } else if (agentState.status === 'error') {
+      status = '✗ FAILED';
     }
     document.getElementById('focus-context-status').textContent = status;
   }

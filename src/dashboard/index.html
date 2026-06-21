@@ -123,6 +123,12 @@
 
     <!-- ═══ F4: FOCUS MODE — REASONING-CENTRIC ═══ -->
     <section id="focus-view" class="focus-reasoning-centric hidden">
+      <!-- FOCUS Header with Pause Control -->
+      <div class="focus-header">
+        <span class="card-label">⚡ FOCUS</span>
+        <button id="focus-pause-btn" title="Pause/Resume FOCUS updates">PAUSE</button>
+      </div>
+
       <!-- PRIMARY: Current Thought (60% viewport) -->
       <div class="focus-thought-container">
         <div class="focus-thought" id="focus-thought">
@@ -136,7 +142,8 @@
           Evaluating next action...
         </div>
         <div class="prediction-confidence" id="focus-prediction-confidence">
-          Confidence: —
+          <div id="focus-confidence-bar" class="focus-confidence-bar"></div>
+          <span style="position: relative; z-index: 1;">Confidence: —</span>
         </div>
       </div>
 
