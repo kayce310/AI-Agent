@@ -12,6 +12,10 @@
       <span id="ws-indicator" class="ws-disconnected" title="WebSocket disconnected">●</span>
       <span class="app-title">KATO AGENT</span>
     </div>
+    <div class="status-center">
+      <button id="tab-mission" class="tab-btn active" data-tab="mission">MISSION</button>
+      <button id="tab-trace" class="tab-btn" data-tab="trace">🧠 TRACE</button>
+    </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
       <button id="theme-toggle" title="Toggle theme">◐</button>
@@ -95,6 +99,23 @@
       <div id="error-display" class="card error-card hidden">
         <div class="card-label">ERROR</div>
         <div id="error-message" class="error-message"></div>
+      </div>
+    </section>
+
+    <!-- ═══ F3: TRACE MODE ═══ -->
+    <section id="trace-view" class="hidden">
+      <!-- Trace Header: Task Context -->
+      <div class="card trace-header">
+        <div class="card-label">TRACE CONTEXT</div>
+        <div id="trace-task-info" class="trace-task-info">
+          <span id="trace-task-id" class="trace-task-id">—</span>
+          <span id="trace-task-status" class="trace-task-status">—</span>
+        </div>
+      </div>
+
+      <!-- Trace Container -->
+      <div id="trace-container" class="trace-container">
+        <div class="empty-state">Select a task to view cognitive trace</div>
       </div>
     </section>
 

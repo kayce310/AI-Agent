@@ -77,6 +77,39 @@ body {
 }
 #theme-toggle:hover { background: var(--border); }
 
+/* ═══ TABS ═══ */
+.status-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.tab-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: rgba(88, 166, 255, 0.05);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
 /* ═══ WORKSPACE — responsive to inspector ═══ */
 #workspace {
   flex: 1;
@@ -93,6 +126,215 @@ body {
   width: 100%;
   min-width: 0;
   transition: margin-right 0.25s ease;
+}
+
+#trace-view {
+  flex: 1;
+  padding: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  transition: margin-right 0.25s ease;
+}
+
+#trace-view.hidden, #mission-view.hidden {
+  display: none;
+}
+
+/* ═══ TRACE CONTAINER ═══ */
+.trace-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trace-decision-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.trace-decision-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+
+.trace-dev-info {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.trace-decision-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.trace-decision-reason {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.trace-reasoning {
+  font-size: 12px;
+  color: var(--text);
+  background: rgba(88, 166, 255, 0.05);
+  border-left: 2px solid var(--accent);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.trace-reasoning.no-reasoning {
+  color: var(--text-muted);
+  border-left-color: var(--text-muted);
+  background: rgba(110, 118, 129, 0.05);
+  font-style: italic;
+}
+
+/* ═══ WARNINGS ═══ */
+.trace-warnings {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.warning-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.warning-badge.warn {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+  border: 1px solid var(--yellow);
+}
+
+.warning-badge.error {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.warning-badge.info {
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* ═══ TOOLS & ARTIFACTS ═══ */
+.trace-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.trace-tools, .trace-artifacts {
+  margin-bottom: 12px;
+}
+
+.trace-tool-item, .trace-artifact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.trace-tool-item:hover, .trace-artifact-item:hover {
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.trace-tool-name, .trace-artifact-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace-tool-status {
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.trace-artifact-icon {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.trace-mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.trace-timestamp {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.trace-header {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.trace-task-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.trace-task-id {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.trace-task-status {
+  color: var(--text-dim);
 }
 
 /* ═══ INSPECTOR PANEL ═══ */
