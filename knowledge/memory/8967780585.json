@@ -78,5 +78,15 @@
     "role": "assistant",
     "content": "Chào buổi tối Kayce! ☺️ Cần tôi giúp gì không?",
     "timestamp": 1782037827208
+  },
+  {
+    "role": "user",
+    "content": "nghiên cứu về các thiết bị IOT giá rẻ mà ta có thể dùng trước cho bạn đi, nghiên cứu luôn cả cách dùng và cách tích hợp. Chia nhỏ task rồi làm từng bước nhỏ nhé Coral",
+    "timestamp": 1782038116020
+  },
+  {
+    "role": "assistant",
+    "content": "Dạ, tôi đã hoàn thành research rất toàn diện về các thiết bị IoT giá rẻ. Bây giờ tôi sẽ tổng hợp lại toàn bộ kiến thức và tạo wiki page cho bạn.\n\n## 📊 **TỔNG HỢP RESEARCH - THIẾT BỊ IOT GIÁ RẺ**\n\nTôi sẽ tạo một wiki page chi tiết với tất cả thông tin đã research:",
+    "timestamp": 1782038116020
   }
 ]
