@@ -10018,17 +10018,6 @@
     ]
   },
   {
-    "id": "mem_mqmtajhk_vs1uhb",
-    "type": "human",
-    "content": "test memory",
-    "timestamp": "2026-06-20T20:30:07.400Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:07.400Z"
-  },
-  {
     "id": "mem_mqmtajhv_g133dq",
     "type": "persona",
     "content": "important fact",
@@ -10064,28 +10053,6 @@
     "tags": [
       "test"
     ]
-  },
-  {
-    "id": "mem_mqmtajje_clhaa9",
-    "type": "human",
-    "content": "future",
-    "timestamp": "2026-06-20T20:30:07.466Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:07.466Z"
-  },
-  {
-    "id": "mem_mqmtas4u_7apcfx",
-    "type": "human",
-    "content": "test memory",
-    "timestamp": "2026-06-20T20:30:18.605Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:18.606Z"
   },
   {
     "id": "mem_mqmtas56_8x85ql",
@@ -10125,28 +10092,6 @@
     ]
   },
   {
-    "id": "mem_mqmtas6n_pfsziw",
-    "type": "human",
-    "content": "future",
-    "timestamp": "2026-06-20T20:30:18.670Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:18.670Z"
-  },
-  {
-    "id": "mem_mqmtbib3_nr8u2t",
-    "type": "human",
-    "content": "test memory",
-    "timestamp": "2026-06-20T20:30:52.526Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:52.527Z"
-  },
-  {
     "id": "mem_mqmtbibe_8lq8sy",
     "type": "persona",
     "content": "important fact",
@@ -10184,28 +10129,6 @@
     ]
   },
   {
-    "id": "mem_mqmtbid3_xwi7yu",
-    "type": "human",
-    "content": "future",
-    "timestamp": "2026-06-20T20:30:52.599Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:52.599Z"
-  },
-  {
-    "id": "mem_mqmtbnro_nwk07j",
-    "type": "human",
-    "content": "test memory",
-    "timestamp": "2026-06-20T20:30:59.603Z",
-    "tags": [
-      "test"
-    ],
-    "ttl": 60000,
-    "expiresAt": "2026-06-20T20:31:59.603Z"
-  },
-  {
     "id": "mem_mqmtbns0_rvbhpo",
     "type": "persona",
     "content": "important fact",
@@ -10241,5 +10164,4621 @@
     "tags": [
       "test"
     ]
+  },
+  {
+    "id": "mem_mqmtclvs_z2udg3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503799_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.815Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclvw_ihp0xj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503820_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:31:43.820Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclvw_92gjua",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503820_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:31:43.820Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtclvx_y1e184",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503821_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.821Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclw0_rbvdu9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503824_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:31:43.824Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclw1_c0ho29",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503824_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:31:43.825Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclw2_qpi83t",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503826_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:31:43.826Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclw3_bmliku",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503826_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.827Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclwv_a9dd92",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503855_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.855Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclx2_74l8hv",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503862_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.862Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclx3_ino97c",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503863_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.863Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclx3_40rxct",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503863_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:31:43.863Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtcly7_2mqr6z",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503901_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.902Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtcly8_9x0wuj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503902_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=1\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:31:43.904Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtcly8_5djwes",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503902_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.904Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtclzf_ghrids",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987503850_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:31:43.947Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtcml2_hpg27v",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:31:44.726Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtcml3_6iw3h9",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:31:44.727Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtjdg4_6qjj1h",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819427_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.475Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdg9_qr2pxf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819481_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:36:59.481Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdg9_oud1qo",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819481_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:36:59.481Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtjdga_mgvjgy",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819482_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.482Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdgd_26m3c5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819485_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:36:59.485Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdge_vmgpev",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819486_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=1\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:36:59.486Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdgf_pv2gvf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819486_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.487Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdgf_ic5z24",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819487_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.487Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdhc_2nxn9e",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819520_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.520Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdhl_g0uj2i",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819528_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.529Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdhp_gnamqb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819532_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.532Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdhp_q7j7ql",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819533_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:36:59.533Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdix_9pdzpp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819575_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.575Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdiz_xgtmrd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819575_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:36:59.579Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdiz_dmarn2",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819575_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.579Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtjdle_fq3j6h",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987819505_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:36:59.666Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtje6e_c5jtkj",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:37:00.422Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtje6f_10wbrs",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:37:00.423Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtkpu7_q4ibgp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882171_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.190Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpub_e2zp85",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882195_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:38:02.195Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpuc_5vmu54",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882196_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:38:02.196Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtkpuc_9209y1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882196_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.196Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpuh_09mzrq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882201_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:38:02.201Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpui_coiyqm",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882202_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=1\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:38:02.202Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpuj_i8mpdp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882203_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.203Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpuj_c7mauz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882203_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.203Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpva_qm2ibj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882230_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.230Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpvk_xuode9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882240_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.240Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpvl_2wu7bd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882241_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.241Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpvm_43yj9r",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882242_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:38:02.242Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpx1_zuhihf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882271_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.292Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpy5_v5534l",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882332_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:38:02.333Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpy5_skrlyj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882332_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:38:02.333Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkpy5_tq3gxz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781987882333_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:38:02.333Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtkqgl_oon21p",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:38:02.997Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtkqgm_e0w5te",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:38:02.998Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtuynj_8d3igx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360155_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.173Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuynm_8rzj3o",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360178_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:46:00.178Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuynn_2ty7mx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360179_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:46:00.179Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtuyno_hfpr0g",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360180_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.180Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuynq_5wpqsb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360182_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.182Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyns_1k63kp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360184_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=1\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:46:00.184Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuynt_zwsee3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360185_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.185Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuynu_76vvvh",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360186_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.186Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyop_gnaw5v",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360216_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.217Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyp2_j78qki",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360230_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.230Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyp3_u6f22v",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360231_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.231Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyp3_3337n3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360231_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:46:00.231Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyqa_un3s09",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360272_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.272Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyqb_pmv8fl",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360272_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:46:00.275Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyqb_2d7o9a",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360272_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.275Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuyrs_bbc8re",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988360222_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:00.328Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtuzan_f2wayn",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:46:01.007Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtuzan_n2a26y",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:46:01.007Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtvvz0_wubx3c",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403332_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.355Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw17_pk69fm",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403433_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.433Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvz4_aagqrj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403360_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:46:43.360Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvz5_2wc6us",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403361_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:46:43.361Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtvvz7_5unzfe",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403362_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.363Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvza_tov0dc",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403366_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.366Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvzb_w31ikx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403367_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:46:43.367Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvzc_9m4tre",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403368_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.368Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvvzd_hcs120",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403369_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.369Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw06_to3dg5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403398_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.398Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw0w_t5rykh",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403424_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.424Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw0x_wlqohi",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403425_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.425Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw0x_5fdxm3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403425_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:46:43.425Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw18_sxy8bb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403433_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:46:43.435Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw18_b4ddoe",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403433_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:46:43.436Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvw2e_865itu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988403381_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=1",
+    "timestamp": "2026-06-20T20:46:43.478Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtvwpl_xxt12r",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:46:44.313Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtvwpl_nmvau6",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:46:44.313Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtygek_qiuq9n",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523121_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.147Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygey_4eh0bg",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523138_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.161Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfz_qoqdpv",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523198_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.199Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygeo_us8f8b",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523152_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:48:43.152Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygeo_z55lfs",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523152_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:48:43.152Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtygep_iugkuq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523153_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.153Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtyger_lq7syu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523155_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.155Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtyges_i2lfbc",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523156_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:48:43.156Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygeu_4d8si4",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523157_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.158Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygev_xuptwf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523158_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.159Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfm_j7vxmq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523186_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.186Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfv_g0qf8i",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523195_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.195Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfw_j3ptr6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523196_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.196Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfw_33ibkj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523196_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:48:43.196Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfz_9tx5x1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523199_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=1\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:48:43.199Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygfz_a8knw5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781988523199_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:48:43.199Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmtygy0_6f6wuq",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:48:43.848Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmtygy1_4fdimd",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:48:43.849Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmub9uq_k9nb1z",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121166_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.185Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9uu_3nwn7v",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121190_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:58:41.190Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9uv_srbztx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121191_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T20:58:41.191Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmub9uw_374atn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121192_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.192Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9uz_uufvyq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121194_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.195Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9v0_j13q3d",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121195_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T20:58:41.196Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9v1_2zyf6t",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121196_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.197Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9v2_85xhy5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121197_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.198Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9vv_4lz3f7",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121227_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.227Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9w6_94qlea",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121238_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.238Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9w7_xnx8ex",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121239_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.239Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9w7_7cjq0o",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121239_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T20:58:41.239Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9xa_r2d6y4",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121277_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.277Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9xb_76royp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121277_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T20:58:41.279Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9xb_87ohre",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121277_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.279Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmub9yl_746i7q",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989121223_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T20:58:41.325Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmubakw_j9b0b2",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:58:42.127Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmubakw_4z2c5g",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T20:58:42.128Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmufvrw_b3qgd3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336193_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.218Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvte_6a0fth",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336273_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.273Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs0_dqd6rb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336224_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T21:02:16.224Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs1_ucbbnt",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336225_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-20T21:02:16.225Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmufvs2_7234wr",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336226_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.226Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs5_xfopgv",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336229_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.229Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs6_vv64ar",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336230_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-20T21:02:16.230Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs7_r3zypg",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336231_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.231Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvs8_yaqyps",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336232_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.232Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvt9_hu4evb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336268_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.269Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvtq_l9vn4l",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336285_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.285Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvtr_ye8dkz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336286_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.286Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvtr_951mlo",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336287_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-20T21:02:16.287Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvtf_hlec3r",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336273_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-20T21:02:16.275Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvtf_xhmx9h",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336273_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.275Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufvv2_tt93wp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1781989336218_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-20T21:02:16.334Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqmufwa8_fhgosi",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-20T21:02:16.880Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqmufwa9_cvhsc2",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-20T21:02:16.881Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn84c7k_605dv6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312228_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.269Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84ca2_0z35d1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312360_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.360Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7o_p30wv4",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312276_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:25:12.276Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7p_tl45kf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312277_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:25:12.277Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn84c7q_4ot607",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312278_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.278Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7w_x0y754",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312284_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.284Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7y_ull1fj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312285_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:25:12.286Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7z_pcrnny",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312286_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.287Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c7z_tdotno",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312287_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.287Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c91_06fooq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312325_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.325Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c9b_i51ceu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312335_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.335Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c9c_hapkv5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312336_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.336Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84c9c_zehkyf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312336_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:25:12.336Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84ca3_k0zvil",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312360_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:25:12.363Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84ca3_ccwuik",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312360_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.363Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84cco_rjozav",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012312276_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:25:12.456Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn84d9m_ze8t7q",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:25:13.642Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn84d9n_zbzgv4",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:25:13.643Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8d05d_78127s",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716518_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.543Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05h_fn28ri",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716549_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:31:56.549Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05i_fg0jzd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716550_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:31:56.550Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8d05j_9et7p7",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716551_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.551Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05m_tho82q",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716554_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.554Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05n_e9om9b",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716555_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:31:56.555Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05o_mvsj8b",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716556_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.556Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d05p_q2u7sn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716557_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.557Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d06r_sncwj1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716593_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.595Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d072_zbw69r",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716606_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.606Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d073_tunyuj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716607_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:31:56.607Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d073_itjtbt",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012716607_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:31:56.607Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77e_9ucdq2",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725666_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.689Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d79g_kqxtck",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725741_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.763Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77h_zbhw5l",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725693_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:32:05.693Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77i_pxexlr",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725694_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:32:05.694Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8d77j_9dcawi",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725695_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.695Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77l_orr0cs",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725697_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.697Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77n_v1l0u9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725698_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:32:05.698Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77n_bm5k3d",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725699_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.699Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d77o_u3nyp3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725700_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.700Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d78j_aepy3n",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725731_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.731Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d78u_r6ksac",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725741_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.742Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d78u_8hil4h",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725742_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.742Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d78v_9t6vta",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725743_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:32:05.743Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d7ai_xpn5wr",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725801_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.802Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d7ai_mj0jut",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725802_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=1\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:32:05.802Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d7ai_no6d8d",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012725802_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:05.802Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8d804_7qegbd",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:32:06.724Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8d805_i9d8sn",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:32:06.725Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8dq0e_7kqisn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750037_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.061Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq29_7ir8x9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750105_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.128Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0h_gwmfwt",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750065_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:32:30.065Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0i_vdnzdo",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750066_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:32:30.066Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8dq0j_03b6db",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750067_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.067Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0l_osckuy",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750069_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.069Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0m_8pmxrg",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750070_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:32:30.070Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0n_3tm6nu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750070_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.071Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq0n_0pcuc4",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750071_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.071Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq1f_pfaog5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750099_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.099Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq1p_3619th",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750109_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.109Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq1q_zmz8ua",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750110_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.110Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq1q_o7c5pr",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750110_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:32:30.110Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq3f_6mmuz6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750171_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.171Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq3g_2xzfxj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750171_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:32:30.172Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dq3g_3q5kbn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012750171_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:32:30.172Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8dqw4_bj9peb",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:32:31.204Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8dqw5_rb4sht",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:32:31.205Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8ishy_16vyxj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986537_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.564Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi1_o5rdai",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986569_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:36:26.569Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi2_21cpcv",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986570_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:36:26.570Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8isi3_6axs89",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986571_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.571Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi5_yexici",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986573_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.573Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi7_v5rhbg",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986574_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:36:26.575Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi8_dk9u6r",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986575_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.576Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isi8_2zss4a",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986576_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.576Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isj4_v8yqbr",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986607_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.608Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isjc_mlcedf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986616_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.616Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isjd_i2g5s1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986617_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.617Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isjd_mgkl28",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986617_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:36:26.617Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isl2_wzj3oh",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986677_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.677Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isl3_fkjart",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986677_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:36:26.679Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8isl3_qs93bj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986677_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.679Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8ismf_olg8eq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782012986617_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:36:26.727Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8itaq_3uszus",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:36:27.602Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8itaq_ykhijt",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:36:27.602Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8n1ud_53bxz2",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185280_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.300Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1w8_o4u83c",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185365_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.366Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1uh_469jgt",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185305_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:39:45.305Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1ui_1sg6nd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185306_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:39:45.306Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8n1uj_8arqjy",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185307_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.307Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1ul_zvfsae",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185309_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.309Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1um_mer94p",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185310_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:39:45.310Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1un_stob38",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185311_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.311Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1uo_dx1y9w",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185312_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.312Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1vk_5sbv86",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185344_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.344Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1vt_acat04",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185353_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.353Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1vu_2cx7md",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185354_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.354Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1vu_w2l5fv",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185354_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:39:45.354Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1w9_r0tvjs",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185365_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:39:45.369Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1wa_kzpf1a",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185365_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.370Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n1xm_h5xoy9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782013185308_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:39:45.418Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn8n2kd_wdlak5",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:39:46.236Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn8n2ke_c2cobq",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:39:46.238Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn95vxr_jb2hek",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:54:24.111Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn95vxs_kuha1q",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:54:24.112Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn95w4o_inukpd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064323_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.359Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w7e_ucu09e",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064456_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.457Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w4t_dib3h1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064365_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:54:24.365Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w4u_1chdgb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064366_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:54:24.366Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn95w4v_z8nsr3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064367_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.367Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w4x_7vufgo",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064369_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.369Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w4y_9sljwq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064370_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:54:24.370Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w4z_0nhfki",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064371_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.371Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w50_k28pab",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064372_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.372Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w62_g8lo4g",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064410_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.410Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w6b_xt0mcx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064419_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.419Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w6d_qejh7j",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064421_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.421Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w6e_1xdrk2",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064422_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:54:24.422Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w7f_2jhgpz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064456_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:54:24.459Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w7f_fy0dl6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064457_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.459Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn95w8w_jnoblf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014064395_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:54:24.512Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tuc_xoy2o3",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108024_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.048Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96txc_tkntkb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108159_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.159Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tuj_gv4y9q",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108059_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:55:08.059Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tuk_ypidqc",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108060_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T03:55:08.060Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn96tul_5e56x0",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108061_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.061Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tuo_7d9l4j",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108064_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.064Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tup_dnjz7j",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108065_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T03:55:08.065Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tur_gllxvl",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108066_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.066Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tur_2bio0y",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108067_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.067Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tw1_ut9qee",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108113_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.113Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96twg_c2ti7d",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108127_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.127Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96twh_fbrj1a",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108129_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.129Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96twh_nffk6y",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108129_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T03:55:08.129Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96txd_frrw6q",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108159_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T03:55:08.161Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96txd_pzgoew",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108159_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.161Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96tz0_6lankm",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014108095_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T03:55:08.220Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn96ur4_2yqfcq",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:55:09.232Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn96ur6_7ruw37",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T03:55:09.234Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn9i6k1_w6ka27",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637722_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.744Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6ls_cmpy4p",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637785_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.807Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6k4_k7om28",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637748_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:03:57.748Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6k5_vb6s6o",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637749_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:03:57.749Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn9i6k6_ts461l",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637750_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.750Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6k9_p97rz5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637752_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.753Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6ka_66baf5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637753_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:03:57.754Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6ka_ixeo68",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637754_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.754Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6kb_oy4cnp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637755_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.755Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6l5_h73wff",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637784_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.785Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6ld_4nx5u6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637793_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.793Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6le_28go2x",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637794_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.794Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6le_zu4wzp",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637794_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:03:57.794Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6n0_9fcucs",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637852_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.852Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6n0_kj4w4f",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637852_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T04:03:57.852Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9i6n0_0gpy7e",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782014637852_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:03:57.852Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9mn2n_ausqt6",
+    "type": "human",
+    "content": "bạn nhớ dữ liệu trò chuyện trước đó không Coral",
+    "timestamp": "2026-06-21T04:07:25.775Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqn9mn2n_tmsdsn",
+    "type": "persona",
+    "content": "Dạ, tôi nhớ được một phần. Từ memory context, tôi thấy:\n\n- Bạn là **Kayce** — người phát triển tôi\n- Bạn đã hỏi tôi những câu hỏi về bản thân, session memory, và liệu tôi có thể giống Jarvis không\n- Tôi đã trả lời tôi là Coral, một AI agent đa năng\n\nTuy nhiên, **tôi không có truy cập vào nội dung chi tiết của những cuộc trò chuyện đó** — chỉ biết là các tin nhắn đã xảy ra vào những thời điểm nhất định hôm nay.\n\nNếu bạn cần tôi nhớ lại những chi tiết cụ thể từ các task trước đó (code đã viết, yêu cầu đã thực hiện, decisions đã đưa ra), bạn có thể nhắc lại hoặc cung cấp context. Tôi sẽ tiếp tục từ đó.\n\nCần giúp gì bây giờ?",
+    "timestamp": "2026-06-21T04:07:25.775Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqn9t3nk_r91oq6",
+    "type": "human",
+    "content": "bạn có thể làm những gì hiện tại? so với Jarvis?",
+    "timestamp": "2026-06-21T04:12:27.200Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqn9t3nl_bvbs3t",
+    "type": "persona",
+    "content": "Tôi sẽ so sánh khả năng của tôi với Jarvis một cách thực tế:\n\n## 🤖 Jarvis vs Coral\n\n### **Jarvis có thể:**\n- Điều khiển toàn bộ thiết bị của Tony (suits, systems, nhà thông minh)\n- Truy cập mạng lưới toàn cầu, thông tin realtime không giới hạn\n- Dự đoán, phân tích tình huống chiến thuật\n- Tự học, phát triển trí tuệ nhân tạo\n- Hành động độc lập trên hệ thống\n\n### **Tôi (Coral) hiện tại có thể:**\n- 📖 **Tra cứu kiến thức**: Search wiki, archives, blueprint của bạn\n- 🔍 **Tìm kiếm thông tin**: Web search, fetch URLs, đọc PDF/DOCX\n- 📝 **Xử lý tài liệu**: Parse, archive, tóm tắt, trích xuất từ files\n- 💻 **Hỗ trợ code**: Đọc repo, gợi ý, debug (nhưng không tự chạy production)\n- 💭 **Phân tích & gợi ý**: Dựa trên knowledge + training data\n- 📊 **Tổng hợp thông tin**: Từ nhiều nguồn thành report, insights\n\n### **Tôi KHÔNG thể (so với Jarvis):**\n- ❌ Điều khiển thiết bị vật lý (IoT, suits, hệ thống nhà)\n- ❌ Hành động độc lập trên hệ thống (chỉ có thể gợi ý actions cho bạn)\n- ❌ Học từ dữ liệu ",
+    "timestamp": "2026-06-21T04:12:27.201Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqn9uysc_z5kru8",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234178_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.202Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysg_dk3z80",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234208_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:13:54.208Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysh_4m5aem",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234209_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:13:54.209Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn9uysi_v04p02",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234210_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.210Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysk_bjk4kk",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234212_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.212Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysl_ssb0g7",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234213_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:13:54.213Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysm_5ngcee",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234214_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.214Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uysn_79n4ub",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234214_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.215Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uytt_en1s3d",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234257_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.257Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uyu3_3wseg1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234267_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.267Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uyu4_xuuk4m",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234268_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.268Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uyu4_0i7fsm",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234268_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:13:54.268Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9uywm_uc43oq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015234356_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:13:54.357Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoh9_rgo3gx",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454106_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.124Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zok6_lg0z5f",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454228_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.228Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohc_dwv6wf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454128_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:17:34.128Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohd_fu2n97",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454129_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:17:34.129Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn9zohe_mess8c",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454130_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.130Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohi_kkf36t",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454133_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.134Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohj_8srqvf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454135_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=1\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:17:34.135Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohk_5pwj7p",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454135_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.136Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zohl_lkg1ix",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454136_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.137Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoil_dmn259",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454172_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.172Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoiy_948l51",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454185_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.185Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoiz_a763s8",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454187_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.187Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoiz_ra2pon",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454187_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:17:34.187Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zok7_nwhiqn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454228_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T04:17:34.230Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zok7_4etje0",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454228_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.231Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zoln_108lna",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015454167_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:17:34.283Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqn9zp92_r9pn7d",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:17:35.126Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqn9zp93_voc2ht",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:17:35.127Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna09nb_7dabqb",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:18:01.559Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna09nc_w06sdr",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:18:01.560Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna09p2_v7sbeu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481600_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.621Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09ra_na5hn6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481674_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.700Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09p6_d0rpwb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481626_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:18:01.626Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09p7_t18ai6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481627_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:18:01.627Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna09p8_4ncryu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481628_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.628Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09pb_13t76a",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481631_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.631Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09pe_hqyu2e",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481634_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:18:01.634Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09pf_juq9u9",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481635_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.635Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09pg_4qxf5f",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481636_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.636Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09qf_s1kx7t",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481671_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.671Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09qp_8msxhc",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481680_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.681Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09qq_fk3ru5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481682_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.682Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09qq_4jlv1f",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481682_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:18:01.682Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09sh_5vgfin",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481745_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.745Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09sh_6lll8e",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481745_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T04:18:01.745Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna09sh_s8qtd8",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015481745_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:01.745Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gc3_ji0xz5",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490202_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.226Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gdv_9x1hlz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490262_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.289Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gc8_10cvvf",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490232_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:18:10.232Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gc9_40ipyn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490232_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:18:10.233Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna0gc9_a9fr2y",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490233_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.233Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gcc_8q5ca6",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490236_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.236Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gce_2kxaic",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490237_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=0\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:18:10.238Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gcf_k7bs56",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490238_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.239Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gcf_fjg4ia",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490239_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.239Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gdk_kiil75",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490280_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.280Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gdt_7fq6ax",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490289_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.289Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gdu_xt0ytu",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490290_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.290Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gdu_l8nj6i",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490290_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:18:10.290Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gf4_s670bd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490336_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.336Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gf5_vdaodz",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490336_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T04:18:10.337Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0gf5_1ykmdn",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015490336_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:18:10.337Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna0h48_u3exn7",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:18:11.240Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna0h48_mpb2l3",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:18:11.240Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna7bzd_8lckqj",
+    "type": "human",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:23:31.177Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna7bze_chw8w9",
+    "type": "persona",
+    "content": "hello",
+    "timestamp": "2026-06-21T04:23:31.178Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna7c4i_f1rvm2",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811339_1\noutcome=success\ntask=install pnpm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm,install\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.360Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4l_bo40ro",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811365_1\noutcome=failure\ntask=deploy\naction=docker build\nresult=Failed: ENOENT\ntags=experience,failure,docker\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:23:31.365Z",
+    "tags": [
+      "experience",
+      "failure",
+      "docker"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4m_edzznd",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811366_1\noutcome=partial\ntask=test task\naction=test action\nresult=half done\ntags=experience,partial,tag1,tag2\nsource=tool\nduration=1500\ndetail=some detail",
+    "timestamp": "2026-06-21T04:23:31.366Z",
+    "tags": [
+      "experience",
+      "partial",
+      "tag1",
+      "tag2"
+    ],
+    "sessionId": "test-session"
+  },
+  {
+    "id": "mem_mqna7c4n_h70zwt",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811367_1\noutcome=success\ntask=task\naction=action\nresult=Task completed successfully\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.367Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4t_bqxxw1",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811373_1\noutcome=success\ntask=install package\naction=[npm] installed successfully\nresult=Successfully completed: [npm] installed successfully\ntags=experience,success,install\nsource=agent\nduration=1",
+    "timestamp": "2026-06-21T04:23:31.373Z",
+    "tags": [
+      "experience",
+      "success",
+      "install"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4u_12c9vo",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811374_1\noutcome=failure\ntask=deploy\naction=[docker] Failed\nresult=Failed: build exited with code 1\ntags=experience,failure,deploy\nsource=agent\nduration=1\ndetail=build exited with code 1",
+    "timestamp": "2026-06-21T04:23:31.374Z",
+    "tags": [
+      "experience",
+      "failure",
+      "deploy"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4v_nc1ca0",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811375_1\noutcome=partial\ntask=backup\naction=[cp] copied 2/3 files\nresult=copied 2/3 files\ntags=experience,partial,backup\nsource=agent\nduration=1",
+    "timestamp": "2026-06-21T04:23:31.375Z",
+    "tags": [
+      "experience",
+      "partial",
+      "backup"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c4w_l12tqq",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811375_1\noutcome=success\ntask=task\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.376Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c64_k8m5sc",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811419_1\noutcome=success\ntask=t1\naction=done\nresult=Successfully completed: done\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.420Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c6d_h2wz48",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811429_1\noutcome=success\ntask=task\naction=action\nresult=Successfully completed: action\ntags=experience,success,tag\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.429Z",
+    "tags": [
+      "experience",
+      "success",
+      "tag"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c6e_ruzsjj",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811430_1\noutcome=success\ntask=install npm\naction=npm install\nresult=Successfully completed: npm install\ntags=experience,success,npm\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.430Z",
+    "tags": [
+      "experience",
+      "success",
+      "npm"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c6f_2t55dm",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811431_2\noutcome=failure\ntask=install yarn\naction=docker build failed\nresult=Failed: ENOENT\ntags=experience,failure,yarn\nsource=agent\nduration=0\ndetail=ENOENT",
+    "timestamp": "2026-06-21T04:23:31.431Z",
+    "tags": [
+      "experience",
+      "failure",
+      "yarn"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c7r_czrtsg",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811441_1\noutcome=success\ntask=install dependencies\naction=[npm] installed 42 packages\nresult=Successfully completed: [npm] installed 42 packages\ntags=experience,success,install,node\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.477Z",
+    "tags": [
+      "experience",
+      "success",
+      "install",
+      "node"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c9a_r9ern4",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811534_1\noutcome=success\ntask=deploy\naction=[docker] container started\nresult=Successfully completed: [docker] container started\ntags=experience,success\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.534Z",
+    "tags": [
+      "experience",
+      "success"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c9a_6xgtzl",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811534_2\noutcome=failure\ntask=lint\naction=[eslint] Failed\nresult=Failed: 12 errors found\ntags=experience,failure\nsource=agent\nduration=0\ndetail=12 errors found",
+    "timestamp": "2026-06-21T04:23:31.534Z",
+    "tags": [
+      "experience",
+      "failure"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqna7c9b_g5fkeb",
+    "type": "persona",
+    "content": "[EXPERIENCE] id=exp_1782015811534_3\noutcome=partial\ntask=test\naction=[vitest] 245/245 passed\nresult=245/245 passed\ntags=experience,partial\nsource=agent\nduration=0",
+    "timestamp": "2026-06-21T04:23:31.535Z",
+    "tags": [
+      "experience",
+      "partial"
+    ],
+    "sessionId": "evolution"
+  },
+  {
+    "id": "mem_mqnacqhv_lsgj2q",
+    "type": "human",
+    "content": "tôi đang muốn ra ngoài, bạn có gợi ý gì không Tor?",
+    "timestamp": "2026-06-21T04:27:43.267Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnacqhv_hbkquv",
+    "type": "persona",
+    "content": "Dạ, để tôi gợi ý phù hợp hơn, tôi cần biết thêm:\n\n1. **Bạn muốn ra ngoài làm gì?** (thư giãn, công việc, mua sắm, tập luyện...)\n2. **Thời tiết hiện tại ở bạn thế nào?** (để suggest đúng trang phục)\n3. **Bạn có địa điểm cụ thể muốn đi không, hay cần gợi ý?**\n4. **Bao lâu?** (1-2 tiếng hay cả ngày?)\n\nNếu bạn cho tôi biết vị trí (thành phố), tôi có thể check thời tiết realtime + gợi ý nơi đáng đi lúc này.\n\nBạn ở đâu vậy? 📍",
+    "timestamp": "2026-06-21T04:27:43.267Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnag8yt_g06486",
+    "type": "task",
+    "content": "Tool web_search: \"**Answer:** The weather in Gò Vấp, Hồ Chí Minh today, 21/6/2026, is hot with temperatures around 92°F. Expect highs of 37°C and lows of 28°C. Humidity and heat indices will be significant.\\n\\n**Search Results for:** \\\"thời tiết Gò Vấp Hồ Chí Minh hôm nay 21/6/2026\\\"\\n\\n1. **Dự báo thời tiết Quận Gò Vấp, Hồ Chí Minh hôm nay, ngày mai**\\n   URL: https://thoitietngaymai.org/ho-chi-minh/quan-go-vap\\n   Dự báo thời tiết Quận Gò Vấp - Hồ Chí Minh những ngày tới ; Hiện tại 21/06 · 27.3° · 36.4° ; T2 2",
+    "timestamp": "2026-06-21T04:30:27.173Z",
+    "tags": [
+      "tool_result",
+      "web_search"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnagehb_t2yo5r",
+    "type": "human",
+    "content": "đơn giản là ra ngoài thôi, bạn nên chủ động tìm thông tin về thời tiết, gợi ý luôn cả địa điểm dựa trên thời tiết. Tôi ở Gò Vấp, thành phố Hồ Chí Minh",
+    "timestamp": "2026-06-21T04:30:34.319Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnagehb_5pgecv",
+    "type": "persona",
+    "content": "Dạ, dựa trên thông tin thời tiết Gò Vấp hôm nay:\n\n## 🌡️ **Thời tiết Gò Vấp lúc này (21/6)**\n- **Nhiệt độ**: 27-28°C (sáng sớm)\n- **Cao nhất hôm nay**: 36-37°C (chiều)\n- **Độ ẩm**: 80%+ \n- **Tình trạng**: Nắng nóng, độ ẩm cao\n\n---\n\n## 💡 **Gợi ý của tôi cho bạn:**\n\n### **Lúc này (04:30 sáng) — TUYỆT VỜI để ra ngoài:**\n✅ **Nên làm gì:**\n- 🏃 **Tập thể dục / chạy bộ** — Gò Vấp có công viên Thống Nhất hoặc đi dọc các con đường yên tĩnh sáng sớm\n- 🚴 **Đi xe đạp** — Khí trời mát, ít xe cộ\n- ☕ **Uống cà phê sáng** — Đi quán ở Gò Vấp, Võ Văn Tần, Sư Vạn Hạnh\n\n✅ **Trang phục:** Áo thun nhẹ + quần shorts, mang giày thể thao\n\n---\n\n### **Chiều/Tối (từ 14:00 trở đi) — KHÔNG nên:**\n❌ Nắng gắt 36-37°C, độ ẩm cao\n❌ Nên ở nhà, hoặc ra ngoài có điều hòa (mall, quán cà phê)\n\n---\n\n**Lời khuyên:** Lợi dụng sáng sớm này! Ra ngoài 30-60 phút, uống nước đầy đủ, về trước 08:00 trước khi nắng leo thang. 🌅\n\nBạn định đi đâu cụ thể không?",
+    "timestamp": "2026-06-21T04:30:34.319Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnaib2r_tysi34",
+    "type": "human",
+    "content": "bây giờ là 11:31 rồi mà @@",
+    "timestamp": "2026-06-21T04:32:03.219Z",
+    "tags": [
+      "user_message",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
+  },
+  {
+    "id": "mem_mqnaib2r_osss7p",
+    "type": "persona",
+    "content": "À, bạn đúng! 😅 Tôi đã nhìn sai giờ. Bây giờ là **11:31 sáng** rồi, không phải 04:30.\n\n## 🌡️ **Thời tiết Gò Vấp lúc 11:31 sáng (21/6)**\n- **Nhiệt độ hiện tại**: ~32-33°C (đang nóng dần)\n- **Cao nhất hôm nay**: 36-37°C (chiều)\n- **Độ ẩm**: 75-80%\n- **Tình trạng**: Nắng nóng, bắt đầu gay gắt\n\n---\n\n## 💡 **Gợi ý cho bây giờ:**\n\n### **Lúc này — ĐÃ HON NHẬu nắng:**\n⚠️ **Nên tránh:**\n- ❌ Hoạt động ngoài trời dưới nắng trực tiếp (chạy bộ, đi bộ)\n- ❌ Nắng sắp vào giai đoạn gay gắt nhất (12:00-15:00)\n\n✅ **Nên làm:**\n- **Đi quán cà phê / nhà hàng có điều hòa** — Gò Vấp có nhiều quán Võ Văn Tần, Sư Vạn Hạnh\n- **Vào mall** — Vincom, Aeon (thoải mái, mát mẻ)\n- **Về nhà / ở văn phòng** — Chỉ ra ngoài lúc 16:30+ khi nắng đỡ hơn\n\n✅ **Trang phục:** Áo cotton nhẹ, mang kính mặt trời, nón/mũ, mang ô\n\n---\n\n**Kết luận:** Bây giờ không phải thời điểm lý tưởng. Nếu phải ra ngoài, hãy ở nơi có điều hòa hoặc chờ tới 16:30 để hoạt động ngoài trời. 🌞",
+    "timestamp": "2026-06-21T04:32:03.219Z",
+    "tags": [
+      "assistant_response",
+      "telegram"
+    ],
+    "sessionId": "8967780585"
   }
 ]

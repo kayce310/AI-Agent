@@ -1039,85 +1039,101 @@
 
   function renderFocus() {
     const taskId = currentTaskId || lastCompletedTaskId;
-    const focusTaskId = document.getElementById('focus-task-id');
-    const focusTaskStatus = document.getElementById('focus-task-status');
-    const focusGoal = document.getElementById('focus-goal');
-    const focusDecision = document.getElementById('focus-decision');
-    const focusTool = document.getElementById('focus-tool');
-    const focusReasoning = document.getElementById('focus-reasoning');
     
     if (!taskId) {
-      focusGoal.innerHTML = '<div class="empty-state">No task running</div>';
-      focusDecision.innerHTML = '<div class="empty-state">No decision yet</div>';
-      focusTool.innerHTML = '<div class="empty-state">No tool running</div>';
-      focusReasoning.innerHTML = '<div class="empty-state">Awaiting reasoning...</div>';
-      focusTaskId.textContent = '—';
-      focusTaskStatus.textContent = '—';
+      document.getElementById('focus-thought').textContent = 'Awaiting reasoning...';
+      document.getElementById('focus-prediction-action').textContent = 'Evaluating next action...';
+      document.getElementById('focus-prediction-confidence').textContent = 'Confidence: —';
+      document.getElementById('focus-tool-display').textContent = 'No tool running';
+      document.getElementById('focus-context-goal').textContent = '—';
+      document.getElementById('focus-context-status').textContent = '—';
       return;
     }
-    
-    // Update header
-    focusTaskId.textContent = taskId;
-    const taskEvent = allEvents.find(e => e.payload?.taskId === taskId && (e.type === 'task_started' || e.type === 'task_finished'));
-    focusTaskStatus.textContent = taskEvent?.type === 'task_finished' ? (taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED') : '⚡ RUNNING';
-    
-    // Goal
-    const startEvent = allEvents.find(e => e.payload?.taskId === taskId && e.type === 'task_started');
-    focusGoal.textContent = startEvent?.payload?.goal || 'Goal unknown';
-    
-    // Current decision (reasoning-first priority)
-    const latestDecisionEvent = allEvents
+
+    // PRIMARY: Current Thought (reasoning-first, no truncation)
+    const latestDecision = allEvents
       .filter(e => e.payload?.taskId === taskId && e.type === 'decision_made')
       .sort((a, b) => b.timestamp - a.timestamp)[0];
-    
-    if (latestDecisionEvent) {
-      const d = latestDecisionEvent.payload;
-      let decisionHtml = `<div class="focus-decision-text">${escapeHtml(d.decision)}</div>`;
+
+    if (latestDecision) {
+      const d = latestDecision.payload;
+      const reasoning = d.reasoningSnippet || d.reason || 'Agent is thinking...';
       
-      // Reasoning-first: reasoningSnippet > reason > fallback
-      if (d.reasoningSnippet) {
-        decisionHtml += `<div class="focus-reasoning-snippet">${escapeHtml(d.reasoningSnippet.substring(0, 200))}${d.reasoningSnippet.length > 200 ? '…' : ''}</div>`;
-      } else if (d.reason) {
-        decisionHtml += `<div class="focus-reason">${escapeHtml(d.reason)}</div>`;
+      const thoughtEl = document.getElementById('focus-thought');
+      thoughtEl.textContent = reasoning;
+      thoughtEl.classList.add('updated');
+      
+      // Remove animation class after animation completes
+      setTimeout(() => thoughtEl.classList.remove('updated'), 400);
+    } else {
+      document.getElementById('focus-thought').textContent = 'Awaiting reasoning...';
+    }
+
+    // PREDICTION: Next Action + Confidence (only real event data, no heuristics)
+    if (latestDecision) {
+      const nextAction = latestDecision.payload.decision || 'Evaluating next action...';
+      document.getElementById('focus-prediction-action').textContent = `Next: ${nextAction}`;
+      
+      // Confidence: Only render if it exists in event payload
+      const confidence = latestDecision.payload.confidence;
+      const confidenceEl = document.getElementById('focus-prediction-confidence');
+      
+      if (confidence !== undefined && confidence !== null) {
+        const percent = Math.round(confidence * 100);
+        confidenceEl.textContent = `Confidence: ${percent}%`;
       } else {
-        decisionHtml += `<div class="empty-state">Agent is thinking...</div>`;
+        confidenceEl.textContent = 'Confidence: —';
+      }
+    } else {
+      document.getElementById('focus-prediction-action').textContent = 'Evaluating next action...';
+      document.getElementById('focus-prediction-confidence').textContent = 'Confidence: —';
+    }
+
+    // SECONDARY: Active Tool
+    const latestTool = allEvents
+      .filter(e => e.payload?.taskId === taskId && 
+        (e.type === 'tool_called' || e.type === 'tool_finished'))
+      .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+    if (latestTool) {
+      const toolName = latestTool.payload.toolName;
+      const isRunning = latestTool.type === 'tool_called';
+      const duration = latestTool.payload.durationMs || 0;
+      
+      let toolHtml = `<span class="tool-icon">🔧</span>`;
+      toolHtml += `<span class="tool-name">${escapeHtml(toolName)}</span>`;
+      
+      if (isRunning) {
+        toolHtml += `<span class="tool-status">Running... (${duration}ms)</span>`;
+      } else {
+        const status = latestTool.payload.success ? '✓' : '✗';
+        toolHtml += `<span class="tool-status">${status} ${duration}ms</span>`;
       }
       
-      focusDecision.innerHTML = decisionHtml;
+      document.getElementById('focus-tool-display').innerHTML = toolHtml;
     } else {
-      focusDecision.innerHTML = '<div class="empty-state">No decision yet</div>';
+      document.getElementById('focus-tool-display').textContent = 'No tool running';
     }
+
+    // TERTIARY: Context (Goal + Status)
+    const taskEvent = allEvents.find(e => 
+      e.payload?.taskId === taskId && 
+      (e.type === 'task_started' || e.type === 'task_finished')
+    );
     
-    // Active tool
-    const latestToolEvent = allEvents
-      .filter(e => e.payload?.taskId === taskId && (e.type === 'tool_called' || e.type === 'tool_finished'))
-      .sort((a, b) => b.timestamp - a.timestamp)[0];
+    const goal = allEvents.find(e => 
+      e.payload?.taskId === taskId && e.type === 'task_started'
+    )?.payload?.goal;
+
+    document.getElementById('focus-context-goal').textContent = goal || '—';
     
-    if (latestToolEvent && latestToolEvent.type === 'tool_called') {
-      const t = latestToolEvent.payload;
-      focusTool.innerHTML = `
-        <div class="tool-name">🔧 ${escapeHtml(t.toolName)}</div>
-        <div class="tool-status">Running... (${new Date(latestToolEvent.timestamp).toLocaleTimeString()})</div>
-      `;
-    } else if (latestToolEvent && latestToolEvent.type === 'tool_finished') {
-      const t = latestToolEvent.payload;
-      const status = t.success ? '✓ Success' : '✗ Failed';
-      focusTool.innerHTML = `
-        <div class="tool-name">${t.success ? '✓' : '✗'} ${escapeHtml(t.toolName)}</div>
-        <div class="tool-status">${status} (${t.durationMs || '?'}ms)</div>
-      `;
-    } else {
-      focusTool.innerHTML = '<div class="empty-state">No tool running</div>';
+    let status = '—';
+    if (taskEvent?.type === 'task_finished') {
+      status = taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED';
+    } else if (taskEvent?.type === 'task_started') {
+      status = '⚡ RUNNING';
     }
-    
-    // Reasoning display
-    if (latestDecisionEvent?.payload?.reasoningSnippet) {
-      focusReasoning.textContent = latestDecisionEvent.payload.reasoningSnippet;
-      focusReasoning.classList.add('thinking');
-    } else {
-      focusReasoning.innerHTML = '<div class="empty-state">Awaiting reasoning...</div>';
-      focusReasoning.classList.remove('thinking');
-    }
+    document.getElementById('focus-context-status').textContent = status;
   }
 
   // ═══ FILTERS ═══

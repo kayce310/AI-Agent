@@ -441,6 +441,195 @@ body {
   margin-top: 6px;
 }
 
+/* ═══ FOCUS MODE — REASONING-CENTRIC ═══ */
+
+.focus-reasoning-centric {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* PRIMARY: Thought Container (60% of viewport) */
+.focus-thought-container {
+  flex: 0 0 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 50px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.focus-thought {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+  text-align: left;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 900px;
+  animation: thought-fade-in 400ms ease-out;
+}
+
+@keyframes thought-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.focus-thought.updated {
+  animation: thought-fade-in 300ms ease-out;
+}
+
+/* PREDICTION: Next Action + Confidence (15%) */
+.focus-prediction-section {
+  flex: 0 0 15%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 50px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.prediction-action {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.prediction-confidence {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'Courier New', monospace;
+}
+
+/* SECONDARY: Tool Section (10%) */
+.focus-tool-section {
+  flex: 0 0 10%;
+  display: flex;
+  align-items: center;
+  padding: 16px 50px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.tool-display {
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-display .tool-icon {
+  font-size: 16px;
+}
+
+.tool-display .tool-name {
+  font-weight: 500;
+}
+
+.tool-display .tool-status {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* TERTIARY: Context Footer (5%) */
+.focus-context-footer {
+  flex: 0 0 5%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 50px;
+  background: var(--bg);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.context-goal {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.context-status {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .focus-thought-container {
+    padding: 30px 40px;
+  }
+
+  .focus-thought {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .focus-prediction-section,
+  .focus-tool-section,
+  .focus-context-footer {
+    padding: 16px 40px;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 600px) {
+  .focus-thought-container {
+    flex: 0 0 50%;
+    padding: 20px 30px;
+  }
+
+  .focus-thought {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .focus-prediction-section {
+    flex: 0 0 20%;
+    padding: 12px 30px;
+  }
+
+  .focus-tool-section {
+    flex: 0 0 15%;
+    padding: 12px 30px;
+  }
+
+  .focus-context-footer {
+    flex: 0 0 15%;
+    padding: 10px 30px;
+    font-size: 10px;
+  }
+
+  .prediction-action,
+  .prediction-confidence {
+    font-size: 12px;
+  }
+
+  .tool-display {
+    font-size: 12px;
+  }
+}
+
 /* ═══ FOCUS MODE ═══ */
 .focus-header {
   background: var(--bg-card);
