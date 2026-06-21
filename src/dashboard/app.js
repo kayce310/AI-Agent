@@ -1,94 +1,15 @@
 /**
  * @file Kato Agent — Mission Control Dashboard
- * @version 9.1.0 — Phase 4D: Cognitive Trace Viewer
+ * @version 9.2.0 — Phase 4D.5: Dashboard Architecture Consolidation
  * 
- * Architecture: Events → AgentState → UI
- * Inspector renders from selectedEntity — NO fetch, NO API calls.
- * Trace View uses buildCognitiveTrace() — deterministic trace building.
+ * Architecture: Events → API → UI
+ * Trace building happens ONLY on backend (trace-builder.ts)
+ * Frontend fetches trace from GET /api/trace/:taskId
+ * No duplicate logic.
  */
 
 (function() {
   'use strict';
-
-  // ═══ TRACE BUILDER (from Phase 4C trace-builder.ts) ═══
-  const LIFECYCLE_EVENTS = new Set(['task_started', 'task_finished', 'task_created']);
-  const LINKED_EVENTS = new Set(['tool_called', 'tool_finished', 'decision_made']);
-
-  function buildCognitiveTrace(taskId, events) {
-    // Filter: only events with matching taskId or no taskId (orphan artifacts)
-    const taskEvents = events.filter(e => {
-      const p = e.payload;
-      if (typeof p !== 'object' || p === null) return false;
-      const ptaskId = p.taskId;
-      if (ptaskId !== undefined && ptaskId !== null) return ptaskId === taskId;
-      return true;
-    });
-    taskEvents.sort((a, b) => a.timestamp - b.timestamp);
-
-    const decisions = [];
-    let activeDecisionId = null;
-
-    for (const event of taskEvents) {
-      const payload = event.payload;
-      switch (event.type) {
-        case 'decision_made':
-          activeDecisionId = payload.decisionId;
-          decisions.push({
-            decisionId: payload.decisionId,
-            decision: event,
-            tools: [],
-            artifacts: [],
-          });
-          break;
-        case 'tool_called': {
-          const target = decisions.find(d => d.decisionId === payload.decisionId);
-          if (target) {
-            const orphan = target.tools.find(t => {
-              if (t.toolCalled) return false;
-              const tf = t.toolFinished?.payload;
-              return tf?.callId === payload.callId;
-            });
-            if (orphan) {
-              orphan.toolCalled = event;
-            } else {
-              const existing = target.tools.find(t => t.toolCalled?.payload?.callId === payload.callId);
-              if (existing) existing.toolCalled = event;
-              else target.tools.push({ toolCalled: event });
-            }
-          }
-          break;
-        }
-        case 'tool_finished': {
-          let matched = false;
-          for (const d of decisions) {
-            const tool = d.tools.find(t => t.toolCalled?.payload?.callId === payload.callId);
-            if (tool) {
-              tool.toolFinished = event;
-              matched = true;
-              break;
-            }
-            const orphan = d.tools.find(t => !t.toolCalled && t.toolFinished?.payload?.callId === payload.callId);
-            if (orphan) {
-              orphan.toolFinished = event;
-              matched = true;
-              break;
-            }
-          }
-          if (!matched && activeDecisionId) {
-            const target = decisions.find(d => d.decisionId === activeDecisionId);
-            if (target) target.tools.push({ toolFinished: event });
-          }
-          break;
-        }
-        default:
-          if (activeDecisionId && !LIFECYCLE_EVENTS.has(event.type) && !LINKED_EVENTS.has(event.type)) {
-            const target = decisions.find(d => d.decisionId === activeDecisionId);
-            if (target) target.artifacts.push(event);
-          }
-      }
-    }
-    return { taskId, decisions };
-  }
 
   // ═══ CONFIG ═══
   const WS_URL = `ws://${location.host}/ws/events`;
@@ -746,40 +667,73 @@
     const taskId = traceTaskId || lastCompletedTaskId;
     
     if (!taskId) {
-      traceContainer.innerHTML = '<div class="empty-state">Select a task from Timeline to view cognitive trace</div>';
+      traceContainer.innerHTML = `
+        <div class="trace-empty-state">
+          <div class="trace-empty-icon">📚</div>
+          <div class="trace-empty-title">No Task Selected</div>
+          <div class="trace-empty-hint">Click a task event in Timeline to view its trace</div>
+          <button class="trace-load-latest-btn" id="load-latest-btn">📖 Open Latest Trace</button>
+        </div>
+      `;
       traceTaskId$.textContent = '—';
       traceTaskStatus.textContent = '—';
+      
+      // Attach click handler for latest trace button
+      const btn = document.getElementById('load-latest-btn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (lastCompletedTaskId) {
+            traceTaskId = lastCompletedTaskId;
+            renderTrace();
+          }
+        });
+      }
       return;
     }
     
-    const trace = buildCognitiveTrace(taskId, allEvents);
-    
-    traceTaskId$.textContent = taskId;
-    const taskEvent = allEvents.find(e => e.payload?.taskId === taskId && (e.type === 'task_started' || e.type === 'task_finished'));
-    traceTaskStatus.textContent = taskEvent?.type === 'task_finished' ? (taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED') : 'RUNNING';
-    
-    if (trace.decisions.length === 0) {
-      traceContainer.innerHTML = '<div class="empty-state">No decisions recorded for this task</div>';
-      return;
-    }
-    
-    let html = '';
-    for (let i = 0; i < trace.decisions.length; i++) {
-      html += renderDecisionCard(trace.decisions[i], i);
-    }
-    
-    traceContainer.innerHTML = html;
-    
-    // Attach click handlers
-    traceContainer.querySelectorAll('[data-decision-index]').forEach(el => {
-      el.addEventListener('click', (e) => onTraceDecisionClick(e, trace.decisions));
-    });
-    traceContainer.querySelectorAll('[data-trace-tool-idx]').forEach(el => {
-      el.addEventListener('click', (e) => onTraceToolClick(e, trace.decisions));
-    });
-    traceContainer.querySelectorAll('[data-trace-artifact-idx]').forEach(el => {
-      el.addEventListener('click', (e) => onTraceArtifactClick(e, trace.decisions));
-    });
+    // Fetch trace from API (backend builds it)
+    fetch(`/api/trace/${encodeURIComponent(taskId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          traceContainer.innerHTML = `<div class="empty-state">Error: ${escapeHtml(data.error || 'Unknown error')}</div>`;
+          return;
+        }
+        
+        const trace = data.data;
+        
+        // Update header
+        traceTaskId$.textContent = taskId;
+        const taskEvent = allEvents.find(e => e.payload?.taskId === taskId && (e.type === 'task_started' || e.type === 'task_finished'));
+        traceTaskStatus.textContent = taskEvent?.type === 'task_finished' ? (taskEvent.payload?.success ? '✓ COMPLETED' : '✗ FAILED') : 'RUNNING';
+        
+        // Render trace
+        if (trace.decisions.length === 0) {
+          traceContainer.innerHTML = '<div class="empty-state">No decisions recorded for this task</div>';
+          return;
+        }
+        
+        let html = '';
+        for (let i = 0; i < trace.decisions.length; i++) {
+          html += renderDecisionCard(trace.decisions[i], i);
+        }
+        
+        traceContainer.innerHTML = html;
+        
+        // Attach click handlers
+        traceContainer.querySelectorAll('[data-decision-index]').forEach(el => {
+          el.addEventListener('click', (e) => onTraceDecisionClick(e, trace.decisions));
+        });
+        traceContainer.querySelectorAll('[data-trace-tool-idx]').forEach(el => {
+          el.addEventListener('click', (e) => onTraceToolClick(e, trace.decisions));
+        });
+        traceContainer.querySelectorAll('[data-trace-artifact-idx]').forEach(el => {
+          el.addEventListener('click', (e) => onTraceArtifactClick(e, trace.decisions));
+        });
+      })
+      .catch(err => {
+        traceContainer.innerHTML = `<div class="empty-state">Error loading trace: ${escapeHtml(err.message)}</div>`;
+      });
   }
 
   function renderDecisionCard(decision, decisionIndex) {

@@ -102,6 +102,21 @@ export class DashboardServer {
       return;
     }
 
+    // ═══ API: Trace ═══
+    if (url.startsWith('/api/trace/')) {
+      const taskId = url.replace(/^\/api\/trace\//, '');
+      if (!taskId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Missing taskId' }));
+        return;
+      }
+
+      const response = this.eventApi.getTrace(taskId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
+      return;
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: false, error: 'Not found' }));

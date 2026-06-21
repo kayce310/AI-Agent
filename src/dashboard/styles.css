@@ -337,6 +337,53 @@ body {
   color: var(--text-dim);
 }
 
+/* ═══ TRACE EMPTY STATE ═══ */
+.trace-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.trace-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.trace-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.trace-empty-hint {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  max-width: 300px;
+}
+
+.trace-load-latest-btn {
+  padding: 10px 20px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.trace-load-latest-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
 /* ═══ INSPECTOR PANEL ═══ */
 .inspector-panel {
   position: fixed;

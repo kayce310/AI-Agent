@@ -5,6 +5,7 @@
  */
 
 import { EventBus } from './bus.js';
+import { buildCognitiveTrace } from './trace-builder.js';
 
 export interface EventApiResponse {
   success: boolean;
@@ -56,6 +57,31 @@ export class EventApi {
     try {
       const stats = this.bus.getCountByType();
       return { success: true, data: stats };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * GET /api/trace/:taskId
+   * Build cognitive trace from events for a specific task
+   */
+  getTrace(taskId: string): EventApiResponse {
+    try {
+      if (!taskId || typeof taskId !== 'string') {
+        return {
+          success: false,
+          error: 'Invalid taskId',
+        };
+      }
+
+      const events = this.bus.getRecent(1000); // Get all recent events
+      const trace = buildCognitiveTrace(taskId, events);
+
+      return { success: true, data: trace };
     } catch (error) {
       return {
         success: false,
