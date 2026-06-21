@@ -173,15 +173,15 @@
 
   // ═══ LOCAL STATE REDUCER (fallback) ═══
   function applyEvent(event) {
-    // Increment event counter (Priority 2)
-    agentState.eventCount++;
-    eventCount.textContent = `${agentState.eventCount} events`;
-    
     // Buffer events while paused (Priority 5)
     if (agentState.focusPaused) {
       agentState.focusEventBuffer.push(event);
       return;  // Don't render yet
     }
+    
+    // Increment event counter (Priority 2) — after pause check
+    agentState.eventCount++;
+    eventCount.textContent = `${agentState.eventCount} events`;
     
     const p = event.payload || {};
     switch (event.type) {
@@ -255,7 +255,7 @@
         
       case 'reasoning_updated':
         // Handle streaming reasoning (Priority 1)
-        agentState.streamingText = p.fullReasoning || '';
+        agentState.streamingText = p.chunk || p.fullReasoning || '';
         agentState.streamIndex = 0;
         startStreamingReasoning();
         break;
@@ -771,11 +771,11 @@
   }
 
   function getTypeAttr(type) {
-    if (type.startsWith('tool')) return 'tool';
-    if (type.startsWith('decision')) return 'decision';
-    if (type.startsWith('task')) return 'task';
-    if (type.startsWith('file')) return 'file';
-    if (type === 'error') return 'error';
+    if (type.startsWith('tool')) return 'data-type="tool"';
+    if (type.startsWith('decision')) return 'data-type="decision"';
+    if (type.startsWith('task')) return 'data-type="task"';
+    if (type.startsWith('file')) return 'data-type="file"';
+    if (type === 'error') return 'data-type="error"';
     return '';
   }
 
@@ -805,7 +805,7 @@
 
   // ═══ RENDER GRAPH ═══
   async function renderGraph() {
-    const taskId = currentTaskId || lastCompletedTaskId;
+    const taskId = agentState.currentTaskId || lastCompletedTaskId;
     const graphView = document.getElementById('graph-view');
     
     if (!taskId) {
@@ -1196,7 +1196,7 @@
   }
 
   function renderFocus() {
-    const taskId = currentTaskId || lastCompletedTaskId;
+    const taskId = agentState.currentTaskId || lastCompletedTaskId;
     
     if (!taskId) {
       document.getElementById('focus-thought').textContent = 'Awaiting reasoning...';
