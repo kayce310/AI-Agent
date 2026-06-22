@@ -5,7 +5,7 @@
  * - Aggregate metrics for dashboard (throughput, latency, error rates)
  */
 
-import EventStore, { Event } from './event-store';
+import EventStore, { Event } from './event-store.js';
 
 export interface Metric {
   name: string;

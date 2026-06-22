@@ -20,7 +20,21 @@ import {
   DecisionMadeSchema,
   MemoryWriteSchema,
   ErrorEventSchema,
+  BaseEventSchema,
 } from './types.js';
+
+// Reasoning updated schema (not in types.ts yet)
+import { z } from 'zod';
+const ReasoningUpdatedSchema = BaseEventSchema.extend({
+  type: z.literal('reasoning_updated'),
+  payload: z.object({
+    taskId: z.string(),
+    chunk: z.string(),
+    isFinal: z.boolean(),
+  }),
+});
+
+
 
 export class EventFactory {
   private static createBase(type: string): BaseEvent {
@@ -133,12 +147,11 @@ export class EventFactory {
 
   static reasoningUpdated(taskId: string, chunk: string, isFinal: boolean): AgentEvent {
     // Phase 4E-B: Live reasoning streaming
-    // chunk is always the FULL accumulated text, not delta
     return {
       id: randomUUID(),
       timestamp: Date.now(),
-      type: 'reasoning_updated',
+      type: 'reasoning_updated' as any,
       payload: { taskId, chunk, isFinal },
-    } as AgentEvent;
+    } as unknown as AgentEvent;
   }
 }

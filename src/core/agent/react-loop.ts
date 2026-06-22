@@ -28,7 +28,7 @@
  *     └─ If final text: break and return
  */
 
-import { Logger } from '../logger';
+import { Logger } from '../logger.js';
 
 export type StreamEventType = 
   | 'decompose'     // Đang phân tích

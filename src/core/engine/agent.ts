@@ -426,7 +426,7 @@ export class Agent extends EventEmitter {
               taskId,
               (chunk: string, isFinal: boolean) => {
                 // Emit reasoning_updated via hooks so listeners can forward to EventBus
-                this.hooks.emit('reasoning:update', {
+                (this.hooks as any).emit('reasoning:update', {
                   sessionId: taskId,
                   chunk,
                   isFinal,

@@ -247,7 +247,7 @@ export class EntityStore {
       try {
         const record = await this.addRelationship(rel);
         results.push(record);
-      } catch (error) {
+      } catch (error: any) {
         log.warn(`Failed to add relationship:`, error);
       }
     }

@@ -376,7 +376,7 @@
     renderTimeline();
     renderFileChanges();
     renderTelemetryDebug();
-     if (currentTab === 'trace') { renderTrace(); renderMcpTrace(); renderCost(); }
+     if (currentTab === 'trace') { renderTrace(); renderMcpTrace(); renderCost(); renderControl(); }
     if (currentTab === 'focus') {
       renderFocus();
       updateConfidenceBar();
@@ -1028,6 +1028,7 @@
     document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
     document.getElementById('tab-memory')?.addEventListener('click', () => switchTab('memory'));
     document.getElementById('tab-graph')?.addEventListener('click', () => switchTab('graph'));
+    document.getElementById('tab-brain')?.addEventListener('click', () => switchTab('brain'));
     
     // Setup pause button (Priority 5)
     const pauseBtn = document.getElementById('focus-pause-btn');
@@ -1045,12 +1046,14 @@
     document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
     document.getElementById('tab-memory')?.classList.toggle('active', tab === 'memory');
     document.getElementById('tab-graph')?.classList.toggle('active', tab === 'graph');
+    document.getElementById('tab-brain')?.classList.toggle('active', tab === 'brain');
     
     missionView?.classList.toggle('hidden', tab !== 'mission');
     traceView?.classList.toggle('hidden', tab !== 'trace');
     document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
     document.getElementById('memory-view')?.classList.toggle('hidden', tab !== 'memory');
     document.getElementById('graph-view')?.classList.toggle('hidden', tab !== 'graph');
+    document.getElementById('brain-view')?.classList.toggle('hidden', tab !== 'brain');
     
     if (tab === 'trace') {
       renderTrace();
@@ -1063,6 +1066,12 @@
       document.dispatchEvent(new CustomEvent('memory-tab-activated'));
     } else if (tab === 'graph') {
       renderGraph();
+    } else if (tab === 'brain') {
+      // Initialize hologram brain on first visit
+      const container = document.getElementById('brain-canvas-container');
+      if (container && window.THREE && window.HologramBrain && !container.querySelector('canvas')) {
+        window.HologramBrain.init(container);
+      }
     }
   }
 
@@ -1300,6 +1309,154 @@
         alertsEl.innerHTML = html;
       })
       .catch(() => {});
+  }
+
+
+  /**
+   * Render CONTROL panel — system health, memory management, diagnostics
+   */
+  function renderControl() {
+    // Fetch health status
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const el = document.getElementById('ctrl-agent-status');
+        if (el) el.textContent = data.data?.status || 'OK';
+        const uptimeEl = document.getElementById('ctrl-uptime');
+        if (uptimeEl) {
+          const upMs = Date.now() - (data.data?.timestamp || Date.now());
+          uptimeEl.textContent = Math.floor(upMs / 60000) + 'm';
+        }
+      })
+      .catch(() => {});
+
+    // Fetch memory stats
+    fetch('/api/memory/stats')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const el = document.getElementById('ctrl-memory-count');
+        if (el) el.textContent = data.data?.totalItems || 0;
+      })
+      .catch(() => {});
+
+    // Fetch event stats
+    fetch('/api/events/stats')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const total = Object.values(data.data || {}).reduce((sum, v) => sum + v, 0);
+        const el = document.getElementById('ctrl-event-count');
+        if (el) el.textContent = total;
+      })
+      .catch(() => {});
+
+    // Wire up control buttons
+    const outputEl = document.getElementById('control-output');
+    const showOutput = (msg, type) => {
+      if (!outputEl) return;
+      outputEl.classList.add('visible');
+      const time = new Date().toLocaleTimeString();
+      outputEl.textContent += `[${time}] ${msg}
+`;
+      outputEl.scrollTop = outputEl.scrollHeight;
+    };
+
+    const flushBtn = document.getElementById('ctrl-flush-btn');
+    if (flushBtn) {
+      flushBtn.onclick = async () => {
+        flushBtn.classList.add('loading');
+        flushBtn.textContent = '⏳ Flushing...';
+        try {
+          const res = await fetch('/api/memory/flush', { method: 'POST' });
+          const data = await res.json();
+          flushBtn.classList.remove('loading');
+          if (data.success) {
+            flushBtn.classList.add('success');
+            flushBtn.textContent = '✅ Flushed';
+            showOutput(`Memory flushed: ${data.data?.count || 0} items`, 'success');
+          } else {
+            flushBtn.classList.add('error');
+            flushBtn.textContent = '❌ Error';
+            showOutput(`Flush failed: ${data.error}`, 'error');
+          }
+          setTimeout(() => { flushBtn.className = 'control-btn'; flushBtn.textContent = '💾 Flush Memory'; }, 2000);
+        } catch (e) {
+          flushBtn.classList.remove('loading');
+          flushBtn.classList.add('error');
+          flushBtn.textContent = '❌ Error';
+          showOutput(`Flush error: ${e.message}`, 'error');
+          setTimeout(() => { flushBtn.className = 'control-btn'; flushBtn.textContent = '💾 Flush Memory'; }, 2000);
+        }
+      };
+    }
+
+    const cleanupBtn = document.getElementById('ctrl-memory-cleanup-btn');
+    if (cleanupBtn) {
+      cleanupBtn.onclick = async () => {
+        cleanupBtn.classList.add('loading');
+        cleanupBtn.textContent = '⏳ Cleaning...';
+        try {
+          const res = await fetch('/api/memory/cleanup', { method: 'POST' });
+          const data = await res.json();
+          cleanupBtn.classList.remove('loading');
+          if (data.success) {
+            cleanupBtn.classList.add('success');
+            cleanupBtn.textContent = '✅ Done';
+            showOutput(`Cleanup: removed ${data.data?.removed || 0} expired items`, 'success');
+          } else {
+            cleanupBtn.classList.add('error');
+            cleanupBtn.textContent = '❌ Error';
+            showOutput(`Cleanup failed: ${data.error}`, 'error');
+          }
+          setTimeout(() => { cleanupBtn.className = 'control-btn'; cleanupBtn.textContent = '🧹 Cleanup'; }, 2000);
+        } catch (e) {
+          cleanupBtn.classList.remove('loading');
+          cleanupBtn.classList.add('error');
+          cleanupBtn.textContent = '❌ Error';
+          showOutput(`Cleanup error: ${e.message}`, 'error');
+          setTimeout(() => { cleanupBtn.className = 'control-btn'; cleanupBtn.textContent = '🧹 Cleanup'; }, 2000);
+        }
+      };
+    }
+
+    const statsBtn = document.getElementById('ctrl-memory-stats-btn');
+    if (statsBtn) {
+      statsBtn.onclick = async () => {
+        try {
+          const res = await fetch('/api/memory/stats');
+          const data = await res.json();
+          if (data.success) {
+            const s = data.data;
+            showOutput(`Memory Stats:
+  Total: ${s.totalItems} items
+  Active: ${s.activeCount}
+  Dormant: ${s.dormantCount}
+  Beliefs: ${s.beliefCount}
+  Pinned: ${s.pinnedCount}
+  Types: ${JSON.stringify(s.typeDistribution || {})}`, 'info');
+          }
+        } catch (e) {
+          showOutput(`Stats error: ${e.message}`, 'error');
+        }
+      };
+    }
+
+    const healthBtn = document.getElementById('ctrl-health-btn');
+    if (healthBtn) {
+      healthBtn.onclick = async () => {
+        try {
+          const res = await fetch('/api/health');
+          const data = await res.json();
+          if (data.success) {
+            showOutput(`Health: ${JSON.stringify(data.data, null, 2)}`, 'info');
+          }
+        } catch (e) {
+          showOutput(`Health error: ${e.message}`, 'error');
+        }
+      };
+    }
   }
 
   function renderDecisionCard(decision, decisionIndex) {

@@ -1,0 +1,22 @@
+[
+  {
+    "role": "user",
+    "content": "Bạn là @tor_310_bot hay @kato310_bot",
+    "timestamp": 1782064299261
+  },
+  {
+    "role": "assistant",
+    "content": "Tôi là Coral, không phải @tor_310_bot hay @kato310_bot. Cần giúp gì ạ?",
+    "timestamp": 1782064299261
+  },
+  {
+    "role": "user",
+    "content": "@kato310_bot",
+    "timestamp": 1782065310582
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: 402 [openrouter/google/gemma-4-26b-a4b-it:free] [429]: {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000  (reset after 3s)",
+    "timestamp": 1782065310582
+  }
+]

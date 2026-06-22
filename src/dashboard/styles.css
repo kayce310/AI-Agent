@@ -140,7 +140,8 @@ body {
 }
 
 #trace-view.hidden, #mission-view.hidden,
-#focus-view.hidden, #graph-view.hidden, #memory-view.hidden {
+#focus-view.hidden, #graph-view.hidden, #memory-view.hidden,
+#brain-view.hidden {
   display: none;
 }
 
@@ -2257,4 +2258,374 @@ body.light {
 .graph-refresh-btn:hover {
   color: var(--primary);
   border-color: var(--primary);
+}
+
+/* ═══ CONTROL PANEL ═══ */
+.control-section { margin-top: 16px; }
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.control-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+}
+.control-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.control-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+.control-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.control-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.control-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.control-btn:active {
+  transform: scale(0.97);
+}
+.control-btn.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.control-btn.success {
+  background: rgba(46,164,78,0.15);
+  border-color: var(--green, #2da44e);
+  color: var(--green, #2da44e);
+}
+.control-btn.error {
+  background: rgba(207,34,46,0.1);
+  border-color: var(--red, #cf222e);
+  color: var(--red, #cf222e);
+}
+.control-output {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+  display: none;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.control-output.visible {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════
+   HOLOGRAM BRAIN — JARVIS/Ultron 3D Neural Network
+   ═══════════════════════════════════════════════════ */
+
+.brain-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  background: #000011;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+.brain-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(0, 10, 30, 0.8);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  z-index: 10;
+}
+
+.brain-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brain-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: #00ffff;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  letter-spacing: 2px;
+}
+
+.brain-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(0, 255, 255, 0.1);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  animation: brain-pulse 2s ease-in-out infinite;
+}
+
+@keyframes brain-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 136, 0.6); }
+}
+
+.brain-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.brain-activity-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brain-activity-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(0, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.brain-activity-bar {
+  width: 120px;
+  height: 6px;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.brain-activity-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.brain-activity-fill.low {
+  background: linear-gradient(90deg, #006644, #00ff88);
+}
+
+.brain-activity-fill.medium {
+  background: linear-gradient(90deg, #ffaa00, #ff6b35);
+}
+
+.brain-activity-fill.high {
+  background: linear-gradient(90deg, #ff3333, #ff0066);
+  box-shadow: 0 0 8px rgba(255, 0, 102, 0.5);
+}
+
+/* 3D Canvas */
+.brain-canvas-container {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+}
+
+.brain-canvas-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Data Readouts */
+.brain-readouts {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 20px;
+  background: rgba(0, 10, 30, 0.6);
+  border-top: 1px solid rgba(0, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.brain-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(0, 20, 40, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.08);
+  transition: border-color 0.3s;
+}
+
+.brain-readout:hover {
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.brain-readout-error {
+  border-color: rgba(255, 51, 51, 0.2);
+}
+
+.brain-readout-icon {
+  font-size: 16px;
+}
+
+.brain-readout-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(0, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.brain-readout-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: #00ffff;
+  text-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+}
+
+.brain-readout-error .brain-readout-value {
+  color: #ff6b6b;
+  text-shadow: 0 0 6px rgba(255, 107, 107, 0.3);
+}
+
+/* Neural Activity Log */
+.brain-log {
+  background: rgba(0, 5, 15, 0.8);
+  border-top: 1px solid rgba(0, 255, 255, 0.1);
+  max-height: 160px;
+  overflow: hidden;
+}
+
+.brain-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.08);
+}
+
+.brain-log-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(0, 255, 255, 0.5);
+  letter-spacing: 1.5px;
+}
+
+.brain-log-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.brain-log-entries {
+  padding: 4px 16px;
+  overflow-y: auto;
+  max-height: 120px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.brain-log-entry {
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+  opacity: 0;
+  animation: brain-log-in 0.3s ease forwards;
+}
+
+@keyframes brain-log-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.brain-log-time {
+  color: rgba(0, 255, 255, 0.3);
+  min-width: 60px;
+}
+
+.brain-log-type {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.brain-log-type.event { background: rgba(0, 255, 255, 0.15); color: #00ffff; }
+.brain-log-type.tool { background: rgba(255, 107, 53, 0.15); color: #ff6b35; }
+.brain-log-type.decision { background: rgba(0, 255, 136, 0.15); color: #00ff88; }
+.brain-log-type.memory { background: rgba(255, 0, 255, 0.15); color: #ff00ff; }
+.brain-log-type.error { background: rgba(255, 51, 51, 0.15); color: #ff3333; }
+
+.brain-log-message {
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+/* Tab button hologram accent */
+.tab-btn-hologram {
+  position: relative;
+}
+
+.tab-btn-hologram::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  transition: width 0.3s ease;
+}
+
+.tab-btn-hologram.active::after {
+  width: 80%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .brain-readouts {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .brain-readout {
+    min-width: 60px;
+    padding: 6px 8px;
+  }
+  .brain-readout-value {
+    font-size: 14px;
+  }
 }

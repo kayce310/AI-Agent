@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kato Agent — Mission Control</title>
+  <meta name="ws-endpoint" content="ws://127.0.0.1:8766/ws/events">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,6 +19,7 @@
       <button id="tab-focus" class="tab-btn" data-tab="focus">⚡ FOCUS</button>
       <button id="tab-memory" class="tab-btn" data-tab="memory">💾 MEMORY</button>
       <button id="tab-graph" class="tab-btn" data-tab="graph">🔗 GRAPH</button>
+      <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain">🧠 HOLOGRAM</button>
     </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
@@ -173,6 +175,38 @@
         <div id="cost-alerts" class="cost-alerts"></div>
       </div>
 
+      <!-- ═══ CONTROL PANEL ═══ -->
+      <div id="control-section" class="control-section">
+        <div class="card cost-header">
+          <span class="card-label">⚙️ SYSTEM CONTROL</span>
+        </div>
+        <div class="control-grid">
+          <div class="control-card">
+            <div class="control-label">Agent Status</div>
+            <div id="ctrl-agent-status" class="control-value">—</div>
+          </div>
+          <div class="control-card">
+            <div class="control-label">Uptime</div>
+            <div id="ctrl-uptime" class="control-value">—</div>
+          </div>
+          <div class="control-card">
+            <div class="control-label">Memories</div>
+            <div id="ctrl-memory-count" class="control-value">—</div>
+          </div>
+          <div class="control-card">
+            <div class="control-label">Events</div>
+            <div id="ctrl-event-count" class="control-value">—</div>
+          </div>
+        </div>
+        <div class="control-actions">
+          <button id="ctrl-flush-btn" class="control-btn" title="Flush memory stores to disk">💾 Flush Memory</button>
+          <button id="ctrl-memory-cleanup-btn" class="control-btn" title="Run memory cleanup">🧹 Cleanup</button>
+          <button id="ctrl-memory-stats-btn" class="control-btn" title="View memory stats">📊 Memory Stats</button>
+          <button id="ctrl-health-btn" class="control-btn" title="Check system health">🩺 Health Check</button>
+        </div>
+        <div id="control-output" class="control-output"></div>
+      </div>
+
     </section>
 
     <!-- ═══ F4: FOCUS MODE — 4-PART LAYOUT ═══ -->
@@ -300,8 +334,7 @@
           <span id="memory-graph-count" class="memory-graph-count">0 links</span>
         </div>
         <svg id="memory-graph-svg" class="memory-graph-svg" width="100%" height="120"></svg>
-      
-        <div id="graph-empty-placeholder" class="empty-state hidden">No task selected</div></div>
+      </div>
     </section>
 
     <!-- ═══ F6: GRAPH VIEW ═══ -->
@@ -323,6 +356,7 @@
       <!-- SVG Canvas -->
       <div id="graph-container" class="graph-container">
         <svg id="graph-svg" class="graph-svg" width="100%" height="600"></svg>
+        <div id="graph-empty-placeholder" class="empty-state hidden">No task selected</div>
       </div>
 
       <!-- Legend -->
@@ -353,6 +387,68 @@
       </div>
     </section>
 
+    <!-- ═══ F7: HOLOGRAM BRAIN — JARVIS/Ultron 3D Neural Network ═══ -->
+    <section id="brain-view" class="brain-view hidden">
+      <!-- Brain Header -->
+      <div class="brain-header">
+        <div class="brain-header-left">
+          <span class="brain-title">🧠 NEURAL CORTEX</span>
+          <span id="brain-status" class="brain-status">INITIALIZING</span>
+        </div>
+        <div class="brain-header-right">
+          <div class="brain-activity-track">
+            <span class="brain-activity-label">ACTIVITY</span>
+            <div class="brain-activity-bar">
+              <div id="brain-activity-bar" class="brain-activity-fill low" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D Canvas -->
+      <div id="brain-canvas-container" class="brain-canvas-container"></div>
+
+      <!-- Data Readouts -->
+      <div class="brain-readouts">
+        <div class="brain-readout">
+          <div class="brain-readout-icon">📡</div>
+          <div class="brain-readout-label">Events</div>
+          <div id="brain-events" class="brain-readout-value">0</div>
+        </div>
+        <div class="brain-readout">
+          <div class="brain-readout-icon">🔧</div>
+          <div class="brain-readout-label">Tools</div>
+          <div id="brain-tools" class="brain-readout-value">0</div>
+        </div>
+        <div class="brain-readout">
+          <div class="brain-readout-icon">💡</div>
+          <div class="brain-readout-label">Decisions</div>
+          <div id="brain-decisions" class="brain-readout-value">0</div>
+        </div>
+        <div class="brain-readout">
+          <div class="brain-readout-icon">🧠</div>
+          <div class="brain-readout-label">Memories</div>
+          <div id="brain-memories" class="brain-readout-value">0</div>
+        </div>
+        <div class="brain-readout brain-readout-error">
+          <div class="brain-readout-icon">⚠️</div>
+          <div class="brain-readout-label">Errors</div>
+          <div id="brain-errors" class="brain-readout-value">0</div>
+        </div>
+      </div>
+
+      <!-- Neural Activity Log -->
+      <div class="brain-log">
+        <div class="brain-log-header">
+          <span class="brain-log-title">NEURAL ACTIVITY LOG</span>
+          <span class="brain-log-hint">Real-time Coral agent events</span>
+        </div>
+        <div id="brain-log-entries" class="brain-log-entries">
+          <div class="empty-state">Awaiting neural activity...</div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ INSPECTOR PANEL (right slide) ═══ -->
     <aside id="inspector" class="inspector-panel hidden">
       <div class="inspector-header">
@@ -367,5 +463,7 @@
 
   <script src="app.js"></script>
   <script src="memory-tab.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="brain-tab.js"></script>
 </body>
 </html>

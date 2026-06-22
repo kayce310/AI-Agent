@@ -1,12 +1,13 @@
-import { SessionManager, SessionState } from './session-manager';
-import { ObservabilityIntegration } from '../../observability/integration';
-import { Logger } from '../../core/logger';
+import { SessionManager, SessionState } from './session-manager.js';
+import { ObservabilityIntegration } from '../../observability/integration.js';
+import { Logger } from '../../core/logger.js';
 import {
   StreamingReActLoop,
   StreamEvent,
   TimeoutError,
   isComplexTask
-} from '../../core/agent/react-loop';
+} from '../../core/agent/react-loop.js';
+import { sentimentAnalyzer, SentimentResult } from '../../core/sentiment/sentiment-analyzer.js';
 
 const logger = new Logger({ module: 'TelegramHandler' });
 
@@ -21,6 +22,7 @@ export interface TelegramResponse {
   text: string;
   sessionId: string;
   sentIntro: boolean;
+  sentiment?: SentimentResult;
 }
 
 /** Callback for sending streaming progress messages */
@@ -30,6 +32,7 @@ export type StreamResponder = (text: string) => Promise<void>;
  * TelegramMessageHandler: Platform layer for Telegram
  * 
  * Handles session management, complex task routing, and streaming progress.
+ * Now includes sentiment analysis for mood-based responses and toxic filtering.
  */
 export class TelegramMessageHandler {
   private sessionManager: SessionManager;
@@ -47,11 +50,17 @@ export class TelegramMessageHandler {
     this.reactLoop = new StreamingReActLoop(
       logger,
       async (prompt: string, context: string, stepLabel: string) => {
-        // Execute a step through the coral agent's handleMessage
-        return await coralAgent.handleMessage(
-          'agent-loop-' + stepLabel,
-          prompt
-        );
+        // Execute a step through the engine's process method
+        const result = await coralAgent.process({
+          sessionId: `agent-loop-${stepLabel}`,
+          messages: [{ role: 'user', content: prompt, timestamp: Date.now() }],
+          modelId: 'default',
+          agentName: 'Coral',
+          protocol: 'agent-loop',
+          mentionPrefix: '',
+          task: prompt,
+        });
+        return result.content || '';
       },
       // Stream callback translates events to Telegram messages
       async (event: StreamEvent) => {
@@ -91,6 +100,7 @@ export class TelegramMessageHandler {
 
   /**
    * Handle an incoming Telegram message
+   * Now includes sentiment analysis and toxic filtering
    */
   async handleMessage(message: TelegramMessage): Promise<TelegramResponse> {
     const { userId, text, chatId } = message;
@@ -102,10 +112,69 @@ export class TelegramMessageHandler {
       session = this.sessionManager.createSession(userId);
     }
 
+    // Analyze sentiment
+    let sentiment: SentimentResult | null = null;
+    try {
+      sentiment = await sentimentAnalyzer.analyze(text);
+      if (sentiment) {
+      
+      // Record sentiment event for observability
+      if (this.observability) {
+        (this.observability as any).recordEvent({
+          type: 'sentiment_analysis',
+          userId,
+          sessionId: session.sessionId,
+          text: text.substring(0, 200),
+          sentiment: {
+            score: sentiment.score,
+            label: sentiment.label,
+            toxic: sentiment.toxic,
+            language: sentiment.language,
+          },
+          timestamp: Date.now(),
+        });
+      }
+    } } catch (error) {
+      logger.warn('Sentiment analysis failed', { error: (error as Error).message });
+    }
+
+    // Toxic message filter
+    if ((sentiment as any)?.toxic && (sentiment as any).toxicity_level > 0.5) {
+      logger.warn(`[${userId}] Toxic message detected`, {
+        toxic_words: (sentiment as any).toxic_words,
+        toxicity_level: (sentiment as any).toxicity_level,
+      });
+      
+      // Record toxic event
+      if (this.observability) {
+        (this.observability as any).recordEvent({
+          type: 'toxic_message',
+          userId,
+          sessionId: session.sessionId,
+          text: text.substring(0, 200),
+          sentiment: {
+            toxic_words: (sentiment as any).toxic_words,
+            toxicity_level: (sentiment as any).toxicity_level,
+          },
+          timestamp: Date.now(),
+        });
+      }
+      
+      // Return warning for highly toxic messages
+      if ((sentiment as any).toxicity_level > 0.8) {
+        return {
+          text: '⚠️ Tin nhắn chứa nội dung không phù hợp. Vui lòng lịch sự hơn.',
+          sessionId: session.sessionId,
+          sentIntro: session.introSent,
+          sentiment,
+        };
+      }
+    }
+
     // Record observability event
     try {
       if (this.observability) {
-        this.observability.recordEvent({
+        (this.observability as any).recordEvent({
           type: 'telegram_message',
           userId,
           sessionId: session.sessionId,
@@ -173,13 +242,46 @@ export class TelegramMessageHandler {
       }
     }
 
+    // Add mood-based response modifier
+    if (sentiment) {
+      agentResponse = this.applyMoodModifier(agentResponse, sentiment);
+    }
+
     this.sessionManager.updateLastActivity(userId);
 
     return {
       text: agentResponse,
       sessionId: session.sessionId,
       sentIntro: session.introSent,
+      sentiment,
     };
+  }
+
+  /**
+   * Apply mood-based response modifiers
+   */
+  private applyMoodModifier(response: string, sentiment: SentimentResult): string {
+    // Don't modify for negative sentiment — keep response neutral/professional
+    if (sentiment.label === 'negative' && sentiment.score < -0.3) {
+      // Add empathetic prefix for very negative messages
+      const prefixes = [
+        'Hiểu rồi, ',
+        'Mình hiểu, ',
+        '',
+      ];
+      const prefix = prefixes[Math.floor(Math.random() * (prefixes.length - 1))];
+      return prefix + response;
+    }
+
+    // Add friendly touch for positive messages
+    if (sentiment.label === 'positive' && sentiment.score > 0.5) {
+      // 30% chance to add friendly emoji
+      if (Math.random() < 0.3 && !response.includes('😊') && !response.includes('👍')) {
+        return response + ' 😊';
+      }
+    }
+
+    return response;
   }
 
   /**
@@ -200,7 +302,7 @@ export class TelegramMessageHandler {
         return `🛠️ ${event.message}`;
       case 'tool_result':
         return `✅ ${event.message}`;
-      case 'synthesize':
+      case 'synthesis':
         return `📝 ${event.message}`;
       case 'error':
         return `⚠️ ${event.message}`;

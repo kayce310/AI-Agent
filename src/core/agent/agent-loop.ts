@@ -24,7 +24,7 @@
  *   Response to user
  */
 
-import { Logger } from '../logger';
+import { Logger } from '../logger.js';
 
 export interface AgentLoopConfig {
   maxSteps?: number;

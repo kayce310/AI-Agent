@@ -176,5 +176,6 @@ export enum EventType {
   FILE_DELETED = 'file_deleted',
   DECISION_MADE = 'decision_made',
   MEMORY_WRITE = 'memory_write',
+  REASONING_UPDATE = 'reasoning:update',
   ERROR = 'error',
 }

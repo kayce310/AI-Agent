@@ -5,9 +5,9 @@
  * - Track performance metrics
  */
 
-import EventStore from './event-store';
-import MetricsCollector from './metrics-collector';
-import { Logger } from '../core/logger';
+import EventStore from './event-store.js';
+import MetricsCollector from './metrics-collector.js';
+import { Logger } from '../core/logger.js';
 
 const log = new Logger({ module: 'ObservabilityIntegration' });
 

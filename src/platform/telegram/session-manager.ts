@@ -1,4 +1,6 @@
 import { randomUUID } from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface SessionState {
   sessionId: string;
@@ -22,28 +24,31 @@ export interface IntroSentEvent {
   userId: string;
 }
 
+const SESSION_FILE = path.join(
+  process.env.TEMP || process.env.TMP || '/tmp',
+  'coral-sessions.json'
+);
+
 /**
- * SessionManager: Lightweight TTL-based session cache
- * 
+ * SessionManager: TTL-based session cache WITH disk persistence
+ *
  * Keeps Coral agent stateless while providing session continuity to users.
- * Sessions expire after 15 minutes of inactivity.
- * 
- * Usage:
- *   const manager = new SessionManager();
- *   const session = manager.getOrCreateSession(userId);
- *   if (!session.introSent) {
- *     sendIntro(userId);
- *     manager.markIntroSent(userId);
- *   }
+ * Sessions expire after 24 hours of inactivity (longer for persistence).
+ * State is saved to disk and restored on restart.
  */
 export class SessionManager {
   private sessions = new Map<string, SessionState>();
-  private readonly TTL_MS = 15 * 60 * 1000; // 15 minutes
+  private readonly TTL_MS = 24 * 60 * 60 * 1000; // 24 hours (survives restarts)
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private dirty = false;
 
   constructor() {
-    // Auto-cleanup expired sessions every 5 minutes
-    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    this.load();
+    // Auto-cleanup expired sessions every 10 minutes
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+      this.save();
+    }, 10 * 60 * 1000);
   }
 
   /**
@@ -64,6 +69,8 @@ export class SessionManager {
       return this.createNewSession(userId);
     }
 
+    existing.lastActivity = Date.now();
+    this.markDirty();
     return existing;
   }
 
@@ -79,6 +86,8 @@ export class SessionManager {
       introSent: false,
     };
     this.sessions.set(userId, session);
+    this.markDirty();
+    this.save();
     return session;
   }
 
@@ -90,6 +99,8 @@ export class SessionManager {
     if (session) {
       session.introSent = true;
       session.lastActivity = Date.now();
+      this.markDirty();
+      this.save();
     }
   }
 
@@ -100,6 +111,7 @@ export class SessionManager {
     const session = this.sessions.get(userId);
     if (session) {
       session.lastActivity = Date.now();
+      this.markDirty();
     }
   }
 
@@ -112,7 +124,6 @@ export class SessionManager {
 
   /**
    * Remove all expired sessions
-   * Called automatically every 5 minutes
    */
   cleanup(): void {
     const now = Date.now();
@@ -124,7 +135,10 @@ export class SessionManager {
       }
     });
 
-    expired.forEach(userId => this.sessions.delete(userId));
+    if (expired.length > 0) {
+      expired.forEach(userId => this.sessions.delete(userId));
+      this.markDirty();
+    }
   }
 
   /**
@@ -136,7 +150,6 @@ export class SessionManager {
 
   /**
    * Get or create a session for a user
-   * Creates a new session if none exists for the given userId
    */
   createSession(userId: string): SessionState {
     const existing = this.getSession(userId);
@@ -151,6 +164,7 @@ export class SessionManager {
     };
 
     this.sessions.set(userId, session);
+    this.save();
     return session;
   }
 
@@ -161,6 +175,34 @@ export class SessionManager {
     return this.sessions.get(userId);
   }
 
+  // ── Persistence ──
+
+  private markDirty(): void {
+    this.dirty = true;
+  }
+
+  private save(): void {
+    try {
+      const data = Object.fromEntries(this.sessions.entries());
+      fs.writeFileSync(SESSION_FILE, JSON.stringify(data, null, 2));
+      this.dirty = false;
+    } catch { /* silent — non-critical */ }
+  }
+
+  private load(): void {
+    try {
+      if (fs.existsSync(SESSION_FILE)) {
+        const raw = fs.readFileSync(SESSION_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        for (const [userId, session] of Object.entries(data) as [string, SessionState][]) {
+          if (session && !this.isExpired(session)) {
+            this.sessions.set(userId, session);
+          }
+        }
+      }
+    } catch { /* silent — will create fresh sessions */ }
+  }
+
   /**
    * Destroy manager and cleanup resources
    */
@@ -168,6 +210,7 @@ export class SessionManager {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
+    if (this.dirty) this.save();
     this.sessions.clear();
   }
 }

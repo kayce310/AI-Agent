@@ -112,7 +112,7 @@ export class SemanticMemory {
         totalEntities: entities.length,
         searchTime: Date.now() - startTime,
       };
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Failed to retrieve user context (non-blocking):', error);
       return {
         contexts: [],

@@ -68,7 +68,7 @@ export class EntityExtractor {
         relationships,
         raw: result,
       };
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Entity extraction failed (non-blocking):', error);
       // Graceful fallback: return empty result, don't crash
       return { entities: [], relationships: [], raw: '' };
@@ -148,7 +148,7 @@ Rules:
       return { entities, relationships };
     } catch (error) {
       log.warn('Failed to parse extraction response:', error);
-      return { entities: [], relationships: [] };
+      return { entities: [], relationships: [] } as any;
     }
   }
 

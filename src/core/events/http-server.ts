@@ -101,9 +101,18 @@ export class DashboardServer {
       this.serveFile(res, 'src/dashboard/memory-tab.js', 'application/javascript; charset=utf-8');
       return;
     }
+    if (url === '/brain-tab.js') {
+      this.serveFile(res, 'src/dashboard/brain-tab.js', 'application/javascript; charset=utf-8');
+      return;
+    }
 
     // ═══ API: Memory ═══
     if (url.startsWith('/api/memory') && this.memoryApi) {
+      // GET /api/memory (root endpoint)
+      if (url === '/api/memory' && req.method === 'GET') {
+        this.sendJson(res, this.memoryApi.stats());
+        return;
+      }
       if (url === '/api/memory/stats') {
         this.sendJson(res, this.memoryApi.stats());
         return;
@@ -123,6 +132,25 @@ export class DashboardServer {
         
         if (url === '/api/memory') {
           this.sendJson(res, this.memoryApi.create(body));
+          return;
+        }
+        // Memory flush — trigger persist to disk
+        if (url === '/api/memory/flush') {
+          if (this.memoryApi && typeof this.memoryApi['store']?.shutdown === 'function') {
+            this.memoryApi['store'].shutdown();
+          }
+          this.sendJson(res, { success: true, data: { message: 'Memory persisted to disk' } });
+          return;
+        }
+        // Memory cleanup — run decay + archive low-confidence items
+        if (url === '/api/memory/cleanup') {
+          let removed = 0;
+          if (this.memoryApi && typeof this.memoryApi['store']?.applyDecay === 'function') {
+            this.memoryApi['store'].applyDecay();
+            const counts = this.memoryApi['store'].getCount();
+            removed = counts.archived;
+          }
+          this.sendJson(res, { success: true, data: { removed } });
           return;
         }
         // POST /api/memory/:id/pin, /unpin, /forget, /promote, /link

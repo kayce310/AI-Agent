@@ -6,9 +6,10 @@
  * - GET /api/observability/sessions - List active sessions
  */
 
+// @ts-ignore - express types not installed
 import { Router, Request, Response } from 'express';
-import EventStore from './event-store';
-import MetricsCollector from './metrics-collector';
+import EventStore from './event-store.js';
+import MetricsCollector from './metrics-collector.js';
 
 export function createObservabilityRouter(
   eventStore: EventStore,

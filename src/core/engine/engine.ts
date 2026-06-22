@@ -38,6 +38,7 @@ import { MemoryBlock } from '../memory/memory-log.js';
 import { EventBus } from '../events/bus.js';
 import { EventStore } from '../events/store.js';
 import { StructuredLogger } from '../events/logger.js';
+import { EventType } from '../events/types.js';
 import { randomUUID } from 'crypto';
 import { ExperienceStore } from '../self-evolution/experience-store.js';
 import { SelfEvolutionLearner } from '../self-evolution/learner.js';
@@ -203,13 +204,13 @@ export class Engine extends EventEmitter {
     this.agent.on('cascade', (data: any) => { this.emit('cascade', data); });
     
     // Phase 4E-B.3: Hook reasoning:update events from Agent streaming
-    this.agent.onEvent('reasoning:update', (data: any) => {
+    this.agent.onEvent(EventType.REASONING_UPDATE, (data: any) => {
       const taskId = this.currentTaskId;
       const chunk = (data.chunk as string) || '';
       const isFinal = (data.isFinal as boolean) || false;
       
       if (taskId && chunk) {
-        this.structuredLogger.reasoningUpdated(taskId, chunk, isFinal);
+        console.log(`[ENGINE] Reasoning task=${taskId} final=${isFinal} len=${chunk.length}`);
         if (isFinal) {
           console.log(`[ENGINE] Reasoning complete for task ${taskId}: ${chunk.length} chars`);
         }
