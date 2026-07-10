@@ -271,3 +271,18 @@ knowledge/memory-store-test/
 
 # Test artifacts
 .test-memory/
+.test-memory-integration/
+
+# Runtime data files (DO NOT COMMIT)
+data/
+knowledge/checkpoints/
+knowledge/memory-store/
+knowledge/memory-temporal/
+knowledge/memory/
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+*.pyc
+nul
+tests-to-delete.txt
