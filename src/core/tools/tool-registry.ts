@@ -106,8 +106,16 @@ export class ToolRegistry {
 
   /**
    * Register a plugin. All tools in the plugin become available.
+   * Idempotent: if a plugin with the same name is already registered,
+   * the call is silently skipped.
    */
   use(plugin: ToolPlugin): void {
+    // Skip if plugin with this name is already registered
+    if (this.plugins.some(p => p.name === plugin.name)) {
+      log.debug(`Plugin "${plugin.name}" already registered — skipping`);
+      return;
+    }
+
     this.plugins.push(plugin);
 
     for (const tool of plugin.tools) {
@@ -208,7 +216,9 @@ export class ToolRegistry {
     // Phase 2: Report results
     if (manifest.errors.length > 0) {
       for (const err of manifest.errors) {
-        log.error(`Plugin error: ${err}`);
+        const file = (err as any).file ?? '';
+        const msg = (err as any).message ?? JSON.stringify(err);
+        log.error(`Plugin error [${file}]: ${msg}`);
       }
     }
     if (manifest.imported > 0) {
@@ -254,7 +264,7 @@ export async function getDefaultRegistry(): Promise<ToolRegistry> {
   return _defaultRegistry;
 }
 
-async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscovery = true): Promise<void> {
+async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
   // Dynamic imports: all tool plugins are discovered and registered
   const pluginModules: Record<string, string> = {
     filesystem: './filesystem.js',
@@ -278,14 +288,6 @@ async function registerBuiltInPlugins(registry: ToolRegistry, enableAutoDiscover
       }
     } catch (err: any) {
       log.warn(`Failed to import plugin ${name}: ${err.message}`);
-    }
-  }
-  // Phase 2a: Auto-discovery via AST Scanner (Micro-Task 50)
-  if (enableAutoDiscovery) {
-    try {
-      await registry.registerAll();
-    } catch (err: any) {
-      log.error(`Auto-discovery failed: ${err.message}`);
     }
   }
 

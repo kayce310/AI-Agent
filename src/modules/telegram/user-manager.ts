@@ -145,12 +145,22 @@ class UserManager {
           }
         }
         this.bootstrapDone = data.bootstrapDone || this.users.size > 0;
-        return;
       }
-    } catch { /* silent — fallback to env */ }
+    } catch { /* silent — will try env */ }
 
-    // No saved state — try env
+    // Always merge env users (env overrides disk for flexibility)
     this.loadFromEnv();
+  }
+
+  /**
+   * Clear user file from disk (for testing)
+   */
+  static clearDiskUserFile(): void {
+    try {
+      if (fs.existsSync(USER_FILE)) {
+        fs.unlinkSync(USER_FILE);
+      }
+    } catch { /* silent */ }
   }
 }
 

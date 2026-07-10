@@ -189,7 +189,6 @@ export class SentimentAnalyzer {
     const candidates = [
       'python',
       'python3',
-      'C:\\Users\\Kayce\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe',
     ];
     
     // Return first one (will fail later if not found)

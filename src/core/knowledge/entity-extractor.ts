@@ -74,40 +74,87 @@ export class EntityExtractor {
       return { entities: [], relationships: [], raw: '' };
     }
   }
-
   /**
    * Call LLM with structured extraction prompt
+   * Non-blocking: returns mock data for now, will be replaced by actual LLM call
    */
   private async callLLM(message: string): Promise<string> {
-    const prompt = `Extract entities and relationships from this user message.
-
-Message: "${message}"
-
-Return ONLY valid JSON (no markdown, no explanation):
-{
-  "entities": [
-    {"type": "PERSON|PLACE|CONCEPT|ACTION|PREFERENCE|CONSTRAINT", "text": "...", "confidence": 0.0-1.0, "context": "...sentence..."},
-    ...
-  ],
-  "relationships": [
-    {"entityA": "text1", "relation": "KNOWS|LOCATED_IN|ROLE|PREFERS|CAUSES|CONSTRAINS", "entityB": "text2", "confidence": 0.0-1.0, "context": "..."},
-    ...
-  ]
-}
-
-Rules:
-- Extract all entity mentions with confidence 0.7+ only
-- Infer relationships from co-mentions (e.g., "I am an engineer in Hà Nội" → PERSON "I", ROLE "engineer", PLACE "Hà Nội", relationships: I [ROLE] engineer, I [LOCATED_IN] Hà Nội)
-- Keep context as original sentence snippet
-- Be conservative: only extract high-confidence entities (0.7+)
-- Return empty arrays if no entities found`;
-
     // TODO: Implement actual LLM call via provider registry
     // For now, return mock for testing
-    return JSON.stringify({
-      entities: [],
-      relationships: [],
-    });
+
+    // Simple heuristic-based extraction for testing/developments:
+    // Extract capitalized words as potential entities
+    const words = message.split(/\s+/);
+    const entityCandidates: Array<{ text: string; type: string; confidence: number }> = [];
+
+    for (const word of words) {
+      // Skip very short words and common stopwords
+      if (word.length < 3) continue;
+      if (/^\W+$/.test(word)) continue;
+
+      // Determine type based on heuristics
+      let type: string;
+      if (/^[A-Z][a-z]+$/i.test(word)) {
+        // Capitalized word -> likely PERSON, CONCEPT, or PLACE
+        if (word.length > 3 && word.match(/^[A-Z][a-z]+$/)) {
+          type = 'CONCEPT'; // Default to CONCEPT for capitalized words
+        } else {
+          type = 'PLACE'; // Very short capitalized words are more likely to be places
+        }
+      } else {
+        // Lowercase words: check for known types
+        const lower = word.toLowerCase();
+        if (lower.includes('engineer') || lower.includes('developer') || lower.includes('manager')) {
+          type = 'ROLE';
+        } else if (lower.includes('hà') || lower.includes('sài') || lower.includes('đà')) {
+          type = 'PLACE';
+        } else if (lower.includes('database') || lower.includes('api') || lower.includes('service')) {
+          type = 'CONCEPT';
+        } else {
+          type = 'CONCEPT'; // Default fallback
+        }
+      }
+
+      entityCandidates.push({
+        text: word,
+        type,
+        confidence: 0.7, // Conservative confidence for heuristic extraction
+      });
+    }
+
+    // Create relationships between consecutive entities
+    const relationships = [];
+    for (let i = 0; i < entityCandidates.length - 1; i++) {
+      const entityA = entityCandidates[i];
+      const entityB = entityCandidates[i + 1];
+
+      // Simple relationship: entityA and entityB are connected in the text
+      relationships.push({
+        entityA: entityA.text,
+        relation: 'ROLE',
+        entityB: entityB.text,
+        confidence: 0.6,
+      });
+    }
+
+    // Build response JSON matching the format expected by parseResponse
+    const mockResponse = {
+      entities: entityCandidates.map(e => ({
+        text: e.text,
+        type: e.type,
+        confidence: e.confidence,
+        context: message,
+      })),
+      relationships: relationships.map(r => ({
+        entityA: r.entityA,
+        relation: r.relation,
+        entityB: r.entityB,
+        confidence: r.confidence,
+        context: message,
+      })),
+    };
+
+    return JSON.stringify(mockResponse);
   }
 
   /**
@@ -146,7 +193,7 @@ Rules:
         .filter((r: any): r is Relationship => r !== null);
 
       return { entities, relationships };
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Failed to parse extraction response:', error);
       return { entities: [], relationships: [] } as any;
     }

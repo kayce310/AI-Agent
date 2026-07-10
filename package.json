@@ -5,7 +5,9 @@
   "main": "src/scripts/start-telegram.ts",
   "type": "module",
   "scripts": {
-    "start": "npx tsx src/scripts/start-telegram.ts",
+    "build": "npx tsc",
+    "start": "node dist/scripts/start-telegram.js",
+    "start:dev": "npx tsx src/scripts/start-telegram.ts",
     "config:9router": "npx tsx scripts/configure-9router.ts",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -20,6 +22,7 @@
     "mammoth": "^1.12.0",
     "openai": "^6.37.0",
     "pdf-parse": "^2.4.5",
+    "sanitize-html": "^2.17.5",
     "ws": "^8.21.0",
     "zod": "^4.4.3"
   },

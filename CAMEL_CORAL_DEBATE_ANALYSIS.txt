@@ -1,0 +1,195 @@
+# CAMEL DEBATE: 8 VẤN ĐỀ DASHBOARD CORAL
+**Ngày:** 2026-06-22 | **Dự án:** Kato Agent Coral Brain Dashboard  
+**Mục tiêu:** Đánh giá 8 vấn đề, priority order, thời gian fix  
+**Context:** 6 tabs (MISSION, TRACE, FOCUS, MEMORY, GRAPH, HOLOGRAM)
+
+---
+
+## VÒNG 1: PHÂN TÍCH CHUYÊN MỤC
+
+### VẤN ĐỀ #1: Tab buttons không căn giữa
+
+**UX/UI:** Tab buttons align-left, CSS thiếu justify-content: center
+**Frontend:** .status-center { display: flex; } nhưng không center
+**Fix:** 1 line CSS → justify-content: center
+
+```
+PHÁT HIỆN: Tab buttons không căn giữa trong header
+ĐỀ XUẤT: Thêm justify-content: center vào .status-center
+ƯU TIÊN: 3 (visual polish)
+ĐIỂM: 9/10 (trivial)
+THỜI GIAN: 2 phút
+```
+
+---
+
+### VẤN ĐỀ #2: Lang-toggle button mất
+
+**Frontend:** CSS định nghĩa #lang-toggle nhưng HTML không có element
+**Root cause:** Missing <button id="lang-toggle">VN/US</button> trong status-right
+**Impact:** User không thể switch language
+
+```
+PHÁT HIỆN: Lang-toggle element mất từ HTML
+ĐỀ XUẤT: Insert <button id="lang-toggle">VN/US</button> vào status-right
+ƯU TIÊN: 2 (critical - blocking i18n)
+ĐIỂM: 10/10
+THỜI GIAN: 3 phút
+```
+
+---
+
+### VẤN ĐỀ #3: TRACE tab i18n không update
+
+**Architecture:** Translations định nghĩa pero updateTranslations() scope limited
+**Issue:** Khi switch sang Vietnamese, TRACE text không thay đổi
+**Root:** updateTranslations() loop không cover tất cả [data-i18n]
+
+```
+PHÁT HIỆN: TRACE tab không update Vietnamese translation
+ĐỀ XUẤT: Debug updateTranslations() loop coverage, force re-render
+ƯU TIÊN: 2 (incomplete i18n)
+ĐIỂM: 9/10
+THỜI GIAN: 5-10 phút
+```
+
+---
+
+### VẤN ĐỀ #4: Memory controls inactive
+
+**Product:** Confidence/Importance sliders không interactive
+**Frontend:** Display-only bars, không <input type="range">
+**Missing:** Settings gear button, sort filter not wired
+
+```
+PHÁT HIỆN: Memory tab - sliders, sort, settings không hoạt động
+ĐỀ XUẤT:
+  1. Add <input type="range"> cho Confidence/Importance
+  2. Wire sort dropdown → query update + re-render
+  3. Add settings gear icon button
+ƯU TIÊN: 1 (critical)
+ĐIỂM: 6/10
+THỜI GIAN: 30-45 phút
+```
+
+---
+
+### VẤN ĐỀ #5: Hologram errors hidden, no interaction
+
+**Architecture:** readouts.errors tracked nhưng không display
+**Frontend:** Zero mousewheel/drag handlers, zero keyboard shortcuts
+**Impact:** Silent failures, user không biết có lỗi
+
+```
+PHÁT HIỆN: Hologram errors silently tracked, no zoom/rotate interaction
+ĐỀ XUẤT:
+  1. Add error modal when readouts.errors > 0
+  2. Add wheel handler (zoom), drag handler (rotate)
+  3. Add keyboard shortcuts (arrows for rotate, +/- for zoom)
+ƯU TIÊN: 1 (critical)
+ĐIỂM: 5/10 (complex)
+THỜI GIAN: 45-60 phút
+```
+
+---
+
+### VẤN ĐỀ #6: FOCUS & GRAPH - purpose unclear
+
+**Architecture:** FOCUS mirrors MISSION tab (redundant?)
+**Product:** GRAPH specialized visualization but disconnected from TRACE workflow
+**Decision:** Keep+enhance OR redesign OR remove?
+
+```
+PHÁT HIỆN: FOCUS & GRAPH có ý nghĩa không rõ, may be redundant
+ĐỀ XUẤT: Product decision:
+  A) Keep & enhance: Wire reasoning to FOCUS, integrate GRAPH with TRACE
+  B) Redesign: FOCUS → Live Metrics, GRAPH → Dependency Inspector  
+  C) Remove: Simplify to 4-tab layout
+ƯU TIÊN: 4 (design question)
+ĐIỂM: 4/10
+THỜI GIAN: 2-3 hours if redesign
+```
+
+---
+
+### VẤN ĐỀ #7: FOCUS tab thô
+
+**UX:** Monochrome, no hierarchy, no animation
+**Frontend:** Can add animated gradient, progress bar, color badges
+**Impact:** Professional appearance, better usability
+
+```
+PHÁT HIỆN: FOCUS tab UI thô, không visual hierarchy
+ĐỀ XUẤT:
+  1. Animated gradient background (running state)
+  2. Progress bar for tool execution
+  3. Color-coded badges (running=green, idle=gray)
+  4. Better typography hierarchy
+  5. Confidence/certainty bars
+ƯU TIÊN: 5 (cosmetic)
+ĐIỂM: 8/10
+THỜI GIAN: 20-30 phút
+```
+
+---
+
+### VẤN ĐỀ #8: Dark theme incomplete, no responsive
+
+**Theme:** Light theme CSS not defined, toggle handler may be missing
+**Responsive:** No media queries, fixed sizes (360px, 700px), no wrap
+**WCAG:** Dark-only violates accessibility
+
+```
+PHÁT HIỆN: Light theme missing, responsive design absent
+ĐỀ XUẤT:
+  1. Define :root[data-theme="light"] CSS variables
+  2. Add media queries (1024px, 768px breakpoints)
+  3. Wire theme toggle: localStorage + data-theme attribute
+  4. Make canvas responsive: calc() instead of px
+  5. Tab wrap on mobile
+ƯU TIÊN: 2 (production readiness)
+ĐIỂM: 5/10
+THỜI GIAN: 1.5-2 hours
+```
+
+---
+
+## VÒNG 2: PRIORITY & ROADMAP
+
+### CRITICAL (Priority 1-2) - MUST FIX:
+1. Issue #2 (lang-toggle): 3 min
+2. Issue #5 (hologram errors + interaction): 60 min
+3. Issue #4 (memory controls): 45 min
+4. Issue #3 (TRACE i18n): 10 min
+
+### HIGH (Priority 3) - BEFORE LAUNCH:
+5. Issue #1 (tab centering): 2 min
+6. Issue #8 (theme + responsive): 90 min
+
+### LATER (Priority 4-5):
+7. Issue #6 (FOCUS/GRAPH redesign): 2-3 hours
+8. Issue #7 (FOCUS visual upgrade): 30 min
+
+**Total: 4-5 hours for all fixes**
+
+---
+
+## JUDGE CONSENSUS
+
+**UX/UI Expert:** Layout centering required. Responsive design prerequisite. FOCUS needs visual polish.
+
+**Frontend Expert:** Lang-toggle missing HTML. i18n loop needs verification. Light theme CSS not defined.
+
+**Architecture Expert:** Hologram is cornerstone but broken (silent failures). FOCUS/GRAPH purpose unclear. Memory backend ready but UI incomplete.
+
+**Product Expert:** Memory controls must work. Hologram errors critical. Language support incomplete. Consider dashboard consolidation (6 tabs → 4?).
+
+---
+
+## IMPLEMENTATION PRIORITY
+
+**Phase 1 (2-3h):** Issues #2, #5, #4, #3
+**Phase 2 (1.5h):** Issues #1, #8
+**Phase 3 (optional):** Issues #6, #7
+
+**Ready for production after Phase 1 + Phase 2.**

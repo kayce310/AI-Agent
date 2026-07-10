@@ -32,6 +32,7 @@ export class EventBus {
 
     // Persist to store
     this.store.append(event);
+    console.log(`[EventBus] Published: ${event.type} id=${event.id?.slice(0,8)}`);
 
     // Notify type-specific handlers
     const typeHandlers = this.handlers.get(event.type) || [];

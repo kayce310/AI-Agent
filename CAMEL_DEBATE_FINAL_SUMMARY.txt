@@ -1,0 +1,133 @@
+CAMEL DEBATE - FINAL SUMMARY
+============================
+Date: 2026-06-22 | Time: ~30 minutes analysis
+
+DEBATE PARTICIPANTS:
+- UX/UI Expert
+- Frontend Expert  
+- Architecture Expert
+- Product/Feature Expert
+
+8 ISSUES EVALUATED
+==================
+
+1. Tab centering (Priority 3) - Visual polish
+   ✓ Root cause identified: CSS missing justify-content: center
+   ✓ Fix: 1 line CSS change
+   ✓ Time: 2 minutes
+
+2. Lang-toggle missing (Priority 2) ⚠️ BLOCKER
+   ✓ Root cause: HTML element missing (CSS orphaned)
+   ✓ Fix: Add <button id="lang-toggle">VN/US</button>
+   ✓ Impact: i18n feature completely blocked
+   ✓ Time: 3 minutes
+
+3. TRACE i18n not updating (Priority 2)
+   ✓ Root cause: updateTranslations() loop coverage unclear
+   ✓ Fix: Debug i18n system verification
+   ✓ Impact: Partial i18n broken
+   ✓ Time: 5-10 minutes
+
+4. Memory controls inactive (Priority 1) ⚠️ CRITICAL
+   ✓ Root cause: UI controls missing (backend ready)
+   ✓ Fix: Add range sliders + wire sort + add settings
+   ✓ Impact: Feature incomplete
+   ✓ Time: 30-45 minutes
+
+5. Hologram errors hidden + no interaction (Priority 1) ⚠️ CRITICAL
+   ✓ Root cause: readouts.errors tracked but not displayed, zero event handlers
+   ✓ Fix: Add error modal + Three.js wheel/drag/keyboard handlers
+   ✓ Impact: Core feature broken, silent failures
+   ✓ Time: 45-60 minutes
+
+6. FOCUS & GRAPH purpose unclear (Priority 4)
+   ✓ Root cause: Design decision pending (redundancy with MISSION)
+   ✓ Fix: Product decision (keep/redesign/remove)
+   ✓ Impact: May be architectural bloat
+   ✓ Time: 2-3 hours if redesign
+
+7. FOCUS UI too basic (Priority 5)
+   ✓ Root cause: Minimal CSS, no animations/hierarchy
+   ✓ Fix: Add animations, progress bar, color badges
+   ✓ Impact: Cosmetic only
+   ✓ Time: 20-30 minutes
+
+8. Dark theme incomplete + no responsive (Priority 2)
+   ✓ Root cause: Light theme CSS undefined, zero media queries
+   ✓ Fix: Add light theme variables + responsive breakpoints
+   ✓ Impact: Production blocker (WCAG AA compliance)
+   ✓ Time: 1.5-2 hours
+
+CRITICAL PATH ANALYSIS
+======================
+
+MUST-FIX (Phase 1): 2-3 hours
+  Issue #2 (lang-toggle): 3min - BLOCKER
+  Issue #5 (hologram): 60min - CRITICAL
+  Issue #4 (memory): 45min - CRITICAL  
+  Issue #3 (i18n): 10min - HIGH
+
+SHOULD-FIX (Phase 2): 1.5 hours
+  Issue #1 (centering): 2min - VISUAL
+  Issue #8 (theme+responsive): 90min - WCAG AA
+
+NICE-TO-HAVE (Phase 3): 3-4 hours
+  Issue #6 (FOCUS/GRAPH): 2-3h - PENDING DECISION
+  Issue #7 (visual): 30min - COSMETIC
+
+TOTAL PRODUCTION-READY: 4-5 hours (Phases 1+2)
+
+SPECIALIST CONSENSUS
+====================
+
+UX/UI: "Tab centering required. Responsive design non-negotiable. FOCUS needs 
+visual hierarchy. Consider consolidating to 4-tab layout."
+
+Frontend: "Lang-toggle missing HTML element. i18n loop needs verification. 
+Light theme CSS undefined. Memory sliders need form elements. Hologram lacks 
+all interaction handlers."
+
+Architecture: "Hologram broken (silent failures). FOCUS/GRAPH purpose unclear. 
+Memory backend ready but UI incomplete. Need state management refactor."
+
+Product: "Memory controls must work. Hologram errors critical. i18n incomplete. 
+FOCUS/GRAPH lack workflow integration. Launch with Phase 1+2 only."
+
+RECOMMENDATION
+==============
+
+✓ PROCEED WITH PHASE 1 IMMEDIATELY
+  - Fix critical blockers (lang-toggle, hologram, memory, i18n)
+  - 2-3 hours work, makes dashboard functional
+
+✓ THEN PROCEED WITH PHASE 2
+  - Fix production requirements (theme, responsive)
+  - 1.5 hours work, makes dashboard production-ready
+
+✗ DEFER PHASE 3
+  - FOCUS/GRAPH redesign pending product decision
+  - Can implement post-launch based on user feedback
+
+EXPECTED OUTCOME
+================
+
+After Phase 1: Dashboard functional
+- Language switching works
+- Hologram interactive with error display
+- Memory controls functional
+- All translations active
+
+After Phase 2: Dashboard production-ready
+- Light + dark theme working
+- Responsive on tablet + mobile
+- WCAG AA compliant
+- Professional appearance
+
+DELIVERABLES CREATED
+====================
+
+1. CAMEL_CORAL_DEBATE_ANALYSIS.txt - Overview
+2. CAMEL_DEBATE_FINDINGS.txt - Detailed findings
+3. This summary document
+
+STATUS: ✓ DEBATE COMPLETE - Ready for implementation

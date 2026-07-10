@@ -28,11 +28,11 @@ export class ActivityReporter {
 
     // 1. Typing loop — sendChatAction every 3s
     //    Telegram typing expires after ~5s, so we refresh every 3s
-    const typingInterval = setInterval(() => {
+    const typingInterval = setInterval(async () => {
       try {
-        this.bot.api.sendChatAction(Number(chatId), 'typing');
+        await this.bot.api.sendChatAction(Number(chatId), 'typing');
       } catch {
-        // Silent fail — typing errors are non-fatal
+        // Silent fail — typing errors are non-fatal (e.g., bot kicked from channel)
       }
     }, 3000);
     this.typingIntervals.set(key, typingInterval);
@@ -48,25 +48,17 @@ export class ActivityReporter {
       }
     }, 500);
 
-    // 3. Heartbeat: send status message after 15s if still processing
-    const heartbeatTimeout = setTimeout(async () => {
-      try {
-        const statusMsg = await this.bot.api.sendMessage(
-          Number(chatId),
-          '\u23F3 \u0110ang x\u1EED l\u00FD...'
-        );
-        this.reactionMessageIds.set(key, statusMsg.message_id);
-      } catch {
-        // Silent fail
-      }
-    }, 15000);
-    this.heartbeatTimeouts.set(key, heartbeatTimeout);
+    // Remove deprecated heartbeat — onThinking provides live updates now
+    // (old heartbeat used to send '⏳ Đang xử lý...' after 15s; redundant with streaming thinking)
+
+    // Cleanup check: store for stop() to clear resources
+    this.heartbeatTimeouts.set(key, null as any);
   }
 
   /**
    * Stop activity reporting and send final reaction.
    */
-  stop(chatId: string, messageId: string): void {
+  async stop(chatId: string, messageId: string): Promise<void> {
     const key = `${chatId}:${messageId}`;
 
     // Clear typing loop
@@ -83,24 +75,29 @@ export class ActivityReporter {
       this.heartbeatTimeouts.delete(key);
     }
 
-    // Delete heartbeat message if sent
+    // Delete heartbeat message if sent (no longer sent — kept for backward compat)
     const heartbeatMsgId = this.reactionMessageIds.get(key);
     if (heartbeatMsgId) {
       try {
-        this.bot.api.deleteMessage(Number(chatId), heartbeatMsgId);
-      } catch {
-        // Silent fail
+        await this.bot.api.deleteMessage(Number(chatId), heartbeatMsgId);
+      } catch (err: any) {
+        // Silent fail — bot may be kicked from channel
       }
       this.reactionMessageIds.delete(key);
     }
 
+    // Clear the null placeholder set by start()
+    if (this.heartbeatTimeouts.has(key)) {
+      this.heartbeatTimeouts.delete(key);
+    }
+
     // Final reaction: 👍
     try {
-      this.bot.api.setMessageReaction(Number(chatId), Number(messageId), [
-        { type: 'emoji', emoji: '\u{1F44D}' }  // 👍
+      await this.bot.api.setMessageReaction(Number(chatId), Number(messageId), [
+        { type: 'emoji', emoji: '👍' }  // 👍
       ]);
-    } catch {
-      // Silent fail
+    } catch (err: any) {
+      // Silent fail — bot may be kicked from channel
     }
   }
 }

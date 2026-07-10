@@ -1,0 +1,204 @@
+CAMEL DEBATE: 8 VẤN ĐỀ DASHBOARD CORAL - INDEX
+==============================================
+
+📋 DEBATE COMPLETION DATE: 2026-06-22
+⏱️ ANALYSIS TIME: ~30 minutes
+🎯 STATUS: ✓ COMPLETE - Ready for implementation
+
+---
+
+DELIVERABLES CREATED
+====================
+
+1. CAMEL_CORAL_DEBATE_ANALYSIS.txt (6.0KB)
+   Comprehensive analysis with 8 issues detailed
+   - Root cause analysis per issue
+   - Specialist perspectives
+   - Detailed recommendations
+
+2. CAMEL_DEBATE_FINDINGS.txt (2.5KB)
+   Condensed findings with priority matrix
+   - Issue summary table
+   - Implementation roadmap
+   - Phase breakdown
+
+3. CAMEL_DEBATE_FINAL_SUMMARY.txt (4.4KB)
+   Executive summary with consensus
+   - 8 issues evaluated with fixes
+   - Critical path analysis
+   - Specialist consensus
+   - Recommendations
+
+---
+
+8 ISSUES SUMMARY TABLE
+======================
+
+Issue | Title                          | Priority | Time    | Feasibility
+------|--------------------------------|----------|---------|-------------
+#1    | Tab centering                  | 3        | 2min    | 9/10
+#2    | Lang-toggle missing ⚠️         | 2        | 3min    | 10/10
+#3    | TRACE i18n not updating        | 2        | 5-10min | 9/10
+#4    | Memory controls inactive ⚠️    | 1        | 30-45m  | 6/10
+#5    | Hologram errors + interaction⚠️| 1        | 45-60m  | 5/10
+#6    | FOCUS/GRAPH purpose unclear    | 4        | 2-3h    | 4/10
+#7    | FOCUS UI too basic             | 5        | 20-30m  | 8/10
+#8    | Dark theme + responsive        | 2        | 1.5-2h  | 5/10
+
+---
+
+CRITICAL ISSUES (⚠️ Priority 1-2)
+=================================
+
+BLOCKER: Issue #2 - Lang-toggle missing
+  Root cause: HTML element missing (CSS orphaned)
+  Impact: i18n feature blocked
+  Fix time: 3 minutes
+  Action: Add <button id="lang-toggle">VN/US</button>
+
+CRITICAL: Issue #5 - Hologram errors hidden + no interaction
+  Root cause: readouts.errors not displayed, zero event handlers
+  Impact: Core feature broken, silent failures
+  Fix time: 45-60 minutes
+  Action: Add error modal + Three.js event handlers
+
+CRITICAL: Issue #4 - Memory controls inactive
+  Root cause: UI controls missing (backend ready)
+  Impact: Feature incomplete (sliders, sort, settings)
+  Fix time: 30-45 minutes
+  Action: Add range inputs + wire state + settings button
+
+HIGH: Issue #3 - TRACE i18n not updating
+  Root cause: updateTranslations() loop coverage unclear
+  Impact: Partial i18n broken
+  Fix time: 5-10 minutes
+  Action: Debug i18n system loop coverage
+
+HIGH: Issue #8 - Dark theme incomplete + no responsive
+  Root cause: Light theme undefined, zero media queries
+  Impact: Production blocker (WCAG AA)
+  Fix time: 1.5-2 hours
+  Action: Add light theme CSS + responsive breakpoints
+
+VISUAL: Issue #1 - Tab centering
+  Root cause: CSS missing justify-content: center
+  Impact: Visual imbalance
+  Fix time: 2 minutes
+  Action: Add 1 CSS line
+
+---
+
+IMPLEMENTATION ROADMAP
+======================
+
+PHASE 1 (CRITICAL): 2-3 hours → FUNCTIONAL DASHBOARD
+  Issue #2: Lang-toggle button (3min) - BLOCKER
+  Issue #5: Hologram errors + interaction (60min) - CRITICAL
+  Issue #4: Memory controls (45min) - CRITICAL
+  Issue #3: TRACE i18n (10min) - HIGH
+  → After Phase 1: Dashboard functional, language switch works, 
+                   memory interactive, hologram responds to input
+
+PHASE 2 (PRODUCTION): 1.5 hours → PRODUCTION-READY
+  Issue #1: Tab centering (2min) - VISUAL
+  Issue #8: Theme + responsive (90min) - WCAG AA
+  → After Phase 2: Professional appearance, mobile-responsive, 
+                   WCAG AA compliant, light+dark themes
+
+PHASE 3 (OPTIONAL): 3-4 hours → OPTIMIZATION
+  Issue #6: FOCUS/GRAPH redesign (2-3h) - PENDING DECISION
+  Issue #7: FOCUS visual upgrade (30min) - COSMETIC
+  → Defer until post-launch user feedback
+
+TOTAL PRODUCTION-READY: 4-5 hours (Phases 1+2)
+
+---
+
+SPECIALIST CONSENSUS
+====================
+
+4 specialists debated 8 issues with unanimous recommendations:
+
+✓ UX/UI Expert:
+  "Tab centering required. Responsive design non-negotiable. FOCUS needs 
+   visual hierarchy. Consider 4-tab consolidation."
+
+✓ Frontend Expert:
+  "Lang-toggle missing HTML. i18n loop needs verification. Light theme 
+   CSS undefined. Hologram lacks interaction handlers."
+
+✓ Architecture Expert:
+  "Hologram broken (silent failures). FOCUS/GRAPH purpose unclear. Memory 
+   backend ready but UI incomplete. Need state refactor."
+
+✓ Product Expert:
+  "Memory controls must work. Hologram errors critical. i18n incomplete. 
+   Launch with Phase 1+2 only."
+
+---
+
+FINAL RECOMMENDATION
+====================
+
+✓ PHASE 1: Start immediately
+  - 2-3 hours work
+  - Fixes all critical blockers
+  - Makes dashboard functional
+
+✓ PHASE 2: Then proceed
+  - 1.5 hours work
+  - Ensures production readiness
+  - WCAG AA compliant
+
+✗ PHASE 3: Defer
+  - Pending product decision
+  - Can implement post-launch
+  - Based on user feedback
+
+EXPECTED OUTCOME
+================
+
+After Phase 1+2 (4-5 hours):
+✓ Language switching works (VN/US)
+✓ Hologram interactive with error display
+✓ Memory controls fully functional (sliders, sort, settings)
+✓ TRACE tab translates to Vietnamese
+✓ Tab buttons centered
+✓ Light + dark theme toggle working
+✓ Responsive on tablet + mobile
+✓ WCAG AA accessible
+
+Production-ready dashboard ready for deployment.
+
+---
+
+NEXT STEPS
+==========
+
+1. Review this analysis with team
+2. Confirm Phase 1 priorities
+3. Start with Issue #2 (lang-toggle) - 3 min quick win
+4. Proceed to Issue #5 (hologram) - 60 min core work
+5. Parallel Issue #4 (memory) - 45 min state management
+6. Verify Issue #3 (i18n) - 10 min debug
+7. Then Phase 2 fixes (theme + responsive)
+8. Test all 6 tabs on desktop + mobile
+
+ESTIMATED COMPLETION: 5 hours from start → Production ready
+
+---
+
+FILES REFERENCE
+===============
+
+For detailed analysis, see:
+- CAMEL_CORAL_DEBATE_ANALYSIS.txt (comprehensive findings)
+- CAMEL_DEBATE_FINDINGS.txt (condensed findings)
+- CAMEL_DEBATE_FINAL_SUMMARY.txt (executive summary)
+
+This index file: CAMEL_DEBATE_INDEX.txt
+
+---
+
+DEBATE STATUS: ✓ COMPLETE
+Ready for implementation team to begin Phase 1 fixes.

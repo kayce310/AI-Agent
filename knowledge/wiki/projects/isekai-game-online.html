@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isekai RPG Online v1</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            color: #0f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .game-area { display: grid; grid-template-rows: 100px 1fr 100px; gap: 20px; height: 700px; }
+        .header {
+            background: linear-gradient(90deg, #1a3a3a, #2d5a5a);
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0,255,0,0.3);
+        }
+        .player-stats { display: flex; gap: 30px; }
+        .stat { display: flex; flex-direction: column; gap: 5px; }
+        .stat-label { font-size: 12px; color: #0f0; opacity: 0.7; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #0f0; }
+        .hp-bar {
+            width: 150px; height: 20px; background: #0a0a0a;
+            border: 1px solid #0f0; border-radius: 3px; overflow: hidden;
+        }
+        .hp-fill {
+            height: 100%; background: linear-gradient(90deg, #00ff00, #00cc00);
+            transition: width 0.3s; display: flex; align-items: center;
+            justify-content: center; color: #000; font-size: 12px; font-weight: bold;
+        }
+        .exp-bar {
+            width: 200px; height: 15px; background: #0a0a0a;
+            border: 1px solid #00f; border-radius: 3px; overflow: hidden;
+        }
+        .exp-fill {
+            height: 100%; background: linear-gradient(90deg, #0099ff, #0066cc);
+            transition: width 0.3s;
+        }
+        .game-screen {
+            background: linear-gradient(135deg, #0d1b2a, #1a2a3a);
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,255,0,0.2);
+        }
+        .battle-area {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; gap: 30px; background: rgba(0,0,0,0.3);
+            border: 1px dashed #0f0; border-radius: 8px; padding: 30px;
+        }
+        .player-avatar, .enemy-avatar {
+            width: 100px; height: 100px; border: 3px solid;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 50px; box-shadow: 0 0 20px;
+        }
+        .player-avatar { background: linear-gradient(135deg, #ff6600, #ff9900); border-color: #0f0; box-shadow: 0 0 20px rgba(255,102,0,0.5); }
+        .enemy-avatar { background: linear-gradient(135deg, #cc0000, #ff3333); border-color: #f00; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        .vs { font-size: 24px; color: #0f0; font-weight: bold; }
+        .enemy-info { text-align: center; color: #f00; }
+        .enemy-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .enemy-hp { font-size: 14px; }
+        .sidebar {
+            background: linear-gradient(135deg, #1a3a2e, #0d2818);
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        .sidebar-title { font-size: 14px; font-weight: bold; color: #0f0; border-bottom: 1px solid #0f0; padding-bottom: 8px; }
+        .inventory-item {
+            background: rgba(0,255,0,0.1); border: 1px solid #0f0;
+            border-radius: 4px; padding: 8px; font-size: 12px;
+            color: #0f0; margin-bottom: 5px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inventory-item:hover { background: rgba(0,255,0,0.2); box-shadow: 0 0 10px rgba(0,255,0,0.3); }
+        .controls {
+            background: linear-gradient(90deg, #1a3a3a, #2d5a5a);
+            border: 2px solid #0f0;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, #0f0, #0cc);
+            color: #000;
+            border: 2px solid #0f0;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        .btn:active { transform: scale(0.95); }
+        .battle-log {
+            background: rgba(0,0,0,0.5); border: 1px solid #0f0;
+            border-radius: 4px; padding: 10px; font-size: 12px;
+            color: #0f0; max-height: 120px; overflow-y: auto;
+            font-family: monospace;
+        }
+        .log-entry {
+            margin-bottom: 5px; padding-bottom: 3px;
+            border-bottom: 1px solid rgba(0,255,0,0.2);
+        }
+        .log-damage { color: #f00; }
+        .log-heal { color: #0f0; }
+        .log-win { color: #0f0; font-weight: bold; }
+        .log-lose { color: #f00; font-weight: bold; }
+        .stats-panel {
+            background: rgba(0,255,0,0.1); border: 1px solid #0f0;
+            border-radius: 4px; padding: 10px; font-size: 12px; color: #0f0;
+        }
+        .stats-panel div { margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .level-badge {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000; border-radius: 50%; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <div class="header">
+                <div class="player-stats">
+                    <div class="stat"><span class="stat-label">LVL</span><span class="stat-value" id="playerLevel">1</span></div>
+                    <div class="stat"><span class="stat-label">HP</span><div class="hp-bar"><div class="hp-fill" id="hpFill" style="width: 100%;"><span id="hpText">100/100</span></div></div></div>
+                    <div class="stat"><span class="stat-label">MP</span><div id="mpText" class="stat-value">50/50</div></div>
+                    <div class="stat"><span class="stat-label">EXP</span><div class="exp-bar"><div class="exp-fill" id="expFill" style="width: 0%;"></div></div><span id="expText" style="font-size: 12px;">0/100</span></div>
+                    <div class="stat"><span class="stat-label">GOLD</span><span class="stat-value" id="goldAmount">0G</span></div>
+                </div>
+                <div class="level-badge" id="levelBadge">1</div>
+            </div>
+            
+            <div class="game-screen">
+                <div class="battle-area">
+                    <div class="player-avatar">⚔️</div>
+                    <div class="vs">VS</div>
+                    <div><div class="enemy-avatar" id="enemyAvatar">👹</div><div class="enemy-info"><div class="enemy-name" id="enemyName">Goblin (F)</div><div class="enemy-hp" id="enemyHp">HP: 20/20</div></div></div>
+                </div>
+                
+                <div class="sidebar">
+                    <div class="sidebar-title">⚔️ INVENTORY</div>
+                    <div id="inventory" style="flex: 1;"><div class="inventory-item">Wooden Sword (+5 ATK)</div><div class="inventory-item">Healing Potion x3</div></div>
+                    <div class="sidebar-title">📊 ENEMY</div>
+                    <div class="stats-panel"><div><span>ATK:</span> <span id="enemyAtk">3</span></div><div><span>DEF:</span> <span id="enemyDef">1</span></div><div><span>REWARD:</span> <span id="reward">5G+10EXP</span></div></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="playerAttack()">⚔️ ATTACK</button>
+                <button class="btn" onclick="playerHeal()">💚 HEAL</button>
+                <button class="btn" onclick="playerSkill()">✨ SKILL</button>
+                <button class="btn" onclick="runAway()">🏃 RUN</button>
+                <button class="btn" onclick="changeMob()">🔄 CHANGE</button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="sidebar-title">📜 BATTLE LOG</div>
+            <div class="battle-log" id="battleLog"><div class="log-entry">Game started!</div><div class="log-entry">Ready!</div></div>
+            <div class="sidebar-title">🎯 PLAYER STATS</div>
+            <div class="stats-panel"><div><span>ATK:</span> <span id="playerAtk">5</span></div><div><span>DEF:</span> <span id="playerDef">2</span></div><div><span>CRIT:</span> <span id="playerCrit">5%</span></div><div style="margin-top: 8px; border-top: 1px solid #0f0; padding-top: 8px;"><div><span>Kills:</span> <span id="kills">0</span></div><div><span>Deaths:</span> <span id="deaths">0</span></div></div></div>
+        </div>
+    </div>
+
+    <script>
+        let player = { level: 1, hp: 100, maxHp: 100, mp: 50, maxMp: 50, exp: 0, maxExp: 100, gold: 0, atk: 5, def: 2, spd: 3, crit: 0.05, kills: 0, deaths: 0 };
+        let enemy = { name: "Goblin", rank: "F", hp: 20, maxHp: 20, atk: 3, def: 1, goldDrop: 5, expDrop: 10, avatar: "👹" };
+        const mobs = [
+            { name: "Goblin", rank: "F", hp: 20, atk: 3, def: 1, gold: 5, exp: 10, avatar: "👹" },
+            { name: "Slime", rank: "F", hp: 15, atk: 2, def: 0, gold: 3, exp: 8, avatar: "🟢" },
+            { name: "Dire Wolf", rank: "E", hp: 50, atk: 8, def: 3, gold: 50, exp: 30, avatar: "🐺" },
+            { name: "Orc", rank: "E", hp: 60, atk: 10, def: 4, gold: 60, exp: 40, avatar: "🗣️" },
+            { name: "Elf Soldier", rank: "D", hp: 80, atk: 12, def: 5, gold: 150, exp: 80, avatar: "🏹" }
+        ];
+
+        function addLog(msg, type = "normal") {
+            const log = document.getElementById("battleLog");
+            const entry = document.createElement("div");
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `> ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            if (log.children.length > 15) log.removeChild(log.children[0]);
+        }
+
+        function updateUI() {
+            document.getElementById("playerLevel").textContent = player.level;
+            document.getElementById("levelBadge").textContent = player.level;
+            document.getElementById("hpFill").style.width = (player.hp / player.maxHp) * 100 + "%";
+            document.getElementById("hpText").textContent = `${Math.floor(player.hp)}/${player.maxHp}`;
+            document.getElementById("mpText").textContent = `${player.mp}/${player.maxMp}`;
+            document.getElementById("goldAmount").textContent = player.gold + "G";
+            document.getElementById("expFill").style.width = (player.exp / player.maxExp) * 100 + "%";
+            document.getElementById("expText").textContent = `${Math.floor(player.exp)}/${Math.floor(player.maxExp)}`;
+            document.getElementById("playerAtk").textContent = player.atk;
+            document.getElementById("playerDef").textContent = player.def;
+            document.getElementById("playerCrit").textContent = (player.crit * 100).toFixed(0) + "%";
+            document.getElementById("kills").textContent = player.kills;
+            document.getElementById("deaths").textContent = player.deaths;
+            document.getElementById("enemyName").textContent = `${enemy.name} (${enemy.rank})`;
+            document.getElementById("enemyHp").textContent = `HP: ${Math.floor(enemy.hp)}/${enemy.maxHp}`;
+            document.getElementById("enemyAtk").textContent = enemy.atk;
+            document.getElementById("enemyDef").textContent = enemy.def;
+            document.getElementById("reward").textContent = `${enemy.goldDrop}G+${enemy.expDrop}EXP`;
+            document.getElementById("enemyAvatar").textContent = enemy.avatar;
+        }
+
+        function playerAttack() {
+            if (player.hp <= 0) return;
+            let dmg = Math.max(1, player.atk - enemy.def + Math.random() * 5);
+            if (Math.random() < player.crit) {
+                dmg *= 2;
+                addLog(`⚡ CRIT! ${dmg.toFixed(0)} DMG`, "damage");
+            } else {
+                addLog(`⚔️ Hit! ${dmg.toFixed(0)} DMG`, "damage");
+            }
+            enemy.hp -= dmg;
+            if (enemy.hp <= 0) { battleWin(); } else { setTimeout(enemyTurn, 500); }
+            updateUI();
+        }
+
+        function playerHeal() {
+            if (player.mp < 10) { addLog("❌ Not enough MP"); return; }
+            player.mp -= 10;
+            let heal = 30;
+            player.hp = Math.min(player.maxHp, player.hp + heal);
+            addLog(`💚 Healed +${heal}`, "heal");
+            setTimeout(enemyTurn, 500);
+            updateUI();
+        }
+
+        function playerSkill() {
+            if (player.mp < 20) { addLog("❌ Not enough MP"); return; }
+            player.mp -= 20;
+            let dmg = Math.max(1, (player.atk * 2 - enemy.def) + Math.random() * 10);
+            addLog(`✨ Skill! ${dmg.toFixed(0)} DMG`, "damage");
+            enemy.hp -= dmg;
+            if (enemy.hp <= 0) { battleWin(); } else { setTimeout(enemyTurn, 500); }
+            updateUI();
+        }
+
+        function runAway() {
+            if (Math.random() < 0.4) { addLog("🏃 Escaped!"); resetBattle(); }
+            else { addLog("❌ Escape failed!"); setTimeout(enemyTurn, 500); }
+        }
+
+        function enemyTurn() {
+            if (enemy.hp <= 0) return;
+            let dmg = Math.max(1, enemy.atk - player.def + Math.random() * 3);
+            player.hp -= dmg;
+            addLog(`👹 Hit! ${dmg.toFixed(0)} DMG`, "damage");
+            if (player.hp <= 0) { battleLose(); }
+            updateUI();
+        }
+
+        function battleWin() {
+            addLog(`🎉 WIN! +${enemy.goldDrop}G +${enemy.expDrop}EXP`, "win");
+            player.gold += enemy.goldDrop;
+            player.exp += enemy.expDrop;
+            player.kills++;
+            if (player.exp >= player.maxExp) {
+                player.level++; player.exp -= player.maxExp; player.maxExp = Math.floor(player.maxExp * 1.15);
+                player.maxHp += 20; player.hp = player.maxHp; player.maxMp += 10; player.mp = player.maxMp;
+                player.atk += 2; player.def += 1;
+                addLog(`⭐ LEVEL ${player.level}!`);
+            }
+            player.hp = player.maxHp; player.mp = player.maxMp;
+            setTimeout(resetBattle, 1500);
+            updateUI();
+        }
+
+        function battleLose() {
+            addLog("💀 DEFEATED!", "lose");
+            player.deaths++; player.hp = player.maxHp; player.mp = player.maxMp;
+            player.exp = Math.max(0, player.exp - 10);
+            addLog("Lost 10 EXP");
+            setTimeout(resetBattle, 1500);
+            updateUI();
+        }
+
+        function resetBattle() { enemy.hp = enemy.maxHp; }
+
+        function changeMob() {
+            let m = mobs[Math.floor(Math.random() * mobs.length)];
+            enemy = { name: m.name, rank: m.rank, hp: m.hp, maxHp: m.hp, atk: m.atk, def: m.def, goldDrop: m.gold, expDrop: m.exp, avatar: m.avatar };
+            addLog(`🔄 Changed to ${enemy.name}!`);
+            resetBattle(); updateUI();
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
+
+---
+#isekai #game #online #rpg #battle

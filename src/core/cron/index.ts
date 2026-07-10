@@ -7,5 +7,6 @@
  */
 
 export { CronScheduler } from './cron-scheduler.js';
-export type { CronJob } from './cron-scheduler.js';
+export type { CronJob, AlertCallback } from './cron-scheduler.js';
 export { SystemMonitor } from './monitor.js';
+export { CronStore, getCronStore } from './cron-store.js';

@@ -95,10 +95,14 @@ export function loadProcessedFiles(): string[] {
 const COMMAND_WHITELIST_PREFIXES = [
   'git',
   'node', 'npx tsx',       // npx tsx for running .ts scripts; bare npx removed
+  'python', 'pip', 'npm', 'npx', 'curl', 'ngrok', 'cloudflared',
   'docker-compose', 'docker',
   'ls', 'dir', 'cat', 'type', 'echo',
   'pdftotext',
   'code',
+  // System inspection — safe read-only commands
+  'ps', 'df', 'whoami', 'uname',
+  'tasklist', 'wmic', 'systeminfo',
 ];
 
 /**
@@ -106,8 +110,30 @@ const COMMAND_WHITELIST_PREFIXES = [
  * NOTE: This is a first-pass filter. The actual execution uses execFileSync
  * without shell, so even if a command passes this check, shell injection
  * is not possible through the execution path.
+ * 
+ * ADDITIONAL SAFETY: Reject commands with dangerous patterns that could
+ * bypass the whitelist check or cause unexpected behavior.
  */
 export function isCommandSafe(command: string): boolean {
+  // Reject empty commands
+  if (!command || command.trim().length === 0) return false;
+  
   const trimmed = command.trim().toLowerCase();
+  
+  // Reject commands with dangerous shell patterns
+  const DANGEROUS_PATTERNS = [
+    /;/,           // Command separator: "ls; rm -rf"
+    /\|/,          // Pipe: "ls | cat"
+    /&/,           // Background: "ls &"
+    /`/,           // Command substitution: `rm -rf`
+    /\$\(/,        // Process substitution: $(ls)
+    /\$\{/,        // Variable expansion: ${PATH}
+  ];
+  
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) return false;
+  }
+  
+  // Check whitelist prefix
   return COMMAND_WHITELIST_PREFIXES.some(prefix => trimmed.startsWith(prefix));
 }

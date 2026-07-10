@@ -65,9 +65,15 @@ export class MemoryStore {
   private blocks: MemoryBlock[] = [];
   private loaded = false;
   private log!: MemoryLog;
+  private maxBlocks = 5000;
 
   constructor(storePath?: string) {
     this.storePath = storePath || process.env.MEMORY_STORE_PATH || DEFAULT_STORE_PATH;
+  }
+
+  /** Configure store limits */
+  setMaxBlocks(max: number): void {
+    this.maxBlocks = max;
   }
 
   // â”€â”€ Initialization â”€â”€
@@ -145,6 +151,13 @@ export class MemoryStore {
 
     this.blocks.push(block);
 
+    // Evict oldest blocks if over limit
+    if (this.blocks.length > this.maxBlocks) {
+      // Sort by timestamp, keep newest maxBlocks
+      this.blocks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      this.blocks = this.blocks.slice(0, this.maxBlocks);
+    }
+
     // Ghi vÃ o append-log (O(1))
     await this.log.append({ op: 'add', block });
 
@@ -171,6 +184,12 @@ export class MemoryStore {
       };
       this.blocks.push(block);
       results.push(block);
+    }
+
+    // Evict oldest blocks if over limit
+    if (this.blocks.length > this.maxBlocks) {
+      this.blocks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      this.blocks = this.blocks.slice(0, this.maxBlocks);
     }
 
     // Ghi batch vÃ o append-log (O(1))
@@ -245,9 +264,15 @@ export class MemoryStore {
   /**
    * Láº¥y block theo ID
    */
-  async getById(id: string): Promise<MemoryBlock | undefined> {
-    await this.ensureLoaded();
+  getBlock(id: string): MemoryBlock | undefined {
     return this.blocks.find(b => b.id === id);
+  }
+
+  /**
+   * Get all blocks for a session
+   */
+  getBlocksBySession(sessionId: string): MemoryBlock[] {
+    return this.blocks.filter(b => b.sessionId === sessionId);
   }
 
   /**

@@ -118,8 +118,12 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
         status: 'working',
         currentGoal: p.goal,
         currentTaskId: p.taskId,
-        currentTaskLabel: p.goal, // Fallback: goal is the label until engine provides a real label
-        eventCount: 0,  // Reset event counter on new task
+        currentTaskLabel: p.goal,
+        activeTools: [],        // Clear tools from previous task
+        recentFiles: [],        // Clear files from previous task
+        recentDecisions: [],    // Clear stale decisions from previous task
+        lastError: null,        // Clear error from previous task
+        eventCount: 0,          // Reset event counter on new task
         timeline,
       };
     }
@@ -132,6 +136,8 @@ export function reduceEvent(state: AgentState, event: AgentEvent): AgentState {
         currentGoal: null,
         currentTaskId: null,
         currentTaskLabel: null,
+        activeTools: [],
+        recentDecisions: [],    // Clear stale decisions from finished task
         timeline,
       };
     }

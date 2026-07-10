@@ -118,7 +118,7 @@ export class SystemMonitor {
     // LLM connectivity (placeholder — actual ping depends on provider)
     let llmConnected = false;
     try {
-      const endpoint = process.env.LLM_ENDPOINT || 'http://localhost:20127/v1/chat/completions';
+      const endpoint = process.env.LLM_ENDPOINT || 'http://localhost:20128/v1/chat/completions';
       const response = await fetch(endpoint, {
         method: 'HEAD',
         signal: AbortSignal.timeout(5000),

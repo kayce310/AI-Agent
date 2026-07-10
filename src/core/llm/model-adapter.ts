@@ -17,6 +17,7 @@
 import OpenAI from 'openai';
 import { ProviderRegistry, IProviderClient, ProviderInvokeParams } from './provider-registry.js';
 import { Logger } from '../logger.js';
+import { withTimeout, createTimeoutController, TimeoutError } from '../util/with-timeout.js';
 const log = new Logger({ module: 'ModelRouter' });
 import { LLMProviderConfig, ModelSpec, ChatMessage } from '../types.js';
 import { evolutionEngine } from '../evolution.js';
@@ -112,14 +113,16 @@ function estimateToolsTokens(tools: any[]): number {
 // â”€â”€ Adapter 1: 9Router (legacy proxy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class RouterAdapter implements ModelAdapter {
-  readonly name = '9router';
-  readonly label = '9Router (Single-Point Proxy)';
+  readonly name: string;
+  readonly label: string;
   private registry: ProviderRegistry;
   private modelId: string = '';
   private providerName: string = '';
 
-  constructor(registry: ProviderRegistry, preferredModel?: string) {
+  constructor(registry: ProviderRegistry, preferredModel?: string, providerName: string = 'local') {
     this.registry = registry;
+    this.name = providerName;
+    this.label = `${providerName} Provider Gateway`;
     const models = registry.listModels();
     if (models.length > 0) {
       this.modelId = preferredModel || models[0];
@@ -167,6 +170,13 @@ export class RouterAdapter implements ModelAdapter {
     const choice = rawData.choices[0];
     const finishReason = choice.finish_reason;
     let content = choice.message?.content || '';
+
+    // ── Reasoning content fallback ──
+    // Some reasoning models (DeepSeek V4 Flash, R1, etc.) return the
+    // response in reasoning_content with empty content. Use it as fallback.
+    if (!content && choice.message?.reasoning_content) {
+      content = choice.message.reasoning_content;
+    }
 
     // Strip model prefix headers
     content = content.replace(/^[\w\/\.-]+:\s*/m, '');
@@ -280,14 +290,16 @@ export class LiteLLMAdapter implements ModelAdapter {
   private models: string[];
   private baseUrl: string;
   private available: boolean = false;
+  private callTimeoutMs: number;
 
   constructor(config: LiteLLMConfig) {
     this.baseUrl = config.baseUrl;
     this.models = config.models;
+    this.callTimeoutMs = config.timeout ?? 60000;
     this.client = new OpenAI({
       baseURL: config.baseUrl,
       apiKey: config.apiKey,
-      timeout: config.timeout ?? 60000,
+      timeout: this.callTimeoutMs,
       maxRetries: 1,
     });
   }
@@ -368,10 +380,12 @@ export class OllamaAdapter implements ModelAdapter {
   private baseUrl: string;
   private defaultModel: string;
   private controller: AbortController;
+  private callTimeoutMs: number;
 
   constructor(config?: OllamaConfig) {
     this.baseUrl = config?.baseUrl || 'http://127.0.0.1:11434';
     this.defaultModel = config?.model || 'llama3.1:8b';
+    this.callTimeoutMs = config?.timeout ?? 60000;
     this.controller = new AbortController();
   }
 
@@ -379,7 +393,11 @@ export class OllamaAdapter implements ModelAdapter {
     const baseUrl = process.env.OLLAMA_BASE_URL;
     const model = process.env.OLLAMA_MODEL;
     if (!baseUrl && !model) return null;
-    return new OllamaAdapter({ baseUrl, model });
+    return new OllamaAdapter({
+      baseUrl,
+      model,
+      timeout: parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
+    });
   }
 
   isAvailable(): boolean {
@@ -399,20 +417,39 @@ export class OllamaAdapter implements ModelAdapter {
       images: m.images || undefined,
     }));
 
-    const res = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: ollamaMessages,
-        stream: false,
-        options: {
-          temperature: options?.temperature ?? 0.7,
-          num_predict: options?.maxTokens ?? 4096,
-        },
-      }),
-      signal: this.controller.signal,
-    });
+    // Create per-call timeout controller so each call has its own deadline
+    const { controller: callController, clear: clearTimer } = createTimeoutController(this.callTimeoutMs);
+
+    // If parent controller aborts, abort the call too
+    const onParentAbort = () => callController.abort();
+    this.controller.signal.addEventListener('abort', onParentAbort);
+
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: ollamaMessages,
+          stream: false,
+          options: {
+            temperature: options?.temperature ?? 0.7,
+            num_predict: options?.maxTokens ?? 4096,
+          },
+        }),
+        signal: callController.signal,
+      });
+    } catch (err: any) {
+      // Convert timeout to fallback-friendly error
+      if (err.name === 'TimeoutError') {
+        throw new Error(`Ollama timed out after ${this.callTimeoutMs}ms — model "${model}" may be unresponsive`);
+      }
+      throw err;
+    } finally {
+      clearTimer();
+      this.controller.signal.removeEventListener('abort', onParentAbort);
+    }
 
     if (!res.ok) {
       throw new Error(`Ollama error (${res.status}): ${res.statusText}`);
@@ -472,25 +509,37 @@ export class ModelRouter {
     }
 
     let lastError: Error | null = null;
+    const perAdapterTimeout = 120_000; // 2 minutes max per adapter
 
     for (const adapter of candidates) {
       try {
         if (!adapter.isAvailable()) {
-
           continue;
         }
 
-        // â”€â”€ DEBUG: Log tools being sent to API â”€â”€
+        // ─── DEBUG: Log tools being sent to API ───
         const toolNames = options?.tools?.map((t: any) => t.function?.name).join(', ') || 'none';
 
-        const response = await adapter.invoke(messages, options);
+        // Wrap adapter call with timeout — prevents hanging on slow/dead adapters
+        const response = withTimeout(
+          adapter.invoke(messages, options),
+          perAdapterTimeout,
+        ).catch((err: any) => {
+          // If timeout or error, throw to trigger fallback
+          if (err instanceof TimeoutError) {
+            throw new Error(`Adapter "${adapter.name}" timed out after ${perAdapterTimeout}ms`);
+          }
+          throw err;
+        });
+
+        const result = await response;
 
         evolutionEngine.recordSuccess(adapter.name, 0).catch(() => {});
         this.lastError.delete(adapter.name);
 
-        return response;
+        return result;
       } catch (err: any) {
-        log.warn(`Adapter "${adapter.name}" failed`, { error: String(err) });
+        log.warn(`Adapter "${adapter.name}" failed: ${err.message}`);
         this.lastError.set(adapter.name, err.message);
 
         evolutionEngine.recordError({
@@ -540,24 +589,40 @@ export async function buildDefaultRouter(registry?: ProviderRegistry): Promise<M
   try {
     reg.loadFromConfig();
     if (reg.listModels().length > 0) {
-      router.use(new RouterAdapter(reg));
-      router.setDefault('9router');
-      log.info(`9router adapter registered with ${reg.listModels().length} model(s)`);
+      // Get first provider name from loaded models (respects config)
+      const models = reg.listModels();
+      // Resolve first model to get actual provider name from registry
+      const firstModel = models[0];
+      const resolved = reg.resolve(firstModel);
+      const firstProviderName = resolved?.providerName || 'omniRoute';
+      
+      // Pass provider name to RouterAdapter so it matches setDefault
+      router.use(new RouterAdapter(reg, undefined, firstProviderName));
+      router.setDefault(firstProviderName);
+      log.info(`✅ Provider configured with ${models.length} model(s) from config/providers.json`);
+    } else {
+      log.warn("⚠️ No models found in providers.json - OmniRoute must be running on localhost:3110");
     }
   } catch (err: any) {
-    log.warn("Failed to load config", { error: String(err) });
+    log.warn("⚠️ Failed to load config", { error: String(err) });
   }
 
+  // Register LiteLLM as fallback if env variables present
   const litellm = LiteLLMAdapter.fromEnv();
-  if (litellm) {
+  if (litellm && litellm.isAvailable()) {
     router.use(litellm);
-    log.info("LiteLLM adapter registered");
+    log.info("✅ LiteLLM adapter registered as fallback");
   }
 
+  // Register Ollama as fallback if env variables present
   const ollama = OllamaAdapter.fromEnv();
-  if (ollama) {
+  if (ollama && ollama.isAvailable()) {
     router.use(ollama);
-    log.info("Ollama adapter registered");
+    log.info("✅ Ollama adapter registered as fallback");
+  }
+
+  if (router.listAdapters().length === 0) {
+    log.error("❌ CRITICAL: No adapters registered! Check config/providers.json and env variables.");
   }
 
   return router;

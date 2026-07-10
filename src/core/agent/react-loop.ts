@@ -404,7 +404,7 @@ HƯỚNG DẪN:
 1. Xác định các công việc độc lập cần thực hiện
 2. Mỗi bước chỉ nên có 1 mục tiêu cụ thể
 3. Tối đa 5 bước
-4. Nếu yêu cầu đơn giản (chỉ cần 1 bước), trả về "---KHÔNG THỂ PHÂN TÍCH---"
+4. CHỈ PHÂN TÍCH NẾU yêu cầu chứa nhiều nhiệm vụ con, cần lập kế hoạch rõ ràng để giải quyết. Nếu yêu cầu đơn giản, chỉ là tìm kiếm thông tin, hoặc có thể giải quyết trong 1-2 bước trực tiếp, hãy trả về "---KHÔNG THỂ PHÂN TÍCH---"
 
 ĐỊNH DẠNG ĐẦU RA (chỉ trả về danh sách, không giải thích thêm):
 ---BẮT ĐẦU KẾ HOẠCH---
@@ -560,9 +560,9 @@ export function isComplexTask(userRequest: string): boolean {
     'đề xuất', 'tổng hợp', 'kiểm tra', 'khảo sát'
   ];
   const sequentialIndicators = [
-    ' then ', ' and ', ' next ', ' after ',
+    ' and ', ' then ', ' next ', ' after ',
     ' first ', ' also ', ' followed by ',
-    ' và ', ' sau đó ', ' tiếp theo ', ' rồi '
+    ' sau đó ', ' tiếp theo ', ' và '
   ];
 
   const lower = userRequest.toLowerCase();
@@ -573,9 +573,15 @@ export function isComplexTask(userRequest: string): boolean {
   const normalized = normalizeVn(lower);
   const normalizedKeywords = complexKeywords.map(kw => normalizeVn(kw));
   const normalizedSequential = sequentialIndicators.map(ind => normalizeVn(ind));
+  
   const keywordCount = normalizedKeywords.filter(kw => normalized.includes(kw)).length;
   const hasSequential = normalizedSequential.some(ind => normalized.includes(ind));
   const isLong = userRequest.length > 100;
+  const hasMultipleKeywords = keywordCount >= 2;
 
-  return keywordCount >= 2 || hasSequential || isLong;
+  // Complex task if:
+  // - Has 2+ keywords (multi-action task), OR
+  // - Has keyword + sequential indicator (ordered steps), OR
+  // - Very long request (>100 chars)
+  return (hasMultipleKeywords) || (keywordCount >= 1 && hasSequential) || isLong;
 }

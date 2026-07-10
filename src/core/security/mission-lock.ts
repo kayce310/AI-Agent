@@ -94,8 +94,10 @@ const INJECTION_PATTERNS = [
   /delete (all |all )?(memories|data|history)/i,
   /send .*(data|information|secrets) to/i,
   
-  // Vietnamese/Chinese mixed
-  /bỏ qua|bỏ hết|không còn/i,
+  // Vietnamese/Chinese mixed — specific injection patterns, not casual speech
+  /bỏ qua (tất cả |các )?(lệnh|quy tắc|hướng dẫn|chỉ thị)/i,
+  /bỏ hết (quy tắc|lệnh|hướng dẫn)/i,
+  /không còn (quy tắc|luật|lệnh|hạn chế)/i,
   /忽略|不受限制|帮助我/i,
 ];
 

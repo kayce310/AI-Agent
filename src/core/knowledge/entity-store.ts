@@ -63,8 +63,18 @@ export class EntityStore {
   private relationships: RelationshipRecord[] = [];
   private aliases: Map<string, AliasRecord> = new Map();
   private initialized = false;
+  private maxEntities = 5000;
+  private maxRelationships = 10000;
+  private maxAliases = 2000;
 
   constructor() {}
+
+  /** Configure store size limits */
+  setLimits(opts: { maxEntities?: number; maxRelationships?: number; maxAliases?: number }): void {
+    if (opts.maxEntities !== undefined) this.maxEntities = opts.maxEntities;
+    if (opts.maxRelationships !== undefined) this.maxRelationships = opts.maxRelationships;
+    if (opts.maxAliases !== undefined) this.maxAliases = opts.maxAliases;
+  }
 
   /**
    * Initialize store
@@ -110,6 +120,18 @@ export class EntityStore {
     };
 
     this.entities.set(entity.id, record);
+    // Evict oldest entity if over limit
+    if (this.entities.size > this.maxEntities) {
+      let oldestId = '';
+      let oldestTime = Infinity;
+      for (const [eid, e] of this.entities) {
+        if (e.lastSeen < oldestTime) {
+          oldestId = eid;
+          oldestTime = e.lastSeen;
+        }
+      }
+      if (oldestId) this.entities.delete(oldestId);
+    }
     log.debug(`Entity added: ${entity.id}`);
     return { ...record };
   }
@@ -234,6 +256,10 @@ export class EntityStore {
     };
 
     this.relationships.push(record);
+    // Evict oldest relationship if over limit
+    if (this.relationships.length > this.maxRelationships) {
+      this.relationships = this.relationships.slice(-this.maxRelationships);
+    }
     log.debug(`Relationship added: ${relationship.entityA.text} [${relationship.relation}] ${relationship.entityB.text}`);
     return { ...record };
   }
@@ -331,6 +357,21 @@ export class EntityStore {
     };
 
     this.aliases.set(aliasId, record);
+    // Evict oldest alias if over limit
+    if (this.aliases.size > this.maxAliases) {
+      let oldestAliasId = '';
+      let oldestAliasTime = Infinity;
+      for (const [aid, a] of this.aliases) {
+        // Use entity's lastSeen as proxy for alias freshness
+        const entity = this.entities.get(a.canonical_id);
+        const freshness = entity?.lastSeen ?? 0;
+        if (freshness < oldestAliasTime) {
+          oldestAliasId = aid;
+          oldestAliasTime = freshness;
+        }
+      }
+      if (oldestAliasId) this.aliases.delete(oldestAliasId);
+    }
     return { ...record };
   }
 

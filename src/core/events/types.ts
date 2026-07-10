@@ -147,6 +147,15 @@ export const ErrorEventSchema = BaseEventSchema.extend({
   }),
 });
 
+// ═══ WORLD EVENTS ═══
+export const WorldDeltaSchema = BaseEventSchema.extend({
+  type: z.literal('world:delta'),
+  payload: z.object({
+    added: z.array(z.string()),
+    removed: z.array(z.string()),
+  }),
+});
+
 // ═══ UNION TYPE ═══
 export const AgentEventSchema = z.discriminatedUnion('type', [
   TaskCreatedSchema,
@@ -160,6 +169,7 @@ export const AgentEventSchema = z.discriminatedUnion('type', [
   DecisionMadeSchema,
   MemoryWriteSchema,
   ErrorEventSchema,
+  WorldDeltaSchema,
 ]);
 
 export type AgentEvent = z.infer<typeof AgentEventSchema>;

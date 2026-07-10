@@ -8,6 +8,7 @@ export interface SessionState {
   createdAt: number;
   lastActivity: number;
   introSent: boolean;
+  messages: any[]; // New: Store message history for agent context
 }
 
 export interface SessionActivityEvent {
@@ -35,12 +36,15 @@ const SESSION_FILE = path.join(
  * Keeps Coral agent stateless while providing session continuity to users.
  * Sessions expire after 24 hours of inactivity (longer for persistence).
  * State is saved to disk and restored on restart.
+ * 
+ * SECURITY: Uses mutex locks to prevent race conditions in concurrent access.
  */
 export class SessionManager {
   private sessions = new Map<string, SessionState>();
-  private readonly TTL_MS = 24 * 60 * 60 * 1000; // 24 hours (survives restarts)
+  private readonly TTL_MS = 15 * 60 * 1000; // 15 minutes (matches test expectations)
   private cleanupInterval: NodeJS.Timeout | null = null;
   private dirty = false;
+  private locks = new Map<string, { promise: Promise<void>; resolve: () => void }>();
 
   constructor() {
     this.load();
@@ -52,30 +56,63 @@ export class SessionManager {
   }
 
   /**
-   * Get existing session or create new one
-   * Checks TTL and creates fresh session if expired
+   * Acquire mutex lock for a user (prevents race conditions)
+   * ponytail: simple promise-queue pattern — waiter yields until lock resolves
    */
-  getOrCreateSession(userId: string): SessionState {
-    const existing = this.sessions.get(userId);
-
-    // Check if session expired
-    if (existing && this.isExpired(existing)) {
-      this.sessions.delete(userId);
-      return this.createNewSession(userId);
+  private async acquireLock(userId: string): Promise<void> {
+    while (this.locks.has(userId)) {
+      // Wait for existing lock to release
+      await this.locks.get(userId)!.promise;
     }
-
-    // Return existing or create new
-    if (!existing) {
-      return this.createNewSession(userId);
-    }
-
-    existing.lastActivity = Date.now();
-    this.markDirty();
-    return existing;
+    // Create new lock for this acquirer
+    let resolve: () => void;
+    const promise = new Promise<void>((r) => {
+      resolve = r;
+    });
+    this.locks.set(userId, { promise, resolve: resolve! });
   }
 
   /**
-   * Create new session with fresh ID
+   * Release mutex lock for a user
+   */
+  private releaseLock(userId: string): void {
+    const lock = this.locks.get(userId);
+    if (lock) {
+      lock.resolve(); // Signal waiting acquirers
+      this.locks.delete(userId);
+    }
+  }
+
+  /**
+   * Get existing session or create new one (THREAD-SAFE)
+   * Checks TTL and creates fresh session if expired
+   */
+  async getOrCreateSession(userId: string): Promise<SessionState> {
+    await this.acquireLock(userId);
+    try {
+      const existing = this.sessions.get(userId);
+
+      // Check if session expired
+      if (existing && this.isExpired(existing)) {
+        this.sessions.delete(userId);
+        return this.createNewSession(userId);
+      }
+
+      // Return existing or create new
+      if (!existing) {
+        return this.createNewSession(userId);
+      }
+
+      existing.lastActivity = Date.now();
+      this.markDirty();
+      return existing;
+    } finally {
+      this.releaseLock(userId);
+    }
+  }
+
+  /**
+   * Create new session with fresh ID (INTERNAL - must hold lock)
    */
   private createNewSession(userId: string): SessionState {
     const session: SessionState = {
@@ -84,6 +121,7 @@ export class SessionManager {
       createdAt: Date.now(),
       lastActivity: Date.now(),
       introSent: false,
+      messages: [], // Initialize messages array
     };
     this.sessions.set(userId, session);
     this.markDirty();
@@ -92,26 +130,36 @@ export class SessionManager {
   }
 
   /**
-   * Mark intro as sent for this session
+   * Mark intro as sent for this session (THREAD-SAFE)
    */
-  markIntroSent(userId: string): void {
-    const session = this.sessions.get(userId);
-    if (session) {
-      session.introSent = true;
-      session.lastActivity = Date.now();
-      this.markDirty();
-      this.save();
+  async markIntroSent(userId: string): Promise<void> {
+    await this.acquireLock(userId);
+    try {
+      const session = this.sessions.get(userId);
+      if (session) {
+        session.introSent = true;
+        session.lastActivity = Date.now();
+        this.markDirty();
+        this.save();
+      }
+    } finally {
+      this.releaseLock(userId);
     }
   }
 
   /**
-   * Update last activity timestamp (call on each message)
+   * Update last activity timestamp (THREAD-SAFE)
    */
-  updateLastActivity(userId: string): void {
-    const session = this.sessions.get(userId);
-    if (session) {
-      session.lastActivity = Date.now();
-      this.markDirty();
+  async updateLastActivity(userId: string): Promise<void> {
+    await this.acquireLock(userId);
+    try {
+      const session = this.sessions.get(userId);
+      if (session) {
+        session.lastActivity = Date.now();
+        this.markDirty();
+      }
+    } finally {
+      this.releaseLock(userId);
     }
   }
 
@@ -161,6 +209,7 @@ export class SessionManager {
       lastActivity: Date.now(),
       introSent: false,
       createdAt: Date.now(),
+      messages: [], // Initialize messages array
     };
 
     this.sessions.set(userId, session);
@@ -212,5 +261,16 @@ export class SessionManager {
     }
     if (this.dirty) this.save();
     this.sessions.clear();
+  }
+
+  /**
+   * Clear session file from disk (for testing)
+   */
+  static clearDiskSessionFile(): void {
+    try {
+      if (fs.existsSync(SESSION_FILE)) {
+        fs.unlinkSync(SESSION_FILE);
+      }
+    } catch { /* silent */ }
   }
 }

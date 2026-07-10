@@ -14,6 +14,7 @@ import Engine from '../engine/engine.js';
 import { CoralRequest, CoralResponse, PlatformAdapter, AdapterMessage } from './types.js';
 import { EngineRequest, ChatMessage } from '../types.js';
 import { globalMemoryStore } from '../memory/memory-store.js';
+import { missionLock } from '../security/mission-lock.js';
 
 const log = new Logger({ module: 'Gateway' });
 
@@ -150,11 +151,28 @@ export class CoralGateway {
    * Used for programmatic access or testing.
    */
   async process(request: CoralRequest): Promise<CoralResponse> {
-    const requestedModel = typeof request.metadata?.modelId === 'string'
+    let requestedModel = typeof request.metadata?.modelId === 'string'
       ? String(request.metadata.modelId)
       : typeof request.metadata?.model === 'string'
       ? String(request.metadata.model)
       : 'default';
+
+    // If model is "all" or "default", get first available model from registry
+    if (requestedModel === 'all' || requestedModel === 'default') {
+      const { ProviderRegistry } = await import('../llm/provider-registry.js');
+      const registry = new ProviderRegistry();
+      try {
+        registry.loadFromConfig();
+        const models = registry.listModels();
+        if (models.length > 0) {
+          requestedModel = models[0];
+        } else {
+          requestedModel = 'auto/best-free';
+        }
+      } catch {
+        requestedModel = 'auto/best-free';
+      }
+    }
 
     // ── Memory: Load conversation history ──
     const sessionId = request.sessionId;
@@ -181,12 +199,14 @@ export class CoralGateway {
     const engineRequest: EngineRequest = {
       sessionId,
       messages: recentMessages,
-      modelId: requestedModel || 'default',
+      modelId: requestedModel,
       agentName: 'Coral',
       protocol: 'gateway',
       mentionPrefix: '',
       task: request.input,
       platformMeta,  // ← Engine can use this for response formatting
+      // Streaming: forward onThinking callback from adapter metadata
+      onThinking: (typeof request.metadata?.onThinking === 'function' ? request.metadata.onThinking : undefined) as ((text: string) => Promise<void>) | undefined,
     };
 
     const result = await this._engine.process(engineRequest);
@@ -231,6 +251,17 @@ export class CoralGateway {
    */
   async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<CoralResponse | null> {
     try {
+      // ── MissionLock: validate every inbound message ──
+      const validation = missionLock.validateMessage(msg.text, msg.userId);
+      if (!validation.allowed) {
+        log.warn(`MissionLock blocked message from ${msg.userId}`, { reason: validation.reason });
+        return {
+          output: `⚠️ Tin nhắn bị từ chối: ${validation.reason || 'Vi phạm an ninh'}`,
+          sessionId: msg.channelId,
+          platform: msg.platform,
+        };
+      }
+
       const request: CoralRequest = {
         input: msg.text,
         userId: msg.userId,

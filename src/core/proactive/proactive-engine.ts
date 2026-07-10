@@ -23,6 +23,7 @@
 
 import { Logger } from '../logger.js';
 import { EventBus } from '../events/bus.js';
+import { getCronStore } from '../cron/cron-store.js';
 
 const log = new Logger({ module: 'ProactiveEngine' });
 
@@ -242,6 +243,86 @@ const DEFAULT_RULES: ProactiveRule[] = [
     enabled: true,
     cooldownMs: 900000, // 15 minutes
   },
+
+  // ── Time-Based Rules (evaluated by proactive-tick cron job) ──
+
+  {
+    id: 'morning-greeting',
+    name: 'Morning Greeting',
+    description: 'Greet user in the morning hours',
+    triggers: [
+      {
+        signalType: 'time',
+        matcher: (data) => {
+          const hour = data.hour as number;
+          return hour >= 6 && hour <= 9;
+        },
+        minConfidence: 0.8,
+      },
+    ],
+    actions: [
+      {
+        type: 'suggest',
+        priority: 'low',
+        message: '🌅 Chào buổi sáng! Chúc bạn một ngày mới tốt lành.',
+        metadata: { topic: 'greeting' },
+      },
+    ],
+    enabled: true,
+    cooldownMs: 86400000, // once per day
+  },
+
+  {
+    id: 'evening-winddown',
+    name: 'Evening Wind-down',
+    description: 'Check in during the evening',
+    triggers: [
+      {
+        signalType: 'time',
+        matcher: (data) => {
+          const hour = data.hour as number;
+          return hour >= 19 && hour <= 22;
+        },
+        minConfidence: 0.8,
+      },
+    ],
+    actions: [
+      {
+        type: 'suggest',
+        priority: 'low',
+        message: '🌆 Buổi tối rồi! Bạn có cần mình giúp gì không?',
+        metadata: { topic: 'winddown' },
+      },
+    ],
+    enabled: true,
+    cooldownMs: 86400000, // once per day
+  },
+
+  {
+    id: 'sleep-reminder',
+    name: 'Sleep Reminder',
+    description: 'Remind user to go to sleep',
+    triggers: [
+      {
+        signalType: 'time',
+        matcher: (data) => {
+          const hour = data.hour as number;
+          return hour >= 23;
+        },
+        minConfidence: 0.8,
+      },
+    ],
+    actions: [
+      {
+        type: 'remind',
+        priority: 'low',
+        message: '😴 Đến lúc ngủ rồi! Ngủ ngon nhé! 🌙',
+        metadata: { topic: 'sleep' },
+      },
+    ],
+    enabled: true,
+    cooldownMs: 86400000, // once per day
+  },
 ];
 
 // ── ProactiveEngine Class ──
@@ -311,6 +392,8 @@ export class ProactiveEngine {
         
         // Update cooldown
         rule.lastTriggered = now;
+        // ponytail: persist cooldown so restart doesn't re-trigger
+        try { getCronStore().setProactiveLastTriggered(rule.id, now); } catch {}
         
         // Record event
         this.recordEvent('proactive_rule_triggered', {
@@ -356,6 +439,33 @@ export class ProactiveEngine {
     return unique;
   }
   
+  /**
+   * Generate time-based context signals for background evaluation.
+   * Called by CronScheduler on a periodic tick to enable time-aware proactive rules.
+   */
+  generateTimeSignals(): ContextSignal[] {
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const dayOfWeek = now.getDay();
+
+    let period: string;
+    if (hour < 6) period = 'night';
+    else if (hour < 12) period = 'morning';
+    else if (hour < 14) period = 'noon';
+    else if (hour < 18) period = 'afternoon';
+    else period = 'evening';
+
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    return [{
+      type: 'time',
+      data: { hour, minute, period, dayOfWeek, isWeekend },
+      confidence: 0.95,
+      timestamp: now.getTime(),
+    }];
+  }
+
   /**
    * Generate proactive suggestions based on message context
    */
@@ -419,6 +529,23 @@ export class ProactiveEngine {
     return { ...this.config };
   }
   
+  /**
+   * Restore persisted cooldown timestamps after restart.
+   */
+  private restoreCooldowns(): void {
+    try {
+      const store = getCronStore();
+      for (const rule of this.rules) {
+        const lastTriggered = store.getProactiveLastTriggered(rule.id);
+        if (lastTriggered !== null) {
+          rule.lastTriggered = lastTriggered;
+        }
+      }
+    } catch {
+      // cron.db not available yet — cooldowns start fresh, fine
+    }
+  }
+
   /**
    * Record event (placeholder for future integration)
    */

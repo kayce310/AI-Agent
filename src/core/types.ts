@@ -77,6 +77,14 @@ export interface EngineRequest {
     platformHint?: string;
     supportsMarkdown?: boolean;
   };
+  /** Checkpoint tracking — passed by Engine for cycle-level persistence */
+  checkpointRequestId?: string;
+  /** Current goal description for checkpoint context */
+  currentGoal?: string;
+  /** Explicit task type: 'interactive' (default, 120s timeout) or 'background' (unlimited) */
+  taskType?: 'interactive' | 'background';
+  /** Stream thinking/progress updates to the platform adapter */
+  onThinking?: (text: string) => Promise<void>;
 }
 
 /** Đầu ra chuẩn của Engine */

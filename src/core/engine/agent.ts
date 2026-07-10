@@ -28,6 +28,9 @@ import { Janitor } from '../agents/janitor.js';
 import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
 import { compressContext } from '../context-compression.js';
 import { estimateTokens } from './token-estimator.js';
+import { CircuitBreaker, engineCircuitBreaker } from '../circuit-breaker.js';
+import type { CheckpointStore } from '../checkpoint.js';
+import { ContextWindowManager, getContextManager } from '../context-window.js';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -64,6 +67,8 @@ const log = new Logger({ module: 'Agent' });
 
 // ── Constants ──
 const MAX_TOOL_CALL_CYCLES = 15;
+const MAX_READ_CALLS = parseInt(process.env.CORAL_MAX_READ_CALLS || '12');
+
 
 // ── AgentConfig ──
 export interface AgentConfig {
@@ -72,8 +77,13 @@ export interface AgentConfig {
   hooks?: HookRegistry;
   tracer?: Tracer;
   maxToolCycles?: number;
+  maxReadCalls?: number;
   auxiliaryLlmCall?: (prompt: string) => Promise<string>;
   debug?: boolean;
+  /** CheckpointStore reference for cycle-level persistence */
+  checkpointStore?: CheckpointStore;
+  /** ContextWindowManager for token budget management */
+  contextManager?: ContextWindowManager;
 }
 
 // ── Agent Result ──
@@ -92,9 +102,13 @@ export class Agent extends EventEmitter {
   private hooks: HookRegistry;
   private tracer?: Tracer;
   private maxToolCycles: number;
-  private auxiliaryLlmCall?: (prompt: string) => Promise<string>;
-  private debug: boolean;
-  private janitor?: Janitor;
+    private maxReadCalls: number;
+    private auxiliaryLlmCall?: (prompt: string) => Promise<string>;
+    private debug: boolean;
+    private janitor?: Janitor;
+    private circuitBreaker: CircuitBreaker;
+    private checkpointStore?: CheckpointStore;
+    private contextManager: ContextWindowManager;
 
   constructor(config: AgentConfig) {
     super();
@@ -103,8 +117,12 @@ export class Agent extends EventEmitter {
     this.hooks = config.hooks ?? globalHooks;
     this.tracer = config.tracer;
     this.maxToolCycles = config.maxToolCycles ?? MAX_TOOL_CALL_CYCLES;
-    this.auxiliaryLlmCall = config.auxiliaryLlmCall;
-    this.debug = config.debug ?? false;
+        this.maxReadCalls = config.maxReadCalls ?? MAX_READ_CALLS;
+        this.auxiliaryLlmCall = config.auxiliaryLlmCall;
+        this.debug = config.debug ?? false;
+        this.circuitBreaker = engineCircuitBreaker;
+        this.checkpointStore = config.checkpointStore;
+        this.contextManager = config.contextManager ?? getContextManager();
 
     // Auto-attach tracer to hooks if provided
     if (this.tracer) {
@@ -115,11 +133,17 @@ export class Agent extends EventEmitter {
     // NOT auto-wired to task:complete — that would run "npx vitest run" after EVERY response,
     // even for simple conversational queries. Janitor is for verifying system integrity
     // after intentional code/tool write operations, not for chat responses.
-    this.janitor = new Janitor({ autoTest: false, autoLint: false });
+    this.maxReadCalls = config.maxReadCalls ?? MAX_READ_CALLS;
+
   }
 
   get hookRegistry(): HookRegistry {
     return this.hooks;
+  }
+
+  /** Get the engine circuit breaker (for monitoring) */
+  get circuitBreakerState() {
+    return this.circuitBreaker;
   }
 
   /**
@@ -141,11 +165,37 @@ export class Agent extends EventEmitter {
     return this.hooks.before(event, handler, priority);
   }
 
+  /**
+   * Strip consecutive duplicate paragraphs from LLM output.
+   * Some providers/models return the same content twice in a single response.
+   */
+  private deduplicateResponse(content: string): string {
+    // Split into paragraph-blocks by blank lines
+    const paragraphs = content.split(/\n\s*\n/);
+    if (paragraphs.length <= 1) return content; // single paragraph, nothing to dedup
+
+    const seen = new Set<string>();
+    const deduped: string[] = [];
+    for (const p of paragraphs) {
+      const trimmed = p.trim();
+      // Normalize: collapse internal whitespace for comparison only
+      const normalized = trimmed.replace(/\s+/g, ' ');
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        deduped.push(p);
+      }
+    }
+    return deduped.join('\n\n');
+  }
+
   private sanitizeFinalResponse(content: string): string {
-    return content
+    let cleaned = content
       .replace(/<longcat_tool_call[\s\S]*?<\/longcat_tool_call>/gi, '')
       .replace(/<tool_call[\s\S]*?<\/tool_call>/gi, '')
       .trim();
+    // Dedup consecutive duplicate paragraphs (provider streaming workaround)
+    cleaned = this.deduplicateResponse(cleaned);
+    return cleaned;
   }
 
   /**
@@ -268,42 +318,26 @@ export class Agent extends EventEmitter {
       }
     }
 
-    // Hard trim: if still over 85%, drop oldest non-system messages
+    // 85%+: Use ContextWindowManager for importance-scored eviction
     const { total: afterCompress } = estimateTokens(messages);
     if (afterCompress > maxContext * 0.85) {
-      const systemMsgs = messages.filter(m => m.role === 'system');
-      const nonSystem = messages.filter(m => m.role !== 'system');
-      const targetChars = Math.floor(maxContext * 0.70 * 4); // 70% budget in chars
-      let kept: any[] = [];
-      let charCount = 0;
-
-      // Keep from the end (most recent first) — BOUNDARY-AWARE
-      for (let i = nonSystem.length - 1; i >= 0; i--) {
-        const msgContent = typeof nonSystem[i].content === 'string' ? nonSystem[i].content : JSON.stringify(nonSystem[i].content || '');
-        const msgLen = msgContent.length;
-        
-        if (charCount + msgLen > targetChars) {
-          // Boundary-aware: try to cut at sentence boundary (. ! ? \n)
-          const remaining = targetChars - charCount;
-          if (remaining > 100) {
-            const cutPoint = findSentenceBoundary(msgContent, remaining);
-            if (cutPoint > 0) {
-              kept.unshift({ ...nonSystem[i], content: msgContent.slice(0, cutPoint) + '...' });
-              charCount += cutPoint + 3;
-            }
-          }
-          break;
-        }
-        kept.unshift(nonSystem[i]);
-        charCount += msgLen;
+      const result = this.contextManager.evictToBudget(messages, sessionId);
+      if (result.evicted > 0) {
+        messages.length = 0;
+        messages.push(...result.messages);
+        log.info(
+          `Context evicted: ${afterCompress.toLocaleString()} → ${this.contextManager.estimateTokens(messages).toLocaleString()} tok ` +
+          `(${result.evicted} msg(s) dropped, ${result.saved} kept)`
+        );
+        await this.hooks.emit('context:evicted', {
+          sessionId,
+          tokensBefore: afterCompress,
+          tokensAfter: this.contextManager.estimateTokens(messages),
+          evicted: result.evicted,
+          saved: result.saved,
+        });
+        return true;
       }
-
-      messages.length = 0;
-      messages.push(...systemMsgs, ...kept);
-
-      const { total: afterTrim } = estimateTokens(messages);
-      log.info(`Hard trimmed: ${afterCompress.toLocaleString()} → ${afterTrim.toLocaleString()} tokens (kept ${kept.length}/${nonSystem.length} messages)`);
-      return true;
     }
 
     return false;
@@ -378,8 +412,24 @@ export class Agent extends EventEmitter {
 
     let toolCallCycles = 0;
     let finalContent = '';
+    let readToolCount = 0;      // Track read-heavy tool calls for loop detection
+    let readLoopForced = false; // Prevent duplicate force-synthesis injections
+    const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
+    const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
     while (toolCallCycles < this.maxToolCycles) {
+      // ── Circuit breaker: stop if service is degraded ──
+      if (!this.circuitBreaker.isHealthy()) {
+        log.warn(`Circuit breaker OPEN — stopping after ${toolCallCycles} cycles`);
+        return {
+          content: '⚠️ Dịch vụ đang gặp sự cố. Vui lòng thử lại sau 1 phút.',
+          modelUsed: 'circuit-breaker',
+          providerUsed: 'circuit-breaker',
+          toolCycles: toolCallCycles,
+          finished: true,
+        };
+      }
+
       try {
         // ── Select relevant tools ──
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
@@ -392,11 +442,12 @@ export class Agent extends EventEmitter {
           /* tool pruner empty, using full registry */
         }
 
-        // Cycle >= 3: restrict to core tools only
-        if (toolCallCycles >= 3) {
-          const coreNames = ['list_directory', 'read_file', 'search_knowledge_graph', 'write_wiki_page', 'fetch_url'];
-          selectedTools = selectedTools.filter((t: any) => coreNames.includes(t.function.name));
-        }
+        // Cycle >= 3: restrict to core tools only to prevent runaway loops.
+        // However, `read_file`/`list_directory`/`search_knowledge_graph`
+        // without `web_search` traps the LLM. Keep all tools available and
+        // use read-loop detection (below) to force synthesis instead.
+        // NOTE: Removed the coreNames filter — it was causing infinite
+        // read-file loops (23+ consecutive read_file calls in the OPi Zero 3 task).
 
         const toolsTokenEstimate = estimateToolsTokenCount(selectedTools);
         /* tools selected */
@@ -408,6 +459,11 @@ export class Agent extends EventEmitter {
           cycle: toolCallCycles,
         });
 
+        if (request.onThinking) {
+          const currentGoal = request.currentGoal || request.task || '';
+          await request.onThinking(`🤔 ${currentGoal ? `Đang phân tích: "${currentGoal.slice(0, 60)}..."` : 'Đang suy nghĩ...'}`);
+        }
+
         let modelResult: any;
         const modelOptions = {
           model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
@@ -416,32 +472,45 @@ export class Agent extends EventEmitter {
         };
 
         // Try streaming first, fallback to regular invoke on error
-        try {
-          if ((this.modelRouter as any).getAdapter('9router')?.invokeStreaming) {
-            const adapter = (this.modelRouter as any).getAdapter('9router');
-            const taskId = request.sessionId;
-            
-            modelResult = await adapter.invokeStreaming(
-              messages,
-              taskId,
-              (chunk: string, isFinal: boolean) => {
-                // Emit reasoning_updated via hooks so listeners can forward to EventBus
-                (this.hooks as any).emit('reasoning:update', {
-                  sessionId: taskId,
-                  chunk,
-                  isFinal,
-                });
-              },
-              modelOptions
-            );
-          } else {
-            // Fallback: regular invoke
-            modelResult = await this.modelRouter.route(messages, modelOptions);
+        // Wrapped in circuit breaker — consecutive failures will open the circuit
+        modelResult = await this.circuitBreaker.execute(async () => {
+          try {
+            if ((this.modelRouter as any).getAdapter('9router')?.invokeStreaming) {
+              const adapter = (this.modelRouter as any).getAdapter('9router');
+              const taskId = request.sessionId;
+              
+              return await adapter.invokeStreaming(
+                messages,
+                taskId,
+                (chunk: string, isFinal: boolean) => {
+                  // Emit reasoning_updated via hooks so listeners can forward to EventBus
+                  (this.hooks as any).emit('reasoning:update', {
+                    sessionId: taskId,
+                    chunk,
+                    isFinal,
+                  });
+
+                  // Show actual reasoning content live
+                  if (request.onThinking && chunk && !isFinal) {
+                    const cleanChunk = chunk.replace(/<[^>]*>/g, '').trim();
+                    // Skip step/phase headers — not useful as thinking display
+                    if (/^(Step|Bước|Phase)\s+\d+/i.test(cleanChunk)) return;
+                    if (cleanChunk.length > 10) {
+                      request.onThinking(`💭 ${cleanChunk.slice(0, 150)}`);
+                    }
+                  }
+                },
+                modelOptions
+              );
+            } else {
+              // Fallback: regular invoke
+              return await this.modelRouter.route(messages, modelOptions);
+            }
+          } catch (err: any) {
+            log.warn(`[STREAMING] Failed, falling back to invoke(): ${err.message}`);
+            return await this.modelRouter.route(messages, modelOptions);
           }
-        } catch (err: any) {
-          log.warn(`[STREAMING] Failed, falling back to invoke(): ${err.message}`);
-          modelResult = await this.modelRouter.route(messages, modelOptions);
-        }
+        });
 
         await this.hooks.emit('model:response', {
           sessionId: request.sessionId,
@@ -499,6 +568,10 @@ export class Agent extends EventEmitter {
           // ── Token-aware context budget check (after tool call) ──
           await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
 
+          // Collect tool call data for checkpoint
+          const executedToolCalls: Array<{id: string; name: string; args: Record<string, unknown>}> = [];
+          const executedToolResults: Array<{id: string; result: unknown}> = [];
+
           for (const toolCall of modelResult.toolCalls) {
             if (toolCall.type !== 'function') {
               continue;
@@ -524,6 +597,20 @@ export class Agent extends EventEmitter {
               continue;
             }
 
+            // ── Checkpoint: mark tool as running (prevents duplicate re-execution on crash) ──
+            if (this.checkpointStore && request.checkpointRequestId) {
+              this.checkpointStore.markToolRunning(request.checkpointRequestId, toolCall.id);
+            }
+
+            // Show thinking: tool call starting
+            if (request.onThinking) {
+              const fnName = toolCall.function.name;
+              const args = (toolCall.function.arguments && typeof toolCall.function.arguments === 'string'
+                ? toolCall.function.arguments.slice(0, 80) + (toolCall.function.arguments.length > 80 ? '...' : '')
+                : '');
+              await request.onThinking(`🔧 ${fnName}${args ? `(${args})` : ''}...`);
+            }
+
             const toolResult = await this.toolRegistry.executeToolCall(toolCall);
 
             const resultStr = JSON.stringify(toolResult);
@@ -542,7 +629,42 @@ export class Agent extends EventEmitter {
               content: JSON.stringify(toolResult),
             });
 
+            // Collect for checkpoint
+            executedToolCalls.push({
+              id: toolCall.id,
+              name: toolCall.function.name,
+              args: toolCall.function.arguments as Record<string, unknown>,
+            });
+            executedToolResults.push({ id: toolCall.id, result: toolResult });
+
             /* tool executed */
+            // Show thinking: tool complete
+            if (request.onThinking) {
+              const resultPreview = typeof toolResult === 'string'
+                ? toolResult.slice(0, 60) + (toolResult.length > 60 ? '...' : '')
+                : 'ok';
+              await request.onThinking(`✅ ${toolCall.function.name} → ${resultPreview}`);
+            }
+
+          }
+          // ── Read-loop detection ──
+          // Count read-heavy tool calls. If they exceed MAX_READ_CALLS,
+          // inject a forced-synthesis system message so the LLM stops
+          // exploring and produces a final answer.
+          if (!readLoopForced) {
+            for (const tc of modelResult.toolCalls) {
+              if (tc.type === 'function' && READ_TOOLS.has(tc.function.name)) {
+                readToolCount++;
+              }
+            }
+            if (readToolCount >= MAX_READ_CALLS) {
+              readLoopForced = true;
+              messages.push({
+                role: 'system',
+                content: `[SYSTEM] Bạn đã đọc đủ tài liệu (${readToolCount} lượt). Hãy tổng hợp câu trả lời NGAY. KHÔNG gọi thêm bất kỳ tool nào. Chỉ trả lời trực tiếp bằng văn bản.`
+              });
+              log.info(`Read-loop detection triggered after ${readToolCount} read calls — forcing synthesis`);
+            }
           }
 
           this.emit('cascade', {
@@ -551,6 +673,17 @@ export class Agent extends EventEmitter {
             modelUsed: modelResult.modelUsed,
             tier: 3,
           });
+
+          // ── Checkpoint: record completed cycle ──
+          if (this.checkpointStore && request.checkpointRequestId) {
+            this.checkpointStore.cycle(
+              request.checkpointRequestId,
+              toolCallCycles,
+              request.currentGoal || request.task || 'ReAct cycle',
+              executedToolCalls,
+              executedToolResults,
+            );
+          }
 
           continue;
         }

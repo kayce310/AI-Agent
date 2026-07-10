@@ -88,7 +88,7 @@ export interface MemoryQuery {
 
 export const DEFAULT_DECAY_RATE = 0.5; // Base half-life: 24h
 export const ARCHIVE_THRESHOLD = 0.1;
-export const MAX_ACTIVE_MEMORIES = 10000;
+export const MAX_ACTIVE_MEMORIES = 3000;
 export const REINFORCEMENT_BONUS = 0.05;
 export const BELIEF_PATTERN_MIN_CALLS = 3;
 export const BELIEF_PATTERN_MIN_TASKS = 2;

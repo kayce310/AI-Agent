@@ -129,4 +129,25 @@ export class EventStore {
     const result = this.db.prepare('DELETE FROM agent_events WHERE timestamp < ?').run(cutoff);
     return result.changes;
   }
+
+  /**
+   * Prune old events automatically — keeps only the most recent N events
+   * plus events newer than `keepDays`. Called from periodic flush.
+   */
+  prune(keepDays: number = 14, maxEvents: number = 10000): { deletedOld: number; deletedOver: number } {
+    const result = { deletedOld: 0, deletedOver: 0 };
+    // 1. Delete events older than keepDays
+    const cutoff = Date.now() - keepDays * 24 * 60 * 60 * 1000;
+    result.deletedOld = this.db.prepare('DELETE FROM agent_events WHERE timestamp < ?').run(cutoff).changes;
+    // 2. If still over maxEvents, delete oldest
+    const count = (this.db.prepare('SELECT COUNT(*) as c FROM agent_events').get() as any).c;
+    if (count > maxEvents) {
+      const excess = count - maxEvents;
+      this.db.prepare(
+        'DELETE FROM agent_events WHERE id IN (SELECT id FROM agent_events ORDER BY timestamp ASC LIMIT ?)'
+      ).run(excess);
+      result.deletedOver = excess;
+    }
+    return result;
+  }
 }

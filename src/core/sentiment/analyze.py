@@ -18,6 +18,7 @@ VIET_TOXIC_WORDS = [
     'chết mẹ', 'chết cha', 'loz', 'clm', 'dm', 'dcm',
     'vcl', 'vãi lồn', 'vãi chưởng', 'fuck', 'shit', 'bitch',
     'asshole', 'damn', 'crap', 'stupid', 'idiot',
+    'đồ khốn nạn', 'khốn nạn', 'tồi tệ', 'tệ',
 ]
 
 # Vietnamese sentiment words (positive/negative dictionaries)
@@ -120,15 +121,15 @@ def analyze_vietnamese(text: str) -> dict:
     else:
         score = (pos_count - neg_count) / total
     
-    # Determine label
-    if score > 0.1:
+    # Determine label with stricter threshold for Vietnamese
+    if score > 0.15:
         label = 'positive'
-    elif score < -0.1:
+    elif score < -0.15:
         label = 'negative'
     else:
         label = 'neutral'
     
-    # Toxic check
+    # Toxic check - only count if we have toxic words
     is_toxic = len(toxic_found) > 0
     toxicity_level = 0.0
     if is_toxic:

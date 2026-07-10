@@ -16,6 +16,7 @@
  */
 
 import { AgentRegistry, SpecialistAgent, DelegationResult } from './agent-registry.js';
+export { AgentRegistry }; // re-export cho DelegationOrchestrator
 import type { Tool, ToolPlugin } from '../tools/tool-registry.js';
 import { Logger } from '../logger.js';
 
@@ -84,7 +85,7 @@ function createDelegateTool(registry: AgentRegistry): Tool {
 /**
  * Run a specialist agent with its own ReAct loop.
  */
-async function runSpecialistAgent(
+export async function runSpecialistAgent(
   agent: SpecialistAgent,
   task: string,
   registry: AgentRegistry,

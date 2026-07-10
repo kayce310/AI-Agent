@@ -10,7 +10,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { execSync, spawn } from 'child_process';
 import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
 import { CoralGateway } from '../core/gateway/index.js';
@@ -19,6 +20,9 @@ import { MemoryStore } from '../core/memory/MemoryStore.js';
 import { MemoryAPI } from '../core/memory/MemoryAPI.js';
 import { MemoryExtractor } from '../core/memory/MemoryExtractor.js';
 import { CronScheduler, SystemMonitor } from '../core/cron/index.js';
+import type { AlertCallback } from '../core/cron/index.js';
+import { proactiveEngine } from '../core/proactive/proactive-engine.js';
+import { worldModel } from '../core/world/model.js';
 
 // ── Timestamp Helper ──
 const ts = () => {
@@ -120,6 +124,69 @@ let dashboardServer: DashboardServer | null = null;
 let memoryStore: MemoryStore | null = null;
 let cronScheduler: CronScheduler | null = null;
 let isShuttingDown = false;
+let tunnelProcess: ReturnType<typeof spawn> | null = null;
+
+// ── Cloudflared Tunnel (quick tunnel, auto-save URL) ──
+function startTunnel(): void {
+  const cloudflaredPath = process.env.CLOUDFLARED_PATH
+    || (process.platform === 'win32' ? 'C:\\Users\\Kayce\\bin\\cloudflared.exe' : 'cloudflared');
+
+  if (!fs.existsSync(cloudflaredPath)) {
+    console.warn(`${ts()} ⚠️ cloudflared not found at ${cloudflaredPath}`);
+    return;
+  }
+
+  const proc = spawn(cloudflaredPath, ['tunnel', '--url', 'http://localhost:8766'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+  tunnelProcess = proc;
+
+  const onData = (data: Buffer) => {
+    const text = data.toString();
+    const match = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+    if (match) {
+      const url = match[0];
+      console.log(`${ts()} 🌐 Tunnel URL: ${url}`);
+
+      // Save to project root (ESM-compatible path)
+      const dirname = path.dirname(fileURLToPath(import.meta.url));
+      const urlPath = path.resolve(dirname, '../../tunnel-url.txt');
+      try {
+        fs.writeFileSync(urlPath, url, 'utf8');
+      } catch {}
+    }
+  };
+
+  if (proc.stdout) proc.stdout.on('data', onData);
+  if (proc.stderr) proc.stderr.on('data', onData);
+
+  proc.on('error', (err) => {
+    console.warn(`${ts()} ⚠️ Tunnel spawn error: ${err.message}`);
+    tunnelProcess = null;
+  });
+
+  proc.on('exit', (code) => {
+    if (code !== 0 && code !== null) {
+      console.warn(`${ts()} ⚠️ Tunnel exited with code ${code}`);
+    }
+    tunnelProcess = null;
+  });
+}
+
+function stopTunnel(): void {
+  if (tunnelProcess) {
+    try {
+      const isWin = process.platform === 'win32';
+      if (isWin) {
+        execSync(`taskkill /F /PID ${tunnelProcess.pid}`, { stdio: 'pipe', timeout: 3000 });
+      } else {
+        tunnelProcess.kill('SIGTERM');
+      }
+    } catch {}
+    tunnelProcess = null;
+  }
+}
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
 
@@ -141,6 +208,12 @@ async function gracefulShutdown(signal: string) {
     if (gatewayInstance) {
       console.log(`${ts()} 📴 Stopping gateway...`);
       await gatewayInstance.stopAll().catch(e => console.error(`Gateway stop error: ${e}`));
+    }
+
+    // 2. Stop cloudflared tunnel
+    if (tunnelProcess) {
+      console.log(`${ts()} 🌐 Stopping tunnel...`);
+      stopTunnel();
     }
 
     // 3. Stop cron scheduler
@@ -193,6 +266,9 @@ async function start() {
   await engine.init();
   engineInstance = engine;
 
+  // ponytail: wire World Model to EventBus for delta events
+  worldModel.setEventBus(engine.getEventBus());
+
   const gateway = new CoralGateway(engine);
   gatewayInstance = gateway;
   const bridge = new TelegramBridge();
@@ -229,6 +305,8 @@ async function start() {
       dashboardServer = new DashboardServer(eventBus, { port: 8766, memoryApi });
       await dashboardServer.start();
       console.log(`${ts()} 📊 Dashboard server running on port 8766`);
+      // Auto-start cloudflared tunnel
+      startTunnel();
     }
   } catch (e) {
     console.error(`${ts()} ⚠️ Dashboard server failed to start: ${e}`);
@@ -237,7 +315,20 @@ async function start() {
   // ── Phase 4: Cron Scheduler + System Monitor ──
   try {
     const monitor = new SystemMonitor();
-    cronScheduler = new CronScheduler();
+    const alertCallback: AlertCallback = async (msg) => {
+      const adminChatId = process.env.TELEGRAM_ALERT_CHAT_ID;
+      if (adminChatId) {
+        try {
+          await bridge.sendMessage(adminChatId, `⚠️ ${msg}`);
+        } catch (e) {
+          console.error(`${ts()} ❌ Alert delivery failed:`, e);
+        }
+      }
+    };
+    cronScheduler = new CronScheduler(alertCallback);
+
+    // ponytail: expose scheduler via globalThis for /world command
+    (globalThis as any).__coral_cronScheduler = cronScheduler;
 
     // Job: Health check every 6 hours (21600000ms)
     cronScheduler.register({
@@ -252,13 +343,16 @@ async function start() {
     });
 
     // Job: Memory flush every hour (3600000ms)
+    // NOTE: Uses engine.flush() NOT engine.cleanup() — cleanup closes the
+    // SQLite database permanently, causing "database connection is not open"
+    // errors on all subsequent requests.
     cronScheduler.register({
       name: 'memory-flush',
       intervalMs: 60 * 60 * 1000,
       timeoutMs: 60000, // 1 min max
       handler: async () => {
         try {
-          await engine.cleanup();
+          await engine.flush();
           return null; // no notification needed
         } catch (err: any) {
           return `⚠️ Memory flush failed: ${err.message}`;
@@ -284,13 +378,85 @@ async function start() {
           return `⚠️ Memory cleanup failed: ${err.message}`;
         }
       },
-      running: false,
+      running: true,  // ponytail: cron tick every 30min, disable if no proactive engine
+      });
+
+      // Job: Proactive tick — evaluate time-based rules every 30 min
+    const proactiveChatId = process.env.TELEGRAM_PROACTIVE_CHAT_ID || process.env.TELEGRAM_ALERT_CHAT_ID;
+    if (proactiveChatId) {
+      cronScheduler.register({
+        name: 'proactive-tick',
+        intervalMs: 30 * 60 * 1000,
+        timeoutMs: 15000,
+        handler: async () => {
+          const signals = proactiveEngine.generateTimeSignals();
+          const actions = proactiveEngine.evaluate(signals, 'system');
+          for (const action of actions) {
+            if (action.type === 'suggest' || action.type === 'notify' || action.type === 'remind') {
+              try {
+                await bridge.sendMessage(proactiveChatId, action.message);
+              } catch (e) {
+                return `⚠️ Proactive delivery failed: ${e}`;
+              }
+            }
+          }
+          return actions.length > 0
+            ? `💡 Proactive: ${actions.length} action(s) fired`
+            : null;
+        },
+        running: true,
+      });
+      console.log(`${ts()} ⏰ Proactive tick registered (30 min interval -> ${proactiveChatId})`);
+    } else {
+      console.warn(`${ts()} ⏸️ Proactive tick disabled — set TELEGRAM_PROACTIVE_CHAT_ID or TELEGRAM_ALERT_CHAT_ID`);
+    }
+
+    // ponytail: World Model probes every 30s — toggleable via /world command, disabled by default (no peripherals yet)
+    cronScheduler.register({
+      name: 'world-model',
+      intervalMs: 30_000,
+      timeoutMs: 5000,
+      handler: async () => {
+        const report = await worldModel.run();
+        console.log(`${ts()} 🌍 World: ${report.system.cpus}cpu ${report.system.freeMemMb}mb free | ${report.files.fileCount} files`);
+        return null; // quiet
+      },
+      running: false, // toggle via /world on/off
     });
 
     cronScheduler.start();
     console.log(`${ts()} ⏰ Cron scheduler started with ${cronScheduler.listJobs().length} jobs`);
   } catch (e) {
     console.error(`${ts()} ⚠️ Cron scheduler failed to start: ${e}`);
+  }
+
+  // ── Phase 5: HITL Approval System ──
+  try {
+    const { HITLManager } = await import('../core/security/hitl.js');
+    const { formatApprovalMessage, buildApprovalKeyboard } = await import('../modules/telegram/hitl-handler.js');
+    const hitlManager = new HITLManager();
+    bridge.registerHITLManager(hitlManager);
+
+    // Wire HITL pending notification to admin chat
+    const hitlAdminChatId = process.env.TELEGRAM_ALERT_CHAT_ID;
+    if (hitlAdminChatId) {
+      hitlManager.onPending = async (request) => {
+        try {
+          await bridge.sendMessageWithKeyboard(
+            hitlAdminChatId as string,
+            formatApprovalMessage(request),
+            buildApprovalKeyboard(request.id),
+          );
+        } catch (e) {
+          console.error(`${ts()} ❌ HITL notification failed:`, e);
+        }
+      };
+      console.log(`${ts()} 🛡️ HITL Manager active — admin chat: ${hitlAdminChatId}`);
+    } else {
+      console.warn(`${ts()} ⚠️ TELEGRAM_ALERT_CHAT_ID not set — HITL approvals will not be delivered`);
+    }
+  } catch (e) {
+    console.error(`${ts()} ⚠️ HITL system failed to initialize: ${e}`);
   }
 }
 

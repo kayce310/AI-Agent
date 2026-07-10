@@ -14,7 +14,7 @@
 import { Logger } from '../logger.js';
 import { EventEmitter } from 'events';
 import { readFile } from 'fs/promises';
-import MemoryCore from '../memory/memory.js';
+import { MemoryFacade } from '../memory/memory-facade.js';
 import MemoryStore, { globalMemoryStore } from '../memory/memory-store.js';
 import ProviderRegistry from '../llm/provider-registry.js';
 import PromptBuilder from '../llm/prompt-builder.js';
@@ -42,11 +42,19 @@ import { EventType } from '../events/types.js';
 import { randomUUID } from 'crypto';
 import { ExperienceStore } from '../self-evolution/experience-store.js';
 import { SelfEvolutionLearner } from '../self-evolution/learner.js';
+import { withTimeout } from '../util/with-timeout.js';
+import { CheckpointStore, getCheckpoint } from '../checkpoint.js';
+import { getContextManager } from '../context-window.js';
+import { TaskQueue, getTaskQueue } from '../task-queue.js';
+import { worldModel } from '../world/model.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
 
 const log = new Logger({ module: 'Engine' });
+
+/** Maximum total time for a single request (120s = 2 minutes) */
+const REQUEST_TIMEOUT_MS = 120_000;
 
 /**
  * Summarize LLM reasoning into a short reason string.
@@ -90,10 +98,47 @@ function parseToolArgs(raw: unknown): Record<string, unknown> {
   return {};
 }
 
+/**
+ * Fast token estimation (heuristic).
+ * Vietnamese: ~2-3 chars/token; English: ~4 chars/token.
+ * Slightly overestimates to be safe. No external model call.
+ */
+function estimateTokenCount(text: string): number {
+  if (!text) return 0;
+  const cjkChars = (text.match(/[㐀-鿿]/g) || []).length;
+  const otherChars = text.length - cjkChars;
+  // CJK: ~2 chars/token; Latin: ~4 chars/token
+  return Math.ceil(cjkChars / 2 + otherChars / 4);
+}
+
+/**
+ * Truncate prompt to fit within token budget.
+ * Strategy: truncate contextFiles section (separated by '--- ' markers).
+ * Falls back to truncating the last 30% of the whole prompt.
+ */
+function truncatePrompt(prompt: string, maxTokens: number): string {
+  const tokens = estimateTokenCount(prompt);
+  if (tokens <= maxTokens) return prompt;
+
+  // Try to truncate session/context blocks (between '--- ' markers)
+  const sections = prompt.split(/--- /);
+  // Remove pairs from the end (keep identity/soul at top)
+  while (sections.length > 2 && estimateTokenCount(sections.join('--- ')) > maxTokens) {
+    sections.splice(-2, 2); // Remove last 2 sections
+  }
+  const rejoined = sections.join('--- ');
+  if (estimateTokenCount(rejoined) <= maxTokens) return rejoined;
+
+  // Fallback: truncate last 30% of text
+  const targetLen = Math.floor(prompt.length * (maxTokens / tokens));
+  const truncated = prompt.slice(0, targetLen);
+  return truncated + '\n\n[Context truncated due to length...]';
+}
+
 export class Engine extends EventEmitter {
   private registry: ProviderRegistry;
   private modelRouter: ModelRouter;
-  private memory: MemoryCore;
+  private memory: MemoryFacade;
   private coralIdentityContext: string = '';
   private toolRegistry!: ToolRegistry;
   private agent!: Agent;
@@ -106,6 +151,7 @@ export class Engine extends EventEmitter {
   private agenticMemory: MemoryTemporal;
   private storage!: CoralStorage;
   private eventBus!: EventBus;
+  private eventStore!: EventStore;
   private eventLogger!: StructuredLogger;
   private pendingCallIds: Map<string, Array<{callId: string; decisionId: string}>> = new Map();
   private tasksWithToolCalls: Set<string> = new Set();
@@ -113,6 +159,8 @@ export class Engine extends EventEmitter {
 
   private agentRegistry!: AgentRegistry;
   private learner!: SelfEvolutionLearner;
+  private checkpointStore: CheckpointStore;
+  private taskQueue: TaskQueue;
 
   /** In-flight promise dedup — same key = same promise */
   private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
@@ -121,7 +169,7 @@ export class Engine extends EventEmitter {
     super();
     this.registry = registry ?? new ProviderRegistry();
     this.modelRouter = new ModelRouter();
-    this.memory = new MemoryCore();
+    this.memory = new MemoryFacade();
     this.hooks = globalHooks;
     this.privilegeGuard = new PrivilegeGuard({
       rules: createDefaultAllowRules(),
@@ -141,9 +189,11 @@ export class Engine extends EventEmitter {
     this.storage = getStorage();
     // Initialize event tables
     this.storage.initEventTables();
-    const eventStore = new EventStore(this.storage.getDb());
-    this.eventBus = new EventBus(eventStore);
+    this.eventStore = new EventStore(this.storage.getDb());
+    this.eventBus = new EventBus(this.eventStore);
     this.eventLogger = new StructuredLogger(this.eventBus);
+    this.checkpointStore = getCheckpoint();
+    this.taskQueue = getTaskQueue();
   }
 
   private sanitizeResponse(content: string): string {
@@ -198,13 +248,15 @@ export class Engine extends EventEmitter {
       maxToolCycles: 10,
       debug: false,
       auxiliaryLlmCall,            // ← Context compression now works!
+      checkpointStore: this.checkpointStore, // ← Cycle-level persistence
+      contextManager: getContextManager(),  // ← Token budget management
     };
     this.agent = new Agent(agentConfig);
 
     this.agent.on('cascade', (data: any) => { this.emit('cascade', data); });
     
     // Phase 4E-B.3: Hook reasoning:update events from Agent streaming
-    this.agent.onEvent(EventType.REASONING_UPDATE, (data: any) => {
+    this.agent.on('reasoning:update', (data: any) => {
       const taskId = this.currentTaskId;
       const chunk = (data.chunk as string) || '';
       const isFinal = (data.isFinal as boolean) || false;
@@ -224,6 +276,26 @@ export class Engine extends EventEmitter {
       maxExperiences: 5,
     });
     log.info('Self-Evolution Learner initialized');
+
+    // ── CHECKPOINTSTORE: Initialize and restore in-progress tasks ──
+    await this.checkpointStore.init();
+    const inProgressCheckpoints = this.checkpointStore.getAllInProgress();
+    if (inProgressCheckpoints.length > 0) {
+      log.warn(`Found ${inProgressCheckpoints.length} in-progress checkpoint(s) from previous run:`);
+      for (const cp of inProgressCheckpoints) {
+        log.warn(`  ${cp.requestId} — ${cp.sessionId}, ${cp.cycles.length} cycle(s)`);
+      }
+    }
+
+    // ── TASK QUEUE: Initialize and start background worker ──
+    await this.taskQueue.init();
+    // Wire engine's processInner as the executor for background tasks
+    this.taskQueue['config'].executor = async (req: any) => {
+      // Execute background task via processInner (no timeout)
+      return this.processInner(req, `bg-${Date.now()}`);
+    };
+    this.taskQueue.start();
+    log.info('TaskQueue background worker started');
 
     try {
       const existingBlocks = await globalMemoryStore.getAll();
@@ -390,6 +462,7 @@ export class Engine extends EventEmitter {
     // Rate limit check (global)
     if (!this.rateLimiter.tryAll(1)) {
       auditLogger.log({ level: 'warn', category: 'rate_limit', sessionId: request.sessionId, detail: 'Global rate limit exceeded' });
+      this.emit('alert:rate_limit', { userId: request.sessionId, type: 'global' });
       return { content: '❌ Rate limit exceeded.', modelUsed: 'none', providerUsed: 'rate-limiter' };
     }
 
@@ -398,7 +471,19 @@ export class Engine extends EventEmitter {
     if (!this.perUserLimiter.tryConsume(userId)) {
       log.warn(`Per-user rate limit exceeded for ${userId}`);
       auditLogger.log({ level: 'warn', category: 'rate_limit', userId, detail: 'Per-user rate limit exceeded' });
+      this.emit('alert:rate_limit', { userId, type: 'per_user' });
       return { content: '❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.', modelUsed: 'none', providerUsed: 'rate-limiter' };
+    }
+
+    // Circuit breaker check — if open, return friendly error immediately
+    if (!this.agent.circuitBreakerState.isHealthy()) {
+      log.warn(`Circuit breaker OPEN for ${userId} — request rejected`);
+      this.emit('alert:circuit_breaker', { userId });
+      return {
+        content: '⚠️ Hệ thống đang bận. Vui lòng thử lại sau 1 phút.',
+        modelUsed: 'none',
+        providerUsed: 'circuit-breaker',
+      };
     }
 
     // Reset side-effect tracking for this request
@@ -407,6 +492,19 @@ export class Engine extends EventEmitter {
     const lastMessage = request.messages[request.messages.length - 1]?.content || '';
     if (!lastMessage.trim()) {
       return { content: '❌ Tin nhắn trống.', modelUsed: 'none', providerUsed: 'none' };
+    }
+
+    // ── BACKGROUND TASK ROUTING ──
+    // If the request is explicitly marked as background, route to TaskQueue instead
+    // of running synchronously with REQUEST_TIMEOUT_MS.
+    if (request.taskType === 'background') {
+      const taskId = this.taskQueue.enqueue(request);
+      log.info(`Routed to background queue: ${taskId} — "${lastMessage.slice(0, 50)}"`);
+      return {
+        content: `✅ Nhiệm vụ nền đã được tạo với ID: \`${taskId}\`\nDùng /status ${taskId} để theo dõi tiến độ.`,
+        modelUsed: 'task-queue',
+        providerUsed: 'task-queue',
+      };
     }
 
     // ── SMART CACHE: content-based key + request coalescing ──
@@ -431,13 +529,42 @@ export class Engine extends EventEmitter {
     }
 
     // Cache MISS — create in-flight promise for coalescing
-    const resultPromise = this.processInner(request, cacheKey);
+    // Wrap with request-level timeout to prevent unbounded hanging
+    const resultPromise = this.processInner(request, cacheKey).catch((err: any) => {
+      // If timeout from inner layer, return friendly error instead of propagating
+      if (err.message?.includes('timed out')) {
+        this.emit('alert:timeout', { sessionId: request.sessionId, message: err.message });
+        return {
+          content: '⚠️ Yêu cầu xử lý quá lâu. Vui lòng thử lại.',
+          modelUsed: 'none',
+          providerUsed: 'timeout',
+        };
+      }
+      throw err;
+    });
     this.pendingRequests.set(cacheKey, resultPromise);
+
+    // ── PendingRequests TTL Cleanup (Tier 2 Fix) ──
+    // If this entry doesn't settle within REQUEST_TIMEOUT_MS + 10s, force-cleanup
+    // This prevents memory leaks when LLM hangs indefinitely
+    const pendingKey = cacheKey;
+    const cleanupTimer = setTimeout(() => {
+      if (this.pendingRequests.has(pendingKey)) {
+        log.warn(`PendingRequest stale cleanup: "${pendingKey.slice(0, 60)}"`);
+        this.emit('alert:stale_cleanup', { key: pendingKey });
+        this.pendingRequests.delete(pendingKey);
+      }
+    }, REQUEST_TIMEOUT_MS + 10_000);
+    // Don't keep the event loop alive just for cleanup
+    if (typeof cleanupTimer === 'object' && 'unref' in cleanupTimer) {
+      (cleanupTimer as NodeJS.Timeout).unref();
+    }
 
     try {
       return await resultPromise;
     } finally {
       this.pendingRequests.delete(cacheKey);
+      clearTimeout(cleanupTimer);
     }
   }
 
@@ -451,6 +578,9 @@ export class Engine extends EventEmitter {
     const taskId = `task-${Date.now()}`;
     this.currentTaskId = taskId;
     const sessionId = request.sessionId || 'default';
+    
+    // ── CHECKPOINT: Start tracking this request ──
+    this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
     
     // Publish task_started event
     this.eventLogger.taskStarted(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task');
@@ -487,6 +617,9 @@ export class Engine extends EventEmitter {
       log.warn(`Learning context fetch failed: ${err.message}`);
     }
 
+    // ponytail: inject cached world state (no re-probe)
+    const worldState = worldModel.getState();
+
     // Build system prompt
     const promptBuilder = new PromptBuilder();
     const systemPrompt = promptBuilder.buildSystem({
@@ -499,9 +632,39 @@ export class Engine extends EventEmitter {
       references: request.references,
       constraints: request.constraints,
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
+      worldContext: worldState,
     });
 
-    const agentRequest: EngineRequest = { ...request, systemPrompt };
+    // ── Prompt Length Guard (Tier 1 Fix) ──
+    const MAX_PROMPT_TOKENS = 3000; // ~safe limit for most models
+    const estimatedTokens = estimateTokenCount(systemPrompt);
+    if (estimatedTokens > MAX_PROMPT_TOKENS) {
+      log.warn(`Prompt too long: ~${estimatedTokens} tokens (max ${MAX_PROMPT_TOKENS}). Truncating context.`);
+      this.emit('alert:prompt_truncated', { originalTokens: estimatedTokens, maxTokens: MAX_PROMPT_TOKENS });
+      // Truncate contextFiles (largest contributor) to fit
+      const truncatedPrompt = truncatePrompt(systemPrompt, MAX_PROMPT_TOKENS);
+      const agentRequest: EngineRequest = { ...request, systemPrompt: truncatedPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
+      try {
+        const result = await this.agent.run(agentRequest);
+        if (result.toolCycles === 0) {
+          this.responseCache.set(cacheKey, result.content, 120_000);
+        }
+        const duration = Date.now() - startTime;
+        this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', true, duration, result.content.substring(0, 500));
+        // ── CHECKPOINT: Mark success ──
+        this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
+        return { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed };
+      } catch (agentErr: any) {
+        const duration = Date.now() - startTime;
+        this.eventLogger.error(agentErr.message, agentErr.stack, 'ENGINE_AGENT_FAILED');
+        this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', false, duration, agentErr.message);
+        // ── CHECKPOINT: Mark failure ──
+        this.checkpointStore.failed(taskId, { message: agentErr.message, stack: agentErr.stack });
+        return { content: `❌ Lỗi khi xử lý: ${agentErr.message}`, modelUsed: 'none', providerUsed: 'none' };
+      }
+    }
+
+    const agentRequest: EngineRequest = { ...request, systemPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
 
     try {
       const result = await this.agent.run(agentRequest);
@@ -534,6 +697,9 @@ export class Engine extends EventEmitter {
       const duration = Date.now() - startTime;
       this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', true, duration, result.content.substring(0, 500));
 
+      // ── CHECKPOINT: Mark success ──
+      this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
+
       return {
         content: result.content,
         modelUsed: result.modelUsed,
@@ -549,12 +715,22 @@ export class Engine extends EventEmitter {
         sessionId: request.sessionId || 'unknown',
         contextSnippet: request.messages[request.messages.length - 1]?.content?.substring(0, 200),
       }).catch(() => {});
-      
+
+      // Emit alert event (event-based, no coupling)
+      this.emit('alert:agent_error', {
+        message: agentErr.message,
+        sessionId: request.sessionId,
+        errorType: 'ENGINE_AGENT_FAILED',
+      });
+
       // Publish error event
       const duration = Date.now() - startTime;
       this.eventLogger.error(agentErr.message, agentErr.stack, 'ENGINE_AGENT_FAILED');
       this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', false, duration, agentErr.message);
       
+      // ── CHECKPOINT: Mark failure ──
+      this.checkpointStore.failed(taskId, { message: agentErr.message, stack: agentErr.stack });
+
       return {
         content: `❌ Lỗi khi xử lý: ${agentErr.message}`,
         modelUsed: 'none',
@@ -584,10 +760,21 @@ export class Engine extends EventEmitter {
   }
 
   getEventBus(): EventBus {
-    return this.eventBus;
-  }
+      return this.eventBus;
+    }
 
-  // ── File Event Helpers ──
+    getTaskQueue(): TaskQueue {
+      return this.taskQueue;
+    }
+
+    /**
+     * Get AgentRegistry for delegation (used by TelegramMessageHandler)
+     */
+    getAgentRegistry(): AgentRegistry {
+      return this.agentRegistry;
+    }
+
+    // ── File Event Helpers ──
 
   /**
    * Extract file path from tool name + args for file event emission.
@@ -623,21 +810,60 @@ export class Engine extends EventEmitter {
   // ── Graceful Cleanup ──
 
   /**
-   * Flush all memory stores and release resources.
-   * Called during graceful shutdown.
+   * Flush in-memory stores to disk without closing database connections.
+   * Safe to call periodically (e.g. cron job memory-flush).
    */
-  async cleanup(): Promise<void> {
+  async flush(): Promise<void> {
     log.info('Flushing memory stores...');
     try {
       await Promise.all([
-        this.temporalMemory.close().catch(e => log.warn('temporalMemory close failed', { error: String(e) })),
-        this.agenticMemory.close().catch(e => log.warn('agenticMemory close failed', { error: String(e) })),
+          this.temporalMemory.flush().catch((e: any) => log.warn('temporalMemory flush failed', { error: String(e) })),
+          this.agenticMemory.flush().catch((e: any) => log.warn('agenticMemory flush failed', { error: String(e) })),
+          this.checkpointStore.flush().catch((e: any) => log.warn('checkpointStore flush failed', { error: String(e) })),
+          this.taskQueue.flush().catch((e: any) => log.warn('taskQueue flush failed', { error: String(e) })),
+        ]);
+        // Periodically prune stale events from SQLite
+        try {
+          const pruned = this.eventStore.prune(14, 10000);
+          if (pruned.deletedOld > 0 || pruned.deletedOver > 0) {
+            log.info(`Event store pruned: ${pruned.deletedOld} old + ${pruned.deletedOver} excess events removed`);
+          }
+        } catch (e: any) {
+          log.warn('Event store prune failed', { error: String(e) });
+        }
+        // Trim in-flight tracking maps to prevent unbounded growth
+      if (this.tasksWithToolCalls.size > 1000) {
+        log.warn(`Clearing ${this.tasksWithToolCalls.size} stale tasksWithToolCalls`);
+        this.tasksWithToolCalls.clear();
+      }
+      if (this.pendingCallIds.size > 100) {
+        log.warn(`Clearing ${this.pendingCallIds.size} stale pendingCallIds`);
+        this.pendingCallIds.clear();
+      }
+      log.info('Memory stores flushed');
+    } catch (err) {
+      log.error('Error during memory flush', { error: String(err) });
+    }
+  }
+
+  /**
+   * Flush all memory stores and release resources.
+   * Called during graceful shutdown ONLY — closes DB connections permanently.
+   */
+  async cleanup(): Promise<void> {
+    log.info('Performing cleanup...');
+    try {
+      await Promise.all([
+        this.temporalMemory.close().catch((e: any) => log.warn('temporalMemory close failed', { error: String(e) })),
+        this.agenticMemory.close().catch((e: any) => log.warn('agenticMemory close failed', { error: String(e) })),
+        this.checkpointStore.shutdown().catch((e: any) => log.warn('checkpointStore shutdown failed', { error: String(e) })),
+        this.taskQueue.stop().catch((e: any) => log.warn('taskQueue stop failed', { error: String(e) })),
       ]);
       // Close SQLite storage
       try { this.storage.close(); } catch (e) { log.warn('SQLite close failed', { error: String(e) }); }
-      log.info('Memory stores flushed');
+      log.info('Cleanup complete');
     } catch (err) {
-      log.error('Error during memory cleanup', { error: String(err) });
+      log.error('Error during cleanup', { error: String(err) });
     }
   }
 }

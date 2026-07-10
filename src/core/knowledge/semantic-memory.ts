@@ -141,7 +141,7 @@ export class SemanticMemory {
         relevanceScore: entity.confidence,
         context: summary,
       };
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Failed to get entity context (non-blocking):', error);
       return null;
     }
@@ -156,24 +156,18 @@ export class SemanticMemory {
     entityType: string,
     topK: number = 5
   ): Promise<SemanticContext[]> {
-    try {
-      const entities = this.store.queryEntities({
-        userId,
-        type: entityType as any,
-        limit: topK,
-      });
-
-      return entities.map(entity => ({
-        entity,
-        relationships: this.query.findRelationshipsForEntity(entity.id).length,
-        neighbors: this.query.findNeighbors(entity.id).length,
-        relevanceScore: entity.confidence * this.getRecencyScore(entity.lastSeen),
-        context: this.query.getEntitySummary(entity.id) || '',
-      }));
-    } catch (error) {
-      log.warn('Failed to find relevant entities (non-blocking):', error);
-      return [];
-    }
+    const entities = this.store.queryEntities({
+      userId,
+      type: entityType as any,
+      limit: topK,
+    });
+    return entities.map(entity => ({
+      entity,
+      relationships: this.query.findRelationshipsForEntity(entity.id).length,
+      neighbors: this.query.findNeighbors(entity.id).length,
+      relevanceScore: entity.confidence * this.getRecencyScore(entity.lastSeen),
+      context: this.query.getEntitySummary(entity.id) || '',
+    }));
   }
 
   /**
@@ -221,7 +215,7 @@ export class SemanticMemory {
 
       lines.push('');
       return lines.join('\n');
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Failed to assemble context window (non-blocking):', error);
       return '';
     }
@@ -268,7 +262,7 @@ export class SemanticMemory {
 
       lines.push('');
       return lines.join('\n');
-    } catch (error) {
+    } catch (error: any) {
       log.warn('Failed to get relationship context (non-blocking):', error);
       return '';
     }

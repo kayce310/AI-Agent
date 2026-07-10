@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kato Agent — Mission Control</title>
+  <title>Coral Agent — Mission Control</title>
   <meta name="ws-endpoint" content="ws://127.0.0.1:8766/ws/events">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -11,15 +11,14 @@
   <header id="status-bar">
     <div class="status-left">
       <span id="ws-indicator" class="ws-disconnected" title="WebSocket disconnected">●</span>
-      <span class="app-title">KATO AGENT</span>
+      <span class="app-title">CORAL AGENT</span>
     </div>
     <div class="status-center">
-      <button id="tab-mission" class="tab-btn active" data-tab="mission">MISSION</button>
-      <button id="tab-trace" class="tab-btn" data-tab="trace">🧠 TRACE</button>
-      <button id="tab-focus" class="tab-btn" data-tab="focus">⚡ FOCUS</button>
-      <button id="tab-memory" class="tab-btn" data-tab="memory">💾 MEMORY</button>
-      <button id="tab-graph" class="tab-btn" data-tab="graph">🔗 GRAPH</button>
-      <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain">🧠 HOLOGRAM</button>
+      <button id="tab-mission" class="tab-btn active" data-tab="mission" data-i18n="tab.mission">MISSION</button>
+      <button id="tab-trace" class="tab-btn" data-tab="trace" data-i18n="tab.trace">🧠 TRACE</button>
+      <button id="tab-focus" class="tab-btn" data-tab="focus" data-i18n="tab.focus">⚡ FOCUS</button>
+      <button id="tab-memory" class="tab-btn" data-tab="memory" data-i18n="tab.memory">💾 MEMORY</button>
+      <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain" data-i18n="tab.hologram">🧠 HOLOGRAM</button>
     </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
@@ -29,11 +28,11 @@
 
   <main id="workspace">
     <!-- ═══ F2: MISSION MODE (default) ═══ -->
-    <section id="mission-view">
-      <!-- Mission Card: Goal + Status -->
+    <section id="mission-view" class="main-content-view">
+          <!-- Mission Card: Goal + Status -->
       <div class="card mission-card">
-        <div class="card-label">CURRENT MISSION</div>
-        <div id="mission-goal" class="mission-goal">Awaiting task</div>
+        <div class="card-label" data-i18n="mission.current">CURRENT MISSION</div>
+        <div id="mission-goal" class="mission-goal" data-i18n="mission.awaiting">Awaiting task</div>
         <div class="mission-status">
           <span id="mission-status-badge" class="badge badge-idle">IDLE</span>
         </div>
@@ -42,61 +41,61 @@
       <!-- Split: Active Tools | Current Decision -->
       <div class="split-panel">
         <div class="card split-left">
-          <div class="card-label">ACTIVE TOOLS</div>
+          <div class="card-label" data-i18n="mission.tools">ACTIVE TOOLS</div>
           <div id="active-tools" class="active-tools-list">
-            <div class="empty-state">No active tools</div>
+            <div class="empty-state" data-i18n="mission.notools">No active tools</div>
           </div>
         </div>
         <div class="card split-right">
-          <div class="card-label">CURRENT DECISION</div>
+          <div class="card-label" data-i18n="mission.decision">CURRENT DECISION</div>
           <div id="current-decision" class="current-decision">
-            <div class="empty-state">No decision yet</div>
+            <div class="empty-state" data-i18n="mission.nodecision">No decision yet</div>
           </div>
         </div>
       </div>
 
       <!-- Next Action -->
       <div class="card">
-        <div class="card-label">NEXT ACTION</div>
+        <div class="card-label" data-i18n="mission.action">NEXT ACTION</div>
         <div id="next-action" class="next-action">—</div>
       </div>
 
       <!-- Timeline -->
       <div class="card timeline-card">
         <div class="card-header">
-          <span class="card-label">TIMELINE</span>
+          <span class="card-label" data-i18n="trace.timeline">TIMELINE</span>
           <div class="timeline-controls">
             <div class="timeline-filters">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="task">Task</button>
-              <button class="filter-btn" data-filter="tool">Tool</button>
-              <button class="filter-btn" data-filter="decision">Decision</button>
-              <button class="filter-btn" data-filter="file">File</button>
+              <button class="filter-btn active" data-filter="all" data-i18n="trace.all">All</button>
+              <button class="filter-btn" data-filter="task" data-i18n="trace.task">Task</button>
+              <button class="filter-btn" data-filter="tool" data-i18n="trace.tool">Tool</button>
+              <button class="filter-btn" data-filter="decision" data-i18n="trace.decision">Decision</button>
+              <button class="filter-btn" data-filter="file" data-i18n="trace.file">File</button>
             </div>
-            <button id="view-toggle" class="view-toggle" title="Toggle view">👤 User</button>
+            <button id="view-toggle" class="view-toggle" title="Toggle view" data-i18n="trace.user">👤 User</button>
           </div>
         </div>
         <div id="timeline" class="timeline-list">
-          <div class="empty-state">No events yet</div>
+          <div class="empty-state" data-i18n="mission.noevents">No events yet</div>
         </div>
       </div>
 
       <!-- File Changes -->
       <div class="card">
-        <div class="card-label">FILE CHANGES</div>
+        <div class="card-label" data-i18n="mission.filechanges">FILE CHANGES</div>
         <div id="file-changes" class="file-list">
-          <div class="empty-state">No file changes</div>
+          <div class="empty-state" data-i18n="mission.nofiles">No file changes</div>
         </div>
       </div>
 
       <!-- Telemetry Debug -->
       <div class="card telemetry-card">
         <div class="card-header">
-          <span class="card-label">TELEMETRY DEBUG</span>
+          <span class="card-label" data-i18n="mission.telemetry">TELEMETRY DEBUG</span>
           <span class="telemetry-hint">🔧 Switch to Dev view for IDs + reasoning</span>
         </div>
         <div id="telemetry-debug" class="telemetry-list">
-          <div class="empty-state">No decisions yet</div>
+          <div class="empty-state" data-i18n="mission.nodecisions">No decisions yet</div>
         </div>
       </div>
 
@@ -108,12 +107,12 @@
     </section>
 
     <!-- ═══ F3: TRACE MODE ═══ -->
-    <section id="trace-view" class="hidden">
-      <!-- Trace Header: Task Context -->
-      <div class="card trace-header">
-        <div class="card-label">TRACE CONTEXT</div>
-        <div id="trace-task-info" class="trace-task-info">
-          <span id="trace-task-id" class="trace-task-id">—</span>
+    <section id="trace-view" class="main-content-view hidden">
+      <!-- Trace Header & Controls -->
+      <div class="trace-header">
+        <div class="trace-dev-info">
+          <span data-i18n="trace.last_task">Last Task:</span> <span id="trace-last-task-id">N/A</span>
+        </div>
           <span id="trace-task-status" class="trace-task-status">—</span>
         </div>
       </div>
@@ -127,10 +126,10 @@
       <div id="mcp-trace-section" class="mcp-trace-section">
         <div class="card mcp-trace-header">
           <div class="card-row">
-            <span class="card-label">MCP TRACE</span>
+            <span class="card-label" data-i18n="trace.mcp">MCP TRACE</span>
             <div class="mcp-trace-controls">
               <select id="mcp-trace-tool-filter" class="mcp-trace-select">
-                <option value="all">All Tools</option>
+                <option value="all" data-i18n="trace.alltools">All Tools</option>
               </select>
               <span id="mcp-trace-summary" class="mcp-trace-summary">—</span>
             </div>
@@ -147,7 +146,7 @@
       <div id="cost-section" class="cost-section">
         <div class="card cost-header">
           <div class="card-row">
-            <span class="card-label">COST TRACKING</span>
+            <span class="card-label" data-i18n="trace.cost">COST TRACKING</span>
             <span id="cost-summary" class="cost-summary">—</span>
           </div>
         </div>
@@ -178,7 +177,7 @@
       <!-- ═══ CONTROL PANEL ═══ -->
       <div id="control-section" class="control-section">
         <div class="card cost-header">
-          <span class="card-label">⚙️ SYSTEM CONTROL</span>
+          <span class="card-label" data-i18n="control.title">⚙️ SYSTEM CONTROL</span>
         </div>
         <div class="control-grid">
           <div class="control-card">
@@ -210,47 +209,47 @@
     </section>
 
     <!-- ═══ F4: FOCUS MODE — 4-PART LAYOUT ═══ -->
-    <section id="focus-view" class="focus-view hidden">
+    <section id="focus-view" class="main-content-view focus-view hidden">
       <!-- PART 1: HEADER -->
       <div class="focus-header">
         <span class="focus-title">⚡ FOCUS</span>
         <div class="focus-controls">
-          <span id="focus-status" class="focus-status">IDLE</span>
+          <span id="focus-status" class="focus-status" data-i18n="focus.awaiting">IDLE</span>
           <button id="focus-pause-btn" class="focus-pause-btn" title="Pause/Resume">PAUSE</button>
         </div>
       </div>
 
       <!-- PART 2: REASONING PANEL (scrollable) -->
       <div class="focus-reasoning-panel">
-        <div id="focus-thought" class="focus-thought">Awaiting reasoning...</div>
+        <div id="focus-thought" class="focus-thought" data-i18n="focus.awaiting">Awaiting reasoning...</div>
       </div>
 
       <!-- PART 3: BOTTOM ROW (3 equal cards) -->
       <div class="focus-bottom-row">
         <!-- Card 1: Prediction -->
         <div class="focus-card">
-          <div class="focus-card-title">Next Action</div>
+          <div class="focus-card-title" data-i18n="focus.nextaction">Next Action</div>
           <div id="focus-prediction-action" class="focus-card-content">Evaluating...</div>
           <div id="focus-prediction-confidence" class="focus-card-meta">Confidence: —</div>
         </div>
 
         <!-- Card 2: Tool -->
         <div class="focus-card">
-          <div class="focus-card-title">Active Tool</div>
-          <div id="focus-tool-display" class="focus-card-content">No tool running</div>
+          <div class="focus-card-title" data-i18n="focus.activetool">Active Tool</div>
+          <div id="focus-tool-display" class="focus-card-content" data-i18n="focus.notool">No tool running</div>
           <div id="focus-tool-duration" class="focus-card-meta">—</div>
         </div>
 
         <!-- Card 3: Context -->
         <div class="focus-card">
-          <div class="focus-card-title">Mission Context</div>
+          <div class="focus-card-title" data-i18n="focus.missioncontext">Mission Context</div>
           <div class="focus-card-content">
             <div class="focus-context-row">
-              <span class="focus-context-label">Goal:</span>
+              <span class="focus-context-label" data-i18n="focus.goal">Goal:</span>
               <span id="focus-context-goal" class="focus-context-value">—</span>
             </div>
             <div class="focus-context-row">
-              <span class="focus-context-label">Status:</span>
+              <span class="focus-context-label" data-i18n="focus.status">Status:</span>
               <span id="focus-context-status" class="focus-context-value">—</span>
             </div>
           </div>
@@ -259,20 +258,20 @@
     </section>
 
     <!-- ═══ F5: MEMORY MODE — 3-PANEL LAYOUT ═══ -->
-    <section id="memory-view" class="memory-view hidden">
+    <section id="memory-view" class="main-content-view memory-view hidden">
       <!-- Top: Search + Filter Bar -->
       <div class="memory-search-bar">
         <div class="memory-search-input-wrap">
           <span class="memory-search-icon">🔍</span>
-          <input id="memory-search-input" type="text" class="memory-search-input" placeholder="Search memories..." />
+          <input id="memory-search-input" type="text" class="memory-search-input" placeholder="Search memories..." data-i18n-placeholder="memory.search" />
         </div>
         <div class="memory-filter-chips" id="memory-filter-chips">
-          <button class="memory-chip active" data-filter="all">All</button>
-          <button class="memory-chip" data-filter="fact">Fact</button>
-          <button class="memory-chip" data-filter="belief">Belief</button>
-          <button class="memory-chip" data-filter="preference">Preference</button>
-          <button class="memory-chip" data-filter="skill">Skill</button>
-          <button class="memory-chip" data-filter="summary">Summary</button>
+          <button class="memory-chip active" data-filter="all" data-i18n="memory.all">All</button>
+          <button class="memory-chip" data-filter="fact" data-i18n="memory.fact">Fact</button>
+          <button class="memory-chip" data-filter="belief" data-i18n="memory.belief">Belief</button>
+          <button class="memory-chip" data-filter="preference" data-i18n="memory.preference">Preference</button>
+          <button class="memory-chip" data-filter="skill" data-i18n="memory.skill">Skill</button>
+          <button class="memory-chip" data-filter="summary" data-i18n="memory.summary">Summary</button>
         </div>
         <div class="memory-filter-extras">
           <button id="memory-filter-toggle" class="memory-filter-toggle" title="Advanced filters">⚙️</button>
@@ -337,14 +336,14 @@
       </div>
     </section>
 
-    <!-- ═══ F6: GRAPH VIEW ═══ -->
-    <section id="graph-view" class="hidden">
+    <!-- ═══ F6: GRAPH VIEW ═══ (ĐÃ BỎ - graph nằm trong hologram tab) ═══ -->
+    <section id="graph-view" class="main-content-view hidden" style="display:none">
       <!-- Graph Header: Task Context -->
       <div class="card graph-header">
-        <div class="card-label">COGNITIVE GRAPH</div>
+        <div class="card-label" data-i18n="graph.title">COGNITIVE GRAPH</div>
         <div id="graph-task-info" class="graph-task-info">
           <select id="graph-task-select" class="graph-task-select">
-            <option value="">-- Select Task --</option>
+            <option value="" data-i18n="graph.select">-- Select Task --</option>
           </select>
           <button id="graph-refresh-btn" class="graph-refresh-btn" title="Refresh">⟳</button>
           <span id="graph-task-id" class="graph-task-id">—</span>
@@ -356,32 +355,32 @@
       <!-- SVG Canvas -->
       <div id="graph-container" class="graph-container">
         <svg id="graph-svg" class="graph-svg" width="100%" height="600"></svg>
-        <div id="graph-empty-placeholder" class="empty-state hidden">No task selected</div>
+        <div id="graph-empty-placeholder" class="empty-state hidden" data-i18n="graph.notask">No task selected</div>
       </div>
 
       <!-- Legend -->
       <div class="card graph-legend">
-        <div class="legend-title">Legend</div>
+        <div class="legend-title" data-i18n="graph.legend">Legend</div>
         <div class="legend-items">
           <div class="legend-item">
             <span class="legend-node decision-node">●</span>
-            <span class="legend-label">Decision</span>
+            <span class="legend-label" data-i18n="graph.decision">Decision</span>
           </div>
           <div class="legend-item">
             <span class="legend-node tool-node">●</span>
-            <span class="legend-label">Tool</span>
+            <span class="legend-label" data-i18n="graph.tool">Tool</span>
           </div>
           <div class="legend-item">
             <span class="legend-node artifact-node">●</span>
-            <span class="legend-label">Artifact</span>
+            <span class="legend-label" data-i18n="graph.artifact">Artifact</span>
           </div>
           <div class="legend-item">
             <span class="legend-edge" style="border-top: 2px solid var(--accent)"></span>
-            <span class="legend-label">Caused</span>
+            <span class="legend-label" data-i18n="graph.caused">Caused</span>
           </div>
           <div class="legend-item">
             <span class="legend-edge" style="border-top: 2px solid var(--text-dim)"></span>
-            <span class="legend-label">Produced</span>
+            <span class="legend-label" data-i18n="graph.produced">Produced</span>
           </div>
         </div>
       </div>
@@ -392,12 +391,19 @@
       <!-- Brain Header -->
       <div class="brain-header">
         <div class="brain-header-left">
-          <span class="brain-title">🧠 NEURAL CORTEX</span>
+          <span class="brain-title" data-i18n="hologram.title">🧠 NEURAL CORTEX</span>
           <span id="brain-status" class="brain-status">INITIALIZING</span>
+        </div>
+        <div class="brain-header-center">
+          <div class="view-mode-toggle">
+            <button class="view-mode-btn active" data-mode="brain" id="view-mode-brain">🧠 Brain</button>
+            <button class="view-mode-btn" data-mode="combined" id="view-mode-combined">⚡ Combined</button>
+            <button class="view-mode-btn" data-mode="graph" id="view-mode-graph">📊 Graph</button>
+          </div>
         </div>
         <div class="brain-header-right">
           <div class="brain-activity-track">
-            <span class="brain-activity-label">ACTIVITY</span>
+            <span class="brain-activity-label" data-i18n="hologram.activity">ACTIVITY</span>
             <div class="brain-activity-bar">
               <div id="brain-activity-bar" class="brain-activity-fill low" style="width:0%"></div>
             </div>
@@ -437,6 +443,93 @@
         </div>
       </div>
 
+      <!-- Legend Panel -->
+      <div class="brain-legend" id="brain-legend">
+        <div class="brain-legend-header">
+          <span class="brain-legend-title">📊 LEGEND</span>
+          <button class="brain-legend-toggle" id="brain-legend-toggle" title="Toggle legend">▼</button>
+        </div>
+        <div class="brain-legend-content" id="brain-legend-content">
+          <div class="legend-section">
+            <div class="legend-section-title">🧠 Brain Nodes (Events)</div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#00ffff;box-shadow:0 0 6px #00ffff"></span>
+              <span class="legend-label">Event</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></span>
+              <span class="legend-label">Tool</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff88"></span>
+              <span class="legend-label">Decision</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ff00ff;box-shadow:0 0 6px #ff00ff"></span>
+              <span class="legend-label">Memory</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ff3333;box-shadow:0 0 6px #ff3333"></span>
+              <span class="legend-label">Error</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <div class="legend-section-title">📦 Graph Nodes (Code)</div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#00ffcc;box-shadow:0 0 6px #00ffcc"></span>
+              <span class="legend-label">Function</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ff66aa;box-shadow:0 0 6px #ff66aa"></span>
+              <span class="legend-label">Class</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#66aaff;box-shadow:0 0 6px #66aaff"></span>
+              <span class="legend-label">File</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#ffaa00;box-shadow:0 0 6px #ffaa00"></span>
+              <span class="legend-label">Module</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#aaff00;box-shadow:0 0 6px #aaff00"></span>
+              <span class="legend-label">HTTP Route</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#33ff99;box-shadow:0 0 6px #33ff99"></span>
+              <span class="legend-label">Package</span>
+            </div>
+          </div>
+          <div class="legend-section">
+            <div class="legend-section-title">🔗 Graph Edges (Relations)</div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#00ffcc"></span>
+              <span class="legend-label">Calls</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#ffaa00"></span>
+              <span class="legend-label">Imports</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#ff66aa"></span>
+              <span class="legend-label">Inherits</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#00ff88"></span>
+              <span class="legend-label">Similar To</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#00aaff"></span>
+              <span class="legend-label">HTTP Calls</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="border-color:#ff00ff"></span>
+              <span class="legend-label">Tests</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Neural Activity Log -->
       <div class="brain-log">
         <div class="brain-log-header">
@@ -461,9 +554,29 @@
     </aside>
   </main>
 
-  <script src="app.js"></script>
-  <script src="memory-tab.js"></script>
+  <script src="i18n.js"></script>
+  <script src="app.js?v=1782474487"></script>
+  <script src="memory-tab.js?v=1782474487"></script>
+  <script src="three.r128.min.js"></script>
+  <script src="d3-dispatch.min.js"></script>
+  <script src="d3-timer.min.js"></script>
+  <script src="d3-quadtree.min.js"></script>
+  <script src="d3-force.min.js"></script>
+  <script src="EffectComposer.js"></script>
+  <script src="RenderPass.js"></script>
+  <script src="ShaderPass.js"></script>
+  <script src="CopyShader.js"></script>
+  <script src="LuminosityHighPassShader.js"></script>
+  <script src="UnrealBloomPass.js"></script>
+  <!-- CDN fallbacks (uncomment if local files missing):
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="brain-tab.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  -->
+  <script src="brain-tab.js?v=1782474487"></script>
 </body>
 </html>

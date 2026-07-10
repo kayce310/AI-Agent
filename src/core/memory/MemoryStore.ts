@@ -39,6 +39,7 @@ export class MemoryStore {
     }
     this.filePath = path.join(dir, 'memories.json');
     this.loadFromDisk();
+    this.enforceLimit();
     this.startDecayInterval();
   }
 
@@ -350,7 +351,18 @@ export class MemoryStore {
   }
 
   private enforceLimit(): void {
-    if (this.items.size <= MAX_ACTIVE_MEMORIES) return;
+    if (this.items.size <= MAX_ACTIVE_MEMORIES) {
+      // Even if under the active limit, evict stale archived items
+      let evicted = 0;
+      for (const [id, item] of this.items) {
+        if (item.archived && !item.pinned && this.items.size - evicted > MAX_ACTIVE_MEMORIES / 2) {
+          this.items.delete(id);
+          evicted++;
+        }
+      }
+      if (evicted > 0) this.markDirty();
+      return;
+    }
     
     // Archive oldest/lowest-scoring items
     const sorted = Array.from(this.items.values())
@@ -361,6 +373,16 @@ export class MemoryStore {
     for (let i = 0; i < Math.min(toRemove, sorted.length); i++) {
       sorted[i].archived = true;
     }
+    
+    // Also remove archived items to free memory
+    let evicted = 0;
+    for (const [id, item] of this.items) {
+      if (item.archived && !item.pinned && evicted < toRemove) {
+        this.items.delete(id);
+        evicted++;
+      }
+    }
+    if (toRemove > 0 || evicted > 0) this.markDirty();
   }
 
   private startDecayInterval(): void {

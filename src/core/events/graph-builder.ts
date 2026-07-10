@@ -226,6 +226,8 @@ export class CognitiveGraphBuilder {
    * Build final graph
    */
   build(): CognitiveGraph {
+    // Reset edges before building to prevent duplication on re-build
+    this.edges = [];
     this.buildEdges();
 
     return {
@@ -233,6 +235,18 @@ export class CognitiveGraphBuilder {
       nodes: Array.from(this.nodes.values()),
       edges: this.edges,
     };
+  }
+
+  /**
+   * Clear all internal state.
+   * Useful for defensive cleanup when reusing a builder instance.
+   */
+  clear(): void {
+    this.nodes.clear();
+    this.edges = [];
+    this.decisionOrder = [];
+    this.toolsByDecision.clear();
+    this.artifactsByDecision.clear();
   }
 
   /**

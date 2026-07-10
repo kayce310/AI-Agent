@@ -9,10 +9,11 @@
  */
 
 import * as path from 'path';
-import { execFileSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, isCommandSafe, toFileUrl, addProcessedFile, BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
+import { classifyCommand, registerPending } from '../risk-gate.js';
 
 /** Validate filename contains only safe characters (no shell metacharacters) */
 function isFilenameSafe(name: string): boolean {
@@ -30,7 +31,9 @@ function processDocument(
     return { success: false, error: `Tên file chứa ký tự không an toàn: ${fileName}` };
   }
 
-  const tmpDir = path.join(BASE_PATH, '.tmp-convert-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  // SECURITY: Use unique temp directory to prevent race conditions
+  const uniqueId = `${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`;
+  const tmpDir = path.join(BASE_PATH, `.tmp-convert-${uniqueId}`);
   const tmpScriptPath = path.join(tmpDir, 'process.mjs');
 
   try {
@@ -130,7 +133,7 @@ const plugin: ToolPlugin = {
     },
     {
       name: 'execute_command',
-      description: 'Chạy lệnh hệ thống (với guard: chỉ cho phép lệnh an toàn)',
+      description: 'Chạy lệnh trên terminal. Dùng để: xem process(ps/tasklist), disk(df), ai(whoami), git, npm/node, ls/cat/type, python, docker. KHÔNG dùng được: crontab, sudo, chmod, rm, vi/nano, apt/yum, pipes(| ; &), shell injection.',
       schema: {
         type: 'object',
         properties: {
@@ -147,6 +150,16 @@ const plugin: ToolPlugin = {
           return { error: `Lệnh "${cmd}" không nằm trong whitelist các lệnh được phép.` };
         }
 
+        // ponytail: Risk Gate — ASK commands require approval
+        const riskLevel = classifyCommand(cmd);
+        if (riskLevel === 'ask') {
+          const approvalId = registerPending(cmd);
+          return { error: `Lệnh "${cmd}" yêu cầu phê duyệt. Chạy: node scripts/approve.js ${approvalId} (hoặc deny ${approvalId})` };
+        }
+        if (riskLevel === 'deny') {
+          return { error: `Lệnh "${cmd}" bị cấm bởi Risk Gate.` };
+        }
+
         // Parse command into program + args array
         // This prevents shell injection since no shell is involved
         const parts = cmd.match(/(?:[^\s"]+|"[^"]*")+/g) || [cmd];
@@ -160,15 +173,42 @@ const plugin: ToolPlugin = {
         }
 
         try {
-          const output = execFileSync(programName, execArgs, {
+          // SECURITY: Always use execFileSync with argument array (prevents shell injection)
+          // For built-in shell commands, we route through a safe wrapper
+          
+          // Map built-in commands to their safe equivalents
+          let finalProgram = programName;
+          let finalArgs = execArgs;
+          
+          // For shell built-ins on Windows, use cmd.exe with /c flag (safe parameterization)
+          if (programName.toLowerCase() === 'echo') {
+            finalProgram = process.platform === 'win32' ? 'cmd' : 'echo';
+            finalArgs = process.platform === 'win32' ? ['/c', 'echo', ...execArgs] : execArgs;
+          } else if (programName.toLowerCase() === 'dir') {
+            finalProgram = process.platform === 'win32' ? 'cmd' : 'ls';
+            finalArgs = process.platform === 'win32' ? ['/c', 'dir', ...execArgs] : ['-la', ...execArgs];
+          } else if (programName.toLowerCase() === 'ls') {
+            finalProgram = process.platform === 'win32' ? 'cmd' : 'ls';
+            finalArgs = process.platform === 'win32' ? ['/c', 'dir', '/b', ...execArgs] : execArgs;
+          } else if (programName.toLowerCase() === 'cat') {
+            finalProgram = process.platform === 'win32' ? 'cmd' : 'cat';
+            finalArgs = process.platform === 'win32' ? ['/c', 'type', ...execArgs] : execArgs;
+          } else if (programName.toLowerCase() === 'type') {
+            finalProgram = process.platform === 'win32' ? 'cmd' : 'cat';
+            finalArgs = process.platform === 'win32' ? ['/c', 'type', ...execArgs] : execArgs;
+          }
+          
+          // Execute with NO shell (prevents injection)
+          const output = execFileSync(finalProgram, finalArgs, {
             cwd: BASE_PATH,
             encoding: 'utf8',
             timeout: 60000,
             maxBuffer: 1024 * 1024,
             windowsHide: true,
-            // NO shell — execFileSync runs the binary directly
-            // This eliminates shell injection vectors
+            // CRITICAL: NO shell flag — execFileSync runs the binary directly
+            // This completely eliminates shell injection vectors
           });
+          
           if (!output || output.trim().length === 0) {
             return `✅ Lệnh chạy thành công (không có output)`;
           }

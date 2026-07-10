@@ -16,6 +16,7 @@ import { McpTrace } from './mcp-trace.js';
 import { CostTracker } from './cost-tracker.js';
 import { MemoryAPI } from '../memory/MemoryAPI.js';
 import { MemoryStore } from '../memory/MemoryStore.js';
+import { getOmniRouteHandlers } from '../omniroute/handlers.js';
 
 export interface DashboardServerOptions {
   port?: number;
@@ -23,12 +24,18 @@ export interface DashboardServerOptions {
   memoryApi?: MemoryAPI;
 }
 
+import { createServer } from 'http';
+import { Logger } from '../logger.js';
+
+const log = new Logger({ module: 'HTTPServer' });
+
 export class DashboardServer {
   private server: http.Server;
   private eventWebSocket: EventWebSocket;
   private eventApi: EventApi;
   private mcpTrace: McpTrace;
   private costTracker: CostTracker;
+  private omnirouteHandlers: any;
   private memoryApi: MemoryAPI | undefined;
   private port: number;
   private host: string;
@@ -41,6 +48,7 @@ export class DashboardServer {
     this.eventApi = new EventApi(eventBus);
     this.mcpTrace = new McpTrace(eventBus);
     this.costTracker = new CostTracker(eventBus, { budgetUsd: 10 });
+    this.omnirouteHandlers = getOmniRouteHandlers();
 
     this.server = http.createServer((req, res) => {
       this.handleRequest(req, res).catch(err => {
@@ -66,18 +74,42 @@ export class DashboardServer {
     }
 
     const url = req.url || '/';
+    // Strip query string for route matching
+    const pathname = url.split('?')[0];
 
     // ═══ STATIC FILES (Dashboard v6) ═══
-    if (url === '/' || url === '/index.html') {
+    if (pathname === '/' || pathname === '/index.html') {
       this.serveFile(res, 'src/dashboard/index.html', 'text/html; charset=utf-8');
       return;
     }
-    if (url === '/styles.css') {
+    if (pathname === '/styles.css') {
       this.serveFile(res, 'src/dashboard/styles.css', 'text/css; charset=utf-8');
       return;
     }
-    if (url === '/app.js') {
+    if (pathname === '/app.js') {
       this.serveFile(res, 'src/dashboard/app.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    // ═══ DASHBOARD MODULES (v8.1) ═══
+    if (pathname === '/utils.js') {
+      this.serveFile(res, 'src/dashboard/utils.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/render-mission.js') {
+      this.serveFile(res, 'src/dashboard/render-mission.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/render-trace.js') {
+      this.serveFile(res, 'src/dashboard/render-trace.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/inspector.js') {
+      this.serveFile(res, 'src/dashboard/inspector.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+
+    if (pathname === '/i18n.js') {
+      this.serveFile(res, 'src/dashboard/i18n.js', 'application/javascript; charset=utf-8');
       return;
     }
 
@@ -97,12 +129,58 @@ export class DashboardServer {
     }
 
     // ═══ MEMORY TAB JS ═══
-    if (url === '/memory-tab.js') {
+    if (pathname === '/memory-tab.js') {
       this.serveFile(res, 'src/dashboard/memory-tab.js', 'application/javascript; charset=utf-8');
       return;
     }
-    if (url === '/brain-tab.js') {
+    if (pathname === '/brain-tab.js') {
       this.serveFile(res, 'src/dashboard/brain-tab.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+
+    // ═══ LOCAL THREE.JS (for headless / CDN-offline mode) ═══
+    if (pathname === '/three.r128.min.js') {
+      this.serveFile(res, 'src/dashboard/three.r128.min.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/d3-force.min.js') {
+      this.serveFile(res, 'src/dashboard/d3-force.min.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/d3-dispatch.min.js') {
+      this.serveFile(res, 'src/dashboard/d3-dispatch.min.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/d3-timer.min.js') {
+      this.serveFile(res, 'src/dashboard/d3-timer.min.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/d3-quadtree.min.js') {
+      this.serveFile(res, 'src/dashboard/d3-quadtree.min.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/EffectComposer.js') {
+      this.serveFile(res, 'src/dashboard/EffectComposer.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/RenderPass.js') {
+      this.serveFile(res, 'src/dashboard/RenderPass.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/ShaderPass.js') {
+      this.serveFile(res, 'src/dashboard/ShaderPass.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/CopyShader.js') {
+      this.serveFile(res, 'src/dashboard/CopyShader.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/LuminosityHighPassShader.js') {
+      this.serveFile(res, 'src/dashboard/LuminosityHighPassShader.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/UnrealBloomPass.js') {
+      this.serveFile(res, 'src/dashboard/UnrealBloomPass.js', 'application/javascript; charset=utf-8');
       return;
     }
 
@@ -230,7 +308,7 @@ export class DashboardServer {
       return;
     }
 
-    // ═══ API: Graph ═══
+    // ═══ API: Graph (Cognitive Decision Graph from events) ═══
     if (url.startsWith('/api/graph/')) {
       const taskId = url.replace(/^\/api\/graph\//, '');
       if (!taskId) {
@@ -245,6 +323,42 @@ export class DashboardServer {
       return;
     }
 
+    // ═══ API: Code Graph (Knowledge Graph from source code) ═══
+    if (url === '/api/code-graph' || url.startsWith('/api/code-graph?')) {
+      const params = new URL(url, 'http://localhost').searchParams;
+      const projectPath = params.get('path') || process.cwd();
+      
+      try {
+        // Dynamic import to avoid loading at startup
+        const { scanCodebase } = await import('../knowledge/code-graph-builder.js');
+        const graph = await scanCodebase(projectPath + '/src');
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          data: {
+            nodes: graph.nodes,
+            edges: graph.edges,
+            stats: {
+              totalNodes: graph.nodes.length,
+              totalEdges: graph.edges.length,
+              byLabel: graph.nodes.reduce((acc, n) => {
+                acc[n.label] = (acc[n.label] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>),
+            }
+          }
+        }));
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Failed to scan codebase' 
+        }));
+      }
+      return;
+    }
+
     // ═══ API: MCP Trace ═══
     if (url === '/api/mcp/trace' || url.startsWith('/api/mcp/trace?')) {
       const params = new URL(url, 'http://localhost').searchParams;
@@ -253,6 +367,32 @@ export class DashboardServer {
       const response = this.mcpTrace.buildTrace(limit, toolName);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));
+      return;
+    }
+
+    // ═══ CIRCUIT BREAKER MANAGEMENT ═══
+    if (url === '/api/circuit-breaker/status') {
+      const { engineCircuitBreaker } = await import('../circuit-breaker.js');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        data: {
+          state: engineCircuitBreaker.getState(),
+          healthy: engineCircuitBreaker.isHealthy(),
+          failureCount: engineCircuitBreaker.getFailureCount(),
+        },
+      }));
+      return;
+    }
+
+    if (url === '/api/circuit-breaker/reset' && req.method === 'POST') {
+      const { engineCircuitBreaker } = await import('../circuit-breaker.js');
+      engineCircuitBreaker.reset();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        message: 'Circuit breaker reset to CLOSED state',
+      }));
       return;
     }
 
@@ -286,6 +426,14 @@ export class DashboardServer {
       return;
     }
 
+    // ═══ API: OmniRoute Integration ═══
+    if (pathname.startsWith('/api/omniroute')) {
+      const handled = await this.omnirouteHandlers.route(req, res, pathname);
+      if (handled) {
+        return;
+      }
+    }
+
     // 404
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ success: false, error: 'Not found' }));
@@ -300,7 +448,12 @@ export class DashboardServer {
         res.end('Internal server error');
         return;
       }
-      res.writeHead(200, { 'Content-Type': contentType });
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
       res.end(data);
     });
   }

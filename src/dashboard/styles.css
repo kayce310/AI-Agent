@@ -1,4 +1,6 @@
 /* ═══ RESET & BASE ═══ */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #0d1117;
@@ -19,17 +21,21 @@
   --orange: #d47629;
   --radius: 8px;
   --radius-sm: 4px;
-  --font: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
-  --font-mono: 'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  --font: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   --transition: 0.2s ease;
+  --shadow-card: 0 4px 20px rgba(0,0,0,0.3);
   --inspector-width: 360px;
 }
+
+::selection { background: var(--accent-bg); color: var(--accent); }
 
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -57,6 +63,7 @@ body {
 #ws-indicator { font-size: 14px; }
 .ws-connected { color: var(--green); }
 .ws-disconnected { color: var(--red); }
+.ws-connecting { color: var(--yellow); }
 
 .app-title {
   font-weight: 700;
@@ -77,6 +84,18 @@ body {
 }
 #theme-toggle:hover { background: var(--border); }
 
+#lang-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#lang-toggle:hover { background: var(--border); }
+
 /* ═══ TABS ═══ */
 .status-center {
   display: flex;
@@ -87,6 +106,9 @@ body {
 }
 
 .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px 12px;
   background: transparent;
   border: 1px solid transparent;
@@ -118,25 +140,27 @@ body {
   overflow: hidden;
 }
 
-#mission-view {
+.main-content-view {
   flex: 1;
   padding: 16px;
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
   min-width: 0;
-  transition: margin-right 0.25s ease;
+  transition: margin-right 0.25s ease; /* For inspector panel */
+  overflow-y: auto; /* Enable scrolling for content that exceeds viewport */
 }
 
-#trace-view {
-  flex: 1;
-  padding: 16px;
-  max-width: 1100px;
-  margin: 0 auto;
-  width: 100%;
-  min-width: 0;
-  overflow-y: auto;
-  transition: margin-right 0.25s ease;
+#mission-view, #trace-view, #focus-view, #memory-view, #graph-view {
+  /* All these views inherit from main-content-view implicitly */
+}
+
+#brain-view {
+  /* brain-view is handled separately to allow full width */
+  flex: 1; /* Allow it to grow and fill space */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide scrollbars if content overflows */
 }
 
 #trace-view.hidden, #mission-view.hidden,
@@ -988,6 +1012,49 @@ body {
   color: var(--text-dim);
 }
 
+.inspector-content .inspector-json.snippet {
+  max-height: 200px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--bg-secondary);
+  border-color: var(--accent-dim);
+}
+.inspector-content .inspector-section {
+  margin: 12px 0;
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+.inspector-content .inspector-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.inspector-content .inspector-linked-tool {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.inspector-content .inspector-linked-tool:last-child {
+  border-bottom: none;
+}
+.inspector-tool-name {
+  flex: 1;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.inspector-tool-dur {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
 .inspector-empty {
   color: var(--text-muted);
   font-style: italic;
@@ -1020,6 +1087,7 @@ body {
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .card-label {
@@ -1119,6 +1187,22 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tool-item.recent {
+  opacity: 0.6;
+  border-left-color: var(--text-muted);
+}
+
+.tool-item.recent .tool-name {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.tool-item .tool-finished {
+  color: #3fb950;
+  font-size: 11px;
+  margin-left: auto;
 }
 
 /* ═══ CURRENT DECISION ═══ */
@@ -2236,6 +2320,13 @@ body.light {
   font-size: 11px;
   font-family: var(--font-mono);
   max-width: 200px;
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+
+.graph-task-select option {
+  background: var(--bg-elevated, #1e1e2e);
+  color: var(--text, #cdd6f4);
 }
 
 .graph-task-select:focus {
@@ -2401,9 +2492,48 @@ body.light {
   50% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 136, 0.6); }
 }
 
+.brain-header-center {
+  display: flex;
+  align-items: center;
+}
+
 .brain-header-right {
   display: flex;
   align-items: center;
+}
+
+/* View Mode Toggle */
+.view-mode-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 20, 40, 0.6);
+  border-radius: 6px;
+  padding: 3px;
+  border: 1px solid rgba(0, 255, 255, 0.15);
+}
+
+.view-mode-btn {
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 255, 255, 0.6);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-mode-btn:hover {
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.view-mode-btn.active {
+  color: #000011;
+  background: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
 }
 
 .brain-activity-track {
@@ -2451,12 +2581,136 @@ body.light {
   flex: 1;
   position: relative;
   min-height: 300px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .brain-canvas-container canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
+  touch-action: none;
+}
+
+/* Legend Panel */
+.brain-legend {
+  position: absolute;
+  top: 70px;
+  right: 16px;
+  width: 200px;
+  background: rgba(0, 10, 30, 0.92);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.brain-legend.collapsed .brain-legend-content {
+  display: none;
+}
+
+.brain-legend.collapsed {
+  width: auto;
+}
+
+.brain-legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.brain-legend-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #00ffff;
+  letter-spacing: 1px;
+}
+
+.brain-legend-toggle {
+  background: none;
+  border: none;
+  color: rgba(0, 255, 255, 0.6);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.brain-legend-toggle:hover {
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.brain-legend-content {
+  padding: 10px 14px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.brain-legend-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.brain-legend-content::-webkit-scrollbar-track {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.brain-legend-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.legend-section {
+  margin-bottom: 12px;
+}
+
+.legend-section:last-child {
+  margin-bottom: 0;
+}
+
+.legend-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0, 255, 255, 0.7);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.08);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-line {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(200, 220, 255, 0.8);
 }
 
 /* Data Readouts */
@@ -2628,4 +2882,229 @@ body.light {
   .brain-readout-value {
     font-size: 14px;
   }
+}
+
+/* ═══ MOBILE RESPONSIVE — ALL TABS ═══ */
+@media (max-width: 900px) {
+  /* ── Status Bar: Tabs scroll ngang ── */
+  .status-center {
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: flex-start;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
+  }
+  .status-center::-webkit-scrollbar { height: 3px; }
+  .status-center::-webkit-scrollbar-track { background: transparent; }
+  .status-center::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* Edge fade indicator để người dùng biết còn tab để scroll */
+  .status-center::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    width: 24px;
+    min-width: 24px;
+    height: 100%;
+    background: linear-gradient(to left, var(--bg), transparent);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    font-size: 10px;
+    padding: 5px 8px;
+    flex-shrink: 0;
+  }
+  #status-bar {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 10px;
+  }
+  .status-left { gap: 6px; }
+  .status-right { gap: 6px; }
+  .app-title { font-size: 10px; letter-spacing: 1px; }
+  #event-count { font-size: 10px; }
+  #theme-toggle { font-size: 12px; padding: 3px 6px; }
+
+  /* ── General ── */
+  .main-content-view {
+    padding: 10px;
+  }
+
+  /* ── MISSION TAB ── */
+  .mission-goal { font-size: 14px; }
+  .card { padding: 10px; }
+  .card-label { font-size: 10px; }
+  .split-panel { grid-template-columns: 1fr; }
+
+  /* Timeline filters wrap */
+  .timeline-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .timeline-filters {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .filter-btn {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  .timeline-list .timeline-item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  /* File list */
+  .file-list .file-item {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+
+  /* Telemetry */
+  .telemetry-card .trace-decision-card { padding: 8px; }
+  .telemetry-hint { font-size: 10px; }
+
+  /* ── FOCUS TAB ── */
+  .focus-header { padding: 8px 10px; }
+  .focus-title { font-size: 14px; }
+  .focus-reasoning-panel { padding: 10px; }
+  .focus-thought { font-size: 13px; line-height: 1.5; }
+  .focus-bottom-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .focus-card { padding: 10px; }
+  .focus-card-title { font-size: 10px; }
+  .focus-card-content { font-size: 12px; }
+  .focus-task-row { flex-wrap: wrap; gap: 6px; }
+  .focus-pause-btn { font-size: 10px; padding: 4px 8px; }
+
+  /* ── TRACE TAB ── */
+  .trace-header { flex-direction: column; gap: 6px; }
+  .trace-decision-card { padding: 10px; }
+  .trace-decision-title { font-size: 13px; }
+  .trace-decision-reason { font-size: 12px; }
+  .trace-reasoning { font-size: 11px; }
+  .trace-tool-item, .trace-artifact-item { font-size: 11px; }
+
+  /* MCP Trace */
+  .mcp-trace-header .card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .mcp-trace-controls {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+  .mcp-trace-select { font-size: 11px; }
+  .mcp-trace-summary { font-size: 11px; }
+  .mcp-stat-summary { font-size: 11px; flex-wrap: wrap; }
+
+  /* Cost section */
+  .cost-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .cost-card { padding: 10px; }
+  .cost-card-value { font-size: 16px; }
+  .cost-card-label { font-size: 10px; }
+
+  /* Control section */
+  .control-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .control-card { padding: 8px; }
+  .control-value { font-size: 13px; }
+  .control-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .control-btn {
+    width: 100%;
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+  .control-output { font-size: 11px; }
+
+  /* ── MEMORY TAB ── */
+  .memory-search-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .memory-search-input { font-size: 13px; }
+  .memory-filter-chips {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .memory-chip { font-size: 10px; padding: 4px 8px; }
+  .memory-filter-extras {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .memory-count { font-size: 11px; }
+  .filter-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .memory-main {
+    flex-direction: column;
+  }
+  .memory-panel-left {
+    max-height: 50vh;
+  }
+  .memory-panel-right {
+    width: 100%;
+    max-height: 40vh;
+  }
+  .memory-list-item { padding: 8px; font-size: 12px; }
+  .memory-detail-content { font-size: 12px; }
+  .memory-detail-empty-icon { font-size: 32px; }
+  .memory-mini-graph svg { height: 80px; }
+
+  /* ── HOLOGRAM / BRAIN TAB ── */
+  .brain-header {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .brain-header-left { width: 100%; justify-content: space-between; }
+  .brain-header-center { width: 100%; }
+  .brain-header-right { width: 100%; }
+  .view-mode-toggle { gap: 4px; }
+  .view-mode-btn { font-size: 10px; padding: 4px 8px; }
+  .brain-title { font-size: 13px; }
+  .brain-status { font-size: 10px; }
+  .brain-activity-track { width: 100%; }
+  .brain-canvas-container { height: 40vh; }
+  .brain-readouts { gap: 6px; }
+  .brain-readout { min-width: 50px; padding: 4px 6px; }
+  .brain-readout-value { font-size: 13px; }
+  .brain-readout-label { font-size: 9px; }
+  .brain-legend-content { grid-template-columns: 1fr; }
+}
+
+/* ── EXTRA SMALL: < 480px — phones ── */
+@media (max-width: 480px) {
+  .main-content-view { padding: 6px; }
+  .card { padding: 8px; }
+  .card-label { font-size: 9px; }
+  .mission-goal { font-size: 13px; }
+  .tab-btn { font-size: 9px; padding: 4px 6px; }
+
+  .trace-decision-card { padding: 8px; }
+  .trace-decision-title { font-size: 12px; }
+
+  .focus-thought { font-size: 12px; }
+  .focus-reasoning-panel { padding: 8px; }
+
+  .brain-readout { min-width: 44px; padding: 3px 5px; }
+  .brain-readout-value { font-size: 12px; }
+  .brain-canvas-container { height: 35vh; }
 }

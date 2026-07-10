@@ -8,7 +8,14 @@
  */
 
 import { Logger } from '../logger.js';
+import { CronStore, getCronStore } from './cron-store.js';
 const log = new Logger({ module: 'Cron' });
+
+/**
+ * Callback for cron alert notifications.
+ * Called when a job returns a non-null string (alert needed).
+ */
+export type AlertCallback = (message: string) => Promise<void>;
 
 export interface CronJob {
   name: string;
@@ -29,6 +36,13 @@ export class CronScheduler {
   private jobs: Map<string, CronJob> = new Map();
   private timers: Map<string, ReturnType<typeof setInterval>> = new Map();
   private isStarted = false;
+  private onAlert: AlertCallback | null = null;
+  private store: CronStore;
+
+  constructor(onAlert?: AlertCallback) {
+    this.onAlert = onAlert || null;
+    this.store = getCronStore();
+  }
 
   /**
    * Register a cron job.
@@ -39,6 +53,17 @@ export class CronScheduler {
       log.warn(`Cron job "${job.name}" already registered, overwriting`);
     }
     this.jobs.set(job.name, { ...job, running: false });
+
+    // Persist job definition
+    this.store.saveJob({
+      name: job.name,
+      interval_ms: job.intervalMs,
+      timeout_ms: job.timeoutMs ?? 0,
+      enabled: 1,
+      last_run: null,
+      last_result: null,
+    });
+
     log.info(`Registered cron job: ${job.name} (every ${job.intervalMs / 1000}s)`);
   }
 
@@ -66,6 +91,7 @@ export class CronScheduler {
     });
     this.timers.clear();
     this.isStarted = false;
+    log.info('Cron scheduler stopped');
   }
 
   /**
@@ -84,6 +110,7 @@ export class CronScheduler {
 
     job.running = true;
     job.lastRun = Date.now();
+    const runId = this.store.startRun(job.name);
 
     try {
       // Wrap handler with optional timeout
@@ -99,14 +126,43 @@ export class CronScheduler {
         result = await job.handler();
       }
       job.lastResult = result || 'ok';
-      if (result && notifyOnSuccess) {
-        return result;
+
+      // Persist job state and run result
+      this.store.saveJob({
+        name: job.name,
+        last_run: job.lastRun,
+        last_result: job.lastResult,
+        interval_ms: job.intervalMs,
+        timeout_ms: job.timeoutMs ?? 0,
+      });
+      this.store.completeRun(runId, result);
+      if (result) {
+        // Fire alert callback if set
+        if (this.onAlert) {
+          this.onAlert(`*${job.name}*: ${result}`).catch(e => log.error(`Alert callback failed: ${e}`));
+        }
+        if (notifyOnSuccess) {
+          return result;
+        }
       }
       return result; // null = no notification needed
     } catch (err: any) {
       const errorMsg = `Cron job "${name}" failed: ${err.message}`;
       log.error(errorMsg);
       job.lastResult = errorMsg;
+      // Persist failure
+      this.store.failRun(runId, errorMsg);
+      this.store.saveJob({
+        name: job.name,
+        last_run: job.lastRun,
+        last_result: errorMsg,
+        interval_ms: job.intervalMs,
+        timeout_ms: job.timeoutMs ?? 0,
+      });
+      // Fire alert callback for errors too
+      if (this.onAlert) {
+        this.onAlert(`*${job.name}*: ${errorMsg}`).catch(e => log.error(`Alert callback failed: ${e}`));
+      }
       return errorMsg; // Error always returns notification
     } finally {
       job.running = false;

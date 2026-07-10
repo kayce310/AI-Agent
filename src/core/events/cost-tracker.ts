@@ -105,6 +105,8 @@ export class CostTracker {
   private criticalThresholdPct: number;
   private maxSingleCallUsd: number;
   private maxRecords: number;
+  private maxAlerts: number;
+  private maxTasks: number;
 
   // Running session totals
   private sessionInput = 0;
@@ -121,6 +123,8 @@ export class CostTracker {
     this.criticalThresholdPct = config?.criticalThresholdPct ?? 90;
     this.maxSingleCallUsd = config?.maxSingleCallUsd ?? 0.50;
     this.maxRecords = config?.maxRecords ?? 10000;
+    this.maxAlerts = 100;
+    this.maxTasks = 500;
 
     this.subscribeToEvents();
   }
@@ -206,6 +210,19 @@ export class CostTracker {
     // Per-task breakdown
     if (taskId) {
       if (!this.byTask[taskId]) {
+        // Evict oldest task if over limit
+        const taskKeys = Object.keys(this.byTask);
+        if (taskKeys.length >= this.maxTasks) {
+          let oldestKey = taskKeys[0];
+          let oldestTime = this.byTask[oldestKey].lastCallAt;
+          for (const k of taskKeys) {
+            if (this.byTask[k].lastCallAt < oldestTime) {
+              oldestKey = k;
+              oldestTime = this.byTask[k].lastCallAt;
+            }
+          }
+          delete this.byTask[oldestKey];
+        }
         this.byTask[taskId] = {
           taskId,
           totalInput: 0,
@@ -231,6 +248,11 @@ export class CostTracker {
 
   private checkAlerts(callCost: number, model: string): void {
     const now = Date.now();
+
+    // Cap alerts
+    if (this.alerts.length > this.maxAlerts) {
+      this.alerts = this.alerts.slice(-this.maxAlerts);
+    }
 
     // High single-call cost
     if (callCost > this.maxSingleCallUsd) {

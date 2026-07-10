@@ -1,5 +1,5 @@
 /**
- * @file Kato Agent — Mission Control Dashboard
+ * @file Coral Agent — Mission Control Dashboard
  * @version 9.2.0 — Phase 4D.5: Dashboard Architecture Consolidation
  * 
  * Architecture: Events → API → UI
@@ -12,7 +12,9 @@
   'use strict';
 
   // ═══ CONFIG ═══
-  const WS_URL = `ws://${location.host}/ws/events`;
+  const WS_PROTOCOL = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const WS_HOST = location.host || '127.0.0.1:8766';
+  const WS_URL = `${WS_PROTOCOL}//${WS_HOST}/ws/events`;
   const STATUS_BADGES = {
     idle: { label: 'IDLE', class: 'badge-idle' },
     working: { label: 'RUNNING', class: 'badge-working' },
@@ -28,6 +30,7 @@
     currentTaskId: null,
     currentTaskLabel: null,
     activeTools: [],
+    recentTools: [],  // Tools that just finished (kept visible briefly)
     recentFiles: [],
     lastError: null,
     recentDecisions: [],
@@ -51,6 +54,7 @@
   let currentTab = 'mission';  // 'mission' | 'trace'
   let traceTaskId = null;  // Currently displayed task in trace
   let lastCompletedTaskId = null;  // Fallback task for trace
+  let _renderPending = false;  // RAF debounce flag – batch renders into 60fps frame
 
   // Inspector state
   let selectedEntity = null;
@@ -70,6 +74,24 @@
   const fileChangesEl = $('#file-changes');
   const errorDisplay = $('#error-display');
   const errorMessage = $('#error-message');
+
+  // API response cache with TTL (prevents redundant API calls on fast event loops)
+  const _apiCache = new Map();
+  async function _cachedFetch(url, ttlMs = 5000) {
+    const now = Date.now();
+    const cached = _apiCache.get(url);
+    if (cached && now - cached.ts < ttlMs) return cached.data;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      _apiCache.set(url, { data, ts: now });
+      return data;
+    } catch (e) {
+      if (cached) return cached.data;  // stale cache is better than nothing
+      throw e;
+    }
+  }
+
   const themeToggle = $('#theme-toggle');
   const telemetryDebugEl = $('#telemetry-debug');
   const viewToggleBtn = $('#view-toggle');
@@ -96,6 +118,8 @@
     setupInspector();
     connectWebSocket();
     fetchInitialData();
+    // Expose state for brain-tab.js Combined mode
+    window.__agentState = agentState;
   }
 
   // ═══ WEBSOCKET ═══
@@ -103,28 +127,75 @@
     try {
       ws = new WebSocket(WS_URL);
       ws.onopen = () => {
+        console.log('[Dashboard] WebSocket connected');
         wsIndicator.className = 'ws-connected';
         wsIndicator.title = 'WebSocket connected';
       };
-      ws.onclose = () => {
+      ws.onclose = (e) => {
+        console.log(`[Dashboard] WebSocket closed: code=${e.code} reason=${e.reason}`);
         wsIndicator.className = 'ws-disconnected';
         wsIndicator.title = 'WebSocket disconnected — retrying in 3s';
         setTimeout(connectWebSocket, 3000);
       };
-      ws.onerror = () => {};
+      ws.onerror = (e) => {
+        console.error('[Dashboard] WebSocket error:', e);
+        wsIndicator.className = 'ws-disconnected';
+        wsIndicator.title = 'WebSocket error — check console';
+      };
       ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data);
           if (msg.type === 'init' || msg.type === 'event') {
-            if (msg.state) Object.assign(agentState, msg.state);  // Merge, don't replace
-            if (msg.event) {
+            if (msg.state) {
+            // Whitelist merge: only accept backend-owned fields, protect frontend-only state
+            const BACKEND_STATE_KEYS = ['status','currentGoal','currentTaskId','currentTaskLabel',
+              'activeTools','recentFiles','lastError','recentDecisions','timeline',
+              'eventCount','lastConfidence','streamingText'];
+            for (const key of BACKEND_STATE_KEYS) {
+              if (key in msg.state) agentState[key] = msg.state[key];
+            }
+            // When task finishes (status → idle), preserve last task display
+            // State will be cleared when NEW task starts (see applyEvent task_started)
+            // This ensures user can still see what the last task accomplished
+          }
+          if (msg.event) {
               allEvents = [msg.event, ...allEvents].slice(0, 200);
+              // Auto-load graph when new task starts
+              if (msg.event.type === 'task_started' && msg.event.payload?.taskId) {
+                const newTaskId = msg.event.payload.taskId;
+                if (window.HologramBrain && typeof window.HologramBrain.loadGraph === 'function') {
+                  window.HologramBrain.loadGraph(newTaskId).catch(err => {
+                    console.warn('[Dashboard] Failed to load graph for task:', newTaskId, err.message);
+                  });
+                }
+              }
             }
             if (msg.events && msg.events.length > 0) {
-              allEvents = [...msg.events, ...allEvents].slice(0, 200);
-            }
+                allEvents = [...msg.events, ...allEvents].slice(0, 200);
+                // Also extract last completed task from WS init events
+                if (!lastCompletedTaskId) {
+                  for (const ev of msg.events) {
+                    if (ev.type === 'task_finished' && ev.payload?.taskId) {
+                      lastCompletedTaskId = ev.payload.taskId;
+                      break;
+                    }
+                  }
+                }
+              }
           }
-          renderAllFromState();
+          // RAF debounce – batch rapid WS events into a single 60fps frame
+          if (!_renderPending) {
+            _renderPending = true;
+            requestAnimationFrame(() => {
+              _renderPending = false;
+              renderAllFromState();
+            });
+          }
+          // Forward agent events to HologramBrain via CustomEvent (no duplicate WebSocket)
+          var brainView = document.getElementById('brain-view');
+          if (brainView) {
+            brainView.dispatchEvent(new CustomEvent('hologram:agent-event', { detail: msg }));
+          }
           // If inspector is open and selectedEntity is an event, check if it was updated
           if (selectedEntity && selectedEntity.kind === 'event') {
             const freshEvent = findEventById(selectedEntity.event.id);
@@ -163,6 +234,13 @@
       if (eventsRes.ok) {
         const eventsData = await eventsRes.json();
         allEvents = (eventsData.data || []).slice(0, 200);
+        // Extract last completed task ID from initial events
+        for (const ev of allEvents) {
+          if (ev.type === 'task_finished' && ev.payload?.taskId) {
+            lastCompletedTaskId = ev.payload.taskId;
+            break;
+          }
+        }
       }
 
       renderAllFromState();
@@ -194,13 +272,14 @@
         agentState.eventCount = 0;  // Reset counter on new task
         eventCount.textContent = '0 events';
         traceTaskId = p.taskId || null;
+        // Clear stale decisions from previous tasks
+        agentState.recentDecisions = [];
+        agentState.streamingText = '';
+        agentState.activeTools = [];
         break;
         
       case 'task_finished':
         agentState.status = p.success ? 'idle' : 'error';
-        agentState.currentGoal = null;
-        agentState.currentTaskId = null;
-        agentState.currentTaskLabel = null;
         if (p.taskId) lastCompletedTaskId = p.taskId;
         break;
         
@@ -214,15 +293,21 @@
         agentState.toolTimer = setInterval(updateToolDuration, 100);
         break;
         
-      case 'tool_finished':
+      case 'tool_finished': {
+        const finishedTool = agentState.activeTools.find(t => t.callId === p.callId);
         agentState.activeTools = agentState.activeTools.filter(t => t.callId !== p.callId);
+        // Keep finished tool visible briefly (3s) so user can see it
+        if (finishedTool) {
+          agentState.recentTools.unshift({ ...finishedTool, finishedAt: Date.now() });
+          if (agentState.recentTools.length > 5) agentState.recentTools.pop();
+        }
         // Stop tool timer
         if (agentState.toolTimer) {
           clearInterval(agentState.toolTimer);
           agentState.toolTimer = null;
         }
         break;
-        
+      }
       case 'file_created':
         agentState.recentFiles.unshift({ path: p.path, event: 'created', timestamp: event.timestamp });
         if (agentState.recentFiles.length > 50) agentState.recentFiles.pop();
@@ -376,15 +461,27 @@
     renderTimeline();
     renderFileChanges();
     renderTelemetryDebug();
-     if (currentTab === 'trace') { renderTrace(); renderMcpTrace(); renderCost(); renderControl(); }
-    if (currentTab === 'focus') {
-      renderFocus();
-      updateConfidenceBar();
-    }
-    if (currentTab === 'graph') renderGraph();
-    // Memory: refresh list when on memory tab (new events → new memories)
-    if (currentTab === 'memory') {
-      document.dispatchEvent(new CustomEvent('memory-refresh'));
+    renderError();
+
+    // Tab-aware: skip heavy renders if their tab isn't active
+    switch (currentTab) {
+      case 'trace':
+        renderTrace();
+        renderMcpTrace();
+        renderCost();
+        renderControl();
+        break;
+      case 'focus':
+        renderFocus();
+        updateConfidenceBar();
+        break;
+      case 'graph':
+        renderGraph();
+        break;
+      case 'memory':
+        document.dispatchEvent(new CustomEvent('memory-refresh'));
+        break;
+      // 'mission' and 'brain' — no extra heavy rendering needed in the hot path
     }
   }
 
@@ -397,16 +494,23 @@
   }
 
   function renderActiveTools() {
-    if (agentState.activeTools.length === 0) {
+    // Auto-purge expired recent tools (older than 3s)
+    const now = Date.now();
+    agentState.recentTools = agentState.recentTools.filter(t => t.finishedAt && (now - t.finishedAt) < 3000);
+
+    const tools = [...agentState.activeTools, ...agentState.recentTools];
+    if (tools.length === 0) {
       activeToolsEl.innerHTML = '<div class="empty-state">No active tools</div>';
       return;
     }
-    activeToolsEl.innerHTML = agentState.activeTools.map(t => {
+    activeToolsEl.innerHTML = tools.map(t => {
       const argsStr = summarizeArgs(t.args);
       const isSelected = selectedEntity && selectedEntity.kind === 'tool' && selectedEntity.tool.callId === t.callId;
-      return `<div class="tool-item${isSelected ? ' selected' : ''}" data-callid="${escapeHtml(t.callId)}" data-toolname="${escapeHtml(t.toolName)}">
+      const isRecent = !!t.finishedAt;
+      return `<div class="tool-item${isSelected ? ' selected' : ''}${isRecent ? ' recent' : ''}" data-callid="${escapeHtml(t.callId)}" data-toolname="${escapeHtml(t.toolName)}">
         <span class="tool-name">${escapeHtml(t.toolName)}</span>
         ${argsStr ? `<span class="tool-args">${escapeHtml(argsStr)}</span>` : ''}
+        ${isRecent ? '<span class="tool-finished">✓</span>' : ''}
       </div>`;
     }).join('');
   }
@@ -447,7 +551,11 @@
 
   function renderNextAction() {
     const d = agentState.recentDecisions[0];
-    nextActionEl.textContent = d ? d.nextAction : '—';
+    if (!d) {
+      nextActionEl.textContent = '— Awaiting action —';
+      return;
+    }
+    nextActionEl.textContent = d.nextAction;
   }
 
   function renderTimeline() {
@@ -461,7 +569,8 @@
       return;
     }
 
-    timelineEl.innerHTML = items.slice(0, 100).map(e => {
+    // Render max 50 items (reduced from 100 — fewer DOM nodes = faster layout)
+    timelineEl.innerHTML = items.slice(0, 50).map(e => {
       const time = formatTime(e.timestamp);
       const type = e.type.replace('_', ' ');
       const p = e.payload || {};
@@ -683,13 +792,38 @@
 
   function renderDecisionInspector(decision) {
     inspectorTitle.textContent = 'DECISION';
+    
+    // Find linked tool events via decisionId
+    let linkedToolsHtml = '';
+    if (decision.decisionId) {
+      const linkedEvents = allEvents.filter(ev =>
+        ev.payload && ev.payload.decisionId === decision.decisionId &&
+        (ev.type === 'tool_called' || ev.type === 'tool_finished')
+      );
+      if (linkedEvents.length > 0) {
+        linkedToolsHtml = '<div class="inspector-section"><div class="inspector-section-title">🔧 Linked Tool Calls</div>';
+        for (const ev of linkedEvents) {
+          const p = ev.payload;
+          const success = p.success !== undefined ? (p.success ? '✅' : '❌') : '⏳';
+          const dur = p.durationMs ? `${p.durationMs}ms` : '';
+          linkedToolsHtml += `<div class="inspector-linked-tool">
+            <span class="inspector-tool-icon">${success}</span>
+            <span class="inspector-tool-name">${escapeHtml(p.toolName || '?')}</span>
+            <span class="inspector-tool-dur">${dur}</span>
+          </div>`;
+        }
+        linkedToolsHtml += '</div>';
+      }
+    }
+
     inspectorContent.innerHTML =
       field('Decision', decision.decision) +
       field('Reason', decision.reason) +
       field('Next Action', decision.nextAction, 'mono') +
       (decision.decisionId ? field('Decision ID', decision.decisionId, 'mono') : '') +
       (decision.taskId ? field('Task ID', decision.taskId, 'mono') : '') +
-      (decision.reasoningSnippet ? field('Reasoning Snippet', '<div class="inspector-json">' + escapeHtml(decision.reasoningSnippet) + '</div>') : '') +
+      (decision.reasoningSnippet ? field('Reasoning Snippet', '<div class="inspector-json snippet">' + escapeHtml(decision.reasoningSnippet) + '</div>') : '') +
+      linkedToolsHtml +
       field('Timestamp', formatTime(decision.timestamp) + ' (' + decision.timestamp + ')');
   }
 
@@ -739,7 +873,8 @@
 
   function formatTime(ts) {
     if (!ts) return '';
-    const d = new Date(ts);
+    // Memoize time formatting: same timestamp → same result
+    const d = typeof ts === 'number' ? new Date(ts) : new Date(ts);
     return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
@@ -786,13 +921,13 @@
 
   // ═══ THEME ═══
   function loadTheme() {
-    const saved = localStorage.getItem('kato-theme');
+    const saved = localStorage.getItem('coral-theme');
     if (saved === 'light') document.body.classList.add('light');
   }
   function setupThemeToggle() {
     themeToggle.addEventListener('click', () => {
       document.body.classList.toggle('light');
-      localStorage.setItem('kato-theme', document.body.classList.contains('light') ? 'light' : 'dark');
+      localStorage.setItem('coral-theme', document.body.classList.contains('light') ? 'light' : 'dark');
     });
   }
 
@@ -875,9 +1010,8 @@
     }
 
     try {
-      // Fetch graph from API
-      const res = await fetch(`/api/graph/${taskId}`);
-      const json = await res.json();
+      // Fetch graph from API (cached 5s — same taskId = same graph data)
+      const json = await _cachedFetch(`/api/graph/${taskId}`);
       
       if (!json.success || !json.data) {
         document.getElementById('graph-task-id').textContent = taskId;
@@ -1027,7 +1161,7 @@
     tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
     document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
     document.getElementById('tab-memory')?.addEventListener('click', () => switchTab('memory'));
-    document.getElementById('tab-graph')?.addEventListener('click', () => switchTab('graph'));
+    // Tab graph riêng đã bỏ - graph nằm trong brain tab
     document.getElementById('tab-brain')?.addEventListener('click', () => switchTab('brain'));
     
     // Setup pause button (Priority 5)
@@ -1035,6 +1169,48 @@
     if (pauseBtn) {
       pauseBtn.addEventListener('click', togglePauseFocus);
     }
+
+    // Legend toggle cho brain tab
+    const legendToggle = document.getElementById('brain-legend-toggle');
+    const legend = document.getElementById('brain-legend');
+    if (legendToggle && legend) {
+      // Collapse mặc định trên mobile
+      if (window.innerWidth < 768) {
+        legend.classList.add('collapsed');
+        legendToggle.textContent = '▶';
+      }
+      legendToggle.addEventListener('click', function () {
+        legend.classList.toggle('collapsed');
+        legendToggle.textContent = legend.classList.contains('collapsed') ? '▶' : '▼';
+      });
+    }
+
+    // View mode buttons for Brain tab (🧠 Brain / ⚡ Combined / 📊 Graph)
+    setupBrainViewModes();
+  }
+
+  function setupBrainViewModes() {
+    const modes = [
+      { btn: 'view-mode-brain', mode: 'brain' },
+      { btn: 'view-mode-combined', mode: 'combined' },
+      { btn: 'view-mode-graph', mode: 'graph' },
+    ];
+    modes.forEach(function (m) {
+      var el = document.getElementById(m.btn);
+      if (!el) return;
+      el.addEventListener('click', function () {
+        // Update active class
+        modes.forEach(function (x) {
+          var xel = document.getElementById(x.btn);
+          if (xel) xel.classList.remove('active');
+        });
+        el.classList.add('active');
+        // Call CodeGraph if available
+        if (window.CodeGraph && typeof window.CodeGraph.setMode === 'function') {
+          window.CodeGraph.setMode(m.mode);
+        }
+      });
+    });
   }
 
   function switchTab(tab) {
@@ -1045,32 +1221,35 @@
     tabTraceBtn?.classList.toggle('active', tab === 'trace');
     document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
     document.getElementById('tab-memory')?.classList.toggle('active', tab === 'memory');
-    document.getElementById('tab-graph')?.classList.toggle('active', tab === 'graph');
     document.getElementById('tab-brain')?.classList.toggle('active', tab === 'brain');
+    // Tab graph riêng đã bị bỏ - graph nằm trong brain tab
     
     missionView?.classList.toggle('hidden', tab !== 'mission');
     traceView?.classList.toggle('hidden', tab !== 'trace');
     document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
     document.getElementById('memory-view')?.classList.toggle('hidden', tab !== 'memory');
-    document.getElementById('graph-view')?.classList.toggle('hidden', tab !== 'graph');
     document.getElementById('brain-view')?.classList.toggle('hidden', tab !== 'brain');
+    // Graph view riêng không còn - graph nằm trong brain tab
     
     if (tab === 'trace') {
       renderTrace();
-       renderMcpTrace();
+      renderMcpTrace();
       renderCost();
+      renderControl();
     } else if (tab === 'focus') {
       renderFocus();
     } else if (tab === 'memory') {
       // Signal memory tab to load (handled by memory-tab.js)
       document.dispatchEvent(new CustomEvent('memory-tab-activated'));
-    } else if (tab === 'graph') {
-      renderGraph();
     } else if (tab === 'brain') {
-      // Initialize hologram brain on first visit
+      // Initialize CodeGraph on FIRST visit only
       const container = document.getElementById('brain-canvas-container');
-      if (container && window.THREE && window.HologramBrain && !container.querySelector('canvas')) {
-        window.HologramBrain.init(container);
+      if (container && window.THREE && window.CodeGraph && !container.querySelector('canvas')) {
+        window.CodeGraph.init(container);
+        // Load graph data automatically
+        window.CodeGraph.loadGraph().catch(err => {
+          console.warn('[Dashboard] Failed to load graph:', err.message);
+        });
       }
     }
   }
@@ -1097,6 +1276,13 @@
           if (lastCompletedTaskId) {
             traceTaskId = lastCompletedTaskId;
             renderTrace();
+          } else {
+            btn.textContent = '⏳ No completed tasks yet';
+            btn.disabled = true;
+            setTimeout(() => {
+              btn.textContent = '📖 Open Latest Trace';
+              btn.disabled = false;
+            }, 2000);
           }
         });
       }
@@ -1104,8 +1290,7 @@
     }
     
     // Fetch trace from API (backend builds it)
-    fetch(`/api/trace/${encodeURIComponent(taskId)}`)
-      .then(res => res.json())
+    _cachedFetch(`/api/trace/${encodeURIComponent(taskId)}`)
       .then(data => {
         if (!data.success) {
           traceContainer.innerHTML = `<div class="empty-state">Error: ${escapeHtml(data.error || 'Unknown error')}</div>`;
@@ -1133,13 +1318,13 @@
         traceContainer.innerHTML = html;
         
         // Attach click handlers
-        traceContainer.querySelectorAll('[data-decision-index]').forEach(el => {
+        traceContainer.find('[data-decision-index]').forEach(el => {
           el.addEventListener('click', (e) => onTraceDecisionClick(e, trace.decisions));
         });
-        traceContainer.querySelectorAll('[data-trace-tool-idx]').forEach(el => {
+        traceContainer.find('[data-trace-tool-idx]').forEach(el => {
           el.addEventListener('click', (e) => onTraceToolClick(e, trace.decisions));
         });
-        traceContainer.querySelectorAll('[data-trace-artifact-idx]').forEach(el => {
+        traceContainer.find('[data-trace-artifact-idx]').forEach(el => {
           el.addEventListener('click', (e) => onTraceArtifactClick(e, trace.decisions));
         });
       })
@@ -1161,8 +1346,7 @@
     const toolFilter = filterEl?.value || 'all';
     const url = toolFilter === 'all' ? '/api/mcp/trace?limit=200' : `/api/mcp/trace?limit=200&tool=${encodeURIComponent(toolFilter)}`;
 
-    fetch(url)
-      .then(r => r.json())
+    _cachedFetch(url)
       .then(data => {
         if (!data.success || !data.data) {
           statsEl.innerHTML = '<div class="empty-state">No tool trace data</div>';
@@ -1247,8 +1431,7 @@
    * Render COST panel — budget, spending, alerts
    */
   function renderCost() {
-    fetch('/api/cost/session')
-      .then(r => r.json())
+    _cachedFetch('/api/cost/session')
       .then(data => {
         if (!data.success) return;
         const s = data.data;
@@ -1256,7 +1439,7 @@
         const barEl = document.getElementById('cost-progress-bar');
         const pctEl = document.getElementById('cost-budget-pct');
         if (budgetEl) budgetEl.textContent = `$${s.totalCostUsd.toFixed(4)}`;
-        fetch('/api/cost/budget').then(r => r.json()).then(bd => {
+        _cachedFetch('/api/cost/budget').then(bd => {
           if (!bd.success) return;
           const b = bd.data;
           if (barEl) {
@@ -1295,8 +1478,7 @@
         }
       })
       .catch(() => {});
-    fetch('/api/cost/alerts')
-      .then(r => r.json())
+    _cachedFetch('/api/cost/alerts')
       .then(data => {
         const alertsEl = document.getElementById('cost-alerts');
         if (!alertsEl || !data.success || !data.data?.length) return;
@@ -1317,8 +1499,7 @@
    */
   function renderControl() {
     // Fetch health status
-    fetch('/api/health')
-      .then(r => r.json())
+    _cachedFetch('/api/health')
       .then(data => {
         if (!data.success) return;
         const el = document.getElementById('ctrl-agent-status');
@@ -1332,8 +1513,7 @@
       .catch(() => {});
 
     // Fetch memory stats
-    fetch('/api/memory/stats')
-      .then(r => r.json())
+    _cachedFetch('/api/memory/stats')
       .then(data => {
         if (!data.success) return;
         const el = document.getElementById('ctrl-memory-count');
@@ -1342,8 +1522,7 @@
       .catch(() => {});
 
     // Fetch event stats
-    fetch('/api/events/stats')
-      .then(r => r.json())
+    _cachedFetch('/api/events/stats')
       .then(data => {
         if (!data.success) return;
         const total = Object.values(data.data || {}).reduce((sum, v) => sum + v, 0);
