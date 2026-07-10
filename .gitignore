@@ -286,3 +286,6 @@ __pycache__/
 *.pyc
 nul
 tests-to-delete.txt
+
+# Tracked binary cache — prevent accidental updates
+src/core/sentiment/__pycache__/
