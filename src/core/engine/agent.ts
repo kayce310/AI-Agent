@@ -590,35 +590,33 @@ export class Agent extends EventEmitter {
         if (modelResult.finishReason === 'stop') {
           R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
           finalContent = modelResult.content || '';
-          finalContent = finalContent.replace(/^[\\w\\/\\.-]+:\\s*/m, '');
+          finalContent = finalContent.replace(/^[\w\/\.-]+:\s*/m, '');
           finalContent = this.sanitizeFinalResponse(finalContent);
 
-          // ── PLANNING_DETECTED → redirect back to model ──
-          const planningPatterns = [/để tôi/i, /tôi sẽ/i, /đang kiểm tra/i, /I'll/i, /let me/i, /I will/i, /để mình/i, /hãy để tôi/i];
-          const isPlanning = finalContent && planningPatterns.some(p => p.test(finalContent));
-          if (isPlanning) {
-            if (toolCallCycles < 2) {
-              log.info(`[PLANNING_DETECTED] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
-              R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
-              messages.push({
-                role: 'system',
-                content: '[SYSTEM] Bạn vừa mô tả kế hoạch. Hãy thực thi ngay bằng tool call, không giải thích thêm.'
-              });
-              toolCallCycles++;
-              R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
-              continue;
-            }
-            // ponytail: max retries exhausted, return clear error
-            const errorMsg = '❌ Không thể thực thi: model liên tục trả kế hoạch thay vì hành động.';
-            R.state({ event: 'PLANNING_EXHAUSTED', requestId, cycle: toolCallCycles, finishReason: 'planning_exhausted' });
-            return { content: errorMsg, modelUsed: modelResult.modelUsed, providerUsed: modelResult.providerUsed, toolCycles: toolCallCycles, finished: true };
+          const responseType = classifyResponse(finalContent, modelResult.toolCalls || []);
+
+          if (responseType === 'PLANNING' && toolCallCycles < 2) {
+            log.info(`[PLANNING] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
+            R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
+            messages.push({
+              role: 'system',
+              content: '[SYSTEM] Bạn vừa trả lời bằng kế hoạch thay vì thực hiện. KHÔNG viết kế hoạch hay ý định. Hãy thực hiện NGAY: gọi tool cần thiết hoặc trả lời trực tiếp kết quả cuối cùng dựa trên kiến thức của bạn. KHÔNG mô tả bạn sẽ làm gì - hãy LÀM nó.'
+            });
+            toolCallCycles++;
+            R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
+            continue;
           }
 
-          /* final response */
+          /* final response — FINAL_ANSWER, NEED_USER, or max-redirect PLANNING */
 
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
-          R.state({ event: 'RETURN_FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop', finalContent: finalContent.slice(0, 100) });
+          R.state({
+            event: 'RETURN_FINISHED',
+            requestId, cycle: toolCallCycles,
+            finishReason: responseType === 'NEED_USER' ? 'need_user' : 'stop',
+            finalContent: finalContent.slice(0, 100),
+          });
           return {
             content: finalContent,
             modelUsed: modelResult.modelUsed,
@@ -626,6 +624,31 @@ export class Agent extends EventEmitter {
             toolCycles: toolCallCycles,
             finished: true,
           };
+        }
+
+        // ── Model truncated (max_tokens) ──
+        if (modelResult.finishReason === 'length') {
+          log.warn(`[TRUNCATED] Model hit max_tokens at cycle ${toolCallCycles}`);
+          const partialContent = (modelResult.content || '').replace(/^[\w\/\.-]+:\s*/m, '').trim();
+          if (partialContent.length > 20) {
+            finalContent = this.sanitizeFinalResponse(partialContent);
+            R.state({
+              event: 'FINISHED', requestId, cycle: toolCallCycles,
+              finishReason: 'length_truncated',
+              finalContent: finalContent.slice(0, 100),
+            });
+            return {
+              content: finalContent + '\n\n_[⚠️ response bị cắt do giới hạn độ dài — vui lòng hỏi cụ thể hơn nếu cần thêm]_',
+
+              modelUsed: modelResult.modelUsed,
+              providerUsed: modelResult.providerUsed,
+              toolCycles: toolCallCycles,
+              finished: true,
+            };
+          }
+          log.info(`[TRUNCATED] Empty content, continuing loop`);
+          toolCallCycles++;
+          continue;
         }
 
         // ── Tool calls ──
