@@ -11,6 +11,8 @@ describe('UserManager', () => {
   let manager: UserManager;
 
   beforeEach(() => {
+    // Clear disk state to avoid cross-test contamination
+    UserManager.clearDiskUserFile();
     // Clear env
     delete process.env.CORAL_TELEGRAM_USERS;
     manager = new UserManager();

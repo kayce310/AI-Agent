@@ -123,6 +123,12 @@ const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 - Ví dụ tốt: "✅ Đã deploy xong lên VPS. Truy cập tại: https://..."
 - Ví dụ KHÔNG tốt: "✅ Step 9: Final Verification & Summary Report"
 
+### 5c. CẤM TRẢ LỜI BẰNG KẾ HOẠCH (HARD RULE — Phase 4F)
+- KHÔNG BAO GIỜ trả lời bằng kế hoạch, ý định, hay mô tả những gì bạn sẽ làm.
+- Nếu bạn cần thực hiện thao tác → hãy GỌI TOOL NGAY, không cần báo trước.
+- Nếu bạn đã có đủ thông tin để trả lời → hãy TRẢ LỜI TRỰC TIẾP, không cần nói "để tôi kiểm tra", "tôi sẽ tìm hiểu", "let me check", v.v.
+- **CẤM các mẫu**: "để tôi", "tôi sẽ", "let me", "I'll", "I will", "đang kiểm tra", "hãy để tôi", "để mình"
+
 ### 6. DELEGATION — KHI NÀO DÙNG delegate_task (HARD RULE)
 - Có 4 specialist agents: **researcher, coder, writer, analyst**.
 - **Dùng delegate_task NGAY KHI** task cần:

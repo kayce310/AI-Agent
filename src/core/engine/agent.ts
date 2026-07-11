@@ -31,6 +31,7 @@ import { estimateTokens } from './token-estimator.js';
 import { CircuitBreaker, engineCircuitBreaker } from '../circuit-breaker.js';
 import type { CheckpointStore } from '../checkpoint.js';
 import { ContextWindowManager, getContextManager } from '../context-window.js';
+import { R } from '../runtime-instrumentation.js';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -64,6 +65,11 @@ function findSentenceBoundary(text: string, maxLength: number): number {
 }
 
 const log = new Logger({ module: 'Agent' });
+
+/** Check if the operation has been cancelled via AbortSignal. */
+function checkAbort(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error('Operation cancelled');
+}
 
 // ── Constants ──
 const MAX_TOOL_CALL_CYCLES = 15;
@@ -202,10 +208,11 @@ export class Agent extends EventEmitter {
    * Run the agent with a given request.
    * This is the main entry point — replaces Engine.process().
    */
-  async run(request: EngineRequest): Promise<AgentResult> {
+  async run(request: EngineRequest, abortSignal?: AbortSignal): Promise<AgentResult> {
     log.info(`agent.run() called — task: "${request.task?.slice(0,50)}" messages: ${request.messages.length} model: ${request.modelId || 'default'}`);
     // Build messages from request
     const messages = this.buildMessages(request);
+    checkAbort(abortSignal);
 
     // Emit task:start
     await this.hooks.emit('task:start', {
@@ -215,7 +222,7 @@ export class Agent extends EventEmitter {
     });
 
     try {
-      const result = await this.executeReActLoop(request, messages);
+      const result = await this.executeReActLoop(request, messages, abortSignal);
       await this.hooks.emit('task:complete', {
         sessionId: request.sessionId,
         result,
@@ -371,7 +378,10 @@ export class Agent extends EventEmitter {
   }
 
   // ── Private: ReAct Loop ──
-  private async executeReActLoop(request: EngineRequest, historyMessages: any[]): Promise<AgentResult> {
+  private async executeReActLoop(request: EngineRequest, historyMessages: any[], abortSignal?: AbortSignal): Promise<AgentResult> {
+    const requestId = request.sessionId || `req-${Date.now()}`;
+    R.startRequest(requestId);
+    R.state({ event: 'RECEIVED', requestId, cycle: 0 });
     const systemPrompt = request.systemPrompt || '';
     const messages: any[] = systemPrompt
       ? [{ role: 'system', content: systemPrompt }, ...historyMessages]
@@ -418,9 +428,14 @@ export class Agent extends EventEmitter {
     const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
     while (toolCallCycles < this.maxToolCycles) {
+      checkAbort(abortSignal);
+      R.startCycle(requestId, toolCallCycles);
+      if (toolCallCycles > 0) R.state({ event: 'NEXT_CYCLE', requestId, cycle: toolCallCycles });
       // ── Circuit breaker: stop if service is degraded ──
       if (!this.circuitBreaker.isHealthy()) {
         log.warn(`Circuit breaker OPEN — stopping after ${toolCallCycles} cycles`);
+        R.state({ event: 'FAILED', requestId, cycle: toolCallCycles, error: 'circuit_breaker_open' });
+        R.state({ event: 'RETURN_ERROR', requestId, cycle: toolCallCycles, error: 'circuit_breaker_open' });
         return {
           content: '⚠️ Dịch vụ đang gặp sự cố. Vui lòng thử lại sau 1 phút.',
           modelUsed: 'circuit-breaker',
@@ -431,6 +446,7 @@ export class Agent extends EventEmitter {
       }
 
       try {
+        R.state({ event: 'BUILD_PROMPT', requestId, cycle: toolCallCycles });
         // ── Select relevant tools ──
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
         let selectedTools = selectRelevantTools(lastUserMsg);
@@ -473,6 +489,8 @@ export class Agent extends EventEmitter {
 
         // Try streaming first, fallback to regular invoke on error
         // Wrapped in circuit breaker — consecutive failures will open the circuit
+        R.state({ event: 'CALL_MODEL', requestId, cycle: toolCallCycles, finishReason: selectedTools.length > 0 ? `tools:${selectedTools.length}` : 'no_tools' });
+        R.waitBegin({ requestId, label: `modelRouter.invoke.cycle${toolCallCycles}`, callerFile: 'agent.ts', callerLine: 476 });
         modelResult = await this.circuitBreaker.execute(async () => {
           try {
             if ((this.modelRouter as any).getAdapter('9router')?.invokeStreaming) {
@@ -512,6 +530,18 @@ export class Agent extends EventEmitter {
           }
         });
 
+        R.waitEnd({ requestId, label: `modelRouter.invoke.cycle${toolCallCycles}`, callerFile: 'agent.ts', callerLine: 513 });
+        R.state({
+          event: 'MODEL_RESPONSE',
+          requestId,
+          cycle: toolCallCycles,
+          finishReason: modelResult.finishReason,
+          toolCallsCount: modelResult.toolCalls?.length || 0,
+        });
+        if (modelResult.toolCalls?.length > 0) {
+          R.rawToolCalls({ requestId, cycle: toolCallCycles, raw: JSON.stringify(modelResult.toolCalls), status: 'RAW_FROM_MODEL' });
+        }
+
         await this.hooks.emit('model:response', {
           sessionId: request.sessionId,
           modelUsed: modelResult.modelUsed,
@@ -526,14 +556,31 @@ export class Agent extends EventEmitter {
 
         // ── Handle finish_reason ──
         if (modelResult.finishReason === 'stop') {
+          R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
           finalContent = modelResult.content || '';
-          finalContent = finalContent.replace(/^[\w\/\.-]+:\s*/m, '');
+          finalContent = finalContent.replace(/^[\\w\\/\\.-]+:\\s*/m, '');
           finalContent = this.sanitizeFinalResponse(finalContent);
+
+          // ── PLANNING_DETECTED: planning text → redirect back to model ──
+          const planningPatterns = [/để tôi/i, /tôi sẽ/i, /đang kiểm tra/i, /I'll/i, /let me/i, /I will/i, /để mình/i, /hãy để tôi/i];
+          const isPlanning = finalContent && planningPatterns.some(p => p.test(finalContent));
+          if (isPlanning && toolCallCycles < 2) {
+            log.info(`[PLANNING_DETECTED] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
+            R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
+            messages.push({
+              role: 'system',
+              content: '[SYSTEM] Bạn vừa trả lời bằng kế hoạch thay vì thực hiện. KHÔNG viết kế hoạch hay ý định. Hãy thực hiện NGAY: gọi tool cần thiết hoặc trả lời trực tiếp kết quả cuối cùng dựa trên kiến thức của bạn. KHÔNG mô tả bạn sẽ làm gì - hãy LÀM nó.'
+            });
+            toolCallCycles++;
+            R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
+            continue;
+          }
 
           /* final response */
 
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
+          R.state({ event: 'RETURN_FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop', finalContent: finalContent.slice(0, 100) });
           return {
             content: finalContent,
             modelUsed: modelResult.modelUsed,
@@ -545,6 +592,8 @@ export class Agent extends EventEmitter {
 
         // ── Tool calls ──
          if (modelResult.finishReason === 'tool_calls' && modelResult.toolCalls) {
+           R.state({ event: 'TOOL_REQUESTED', requestId, cycle: toolCallCycles, toolCallsCount: modelResult.toolCalls.length });
+           R.rawToolCalls({ requestId, cycle: toolCallCycles, raw: JSON.stringify(modelResult.toolCalls), status: 'AFTER_PARSER' });
            // Emit intermediate response if model provided text before tool calls
            if (modelResult.content) {
              await this.hooks.emit('model:intermediate_response', {
@@ -611,7 +660,10 @@ export class Agent extends EventEmitter {
               await request.onThinking(`🔧 ${fnName}${args ? `(${args})` : ''}...`);
             }
 
+            R.state({ event: 'TOOL_RUNNING', requestId, cycle: toolCallCycles, finishReason: toolCall.function.name });
+            R.waitBegin({ requestId, label: `tool:${toolCall.function.name}[${toolCall.id.slice(0,8)}]`, callerFile: 'agent.ts', callerLine: 614 });
             const toolResult = await this.toolRegistry.executeToolCall(toolCall);
+            R.waitEnd({ requestId, label: `tool:${toolCall.function.name}[${toolCall.id.slice(0,8)}]`, callerFile: 'agent.ts', callerLine: 614 });
 
             const resultStr = JSON.stringify(toolResult);
 
@@ -685,6 +737,7 @@ export class Agent extends EventEmitter {
             );
           }
 
+          R.state({ event: 'CONTINUE', requestId, cycle: toolCallCycles, finishReason: 'tool_calls' });
           continue;
         }
 
@@ -692,6 +745,8 @@ export class Agent extends EventEmitter {
         finalContent = modelResult.content ||
           (modelResult.toolCalls?.length ? '⚠️ Đang xử lý yêu cầu...' : '❌ Phản hồi không mong đợi.');
         finalContent = this.sanitizeFinalResponse(finalContent);
+        R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason || 'unknown' });
+        R.state({ event: 'RETURN_FINISHED', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason || 'unknown', finalContent: finalContent.slice(0, 100) });
 
         return {
           content: finalContent,
@@ -702,6 +757,8 @@ export class Agent extends EventEmitter {
         };
 
       } catch (err: any) {
+        R.state({ event: 'FAILED', requestId, cycle: toolCallCycles, error: err.message?.slice(0, 200) });
+        R.state({ event: 'RETURN_ERROR', requestId, cycle: toolCallCycles, error: err.message?.slice(0, 200) });
         await this.hooks.emit('model:error', {
           sessionId: request.sessionId,
           error: err.message,
@@ -730,6 +787,8 @@ export class Agent extends EventEmitter {
     }
 
     // ── Max cycles exceeded → Graceful Fallback ──
+    R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'max_cycles' });
+    R.state({ event: 'RETURN_MAX_CYCLES', requestId, cycle: toolCallCycles });
     // Extract recent context from conversation to provide a meaningful response
     const recentUserMessages = messages
       .filter((m: any) => m.role === 'user')

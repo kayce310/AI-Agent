@@ -1,22 +1,102 @@
 [
   {
     "role": "user",
-    "content": "Bạn là @tor_310_bot hay @kato310_bot",
-    "timestamp": 1782064299261
+    "content": "**11:15  ▉",
+    "timestamp": 1782126919466
   },
   {
     "role": "assistant",
-    "content": "Tôi là Coral, không phải @tor_310_bot hay @kato310_bot. Cần giúp gì ạ?",
-    "timestamp": 1782064299261
+    "content": "❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+    "timestamp": 1782126919466
   },
   {
     "role": "user",
-    "content": "@kato310_bot",
-    "timestamp": 1782065310582
+    "content": "**11:15 UTC — Zombie still cr ▉",
+    "timestamp": 1782126934175
   },
   {
     "role": "assistant",
-    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: 402 [openrouter/google/gemma-4-26b-a4b-it:free] [429]: {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000  (reset after 3s)",
-    "timestamp": 1782065310582
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782126934175
+  },
+  {
+    "role": "user",
+    "content": "tắt Coral đi Tor",
+    "timestamp": 1782126940163
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782126940163
+  },
+  {
+    "role": "user",
+    "content": "11:15 UTC — Session complete.\n\nKhang, all ▉",
+    "timestamp": 1782126943981
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782126943981
+  },
+  {
+    "role": "user",
+    "content": "💾 Self-improvement review: Memory updated",
+    "timestamp": 1782126948123
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782126948123
+  },
+  {
+    "role": "user",
+    "content": "**Khang: ▉",
+    "timestamp": 1782126951813
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782126951814
+  },
+  {
+    "role": "user",
+    "content": "💻 terminal: \"ps aux | grep node | grep -v grep | a...\"",
+    "timestamp": 1782126952678
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+    "timestamp": 1782126952678
+  },
+  {
+    "role": "user",
+    "content": "**Coral ▉",
+    "timestamp": 1782126971846
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+    "timestamp": 1782126971846
+  },
+  {
+    "role": "user",
+    "content": "💻 terminal: \"ps aux | grep node | grep -v grep || ...\"",
+    "timestamp": 1782126972966
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+    "timestamp": 1782126972966
+  },
+  {
+    "role": "user",
+    "content": "**11:16 UTC — ▉",
+    "timestamp": 1782126985233
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+    "timestamp": 1782126985233
   }
 ]

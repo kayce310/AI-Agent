@@ -47,6 +47,7 @@ import { CheckpointStore, getCheckpoint } from '../checkpoint.js';
 import { getContextManager } from '../context-window.js';
 import { TaskQueue, getTaskQueue } from '../task-queue.js';
 import { worldModel } from '../world/model.js';
+import { R } from '../runtime-instrumentation.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -530,6 +531,9 @@ export class Engine extends EventEmitter {
 
     // Cache MISS — create in-flight promise for coalescing
     // Wrap with request-level timeout to prevent unbounded hanging
+    const requestId = request.sessionId || `req-${Date.now()}`;
+    R.pendingReq({ event: 'CREATE', cacheKey });
+    R.waitBegin({ requestId, label: 'processInner', callerFile: 'engine.ts', callerLine: 533 });
     const resultPromise = this.processInner(request, cacheKey).catch((err: any) => {
       // If timeout from inner layer, return friendly error instead of propagating
       if (err.message?.includes('timed out')) {
@@ -563,7 +567,9 @@ export class Engine extends EventEmitter {
     try {
       return await resultPromise;
     } finally {
+      R.waitEnd({ requestId, label: 'processInner', callerFile: 'engine.ts', callerLine: 564 });
       this.pendingRequests.delete(cacheKey);
+      R.pendingReq({ event: 'DELETE', cacheKey });
       clearTimeout(cleanupTimer);
     }
   }
@@ -578,6 +584,8 @@ export class Engine extends EventEmitter {
     const taskId = `task-${Date.now()}`;
     this.currentTaskId = taskId;
     const sessionId = request.sessionId || 'default';
+    const requestId = request.sessionId || `req-${Date.now()}`;
+    R.state({ event: 'RECEIVED', requestId, taskId });
     
     // ── CHECKPOINT: Start tracking this request ──
     this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
@@ -645,7 +653,7 @@ export class Engine extends EventEmitter {
       const truncatedPrompt = truncatePrompt(systemPrompt, MAX_PROMPT_TOKENS);
       const agentRequest: EngineRequest = { ...request, systemPrompt: truncatedPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
       try {
-        const result = await this.agent.run(agentRequest);
+        const result = await this.agent.run(agentRequest); // TODO: Gateway cần pass AbortSignal để cancel hoạt động end-to-end
         if (result.toolCycles === 0) {
           this.responseCache.set(cacheKey, result.content, 120_000);
         }
@@ -667,7 +675,8 @@ export class Engine extends EventEmitter {
     const agentRequest: EngineRequest = { ...request, systemPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
 
     try {
-      const result = await this.agent.run(agentRequest);
+      R.waitBegin({ requestId, label: 'agent.run', callerFile: 'engine.ts', callerLine: 671 });
+      const result = await this.agent.run(agentRequest); // TODO: Gateway cần pass AbortSignal để cancel hoạt động end-to-end
 
       // Smart cache write: ONLY if no tools were called (pure LLM knowledge response)
       // Side-effect tracking via recordToolCall() handles tool detection in ResponseCache.set()

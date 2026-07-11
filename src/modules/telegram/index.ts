@@ -33,6 +33,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { RateLimiter } from '../../core/security/rate-limiter.js';
+import { R } from '../../core/runtime-instrumentation.js';
 
 // Rate limiter: max 20 messages per 60s per user
 const messageLimiter = new RateLimiter('telegram', {
@@ -547,7 +548,11 @@ export class TelegramBridge implements PlatformAdapter {
           };
 
           // Hermes-style: AI nhận mọi tin nhắn, không pre-filter
+          const requestId = `${userId}:${messageId}`;
+          R.state({ event: 'RECEIVED', requestId });
+          R.waitBegin({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 551 });
           let agentResponse = await this.messageHandler(adapterMsg);
+          R.waitEnd({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 554 });
 
           // Update activity timestamp
           this.sessionManager.updateLastActivity(userId);
@@ -713,7 +718,11 @@ export class TelegramBridge implements PlatformAdapter {
           };
 
           // Hermes-style: AI nhận mọi tin nhắn, không pre-filter
+          const requestId = `${userId}:${messageId}`;
+          R.state({ event: 'RECEIVED', requestId });
+          R.waitBegin({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 551 });
           let agentResponse = await this.messageHandler(adapterMsg);
+          R.waitEnd({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 554 });
 
           // Update activity timestamp
           this.sessionManager.updateLastActivity(userId);

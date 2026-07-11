@@ -170,6 +170,19 @@ export class CronStore {
     `).all(jobName, limit) as CronRunRow[];
   }
 
+  // ── Proactive cooldown persistence ──
+  // ponytail: in-memory only — survives same session, not restart.
+  // Upgrade to SQLite table if restart persistence matters.
+  private proactiveCooldowns = new Map<string, number>();
+
+  setProactiveLastTriggered(ruleId: string, timestamp: number): void {
+    this.proactiveCooldowns.set(ruleId, timestamp);
+  }
+
+  getProactiveLastTriggered(ruleId: string): number | null {
+    return this.proactiveCooldowns.get(ruleId) ?? null;
+  }
+
   // ── Utility ──
 
   pruneOldRuns(): void {

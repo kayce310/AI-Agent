@@ -1,36 +1,6 @@
 [
   {
     "role": "user",
-    "content": "❌ Lỗi khi xử lý: this.coralAgent.handleMessage is not a function\nBạn vừa báo lỗi",
-    "timestamp": 1782062936530
-  },
-  {
-    "role": "assistant",
-    "content": "Lỗi này không phải từ phía tôi. Đây là lỗi code ở hệ thống gọi tôi — đối tượng `coralAgent` không có method `handleMessage`.\n\n**Nguyên nhân thường gặp:**\n- Method chưa được định nghĩa trong class\n- Sai tên method (typo)\n- Method là async nhưng không được await đúng cách\n\nBạn có thể share code tạo `coralAgent` không? Mình sẽ check giúp.",
-    "timestamp": 1782062936531
-  },
-  {
-    "role": "user",
-    "content": "bạn là ai?",
-    "timestamp": 1782063058455
-  },
-  {
-    "role": "assistant",
-    "content": "Mình là **Coral** — một AI agent đa năng, sẵn sàng hỗ trợ bạn. 😊\n\nCần gì cứ hỏi nhé!",
-    "timestamp": 1782063058455
-  },
-  {
-    "role": "user",
-    "content": "bạn được tạo ra để làm gì?",
-    "timestamp": 1782063066039
-  },
-  {
-    "role": "assistant",
-    "content": "Mình là **Coral** — một AI agent đa năng được tạo ra để:\n\n- **Trả lời câu hỏi** và hỗ trợ thông tin\n- **Xử lý tài liệu** (PDF, DOCX) — đọc, trích xuất, lưu trữ\n- **Tìm kiếm kiến thức** từ cơ sở dữ liệu có sẵn\n- **Hỗ trợ kỹ thuật** — code, debug, phân tích\n- **Kết nối internet** khi cần thông tin thời gian thực\n\nTóm lại: **ngắn gọn, chính xác, hiệu quả** — giúp bạn hoàn thành công việc nhanh hơn. 🚀\n\nCần mình hỗ trợ gì cụ thể không?",
-    "timestamp": 1782063066040
-  },
-  {
-    "role": "user",
     "content": "hello",
     "timestamp": 1782063070323
   },
@@ -68,5 +38,65 @@
     "role": "assistant",
     "content": "Bạn muốn mình xác minh **\"nó\"** có thật không — nhưng bạn chưa cho biết **\"nó\" là cái gì**.\n\nCần bạn cung cấp:\n- **Cái cần xác minh là gì?** (thông tin, link, dữ liệu, claim, file...)\n- **Xác minh theo tiêu chí nào?** (tồn tại, đúng sự thật, còn hiệu lực...)\n\nKhi bạn cho chi tiết, mình sẽ fetch real-time data và xác thực ngay. ✓",
     "timestamp": 1782121702458
+  },
+  {
+    "role": "user",
+    "content": "alo",
+    "timestamp": 1782127468425
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782127468426
+  },
+  {
+    "role": "user",
+    "content": "/model",
+    "timestamp": 1782127512676
+  },
+  {
+    "role": "assistant",
+    "content": "❌ Lỗi khi gọi model: All adapters failed. Last error: Connection error.",
+    "timestamp": 1782127512676
+  },
+  {
+    "role": "user",
+    "content": "Cho tôi thông tin thời tiết hiện tại đi, lấy location của server nhe Coral",
+    "timestamp": 1782184661378
+  },
+  {
+    "role": "assistant",
+    "content": "Đây là thông tin thời tiết hiện tại từ **location của server**:\n\n📍 **The Dalles, Oregon, Hoa Kỳ** (Google Cloud)\n🌡 **Nhiệt độ:** 92°F (~33°C)\n☀ **Trời:** Nắng (Sunny)\n💧 **Độ ẩm:** 15%\n🌬 **Gió:** Tây Bắc 4mph\n\nTrời khá nóng và khô nhé! Có cần mình tra thêm gì không? 😊",
+    "timestamp": 1782184661379
+  },
+  {
+    "role": "user",
+    "content": "tôi cần thời tiết quận 3 thành phố Hồ Chí Minh, tôi muốn đi ra ngoài",
+    "timestamp": 1782184894366
+  },
+  {
+    "role": "assistant",
+    "content": "Đây là thông tin thời tiết **Quận 3, TP.HCM** hiện tại (10:15 AM, 23/06/2026):\n\n---\n\n## ⛈ Thời tiết hiện tại\n| Chỉ số | Giá trị |\n|--------|---------|\n| 🌡 **Nhiệt độ** | **32.9°C** |\n| 🥵 **Cảm giác thực** | **40.1°C** |\n| 💧 **Độ ẩm** | 64% |\n| 🌬 **Gió** | 8.7 km/h (Tây) |\n| ⛈ **Trạng thái** | **Dông暴雨** |\n\n---\n\n## 📊 Dự báo hôm nay (23/06)\n| Khung giờ | Nhiệt độ | Khả năng mưa | Thời tiết |\n|-----------|----------|--------------|-----------|\n| 10:00 | 32.4°C | 51% | ⛈ Dông |\n| 11:00 | 33.8°C | 49% | ⛈ Dông |\n| 12:00 | 28.2°C | 51% | 🌧 Mưa rào |\n| 13:00 | 29.2°C | 55% | 🌧 Mưa nhỏ |\n| 14:00 | 30.6°C | 62% | 🌧 Mưa nhỏ |\n| 15:00 | 31.4°C | 70% | ☁️ U ám |\n| 16:00 | 31.5°C | 78% | ⛈ Dông |\n| 17:00 | 26.9°C | **85%** | ⛈ Dông mạnh |\n| 18:00 | 25.7°C | **91%** | ⛈ Dông mạnh |\n| 19:00 | 26.1°C | 90% | 🌧 Mưa nhỏ |\n\n---\n\n## 💡 Gợi ý ra ngoài\n- **Bây giờ**: Đang dông, cảm giác nóng 40°C → **không nên ra ngoài**\n- **12:00-15:00**: Mưa nhỏ, nhiệt độ hạ → có thể ra ngoài nếu cần\n- **16:00-18:00**: Dông mạnh nhất (85-91%) → **tránh hoàn toàn**\n- **Sau 19:00**: Mưa giảm, trời mát → **thời điểm tốt nhất**\n\n**Nếu bắt buộc ra ngoài bây giờ**: Mang ô/áo mưa, uống nhiều nước, tránh nắng nóng! ☂️",
+    "timestamp": 1782184894366
+  },
+  {
+    "role": "user",
+    "content": "Chào Coral",
+    "timestamp": 1782185685033
+  },
+  {
+    "role": "assistant",
+    "content": "Chào bạn! Cần giúp gì ạ? 😊",
+    "timestamp": 1782185685033
+  },
+  {
+    "role": "user",
+    "content": "Coral nhớ trước đó ta đang nói về vấn đề gì không",
+    "timestamp": 1782185777234
+  },
+  {
+    "role": "assistant",
+    "content": "Dựa trên memory, trong phiên này mình đã nói chuyện với bạn về:\n\n1. **Xác thực real-time** — bạn yêu cầu xác minh \"nó\" có thật không, nhưng chưa cho biết cụ thể \"nó\" là gì\n2. **Thời tiết Quận 3, TP.HCM** — mình đã cung cấp thông tin thời tiết hiện tại và dự báo hôm nay\n\nTrước đó (từ memory cũ hơn), bạn cũng từng hỏi về:\n- Task trước đó\n- Bạn có nhớ dữ liệu trò chuyện không\n- Gợi ý ra ngoài\n\nBạn muốn tiếp tục vấn đề nào không? 😊",
+    "timestamp": 1782185777234
   }
 ]

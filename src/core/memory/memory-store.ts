@@ -58,7 +58,32 @@ export interface LegacyMessage {
 // Re-export for backward compatibility
 export type { MemoryBlock, MemoryBlockType };
 
-// â”€â”€ Memory Store Class â”€â”€
+// ── Memory Store Class ──
+
+/**
+ * Minimal async mutex — no dependencies, FIFO ordering.
+ * @internal
+ */
+class SimpleMutex {
+  private _locked = false;
+  private _pending: Array<() => void> = [];
+
+  acquire(): Promise<void> {
+    if (!this._locked) {
+      this._locked = true;
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      this._pending.push(resolve);
+    });
+  }
+
+  release(): void {
+    const next = this._pending.shift();
+    if (next) { next(); return; }
+    this._locked = false;
+  }
+}
 
 export class MemoryStore {
   private storePath: string;
@@ -66,6 +91,7 @@ export class MemoryStore {
   private loaded = false;
   private log!: MemoryLog;
   private maxBlocks = 5000;
+  private blocksMutex = new SimpleMutex();
 
   constructor(storePath?: string) {
     this.storePath = storePath || process.env.MEMORY_STORE_PATH || DEFAULT_STORE_PATH;
@@ -132,7 +158,9 @@ export class MemoryStore {
   ): Promise<MemoryBlock> {
     await this.ensureLoaded();
 
-    const now = new Date().toISOString();
+    await this.blocksMutex.acquire();
+    try {
+      const now = new Date().toISOString();
     const expiresAt = opts?.ttl ? new Date(Date.now() + opts.ttl).toISOString() : undefined;
 
     const block: MemoryBlock = {
@@ -158,15 +186,18 @@ export class MemoryStore {
       this.blocks = this.blocks.slice(0, this.maxBlocks);
     }
 
-    // Ghi vÃ o append-log (O(1))
+    // Ghi vào append-log (O(1))
     await this.log.append({ op: 'add', block });
 
-    // Táº¡o snapshot náº¿u cáº§n (periodic: má»—i 1000 ops)
+    // Tạo snapshot nếu cần (periodic: mỗi 1000 ops)
     if (this.log.shouldSnapshot()) {
       await this.log.createSnapshot(this.blocks);
     }
 
     return block;
+    } finally {
+      this.blocksMutex.release();
+    }
   }
 
   /**
@@ -215,8 +246,9 @@ export class MemoryStore {
    */
   async query(text: string, opts?: MemoryQueryOptions): Promise<MemoryBlock[]> {
     await this.ensureLoaded();
-
-    let results = this.blocks;
+    await this.blocksMutex.acquire();
+    try {
+      let results = this.blocks;
 
     // Filter by type(s)
     if (opts?.types?.length) {
@@ -243,7 +275,7 @@ export class MemoryStore {
       results = results.filter(b => b.sessionId === opts.sessionId);
     }
 
-    // Score by keyword overlap vá»›i query text
+    // Score by keyword overlap với query text
     const queryTokens = this.tokenize(text);
     if (queryTokens.length > 0 && text.trim().length > 0) {
       results = results
@@ -259,6 +291,9 @@ export class MemoryStore {
     // Apply topK
     const topK = opts?.topK ?? 10;
     return results.slice(0, topK);
+    } finally {
+      this.blocksMutex.release();
+    }
   }
 
   /**
@@ -318,10 +353,15 @@ export class MemoryStore {
    */
   async getAll(type?: MemoryBlockType): Promise<MemoryBlock[]> {
     await this.ensureLoaded();
-    if (type) {
-      return this.blocks.filter(b => b.type === type);
+    await this.blocksMutex.acquire();
+    try {
+      if (type) {
+        return this.blocks.filter(b => b.type === type);
+      }
+      return [...this.blocks];
+    } finally {
+      this.blocksMutex.release();
     }
-    return [...this.blocks];
   }
 
   /**

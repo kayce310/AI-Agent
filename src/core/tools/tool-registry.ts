@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { secureRuntime, WORKSPACE_ROOT } from './tool-gateway.js';
 import { Logger } from '../logger.js';
+import { R } from '../runtime-instrumentation.js';
 
 const log = new Logger({ module: 'ToolRegistry' });
 
@@ -187,9 +188,12 @@ export class ToolRegistry {
       return { error: `Tool "${functionName}" not found` };
     }
     try {
+      R.toolCall({ status: 'BEFORE_EXECUTE', toolName: functionName, toolCallId: toolCall.id, rawArgs: (toolCall.function.arguments || '').slice(0, 200), parsedArgsCount: Object.keys(args).length });
       const result = await tool.execute(args);
+      R.toolCall({ status: 'AFTER_EXECUTE', toolName: functionName, toolCallId: toolCall.id });
       return result;
     } catch (err: any) {
+      R.toolCall({ status: 'ERROR', toolName: functionName, toolCallId: toolCall.id, error: err.message?.slice(0, 200) });
       return { error: `Tool "${functionName}" execution failed: ${err.message}` };
     }
   }

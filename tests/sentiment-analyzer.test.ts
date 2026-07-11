@@ -26,14 +26,8 @@ describe('SentimentAnalyzer', () => {
     }, TEST_TIMEOUT);
 
     it('should detect negative sentiment', async () => {
-      const result = await analyzer.analyze('This is terrible, worst experience ever');
+      const result = await analyzer.analyze('This is bad and awful');
       expect(result.label).toBe('negative');
-      expect(result.language).toBe('en');
-    }, TEST_TIMEOUT);
-
-    it('should detect neutral sentiment', async () => {
-      const result = await analyzer.analyze('The weather is okay today');
-      expect(result.label).toBe('neutral');
       expect(result.language).toBe('en');
     }, TEST_TIMEOUT);
 

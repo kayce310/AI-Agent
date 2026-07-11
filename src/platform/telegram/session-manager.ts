@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { R } from '../../core/runtime-instrumentation.js';
 
 export interface SessionState {
   sessionId: string;
@@ -60,6 +61,7 @@ export class SessionManager {
    * ponytail: simple promise-queue pattern — waiter yields until lock resolves
    */
   private async acquireLock(userId: string): Promise<void> {
+    R.sessionLock({ event: 'LOCK_ACQUIRE', userId });
     while (this.locks.has(userId)) {
       // Wait for existing lock to release
       await this.locks.get(userId)!.promise;
@@ -70,12 +72,14 @@ export class SessionManager {
       resolve = r;
     });
     this.locks.set(userId, { promise, resolve: resolve! });
+    R.sessionLock({ event: 'LOCK_ACQUIRED', userId });
   }
 
   /**
    * Release mutex lock for a user
    */
   private releaseLock(userId: string): void {
+    R.sessionLock({ event: 'LOCK_RELEASE', userId });
     const lock = this.locks.get(userId);
     if (lock) {
       lock.resolve(); // Signal waiting acquirers

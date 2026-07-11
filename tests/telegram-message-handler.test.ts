@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TelegramMessageHandler } from '../src/platform/telegram/message-handler';
 import { ObservabilityIntegration } from '../src/observability/integration';
+import { SessionManager } from '../src/platform/telegram/session-manager';
 
 describe('TelegramMessageHandler', () => {
   let handler: TelegramMessageHandler;
@@ -8,9 +9,17 @@ describe('TelegramMessageHandler', () => {
   let observabilityMock: any;
 
   beforeEach(() => {
-    // Mock Coral agent
+    // Clear disk state to avoid cross-test contamination
+    SessionManager.clearDiskSessionFile();
+
+    // Mock Coral agent with process() method (not handleMessage)
     coralMock = {
-      handleMessage: vi.fn().mockResolvedValue('Response from Coral'),
+      process: vi.fn().mockResolvedValue({ content: 'Response from Coral' }),
+      toolRegistry: {
+        listTools: vi.fn().mockReturnValue([]),
+      },
+      agentConfig: {},
+      agentRegistry: undefined,
     };
 
     // Mock observability (optional)
@@ -60,10 +69,10 @@ describe('TelegramMessageHandler', () => {
         text: 'Test message',
       });
 
-      expect(coralMock.handleMessage).toHaveBeenCalledWith(
-        expect.any(String), // sessionId
-        'Test message'
-      );
+      expect(coralMock.process).toHaveBeenCalled();
+      const callArgs = coralMock.process.mock.calls[0][0];
+      expect(callArgs.sessionId).toBeDefined();
+      expect(callArgs.messages[0].content).toBe('Test message');
     });
 
     it('uses same session ID across messages', async () => {
@@ -159,7 +168,7 @@ describe('TelegramMessageHandler', () => {
 
   describe('Observability Integration', () => {
     it('handles missing observability gracefully', async () => {
-      const handler2 = new TelegramMessageHandler(coralMock); // No observability
+      const handler2 = new TelegramMessageHandler(coralMock); // No observability param
       const response = await handler2.handleMessage({
         userId: 'user123',
         text: 'Hello',
@@ -189,7 +198,12 @@ describe('TelegramMessageHandler', () => {
   describe('Error Handling', () => {
     it('returns agent response on agent failure', async () => {
       const failingCoralMock = {
-        handleMessage: vi.fn().mockRejectedValue(new Error('Agent crashed')),
+        process: vi.fn().mockRejectedValue(new Error('Agent crashed')),
+        toolRegistry: {
+          listTools: vi.fn().mockReturnValue([]),
+        },
+        agentConfig: {},
+        agentRegistry: undefined,
       };
 
       const failHandler = new TelegramMessageHandler(failingCoralMock);
