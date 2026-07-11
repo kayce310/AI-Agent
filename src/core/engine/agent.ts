@@ -71,6 +71,38 @@ function checkAbort(signal?: AbortSignal): void {
   if (signal?.aborted) throw new Error('Operation cancelled');
 }
 
+type ResponseType = 'NEED_TOOL' | 'NEED_USER' | 'PLANNING' | 'FINAL_ANSWER';
+
+function classifyResponse(content: string, toolCalls: any[]): ResponseType {
+  // 1. NEED_TOOL — highest priority
+  if (toolCalls.length > 0) return 'NEED_TOOL';
+
+  // 2. NEED_USER — model is asking user for input
+  const needUserPatterns = [
+    /bạn có thể/i, /bạn vui lòng/i,
+    /could you/i, /can you/i, /please provide/i,
+  ];
+  if (needUserPatterns.some(p => p.test(content))) return 'NEED_USER';
+
+  // 3. PLANNING vs FINAL_ANSWER
+  const planningPatterns = [
+    /để tôi/i, /tôi sẽ/i, /đang kiểm tra/i, /đang tìm/i,
+    /I'll/i, /let me/i,
+  ];
+  const isPlanningLike = planningPatterns.some(p => p.test(content));
+  if (isPlanningLike) {
+    // Check for explanation patterns that indicate FINAL_ANSWER
+    const explanationPatterns = [/để tôi giải thích/i];
+    const isExplanation = explanationPatterns.some(p => p.test(content));
+    // Heuristic: if model already wrote >200 chars, it's explaining, not planning
+    if (isExplanation || content.length > 200) return 'FINAL_ANSWER';
+    return 'PLANNING';
+  }
+
+  // 4. Everything else is FINAL_ANSWER
+  return 'FINAL_ANSWER';
+}
+
 // ── Constants ──
 const MAX_TOOL_CALL_CYCLES = 15;
 const MAX_READ_CALLS = parseInt(process.env.CORAL_MAX_READ_CALLS || '12');
@@ -561,19 +593,25 @@ export class Agent extends EventEmitter {
           finalContent = finalContent.replace(/^[\\w\\/\\.-]+:\\s*/m, '');
           finalContent = this.sanitizeFinalResponse(finalContent);
 
-          // ── PLANNING_DETECTED: planning text → redirect back to model ──
+          // ── PLANNING_DETECTED → redirect back to model ──
           const planningPatterns = [/để tôi/i, /tôi sẽ/i, /đang kiểm tra/i, /I'll/i, /let me/i, /I will/i, /để mình/i, /hãy để tôi/i];
           const isPlanning = finalContent && planningPatterns.some(p => p.test(finalContent));
-          if (isPlanning && toolCallCycles < 2) {
-            log.info(`[PLANNING_DETECTED] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
-            R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
-            messages.push({
-              role: 'system',
-              content: '[SYSTEM] Bạn vừa trả lời bằng kế hoạch thay vì thực hiện. KHÔNG viết kế hoạch hay ý định. Hãy thực hiện NGAY: gọi tool cần thiết hoặc trả lời trực tiếp kết quả cuối cùng dựa trên kiến thức của bạn. KHÔNG mô tả bạn sẽ làm gì - hãy LÀM nó.'
-            });
-            toolCallCycles++;
-            R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
-            continue;
+          if (isPlanning) {
+            if (toolCallCycles < 2) {
+              log.info(`[PLANNING_DETECTED] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
+              R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
+              messages.push({
+                role: 'system',
+                content: '[SYSTEM] Bạn vừa mô tả kế hoạch. Hãy thực thi ngay bằng tool call, không giải thích thêm.'
+              });
+              toolCallCycles++;
+              R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
+              continue;
+            }
+            // ponytail: max retries exhausted, return clear error
+            const errorMsg = '❌ Không thể thực thi: model liên tục trả kế hoạch thay vì hành động.';
+            R.state({ event: 'PLANNING_EXHAUSTED', requestId, cycle: toolCallCycles, finishReason: 'planning_exhausted' });
+            return { content: errorMsg, modelUsed: modelResult.modelUsed, providerUsed: modelResult.providerUsed, toolCycles: toolCallCycles, finished: true };
           }
 
           /* final response */
