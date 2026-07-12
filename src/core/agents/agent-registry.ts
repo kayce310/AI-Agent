@@ -56,7 +56,7 @@ export const SPECIALIST_AGENTS: SpecialistAgent[] = [
     role: 'Lập trình viên — viết và review code',
     goal: 'Viết code chất lượng cao, tuân thủ best practices, debug hiệu quả',
     backstory: 'Bạn là senior developer với kinh nghiệm TypeScript/Node.js. Bạn viết code clean, có tests, và tuân thủ coding standards.',
-    allowedTools: ['read_file', 'list_directory', 'execute_command', 'search_knowledge_graph'],
+    allowedTools: ['read_file', 'list_directory', 'write_file', 'search_files', 'patch_file', 'execute_command', 'search_knowledge_graph'],
     maxCycles: 10,
   },
   {

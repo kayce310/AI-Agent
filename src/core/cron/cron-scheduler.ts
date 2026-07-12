@@ -23,9 +23,10 @@ export interface CronJob {
   handler: () => Promise<string | null>; // null = no notification, string = notification content
   lastRun?: number;
   lastResult?: string;
-  running: boolean;
+  running?: boolean;
   /** Max execution time in ms. If exceeded, the job is considered failed. */
   timeoutMs?: number;
+  enabled?: boolean;
 }
 
 /**
@@ -52,7 +53,7 @@ export class CronScheduler {
     if (this.jobs.has(job.name)) {
       log.warn(`Cron job "${job.name}" already registered, overwriting`);
     }
-    this.jobs.set(job.name, { ...job, running: false });
+    this.jobs.set(job.name, { ...job, running: false, enabled: job.enabled ?? true });
 
     // Persist job definition
     this.store.saveJob({
@@ -75,6 +76,7 @@ export class CronScheduler {
     this.isStarted = true;
 
     Array.from(this.jobs.entries()).forEach(([name, job]) => {
+      if (!job.enabled) return;
       const timer = setInterval(() => this.runJob(name), job.intervalMs);
       this.timers.set(name, timer);
       log.info(`Started cron job: ${name}`);
@@ -105,6 +107,10 @@ export class CronScheduler {
     }
     if (job.running) {
       log.warn(`Cron job "${name}" already running, skipping`);
+      return null;
+    }
+    if (!job.enabled) {
+      log.debug(`Cron job "${name}" is disabled, skipping`);
       return null;
     }
 
@@ -169,15 +175,43 @@ export class CronScheduler {
     }
   }
 
+  enableJob(name: string): void {
+    const job = this.jobs.get(name);
+    if (job) {
+      job.enabled = true;
+      log.info(`Enabled cron job: ${name}`);
+      // If scheduler is running but no timer for this job, start one
+      if (this.isStarted && !this.timers.has(name)) {
+        const timer = setInterval(() => this.runJob(name), job.intervalMs);
+        this.timers.set(name, timer);
+      }
+    }
+  }
+
+  disableJob(name: string): void {
+    const job = this.jobs.get(name);
+    if (job) {
+      job.enabled = false;
+      log.info(`Disabled cron job: ${name}`);
+      // Stop timer if running
+      const timer = this.timers.get(name);
+      if (timer) {
+        clearInterval(timer);
+        this.timers.delete(name);
+      }
+    }
+  }
+
   /**
    * List all registered jobs with their status.
    */
-  listJobs(): Array<{ name: string; lastRun: number | null; lastResult: string | null; running: boolean; intervalMs: number }> {
+  listJobs(): Array<{ name: string; lastRun: number | null; lastResult: string | null; running: boolean; enabled: boolean; intervalMs: number }> {
     return Array.from(this.jobs.values()).map(j => ({
       name: j.name,
       lastRun: j.lastRun ?? null,
       lastResult: j.lastResult ?? null,
-      running: j.running,
+      running: j.running ?? false,
+      enabled: j.enabled ?? true,
       intervalMs: j.intervalMs,
     }));
   }
