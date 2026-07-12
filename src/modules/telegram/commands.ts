@@ -438,7 +438,16 @@ export class CommandRegistry {
     // Give Telegram time to deliver the message before exiting
     setTimeout(() => {
       log.info('Restart requested by user via /restart');
-      process.exit(0); // Process manager (e.g. pm2 / bat script) will restart
+      // ponytail: self-spawn — works without PM2/bat loop
+      const { spawn } = require('child_process');
+      const child = spawn(process.execPath, process.argv.slice(1), {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+        detached: true,
+        windowsHide: true,
+      });
+      child.unref();
+      process.exit(0);
     }, 1500);
   }
 

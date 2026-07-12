@@ -280,6 +280,7 @@ async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
     report: './report.js',
     system: './system.js',
     search: './search.js',
+    browser: './browser.js',
   };
   for (const [name, modulePath] of Object.entries(pluginModules)) {
     try {

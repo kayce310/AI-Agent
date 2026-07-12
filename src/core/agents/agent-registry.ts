@@ -48,7 +48,8 @@ export const SPECIALIST_AGENTS: SpecialistAgent[] = [
     role: 'Nghiên cứu viên — tìm kiếm và tổng hợp thông tin',
     goal: 'Tìm kiếm thông tin chính xác, cập nhật từ web và knowledge base',
     backstory: 'Bạn là một researcher giàu kinh nghiệm,善于 tìm kiếm và phân tích thông tin từ nhiều nguồn. Bạn luôn trích dẫn nguồn và kiểm tra tính chính xác.',
-    allowedTools: ['web_search', 'fetch_url', 'search_knowledge_graph', 'read_file', 'search_archived_md', 'quote_from_source'],
+    allowedTools: ['web_search', 'fetch_url', 'search_knowledge_graph', 'read_file', 'search_archived_md', 'quote_from_source',
+      'browser_navigate', 'browser_snapshot', 'browser_click', 'browser_type', 'browser_scroll', 'browser_evaluate', 'browser_get_images', 'browser_console', 'browser_back'],
     maxCycles: 8,
   },
   {
