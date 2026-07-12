@@ -12,6 +12,7 @@ import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, addProcessedFile } from './_shared.js';
 import { BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
+import { globalMemoryStore } from '../memory/memory-store.js';
 
 /**
  * Quét thư mục tìm kiếm keyword (dùng cho search_knowledge_graph)
@@ -132,7 +133,43 @@ const plugin: ToolPlugin = {
 
         return { success: true, path: wikiRelPath };
       }
-    }
+    },
+    {
+      name: 'session_search',
+      description: 'Search conversation history across all channels. Uses MemoryStore semantic query. Returns matching messages with session ID, content preview, and relevance score. Use to recall past discussions, decisions, or facts mentioned in previous conversations.',
+      schema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Keywords or phrase to search for in conversation history' },
+          limit: { type: 'number', description: 'Max results (default: 10, max: 50)' },
+          sessionId: { type: 'string', description: 'Optional: filter by specific channel/session ID' },
+        },
+        required: ['query'],
+      },
+      execute: async (args: Record<string, any>) => {
+        const query = String(args.query || '');
+        if (!query) return { error: 'query không được để trống' };
+        const limit = Math.min(Number(args.limit) || 10, 50);
+        const sessionId = args.sessionId ? String(args.sessionId) : undefined;
+
+        const opts: any = { topK: limit };
+        if (sessionId) opts.sessionId = sessionId;
+
+        const results = await globalMemoryStore.query(query, opts);
+        return {
+          query,
+          total: results.length,
+          results: results.slice(0, limit).map((r: any) => ({
+            content: r.content.slice(0, 500),
+            score: r.score ?? 0,
+            sessionId: r.sessionId || 'unknown',
+            type: r.type,
+            tags: r.tags || [],
+            timestamp: r.timestamp,
+          })),
+        };
+      }
+    },
   ]
 };
 

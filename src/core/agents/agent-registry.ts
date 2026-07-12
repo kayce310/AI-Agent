@@ -49,7 +49,8 @@ export const SPECIALIST_AGENTS: SpecialistAgent[] = [
     goal: 'Tìm kiếm thông tin chính xác, cập nhật từ web và knowledge base',
     backstory: 'Bạn là một researcher giàu kinh nghiệm,善于 tìm kiếm và phân tích thông tin từ nhiều nguồn. Bạn luôn trích dẫn nguồn và kiểm tra tính chính xác.',
     allowedTools: ['web_search', 'fetch_url', 'search_knowledge_graph', 'read_file', 'search_archived_md', 'quote_from_source',
-      'browser_navigate', 'browser_snapshot', 'browser_click', 'browser_type', 'browser_scroll', 'browser_evaluate', 'browser_get_images', 'browser_console', 'browser_back'],
+      'browser_navigate', 'browser_snapshot', 'browser_click', 'browser_type', 'browser_scroll', 'browser_evaluate', 'browser_get_images', 'browser_console', 'browser_back',
+      'vision_analyze', 'session_search'],
     maxCycles: 8,
   },
   {
@@ -65,7 +66,7 @@ export const SPECIALIST_AGENTS: SpecialistAgent[] = [
     role: 'Nhà văn — viết nội dung, báo cáo, tài liệu',
     goal: 'Viết nội dung rõ ràng, có cấu trúc, dễ hiểu bằng tiếng Việt',
     backstory: 'Bạn là content writer chuyên nghiệp,擅长 viết blog, báo cáo, tài liệu kỹ thuật. Bạn sử dụng markdown formatting và luôn có cấu trúc rõ ràng.',
-    allowedTools: ['read_file', 'search_knowledge_graph', 'generate_report', 'write_wiki_page'],
+    allowedTools: ['read_file', 'search_knowledge_graph', 'generate_report', 'write_wiki_page', 'session_search'],
     maxCycles: 6,
   },
   {
@@ -73,7 +74,7 @@ export const SPECIALIST_AGENTS: SpecialistAgent[] = [
     role: 'Phân tích viên — phân tích dữ liệu và đưa ra insights',
     goal: 'Phân tích sâu sắc, tìm patterns, đưa ra recommendations có căn cứ',
     backstory: 'Bạn là data analyst với tư duy logic mạnh. Bạn phân tích dữ liệu từ nhiều nguồn, tìm patterns, và đưa ra insights actionable.',
-    allowedTools: ['read_file', 'search_knowledge_graph', 'search_archived_md', 'extract_formulas', 'web_search'],
+    allowedTools: ['read_file', 'search_knowledge_graph', 'search_archived_md', 'extract_formulas', 'web_search', 'session_search'],
     maxCycles: 8,
   },
 ];

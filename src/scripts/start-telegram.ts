@@ -69,6 +69,39 @@ function isProcessAlive(pid: number): boolean {
 }
 
 function acquireFileLock(): boolean {
+  // ponytail: kill ALL Coral instances on startup, not just lock file PID
+  // Prevents zombies when multiple startup methods are used simultaneously
+  try {
+    const isWin = process.platform === 'win32';
+    if (isWin) {
+      const result = execSync(
+        `wmic process where "name='node.exe' and commandline like '%start-telegram.js%' and not processid=${process.pid}" get processid`,
+        { encoding: 'utf8', timeout: 5000, stdio: 'pipe' }
+      );
+      const pids = result.toString().split('\n')
+        .map(l => l.trim())
+        .filter(l => /^\d+$/.test(l))
+        .map(l => parseInt(l, 10));
+      for (const pid of pids) {
+        console.log(`${ts()} 🔴 Found duplicate Coral instance (PID ${pid}). Killing...`);
+        killProcess(pid);
+      }
+    } else {
+      const result = execSync(
+        `ps aux | grep "start-telegram" | grep -v grep | awk '{print $2}' | grep -v ${process.pid}`,
+        { encoding: 'utf8', timeout: 5000, stdio: 'pipe' }
+      );
+      const pids = result.toString().trim().split('\n')
+        .map(l => l.trim())
+        .filter(l => /^\d+$/.test(l))
+        .map(l => parseInt(l, 10));
+      for (const pid of pids) {
+        console.log(`${ts()} 🔴 Found duplicate Coral instance (PID ${pid}). Killing...`);
+        killProcess(pid);
+      }
+    }
+  } catch {}
+
   try {
     if (fs.existsSync(LOCK_FILE)) {
       const pidStr = fs.readFileSync(LOCK_FILE, 'utf8').trim();

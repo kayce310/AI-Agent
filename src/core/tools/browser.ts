@@ -8,6 +8,7 @@
 
 import type { ToolPlugin, Tool } from './tool-registry.js';
 import puppeteer, { Browser, Page } from 'puppeteer';
+import * as path from 'path';
 
 // ── Singleton Browser ──
 
@@ -332,6 +333,82 @@ const browserGetImages: Tool = {
   },
 };
 
+// ── Vision Analyze — take screenshot or read image, return base64 + file path ──
+
+const browserVision: Tool = {
+  name: 'vision_analyze',
+  description: 'Take a screenshot of the current browser page or analyze an image at a URL/file path. Returns image metadata + base64 data URL for LLM vision models. Saves to temp file for use as media attachment.',
+  schema: {
+    type: 'object',
+    properties: {
+      image_url: { type: 'string', description: 'Optional: URL or absolute file path to an image. If omitted, takes screenshot of current browser page.' },
+      question: { type: 'string', description: 'Optional: what to look for or describe in the image' },
+    },
+  },
+  execute: async (args: Record<string, any>) => {
+    const imageUrl = String(args.image_url || '');
+    const question = String(args.question || '');
+    const tmpDir = path.join(process.cwd(), 'tmp');
+
+    try {
+      let buffer: Buffer;
+      let format = 'png';
+      let width = 0;
+      let height = 0;
+
+      if (imageUrl) {
+        // External URL or file path
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          const resp = await fetch(imageUrl, { signal: AbortSignal.timeout(15000) });
+          if (!resp.ok) return { error: `Failed to fetch image: ${resp.status}` };
+          buffer = Buffer.from(await resp.arrayBuffer());
+          const ct = resp.headers.get('content-type') || '';
+          if (ct.includes('jpeg') || ct.includes('jpg')) format = 'jpeg';
+          else if (ct.includes('gif')) format = 'gif';
+          else if (ct.includes('webp')) format = 'webp';
+        } else {
+          // Local file
+          const fs = await import('fs/promises');
+          buffer = await fs.readFile(imageUrl);
+          const ext = imageUrl.split('.').pop()?.toLowerCase() || 'png';
+          format = ext === 'jpg' ? 'jpeg' : ext;
+        }
+      } else {
+        // Screenshot via Puppeteer
+        const page = await getPage();
+        const rawBuffer = await page.screenshot({ type: 'png', fullPage: false });
+        buffer = Buffer.from(rawBuffer as any);
+        const vp = page.viewport();
+        width = vp?.width || 1280;
+        height = vp?.height || 720;
+      }
+
+      // Save to temp file for media attachment
+      const fs = await import('fs/promises');
+      const timestamp = Date.now();
+      const fileName = `vision_${timestamp}.${format}`;
+      const filePath = path.join(tmpDir, fileName);
+      await fs.mkdir(tmpDir, { recursive: true });
+      await fs.writeFile(filePath, buffer);
+
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:image/${format};base64,${base64}`;
+
+      return {
+        file_path: filePath,
+        format,
+        width,
+        height,
+        bytes: buffer.length,
+        image_data: dataUrl,
+        question,
+      };
+    } catch (err: any) {
+      return { error: `Vision capture failed: ${err.message}` };
+    }
+  },
+};
+
 // ── Plugin Export ──
 
 const plugin: ToolPlugin = {
@@ -346,6 +423,7 @@ const plugin: ToolPlugin = {
     browserBack,
     browserConsole,
     browserGetImages,
+    browserVision,
   ],
 };
 
