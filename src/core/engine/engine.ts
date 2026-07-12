@@ -454,6 +454,7 @@ export class Engine extends EventEmitter {
   getPrivilegeGuard(): PrivilegeGuard { return this.privilegeGuard; }
   getTemporalMemory(): MemoryTemporal { return this.temporalMemory; }
   getAgenticMemory(): MemoryTemporal { return this.agenticMemory; }
+  getMemoryFacade(): MemoryFacade { return this.memory; }
 
   // ═══════════════════════════════════════════════════════════════
   // PHASE 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing

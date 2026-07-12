@@ -155,6 +155,8 @@ function startTunnel(): void {
       try {
         fs.writeFileSync(urlPath, url, 'utf8');
       } catch {}
+      // ponytail: expose so /status and /dashboard commands can show it
+      (globalThis as any).__coral_tunnelUrl = url;
     }
   };
 
@@ -302,11 +304,13 @@ async function start() {
         console.log(`${ts()} 🧠 Memory extraction: ${extracted.extracted} new, ${extracted.reinforced} reinforced, ${extracted.beliefs} beliefs`);
       }
 
-      dashboardServer = new DashboardServer(eventBus, { port: 8766, memoryApi });
-      await dashboardServer.start();
-      console.log(`${ts()} 📊 Dashboard server running on port 8766`);
-      // Auto-start cloudflared tunnel
-      startTunnel();
+      // Expose on globalThis so /dashboard command can start them later
+      (globalThis as any).__coral_eventBus = eventBus;
+      (globalThis as any).__coral_memoryApi = memoryApi;
+      // ponytail: expose tunnel start/stop so /dashboard command can control them
+      (globalThis as any).__coral_startTunnel = startTunnel;
+      (globalThis as any).__coral_stopTunnel = stopTunnel;
+      console.log(`${ts()} 🧠 Memory system ready (dashboard off — use /dashboard to start)`);
     }
   } catch (e) {
     console.error(`${ts()} ⚠️ Dashboard server failed to start: ${e}`);
@@ -411,7 +415,7 @@ async function start() {
       console.warn(`${ts()} ⏸️ Proactive tick disabled — set TELEGRAM_PROACTIVE_CHAT_ID or TELEGRAM_ALERT_CHAT_ID`);
     }
 
-    // ponytail: World Model probes every 30s — toggleable via /world command, disabled by default (no peripherals yet)
+    // ponytail: World Model probes every 30s — toggleable via /world command, disabled by default
     cronScheduler.register({
       name: 'world-model',
       intervalMs: 30_000,
@@ -421,8 +425,24 @@ async function start() {
         console.log(`${ts()} 🌍 World: ${report.system.cpus}cpu ${report.system.freeMemMb}mb free | ${report.files.fileCount} files`);
         return null; // quiet
       },
-      running: false, // toggle via /world on/off
+      enabled: false, // toggle via /world on/off
     });
+
+    // ponytail: Daily digest — extract knowledge to Obsidian every 24h
+    const vaultPath = process.env.OBSIDIAN_VAULT_PATH || process.env.KNOWLEDGE_VAULT_PATH;
+    const digestChannelId = process.env.KNOWLEDGE_CHANNEL_ID;
+    if (vaultPath && digestChannelId) {
+      cronScheduler.register({
+        name: 'daily-digest',
+        intervalMs: 24 * 60 * 60 * 1000,
+        timeoutMs: 60000,
+        handler: async () => {
+          const { dailyDigest } = await import('../core/knowledge/daily-digest.js');
+          return await dailyDigest(engine.getMemoryFacade(), vaultPath, digestChannelId);
+        },
+        enabled: true,
+      });
+    }
 
     cronScheduler.start();
     console.log(`${ts()} ⏰ Cron scheduler started with ${cronScheduler.listJobs().length} jobs`);
