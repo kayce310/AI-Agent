@@ -307,18 +307,6 @@ export class Engine extends EventEmitter {
       }
     } catch { /* silent */ }
 
-    // ═══ HEAP MONITOR: warn if heap > 750MB, log every 5min ═══
-    const HEAP_WARN_MB = 750;
-    setInterval(() => {
-      const usage = process.memoryUsage().heapUsed / 1024 / 1024;
-      const rss = process.memoryUsage().rss / 1024 / 1024;
-      if (usage > HEAP_WARN_MB) {
-        log.warn(`HEAP HIGH: ${usage.toFixed(0)}MB used (RSS ${rss.toFixed(0)}MB) — possible leak`);
-      } else {
-        log.info(`Heap: ${usage.toFixed(0)}MB used / ${rss.toFixed(0)}MB RSS`);
-      }
-    }, 5 * 60 * 1000).unref();
-
     // ═══ EVENT BUS: tool:call → tool_called + decision_made ═══
     this.agent.onEvent('tool:call', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
