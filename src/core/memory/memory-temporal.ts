@@ -87,7 +87,8 @@ export class MemoryTemporal {
 
     this.log = await createMemoryLog(this.config.logDir);
     const replayed = await this.log.replay();
-    this.blocks = new Map(replayed.map(b => [b.id, b]));
+    // ponytail: guard against replay() returning non-array (empty/corrupt log)
+    this.blocks = new Map(Array.isArray(replayed) ? replayed.map(b => [b.id, b]) : []);
     this.loaded = true;
   }
 
