@@ -31,6 +31,7 @@ export interface ProviderInvokeParams {
   temperature?: number;
   max_tokens?: number;
   tool_choice?: 'auto' | 'none';
+  stream?: boolean;
 }
 
 /** Má»™t provider Ä‘Ã£ Ä‘Æ°á»£c khá»Ÿi táº¡o (cÃ³ OpenAI client sáºµn) */
@@ -52,16 +53,19 @@ class OpenAIBackedProvider implements IProviderClient {
   }
 
   async invoke(params: ProviderInvokeParams): Promise<any> {
-    const response = await this.client.chat.completions.create({
+    const createParams: any = {
       model: params.model,
       messages: params.messages,
       temperature: params.temperature ?? 0.7,
       max_tokens: params.max_tokens ?? 1024,
       tools: params.tools,
       tool_choice: params.tool_choice ?? 'auto',
-    });
-
-    return response;
+    };
+    // ponytail: stream param was silently ignored — OpenAI SDK needs explicit stream:true
+    if (params.stream) {
+      createParams.stream = true;
+    }
+    return await this.client.chat.completions.create(createParams);
   }
 
   /** Expose raw client cho tool calling loop */
