@@ -736,10 +736,13 @@ export class Agent extends EventEmitter {
               cycle: toolCallCycles,
             });
 
+            // ponytail: cap tool result at 8KB to prevent OOM from large search/read results
+            const rawResult = JSON.stringify(toolResult);
+            const cappedResult = rawResult.length > 8192 ? rawResult.slice(0, 8192) + '...[truncated]' : rawResult;
             messages.push({
               role: 'tool',
               tool_call_id: toolCall.id,
-              content: JSON.stringify(toolResult),
+              content: cappedResult,
             });
 
             // Collect for checkpoint
