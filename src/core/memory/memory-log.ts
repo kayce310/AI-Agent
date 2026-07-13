@@ -200,7 +200,7 @@ export class MemoryLog {
    */
   async replay(): Promise<MemoryBlock[]> {
     const snapshot = await this.tryLoadSnapshot();
-    let blocks: MemoryBlock[] = snapshot?.blocks ?? [];
+    let blocks: MemoryBlock[] = Array.isArray(snapshot?.blocks) ? snapshot.blocks : [];
     let startSeq = snapshot?.seq ?? 0;
   
     // Collect all log files: active + archives, sorted by timestamp (oldest first)
@@ -230,7 +230,7 @@ export class MemoryLog {
               if (entry.block) blocks.push(entry.block);
               break;
             case 'addMany':
-              if (entry.blocks) blocks.push(...entry.blocks);
+              if (Array.isArray(entry.blocks)) blocks.push(...entry.blocks);
               break;
             case 'clear':
               blocks = [];
