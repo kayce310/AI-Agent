@@ -249,6 +249,9 @@ export class MemoryStore {
     await this.blocksMutex.acquire();
     try {
       let results = this.blocks;
+    // Filter expired blocks (cleanup runs async via cron)
+    const now = Date.now();
+    results = results.filter(b => !b.expiresAt || new Date(b.expiresAt).getTime() > now);
 
     // Filter by type(s)
     if (opts?.types?.length) {

@@ -35,7 +35,8 @@ const SESSION_FILE = path.join(
  * SessionManager: TTL-based session cache WITH disk persistence
  *
  * Keeps Coral agent stateless while providing session continuity to users.
- * Sessions expire after 24 hours of inactivity (longer for persistence).
+ * Sessions expire after 15 minutes of inactivity.
+ * Disk persistence survives Coral restart (not related to TTL).
  * State is saved to disk and restored on restart.
  * 
  * SECURITY: Uses mutex locks to prevent race conditions in concurrent access.
