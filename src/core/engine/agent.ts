@@ -71,35 +71,32 @@ function checkAbort(signal?: AbortSignal): void {
   if (signal?.aborted) throw new Error('Operation cancelled');
 }
 
-type ResponseType = 'NEED_TOOL' | 'NEED_USER' | 'PLANNING' | 'FINAL_ANSWER';
+/**
+ * Response-type classification — pure structure-based, no NLP heuristics.
+ *
+ * The model has exactly TWO valid output paths:
+ *   1. Call a tool via the API's built-in tool_call mechanism.
+ *   2. Write a direct text answer.
+ *
+ * There is NO third path for "planning text" or "intent description".
+ * If the model wrote text, that text IS the intended answer — no regex guessing,
+ * no content-length threshold, no /let me/i pattern detection.
+ * This mirrors exactly how Hermes agent handles responses: API structure only.
+ */
+type ResponseType = 'NEED_TOOL' | 'FINAL_ANSWER' | 'UNPARSEABLE';
 
 function classifyResponse(content: string, toolCalls: any[]): ResponseType {
-  // 1. NEED_TOOL — highest priority
+  // 1. Structured tool calls from API — highest priority
   if (toolCalls.length > 0) return 'NEED_TOOL';
 
-  // 2. NEED_USER — model is asking user for input
-  const needUserPatterns = [
-    /bạn có thể/i, /bạn vui lòng/i,
-    /could you/i, /can you/i, /please provide/i,
-  ];
-  if (needUserPatterns.some(p => p.test(content))) return 'NEED_USER';
+  // 2. Empty / garbage content — no meaningful response at all
+  const trimmed = (content || '').trim();
+  if (!trimmed || trimmed.length < 3) return 'UNPARSEABLE';
 
-  // 3. PLANNING vs FINAL_ANSWER
-  const planningPatterns = [
-    /để tôi/i, /tôi sẽ/i, /đang kiểm tra/i, /đang tìm/i,
-    /I'll/i, /let me/i,
-  ];
-  const isPlanningLike = planningPatterns.some(p => p.test(content));
-  if (isPlanningLike) {
-    // Check for explanation patterns that indicate FINAL_ANSWER
-    const explanationPatterns = [/để tôi giải thích/i];
-    const isExplanation = explanationPatterns.some(p => p.test(content));
-    // Heuristic: if model already wrote >200 chars, it's explaining, not planning
-    if (isExplanation || content.length > 200) return 'FINAL_ANSWER';
-    return 'PLANNING';
-  }
-
-  // 4. Everything else is FINAL_ANSWER
+  // 3. Everything else is FINAL_ANSWER
+  //    No NLP. No regex. No content-length threshold.
+  //    The model either called a tool (handled above) or wrote a text response.
+  //    Trust the text as the intended answer — even if it starts with "Let me".
   return 'FINAL_ANSWER';
 }
 
@@ -147,6 +144,7 @@ export class Agent extends EventEmitter {
     private circuitBreaker: CircuitBreaker;
     private checkpointStore?: CheckpointStore;
     private contextManager: ContextWindowManager;
+    private sessionStartTimes = new Map<string, number>();
 
   constructor(config: AgentConfig) {
     super();
@@ -414,10 +412,35 @@ export class Agent extends EventEmitter {
     const requestId = request.sessionId || `req-${Date.now()}`;
     R.startRequest(requestId);
     R.state({ event: 'RECEIVED', requestId, cycle: 0 });
+    // Track session start time for duration logging
+    if (request.sessionId && !this.sessionStartTimes.has(request.sessionId)) {
+      this.sessionStartTimes.set(request.sessionId, Date.now());
+    }
     const systemPrompt = request.systemPrompt || '';
-    const messages: any[] = systemPrompt
-      ? [{ role: 'system', content: systemPrompt }, ...historyMessages]
-      : historyMessages;
+    // ── Structured response format instruction ──
+    // Tells the model exactly what output paths are valid (tool_call or direct answer).
+    // Eliminates "Let me look at X" / "tôi sẽ kiểm tra" planning text at the source,
+    // so no heuristic classifyResponse is needed downstream.
+    // Mirrors the approach of Hermes agent's TOOL_USE_ENFORCEMENT_GUIDANCE.
+    const FORMAT_INSTRUCTION =
+      '\n\n# Response Format\n' +
+      'You must respond in ONE of these two formats, never both in the same response:\n\n' +
+      '1. **Tool call** — If you need to take an action (read a file, search, run code, etc.), ' +
+      'use the API\'s built-in function/tool_call mechanism with structured arguments. ' +
+      'Do NOT describe the tool call in text.\n\n' +
+      '2. **Direct answer** — If you already have enough information or the task is complete, ' +
+      'write your answer in plain text. This text IS shown verbatim to the user as your final response.\n\n' +
+      '**CRITICAL — Never do these:**\n' +
+      '- Never write "Let me look at X", "I\'ll search for Y", "để tôi kiểm tra", "tôi sẽ tìm" ' +
+      'or any sentence describing a future action.\n' +
+      '- Never end a turn with a promise. If you need to do something, do it NOW via a tool call.\n' +
+      '- Any text you write without a tool call IS YOUR FINAL ANSWER. The system does not ' +
+      'intercept "planning language" — what you write is what the user sees.\n' +
+      '- If a tool or operation fails, report the blocker honestly. Do not fabricate results.';
+    const fullSystemPrompt = systemPrompt
+      ? `${systemPrompt}${FORMAT_INSTRUCTION}`
+      : FORMAT_INSTRUCTION;
+    const messages: any[] = [{ role: 'system', content: fullSystemPrompt }, ...historyMessages];
 
     // ── Token-aware context budget check ──
     await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
@@ -586,35 +609,49 @@ export class Agent extends EventEmitter {
 
         /* router used */
 
-        // ── Handle finish_reason ──
+        // ── Handle finish_reason: stop ──
         if (modelResult.finishReason === 'stop') {
           R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
-          finalContent = modelResult.content || '';
-          finalContent = finalContent.replace(/^[\w\/\.-]+:\s*/m, '');
-          finalContent = this.sanitizeFinalResponse(finalContent);
+          let rawContent = modelResult.content || '';
+          rawContent = rawContent.replace(/^[\w\/\.-]+:\s*/m, '');
+          finalContent = this.sanitizeFinalResponse(rawContent);
 
           const responseType = classifyResponse(finalContent, modelResult.toolCalls || []);
 
-          if (responseType === 'PLANNING' && toolCallCycles < 2) {
-            log.info(`[PLANNING] Cycle ${toolCallCycles}: "${finalContent.slice(0, 100)}..." — redirecting`);
-            R.meta({ event: 'PLANNING_DETECTED', requestId, cycle: toolCallCycles, content: finalContent.slice(0, 200) });
-            messages.push({
-              role: 'system',
-              content: '[SYSTEM] Bạn vừa trả lời bằng kế hoạch thay vì thực hiện. KHÔNG viết kế hoạch hay ý định. Hãy thực hiện NGAY: gọi tool cần thiết hoặc trả lời trực tiếp kết quả cuối cùng dựa trên kiến thức của bạn. KHÔNG mô tả bạn sẽ làm gì - hãy LÀM nó.'
-            });
-            toolCallCycles++;
-            R.state({ event: 'PLANNING_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'planning_redirect' });
-            continue;
+          if (responseType === 'UNPARSEABLE') {
+            if (toolCallCycles < 2) {
+              // Reasonable retry: the model returned empty/garbage,
+              // give it one more chance with a clear format reminder
+              log.warn(`[UNPARSEABLE] Cycle ${toolCallCycles}: empty/garbage content — redirecting with format reminder`);
+              R.meta({ event: 'UNPARSEABLE_RESPONSE', requestId, cycle: toolCallCycles, content: (finalContent || '').slice(0, 200) });
+              messages.push({
+                role: 'system',
+                content: '[SYSTEM] Phản hồi trước của bạn không có nội dung hợp lệ (trống hoặc không thể đọc được). Hãy trả lời theo MỘT trong hai dạng sau:\n\n1. Nếu cần gọi tool → dùng API tool_call (có cấu trúc)\n2. Nếu trả lời trực tiếp → viết nội dung rõ ràng bằng văn bản\n\nKHÔNG viết "let me", "I\'ll", "để tôi", "tôi sẽ" hay bất kỳ câu mô tả ý định nào. Nếu cần hành động, hãy gọi tool NGAY. Nếu đã có câu trả lời, hãy viết nó ra NGAY.'
+              });
+              toolCallCycles++;
+              R.state({ event: 'UNPARSEABLE_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'unparseable_redirect' });
+              continue;
+            }
+
+            // Redirects exhausted — return a clean fallback instead of garbage
+            log.warn(`[UNPARSEABLE] Max redirects (2) reached — returning fallback`);
+            R.meta({ event: 'UNPARSEABLE_EXHAUSTED', requestId, cycle: toolCallCycles });
+            return {
+              content: '[E1] ❌ Coral chưa hoàn tất yêu cầu. Model trả về nội dung rỗng. Vui lòng thử lại với câu hỏi đơn giản hơn hoặc dùng /new để bắt đầu lại.',
+              modelUsed: modelResult.modelUsed || 'unknown',
+              providerUsed: modelResult.providerUsed || 'unknown',
+              toolCycles: toolCallCycles,
+              finished: true,
+            };
           }
 
-          /* final response — FINAL_ANSWER, NEED_USER, or max-redirect PLANNING */
-
+          /* final response — everything reachable here is a valid FINAL_ANSWER */
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
           R.state({
             event: 'RETURN_FINISHED',
             requestId, cycle: toolCallCycles,
-            finishReason: responseType === 'NEED_USER' ? 'need_user' : 'stop',
+            finishReason: 'stop',
             finalContent: finalContent.slice(0, 100),
           });
           return {
@@ -806,12 +843,40 @@ export class Agent extends EventEmitter {
         }
 
         // ── Unknown finish_reason ──
-        finalContent = modelResult.content ||
-          (modelResult.toolCalls?.length ? '⚠️ Đang xử lý yêu cầu...' : '❌ Phản hồi không mong đợi.');
-        finalContent = this.sanitizeFinalResponse(finalContent);
-        R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason || 'unknown' });
-        R.state({ event: 'RETURN_FINISHED', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason || 'unknown', finalContent: finalContent.slice(0, 100) });
+        const tokEst = estimateTokens(messages);
+        const sessionDur = request.sessionId
+          ? ((Date.now() - (this.sessionStartTimes.get(request.sessionId) || Date.now())) / 1000 / 60).toFixed(1)
+          : '?';
+        log.warn(`[UNKNOWN_FINISH] reason="${modelResult.finishReason}", contentLength=${(modelResult.content || '').length}, messageCount=${messages.length}, estimatedTokens=${tokEst.total}, activeModel="${modelResult.modelUsed}", provider="${modelResult.providerUsed}", sessionDuration=${sessionDur}min, cycle=${toolCallCycles}`);
 
+        // If model returned content despite unknown finish_reason, use it
+        if (modelResult.content) {
+          finalContent = this.sanitizeFinalResponse(modelResult.content);
+          R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
+          return {
+            content: finalContent,
+            modelUsed: modelResult.modelUsed,
+            providerUsed: modelResult.providerUsed,
+            toolCycles: toolCallCycles,
+            finished: true,
+          };
+        }
+
+        // Empty content + unknown reason → retry once (like UNPARSEABLE for 'stop')
+        if (toolCallCycles < 2) {
+          log.warn(`[UNKNOWN_FINISH] Cycle ${toolCallCycles}: empty content with reason="${modelResult.finishReason}" — retrying`);
+          messages.push({
+            role: 'system',
+            content: `[SYSTEM] Model trả về finish_reason không xác định ("${modelResult.finishReason}") với nội dung trống. Hãy trả lời lại câu hỏi trực tiếp bằng văn bản. KHÔNG gọi tool.`,
+          });
+          toolCallCycles++;
+          R.state({ event: 'UNKNOWN_FINISH_RETRY', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason });
+          continue;
+        }
+
+        // Retries exhausted
+        finalContent = this.sanitizeFinalResponse('[E2] ❌ Coral gặp sự cố khi xử lý yêu cầu. Model trả về phản hồi rỗng. Vui lòng thử lại hoặc đặt câu hỏi khác.');
+        R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: modelResult.finishReason || 'unknown' });
         return {
           content: finalContent,
           modelUsed: modelResult.modelUsed,
