@@ -842,6 +842,14 @@ export class Agent extends EventEmitter {
           continue;
         }
 
+        // ponytail: tool_calls reported but not parsed (streaming delta issue) — retry with text-only instruction
+        if (modelResult.finishReason === 'tool_calls' && !modelResult.toolCalls && toolCallCycles < 2) {
+          log.warn(`[TOOL_CALLS_NO_PARSED] finishReason=tool_calls but toolCalls empty — retrying`);
+          messages.push({ role: 'system', content: '[SYSTEM] Response had tool_calls but arguments were lost. Please respond with a direct text answer.' });
+          toolCallCycles++;
+          continue;
+        }
+
         // ── Unknown finish_reason ──
         const tokEst = estimateTokens(messages);
         const sessionDur = request.sessionId

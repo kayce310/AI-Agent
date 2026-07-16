@@ -227,9 +227,9 @@ export class RouterAdapter implements ModelAdapter {
 
     let accumulated = '';
     let finishReason = '';
-    let toolCalls: any[] | undefined;
     let tokenUsage: { input: number; output: number } | undefined;
-
+    // ponytail: accumulate tool_calls from delta chunks (OpenAI streaming format)
+    const toolCallMap = new Map<number, any>();
     for await (const chunk of response) {
       const delta = chunk.choices?.[0]?.delta;
       const text = delta?.content || '';
@@ -246,9 +246,29 @@ export class RouterAdapter implements ModelAdapter {
         }
       }
 
-      if (chunk.choices?.[0]?.finish_reason) {
-        finishReason = chunk.choices[0].finish_reason;
-        toolCalls = chunk.choices[0].message?.tool_calls || undefined;
+      const fr = chunk.choices?.[0]?.finish_reason;
+      if (fr != null) {
+        finishReason = fr;
+      }
+
+      // Accumulate tool_calls from delta (streaming format), not message
+      const deltaToolCalls = delta?.tool_calls;
+      if (deltaToolCalls) {
+        for (const tc of deltaToolCalls) {
+          const idx = tc.index ?? 0;
+          const existing = toolCallMap.get(idx);
+          if (!existing) {
+            toolCallMap.set(idx, {
+              id: tc.id,
+              type: 'function',
+              function: { name: tc.function?.name || '', arguments: tc.function?.arguments || '' },
+            });
+          } else {
+            if (tc.id) existing.id = tc.id;
+            if (tc.function?.name) existing.function.name = tc.function.name;
+            if (tc.function?.arguments) existing.function.arguments += tc.function.arguments;
+          }
+        }
       }
 
       if (chunk.usage) {
@@ -268,7 +288,7 @@ export class RouterAdapter implements ModelAdapter {
       modelUsed: modelId,
       providerUsed: resolved.providerName,
       tokenUsage,
-      toolCalls,
+      toolCalls: toolCallMap.size > 0 ? Array.from(toolCallMap.values()) : undefined,
       finishReason,
     };
   }
