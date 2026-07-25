@@ -303,6 +303,70 @@ export class CommandRegistry {
       description: 'Chuyển sang session cũ — /switch <sessionId>',
       handler: this.handleSwitch.bind(this),
     });
+
+    // ── Trace / Activity Log ──
+    this.register({
+      name: 'trace',
+      description: 'Xem log hoạt động gần đây của Coral từ EventBus',
+      handler: async (ctx, args) => {
+        const { userManager } = await import('./user-manager.js');
+        const userId = String(ctx.from?.id || 'unknown');
+        if (!userManager.isAllowed(userId)) return;
+
+        const limit = args.length > 0 ? Math.min(parseInt(args[0], 10) || 10, 50) : 10;
+
+        try {
+          const eventBus = (globalThis as any).__coral_eventBus;
+          if (!eventBus) {
+            await ctx.reply('❌ EventBus chưa sẵn sàng.');
+            return;
+          }
+
+          const events = eventBus.getRecent(limit);
+          if (!events || events.length === 0) {
+            await ctx.reply('📭 Chưa có sự kiện nào trong EventBus.');
+            return;
+          }
+
+          const lines: string[] = ['📜 **Hoạt động gần đây**', ''];
+          for (const ev of events) {
+            const time = new Date(ev.timestamp).toLocaleTimeString('vi-VN');
+            switch (ev.type) {
+              case 'task_started':
+                lines.push(`🟢 ${time} **Task:** ${ev.payload.goal?.slice(0, 60) || ''}`);
+                break;
+              case 'task_finished':
+                const statusIcon = ev.payload.success ? '✅' : '❌';
+                const statusText = ev.payload.success ? 'Hoàn thành' : 'Thất bại';
+                lines.push(`${statusIcon} ${time} **${statusText}:** ${ev.payload.goal?.slice(0, 40) || ''}`);
+                break;
+              case 'tool_called':
+                lines.push(`🔧 ${time} \`/${ev.payload.toolName}\``);
+                break;
+              case 'tool_finished':
+                lines.push(`   ⏱️ ${ev.payload.durationMs || '?'}ms → ${ev.payload.success ? '✅' : '❌'}`);
+                break;
+              case 'decision_made':
+                lines.push(`🧠 ${time} Quyết định: ${ev.payload.decision?.slice(0, 50) || ''}`);
+                break;
+              case 'file_created':
+                lines.push(`📄 ${time} Tạo: \`${ev.payload.path?.split('/').pop() || ''}\``);
+                break;
+              case 'file_modified':
+                lines.push(`✏️ ${time} Sửa: \`${ev.payload.path?.split('/').pop() || ''}\``);
+                break;
+              default:
+                lines.push(`📌 ${time} ${ev.type}: ${JSON.stringify(ev.payload).slice(0, 60)}`);
+            }
+          }
+          lines.push('', `Dùng \`/trace <số lượng>\` để xem nhiều hơn (tối đa 50).`);
+
+          await ctx.reply(lines.join('\n'));
+        } catch (err: any) {
+          await ctx.reply(`❌ Lỗi đọc EventBus: ${err.message}`);
+        }
+      },
+    });
   }
 
   register(command: { name: string; description: string; handler: (ctx: Context, args: string[]) => Promise<void> }): void {
