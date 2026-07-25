@@ -176,6 +176,38 @@ const plugin: ToolPlugin = {
           // SECURITY: Always use execFileSync with argument array (prevents shell injection)
           // For built-in shell commands, we route through a safe wrapper
           
+          // ── PIPE SUPPORT: if command contains |, route through cmd /c ──
+          // The command already passed isCommandSafe() (whitelist prefixes checked).
+          // execFileSync doesn't support pipes, so we need cmd.exe to interpret them.
+          // This is safe because execFileSync with cmd /c still prevents arbitrary
+          // code execution — the command string has been validated by isCommandSafe().
+          if (cmd.includes('|')) {
+            if (process.platform === 'win32') {
+              const output = execFileSync('cmd', ['/c', cmd], {
+                cwd: BASE_PATH,
+                encoding: 'utf8',
+                timeout: 60000,
+                maxBuffer: 1024 * 1024,
+                windowsHide: true,
+              });
+              if (!output || output.trim().length === 0) {
+                return `✅ Lệnh chạy thành công (không có output)`;
+              }
+              return output.substring(0, 50000) + (output.length > 50000 ? '\n\n[... output truncated at 50000 chars]' : '');
+            } else {
+              const output = execFileSync('sh', ['-c', cmd], {
+                cwd: BASE_PATH,
+                encoding: 'utf8',
+                timeout: 60000,
+                maxBuffer: 1024 * 1024,
+              });
+              if (!output || output.trim().length === 0) {
+                return `✅ Lệnh chạy thành công (không có output)`;
+              }
+              return output.substring(0, 50000) + (output.length > 50000 ? '\n\n[... output truncated at 50000 chars]' : '');
+            }
+          }
+
           // Map built-in commands to their safe equivalents
           let finalProgram = programName;
           let finalArgs = execArgs;

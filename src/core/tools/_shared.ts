@@ -105,8 +105,10 @@ const COMMAND_WHITELIST_PREFIXES = [
   'wc', 'sort', 'uniq', 'cut', 'tr', 'diff', 'xxd', 'od',
   // File search
   'grep', 'rg', 'ag', 'find', 'fd', 'which', 'where', 'locate',
+  // Windows-specific file search
+  'findstr', 'find', 'more',
   // File operations (safe via execFileSync)
-  'mkdir', 'touch', 'cp', 'mv', 'rm', 'rmdir',
+  'mkdir', 'touch', 'cp', 'mv', 'rm', 'rmdir', 'del', 'copy', 'xcopy', 'robocopy',
   // Archive
   'tar', 'zip', 'unzip', '7z', 'gzip', 'gunzip',
   // System inspection
