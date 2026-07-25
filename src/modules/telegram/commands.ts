@@ -99,22 +99,75 @@ export class CommandRegistry {
   // ──────────────────────────────────────────────
 
   private registerDefaultCommands(): void {
-    // ── Commands delegated to core CommandRegistry ──
+    // ── Start ──
+    this.register({
+      name: 'start',
+      description: 'Bắt đầu / chào mừng',
+      handler: async (ctx, _args) => {
+        const userId = String(ctx.from?.id || 'unknown');
+        const { userManager } = await import('./user-manager.js');
+        if (!userManager.isBootstrapped()) {
+          userManager.bootstrap(userId);
+        }
+        const allowed = userManager.isAllowed(userId);
+        if (!allowed) {
+          await ctx.reply('❌ Bạn chưa được phép sử dụng Coral. Liên hệ admin.');
+          return;
+        }
+        await ctx.reply(
+          '🌊 **Chào mừng bạn đến với Coral!**\n\n' +
+          'Tôi là AI Agent có thể giúp bạn:\n' +
+          '• Trả lời câu hỏi, thực thi code, quản lý file\n' +
+          '• Tìm kiếm thông tin, phân tích dữ liệu\n\n' +
+          'Gửi tin nhắn bất kỳ để bắt đầu, hoặc dùng /help để xem danh sách lệnh.'
+        );
+      },
+    });
+
+    // ── Help: core commands + Telegram-specific commands ──
     this.register({
       name: 'help',
       description: 'Xem danh sách tất cả lệnh',
       handler: async (ctx, args) => {
         const { userManager } = await import('./user-manager.js');
         const userId = String(ctx.from?.id || 'unknown');
+        if (!userManager.isAllowed(userId)) return;
         const isAdmin = userManager.isAdmin(userId);
+
+        // Get core commands help text
         const coreCtx = buildCoreContext(ctx, args);
         coreCtx.isAdmin = isAdmin;
-        coreCtx.isAllowed = userManager.isAllowed(userId);
-        const result = await CoreRegistry.getInstance().execute('help', coreCtx);
-        await ctx.reply(result.text, { parse_mode: 'Markdown' });
+        coreCtx.isAllowed = true;
+        const coreResult = await CoreRegistry.getInstance().execute('help', coreCtx);
+
+        // Append Telegram-specific commands (not in core registry)
+        const lines: string[] = [coreResult.text];
+
+        // Check which local commands exist but aren't in core
+        const coreCmdNames = CoreRegistry.getInstance().getCommands('telegram').map(c => c.name);
+        const localCmds = this.getAll().filter(c => !coreCmdNames.includes(c.name));
+        if (localCmds.length > 0) {
+          lines.push('', '*Telegram:*');
+          for (const cmd of localCmds) {
+            lines.push(`• /${cmd.name} — ${cmd.description}`);
+          }
+        }
+
+        // Admin commands (always added by Telegram layer)
+        if (isAdmin) {
+          lines.push('', '*Quản trị:*');
+          lines.push('• /allow <userId> — Thêm user');
+          lines.push('• /allow <userId> admin — Thêm admin');
+          lines.push('• /disallow <userId> — Xóa user');
+          lines.push('• /users — Danh sách user');
+          lines.push('• /admin — Bảng điều khiển admin');
+        }
+
+        await ctx.reply(lines.join('\n'), { parse_mode: 'Markdown' });
       },
     });
 
+    // ── Status: system info + task detail + dashboard ──
     this.register({
       name: 'status',
       description: 'Xem trạng thái hệ thống Coral',
@@ -122,11 +175,76 @@ export class CommandRegistry {
         const { userManager } = await import('./user-manager.js');
         const userId = String(ctx.from?.id || 'unknown');
         if (!userManager.isAllowed(userId)) return;
-        const coreCtx = buildCoreContext(ctx, args);
-        coreCtx.isAdmin = userManager.isAdmin(userId);
-        coreCtx.isAllowed = true;
-        const result = await CoreRegistry.getInstance().execute('status', coreCtx);
-        await ctx.reply(result.text, { parse_mode: 'Markdown' });
+
+        // ── Task detail mode (backward compat) ──
+        if (args.length > 0) {
+          const taskId = args[0];
+          const taskQueue = getTaskQueue();
+          const task = taskQueue.getStatus(taskId);
+          if (!task) {
+            await ctx.reply(`❌ Không tìm thấy tác vụ \`${taskId}\``);
+            return;
+          }
+          const statusIcons: Record<string, string> = {
+            queued: '⏳', running: '🔄', completed: '✅', failed: '❌', cancelled: '🚫',
+          };
+          const icon = statusIcons[task.status] || '❓';
+          const lines = [
+            `${icon} **Task: \`${taskId}\`**`,
+            '',
+            `📋 Trạng thái: **${task.status}**`,
+            `📝 Mô tả: ${task.request.task || 'không rõ'}`,
+            `⏱ Tạo: ${new Date(task.createdAt).toLocaleString('vi-VN')}`,
+          ];
+          if (task.startedAt) lines.push(`🔄 Bắt đầu: ${new Date(task.startedAt).toLocaleString('vi-VN')}`);
+          if (task.completedAt) lines.push(`✅ Kết thúc: ${new Date(task.completedAt).toLocaleString('vi-VN')}`);
+          if (task.progress) lines.push(`📊 Tiến độ: ${task.progress}`);
+          if (task.error) lines.push(`⚠️ Lỗi: ${task.error.slice(0, 200)}`);
+          await ctx.reply(lines.join('\n'));
+          return;
+        }
+
+        // ── System status ──
+        const role = userManager.isAdmin(userId) ? '👑 Admin' : '👤 User';
+        const currentSession = this.userSessions.get(userId);
+        const modelSpecs = new ProviderRegistry();
+        modelSpecs.loadFromConfig();
+        const specs = modelSpecs.getModelSpecs();
+        const currentModel = currentSession?.selectedModel || (specs.length > 0 ? specs[0].id : 'auto/best-free');
+        const memory = process.memoryUsage();
+        const uptime = process.uptime();
+
+        const lines: string[] = [
+          '🌊 **Coral Status**',
+          '',
+          `📱 Platform: Telegram`,
+          `👤 Role: ${role}`,
+          `🧠 Model hiện tại: \`${currentModel}\``,
+          `📊 Models available: \`${specs.length}\``,
+          `💾 Memory: ${(memory.heapUsed / 1024 / 1024).toFixed(1)}MB / ${(memory.heapTotal / 1024 / 1024).toFixed(1)}MB`,
+          `⏱️ Uptime: ${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
+          `🗄️ Memories: Active`,
+        ];
+
+        // Dashboard status — check globalThis for runtime state
+        try {
+          const dashboardServer = (globalThis as any).__coral_dashboardServer;
+          const tunnelUrl = (globalThis as any).__coral_tunnelUrl;
+          if (dashboardServer) {
+            lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại \`http://localhost:8766\``);
+            if (tunnelUrl) {
+              lines.push(`🌐 **Tunnel:** \`${tunnelUrl}\``);
+            } else {
+              lines.push(`🌐 **Tunnel:** đang chờ tạo...`);
+            }
+          } else {
+            lines.push(`📊 **Dashboard:** ⚪ **đang tắt** — dùng \`/dashboard\` để bật`);
+          }
+        } catch {
+          lines.push(`📊 **Dashboard:** ⚪ không xác định`);
+        }
+
+        await ctx.reply(lines.join('\n'));
       },
     });
 

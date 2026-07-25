@@ -234,6 +234,7 @@ export class TelegramBridge implements PlatformAdapter {
         { command: 'cancel', description: 'Hủy task' },
         { command: 'dashboard', description: 'Bật/tắt dashboard' },
         { command: 'restart', description: 'Khởi động lại bot' },
+        { command: 'world', description: 'Bật/tắt world model probes' },
       ]);
       console.log(`${ts()} ✅ Telegram bot commands registered`);
 
@@ -328,6 +329,10 @@ export class TelegramBridge implements PlatformAdapter {
 
     this.bot.command('restart', async (ctx) => {
       await this.commandRegistry.get('restart')?.handler(ctx, []);
+    });
+
+    this.bot.command('world', async (ctx) => {
+      await this.commandRegistry.get('world')?.handler(ctx, []);
     });
 
     // ── Task Commands (Phase 3) ──
