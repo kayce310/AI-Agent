@@ -148,11 +148,14 @@ export class RouterAdapter implements ModelAdapter {
       throw new Error(`Model "${modelId}" not available. Available: ${available.join(', ') || 'none'}`);
     }
 
+    // max_tokens Æ°u tiÃªn: (1) options truyá»n tÆ°á»ng minh, (2) config providers.json, (3) fallback 2048
+    const effectiveMaxTokens = options?.maxTokens ?? resolved.maxTokens ?? 2048;
+
     const payload: any = {
       model: modelId,
       messages,
       temperature: options?.temperature ?? 0.3,    // Lower = less reasoning tokens
-      max_tokens: options?.maxTokens ?? 2048,      // Reduced from 4096 for faster response
+      max_tokens: effectiveMaxTokens,
       stream: false,
     };
     if (options?.tools && options.tools.length > 0) {
@@ -207,11 +210,14 @@ export class RouterAdapter implements ModelAdapter {
       throw new Error(`Model "${modelId}" not available`);
     }
 
+    // max_tokens Æ°u tiÃªn: (1) options truyá»n tÆ°á»ng minh, (2) config providers.json, (3) fallback 2048
+    const effectiveMaxTokens = options?.maxTokens ?? resolved.maxTokens ?? 2048;
+
     const payload: any = {
       model: modelId,
       messages,
       temperature: options?.temperature ?? 0.3,
-      max_tokens: options?.maxTokens ?? 2048,
+      max_tokens: effectiveMaxTokens,
       stream: true,
     };
     if (options?.tools && options.tools.length > 0) {

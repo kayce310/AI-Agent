@@ -457,6 +457,7 @@ export class Agent extends EventEmitter {
     let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
     let guardTriggered = false;    // đánh dấu Guard đã kích hoạt trong task này
     let intentionGuardCount = 0;   // số lần Guard trigger (tránh loop vô hạn)
+    let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập intentionGuardCount
     const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
     const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
@@ -517,7 +518,8 @@ export class Agent extends EventEmitter {
         const modelOptions = {
           model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
           tools: selectedTools,
-          maxTokens: 4096,
+          // Không hardcode maxTokens — để model-adapter tự quyết theo:
+          // (1) options truyền tường minh, (2) config providers.json, (3) fallback 2048
         };
 
         // Try streaming first, fallback to regular invoke on error
@@ -688,6 +690,24 @@ export class Agent extends EventEmitter {
         if (modelResult.finishReason === 'length') {
           log.warn(`[TRUNCATED] Model hit max_tokens at cycle ${toolCallCycles}`);
           const partialContent = (modelResult.content || '').replace(/^[\w\/\.-]+:\s*/m, '').trim();
+
+          // ── LengthGuard: retry nếu chưa có plan và chưa retry lần nào ──
+          // Nếu đã có plan, giữ nguyên hành vi cũ (return truncation ngay)
+          if (!hasCreatedPlan && lengthRetryCount < 1) {
+            log.warn(`[LengthGuard] Cycle ${toolCallCycles}: truncated before plan created — retrying (attempt ${lengthRetryCount + 1}/1)`);
+            lengthRetryCount++;
+            // KHÔNG giữ partialContent bị cắt vào history — tránh model tiếp nối câu dở dang
+            messages.push({
+              role: 'system',
+              content: '[GUARD] Phản hồi trước bị cắt vì vượt giới hạn độ dài trước khi bạn kịp hành động. QUY TẮC:\n'
+                + '1. Nếu cần lập kế hoạch nhiều bước, gọi update_plan(action=\'create\', items=[...]) NGAY — đừng viết mô tả kế hoạch bằng văn bản dài.\n'
+                + '2. Nếu là tác vụ đơn giản, thực hiện bằng tool call trực tiếp, không mô tả ý định trước.'
+            });
+            toolCallCycles++;
+            R.state({ event: 'LENGTH_GUARD_RETRY', requestId, cycle: toolCallCycles });
+            continue; // Quay lại đầu vòng lặp
+          }
+
           if (partialContent.length > 20) {
             finalContent = this.sanitizeFinalResponse(partialContent);
             R.state({

@@ -77,6 +77,7 @@ class OpenAIBackedProvider implements IProviderClient {
 export class ProviderRegistry {
   private providers: Map<string, OpenAIBackedProvider> = new Map();
   private modelToProvider: Map<string, string> = new Map(); // modelId -> providerName
+  private modelSpecs: Map<string, ModelSpec> = new Map();    // modelId -> full ModelSpec (maxTokens, tier, label)
   private configPath: string;
 
   constructor(configPath?: string) {
@@ -118,21 +119,29 @@ export class ProviderRegistry {
     this.providers.set(config.name, provider);
 
     // Normalize models: support cáº£ string[] vÃ  ModelSpec[]
-    const modelIds = config.models.map((m: any) => typeof m === 'string' ? m : m.id);
-    for (const modelId of modelIds) {
-      this.modelToProvider.set(modelId, config.name);
+    // LÆ°u ModelSpec Ä‘áº§y Ä‘á»§ (maxTokens, tier, label) cho resolve()
+    for (const m of config.models) {
+      if (typeof m === 'string') {
+        this.modelToProvider.set(m, config.name);
+        // string khÃ´ng cÃ³ maxTokens â†’ khÃ´ng set vÃ o modelSpecs (Ä‘á»ƒ fallback 2048)
+      } else {
+        this.modelToProvider.set(m.id, config.name);
+        this.modelSpecs.set(m.id, { ...m, tier: m.tier || config.tier || 3 });
+      }
     }
   }
 
-  /** Resolve provider cho má»™t model ID */
-  resolve(modelId: string): { provider: IProviderClient; providerName: string } | null {
+  /** Resolve provider cho má»™t model ID, kÃ¨m maxTokens tá»« config */
+  resolve(modelId: string): { provider: IProviderClient; providerName: string; maxTokens?: number } | null {
     const providerName = this.modelToProvider.get(modelId);
     if (!providerName) return null;
 
     const provider = this.providers.get(providerName);
     if (!provider) return null;
 
-    return { provider, providerName };
+    const spec = this.modelSpecs.get(modelId);
+
+    return { provider, providerName, maxTokens: spec?.maxTokens };
   }
 
   /** Kiá»ƒm tra model cÃ³ tá»“n táº¡i khÃ´ng */
