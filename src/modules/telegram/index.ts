@@ -304,6 +304,15 @@ export class TelegramBridge implements PlatformAdapter {
   // ──────────────────────────────────────────────
 
   private registerEventHandlers(): void {
+    // ── Bootstrap middleware: first user becomes admin on ANY interaction ──
+    this.bot.use(async (ctx, next) => {
+      const userId = String(ctx.from?.id || 'unknown');
+      if (userId !== 'unknown' && !userManager.isBootstrapped()) {
+        userManager.bootstrap(userId);
+      }
+      await next();
+    });
+
     // ── Handle all slash commands via CommandRegistry ──
     this.bot.command('start', async (ctx) => {
       await this.commandRegistry.get('start')?.handler(ctx, []);

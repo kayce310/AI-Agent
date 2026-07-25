@@ -1,8 +1,0 @@
-🌊 **Coral Status**
-
-📱 Platform: telegram
-👤 User: `t`
-🧠 Models: `7` available
-💾 Memory: 7.8MB / 11.2MB
-⏱️ Uptime: 0m 0s
-📊 **Dashboard:** ⚪ **đang tắt** — dùng `/dashboard` để bật

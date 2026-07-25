@@ -1,2441 +1,5 @@
 [
   {
-    "id": "2c519d89-b479-433f-a8a4-cb67975c446f",
-    "type": "skill",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"class Item|class Projectile|requestAnimationFrame\",\"total\":2,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\isekai-rpg-enhanced.html\",\"line\":524,\"content\":\"class Item {\"},{\"file\":\"knowledg",
-    "source": {
-      "taskId": "task-1784684616486",
-      "tool": "search_files",
-      "decisionId": "aaa51851-a3a9-4c71-acb1-bb6188a68154"
-    },
-    "confidence": 5.82493319988872e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "72b5404d-c11f-48cc-9273-3288bada8d3d",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784684616486",
-      "decisionId": "aaa51851-a3a9-4c71-acb1-bb6188a68154"
-    },
-    "confidence": 4.65994655991098e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "601d802c-c1d4-4e99-8ab6-64244e1479ce",
-    "type": "skill",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"function draw|function gameLoop|function updateUI|function checkLevelUp\",\"total\":4,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\isekai-rpg-enhanced.html\",\"line\":318,\"content\":\"function d",
-    "source": {
-      "taskId": "task-1784684616486",
-      "tool": "search_files",
-      "decisionId": "ecbdf6db-784a-418b-98f1-cfdda2ac9ef0"
-    },
-    "confidence": 5.82493319988872e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "2c6af5fb-f565-4311-9180-a5d9a6340869",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784684616486",
-      "decisionId": "ecbdf6db-784a-418b-98f1-cfdda2ac9ef0"
-    },
-    "confidence": 4.65994655991098e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "cf2f4563-f916-4fa6-b5a0-819f952252c8",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 6)",
-    "source": {
-      "taskId": "task-1784684616486",
-      "decisionId": "187a594b-1c3c-4c15-a598-27152e11ec86"
-    },
-    "confidence": 4.65994655991098e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "48c951f1-bb63-4666-8808-830ce0a7ae69",
-    "type": "skill",
-    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\n<html lang=\\\"vi\\\">\\n<head>\\n    <meta charset=\\\"UTF-8\\\">\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\n    <title>🎮 ISEKAI RPG - Enhanc",
-    "source": {
-      "taskId": "task-1784684616486",
-      "tool": "read_file",
-      "decisionId": "e626d127-c48f-49e4-832e-78cb9bc14a6f"
-    },
-    "confidence": 8.188077551973841e-11,
-    "importance": 0.5,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "read_file"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "8ae13022-c914-41a5-a011-182954c74391",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 5)",
-    "source": {
-      "taskId": "task-1784684616486",
-      "decisionId": "e626d127-c48f-49e4-832e-78cb9bc14a6f"
-    },
-    "confidence": 4.65994655991098e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784742442763,
-    "lastAccessedAt": 1784742442763,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "3359357d-a49b-44b8-94ae-1154f4d58043",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743349354",
-      "decisionId": "a6e7e2c1-e22f-40b7-aded-d4438bc6abfe"
-    },
-    "confidence": 6.531494218963711e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743379491,
-    "lastAccessedAt": 1784743379491,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f4b4fd6c-b9c5-4bea-b294-dda4ab2b8fe3",
-    "type": "fact",
-    "content": "Completed task: Coral (31633ms)",
-    "source": {
-      "taskId": "task-1784743349354"
-    },
-    "confidence": 2.281171457161892e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743380989,
-    "lastAccessedAt": 1784743380989,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "2c6ddea5-7a42-4b08-8490-6dea59345669",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743480474",
-      "decisionId": "8e01d3f1-f4fc-45f9-8028-82f98afc2a5a"
-    },
-    "confidence": 6.872703963026502e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743521173,
-    "lastAccessedAt": 1784743521173,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "6f294f3b-b5c0-47ba-b547-97eacc7a2e6b",
-    "type": "fact",
-    "content": "Completed task: ta đang nói về vấn đề gì vậy  Coral (40702ms)",
-    "source": {
-      "taskId": "task-1784743480474"
-    },
-    "confidence": 2.3647642557182683e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743521177,
-    "lastAccessedAt": 1784743521177,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "92fc444d-6297-4ed6-b5c0-0bf079dec8e4",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743557506",
-      "decisionId": "ed1f3f4f-4a85-4613-8331-99464313d783"
-    },
-    "confidence": 6.988208041015054e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743567545,
-    "lastAccessedAt": 1784743567545,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1f54664b-0a5f-48b7-a4dd-7bc30de51034",
-    "type": "fact",
-    "content": "Completed task: sao memory cao vậy Coral (10041ms)",
-    "source": {
-      "taskId": "task-1784743557506"
-    },
-    "confidence": 2.3930830112954944e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743567547,
-    "lastAccessedAt": 1784743567547,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "73d298b7-5b70-4756-8b70-08674a42c94c",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743612254",
-      "decisionId": "81482167-ea67-498a-9a49-cc5198c362fd"
-    },
-    "confidence": 7.228517627290665e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743661700,
-    "lastAccessedAt": 1784743661700,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "fc5f6fc4-e4ca-4f90-b5b5-39e91e260b8c",
-    "type": "fact",
-    "content": "Completed task: 🌊 Coral Status\n\n📱 Platform: Telegram\n👤 Role: 👑 Admin\n🧠 Model hiện tại: all\n📊 Models available: 7\n💾 Memory: 284.8MB / 289.0MB\n⏱️ Uptime: 18m 25s\n🗄️ Memories: Active\n📊 Dashboard: 🔴 Off (gửi /d (49448ms)",
-    "source": {
-      "taskId": "task-1784743612254"
-    },
-    "confidence": 2.451579775798631e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743661703,
-    "lastAccessedAt": 1784743661703,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "add6f328-b130-4897-b05a-0a0fce0cebba",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784743693884",
-      "decisionId": "7819479b-28d2-46c9-be7c-a3f7a216c621"
-    },
-    "confidence": 7.337509957382378e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743703526,
-    "lastAccessedAt": 1784743703526,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "d60c2c1a-ae38-4d4b-8e23-bb30bbcef03c",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784743693884",
-      "decisionId": "1121c97d-088a-4ff8-bee6-e882b2bd6e8c"
-    },
-    "confidence": 7.356937327860054e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743710916,
-    "lastAccessedAt": 1784743710916,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "fbd71c1f-7d66-49cf-88d2-756ac30c4b31",
-    "type": "fact",
-    "content": "Completed task: clear đi (23764ms)",
-    "source": {
-      "taskId": "task-1784743693884"
-    },
-    "confidence": 2.48688525993446e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743717649,
-    "lastAccessedAt": 1784743717649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "545adb75-c9cb-4bf6-9704-f5cc517ba7c1",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743745681",
-      "decisionId": "28c719c1-d3f9-4e77-b0b4-696aef5518e8"
-    },
-    "confidence": 7.589377044449166e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743797851,
-    "lastAccessedAt": 1784743797851,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "febe2568-2c95-48c4-b8a7-7e260ebf7011",
-    "type": "fact",
-    "content": "Completed task: bạn không có command /clear (52174ms)",
-    "source": {
-      "taskId": "task-1784743745681"
-    },
-    "confidence": 2.538389792319205e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743797856,
-    "lastAccessedAt": 1784743797856,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "659e7411-3d62-4e6b-86ee-b6f98a03044b",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743870794",
-      "decisionId": "0bdedec4-b80a-4488-9ad8-aea939431a68"
-    },
-    "confidence": 7.942402501789286e-13,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784743924921,
-    "lastAccessedAt": 1784743924921,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "4b361f9e-f20a-4db3-bef8-122781789428",
-    "type": "fact",
-    "content": "Completed task: bạn được phép clear memory của bạn Coral, tôi cho phép (54129ms)",
-    "source": {
-      "taskId": "task-1784743870794"
-    },
-    "confidence": 2.622177557439143e-9,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784743924923,
-    "lastAccessedAt": 1784743924923,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "44aa724f-f6bb-4b8d-aeb6-55c43ea05c49",
-    "type": "fact",
-    "content": "Completed task: bạn được phép clear memory của bạn Coral, tôi cho phép (54129ms)",
-    "source": {
-      "taskId": "task-1784743870794"
-    },
-    "confidence": 0.0000021103505072803055,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330646,
-    "lastAccessedAt": 1784773330646,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "aff1ed94-15f7-4184-9a90-05cc53d63a6e",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743870794",
-      "decisionId": "0bdedec4-b80a-4488-9ad8-aea939431a68"
-    },
-    "confidence": 9.287989139695077e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330646,
-    "lastAccessedAt": 1784773330646,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1dbc1870-f378-4d79-81b9-0829148a6db1",
-    "type": "fact",
-    "content": "Completed task: bạn không có command /clear (52174ms)",
-    "source": {
-      "taskId": "task-1784743745681"
-    },
-    "confidence": 0.000002110350928120837,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330647,
-    "lastAccessedAt": 1784773330647,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "b8349f58-5c2f-48c4-a975-8cbdf74dfb4c",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743745681",
-      "decisionId": "28c719c1-d3f9-4e77-b0b4-696aef5518e8"
-    },
-    "confidence": 9.287991732755986e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330647,
-    "lastAccessedAt": 1784773330647,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "d6c0cc70-3ade-42cd-82d5-0f8168905372",
-    "type": "fact",
-    "content": "Completed task: clear đi (23764ms)",
-    "source": {
-      "taskId": "task-1784743693884"
-    },
-    "confidence": 0.000002110350928120837,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330647,
-    "lastAccessedAt": 1784773330647,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "fe9c37c0-1bea-4618-8489-b9fa4b6fc228",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784743693884",
-      "decisionId": "1121c97d-088a-4ff8-bee6-e882b2bd6e8c"
-    },
-    "confidence": 9.287991732755986e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330647,
-    "lastAccessedAt": 1784773330647,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "9904a7d4-9923-4683-b8b6-60d06ca78835",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784743693884",
-      "decisionId": "7819479b-28d2-46c9-be7c-a3f7a216c621"
-    },
-    "confidence": 9.287994325817655e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "a9e7ad72-2bec-4c89-aa99-cb0f1568bd4e",
-    "type": "fact",
-    "content": "Completed task: 🌊 Coral Status\n\n📱 Platform: Telegram\n👤 Role: 👑 Admin\n🧠 Model hiện tại: all\n📊 Models available: 7\n💾 Memory: 284.8MB / 289.0MB\n⏱️ Uptime: 18m 25s\n🗄️ Memories: Active\n📊 Dashboard: 🔴 Off (gửi /d (49448ms)",
-    "source": {
-      "taskId": "task-1784743612254"
-    },
-    "confidence": 0.0000021103513489614555,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1cb052ae-b768-4ae2-a387-97259c39e22b",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743612254",
-      "decisionId": "81482167-ea67-498a-9a49-cc5198c362fd"
-    },
-    "confidence": 9.287994325817655e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "40a0cfe7-1c06-4297-a295-51096465f779",
-    "type": "fact",
-    "content": "Completed task: sao memory cao vậy Coral (10041ms)",
-    "source": {
-      "taskId": "task-1784743557506"
-    },
-    "confidence": 0.0000021103513489614555,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "0bcabad1-1a6e-4016-89a5-5bd7b25f8147",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743557506",
-      "decisionId": "ed1f3f4f-4a85-4613-8331-99464313d783"
-    },
-    "confidence": 9.287994325817655e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "4563c415-6e43-419d-b14e-8bf8ae947cb0",
-    "type": "fact",
-    "content": "Completed task: ta đang nói về vấn đề gì vậy  Coral (40702ms)",
-    "source": {
-      "taskId": "task-1784743480474"
-    },
-    "confidence": 0.0000021103513489614555,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330648,
-    "lastAccessedAt": 1784773330648,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "93794562-93f1-48e2-93af-14a5d6503cc2",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743480474",
-      "decisionId": "8e01d3f1-f4fc-45f9-8028-82f98afc2a5a"
-    },
-    "confidence": 9.287996918880043e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "29643cab-fb1c-4fd7-bbb8-4ed9b0459e13",
-    "type": "fact",
-    "content": "Completed task: Coral (31633ms)",
-    "source": {
-      "taskId": "task-1784743349354"
-    },
-    "confidence": 0.000002110351769802159,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "fdbde332-f1b1-4d57-93f1-a399cf054772",
-    "type": "fact",
-    "content": "Decision: Respond directly — Reason: Respond directly",
-    "source": {
-      "taskId": "task-1784743349354",
-      "decisionId": "a6e7e2c1-e22f-40b7-aded-d4438bc6abfe"
-    },
-    "confidence": 9.287996918880043e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f6a1740e-1ac4-4b9b-86b5-22004e346467",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 18)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "f294fa48-1f51-4d67-9eda-71405d9304ce"
-    },
-    "confidence": 9.287996918880043e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "687f78f8-91a7-4344-a25b-3e26d3dbcd0a",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 17)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "77c97e2f-3e24-4f68-a422-8e38e5cd2713"
-    },
-    "confidence": 9.287996918880043e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330649,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f2882508-0b42-423b-9b7d-b662a7d0b07c",
-    "type": "fact",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"class Player extends Sprite\",\"total\":1,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\isekai-rpg-enhanced.html\",\"line\":395,\"content\":\"class Player extends Sprite {\"}]}",
-    "source": {
-      "taskId": "task-1784710909457",
-      "tool": "search_files",
-      "decisionId": "0720fbe3-1e53-4090-a072-911bda08c1bb"
-    },
-    "confidence": 1.1455196199952059e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330649,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "fact",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "39a63da8-27f9-40a5-85f5-004f95786ae5",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 16)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "0720fbe3-1e53-4090-a072-911bda08c1bb"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "e9ccd87f-5638-4078-97b6-e08ee27ff2ed",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 15)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "b17a593b-58c3-4e40-bd31-a4fa3680e68b"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "fbefc061-d753-4af7-914d-2dfd70ace3c5",
-    "type": "fact",
-    "content": "Tool \"list_directory\" returned: [{\"name\":\"core\",\"type\":\"directory\"},{\"name\":\"dashboard\",\"type\":\"directory\"},{\"name\":\"modules\",\"type\":\"directory\"},{\"name\":\"platform\",\"type\":\"directory\"},{\"name\":\"scripts\",\"type\":\"directory\"}]",
-    "source": {
-      "taskId": "task-1784710909457",
-      "tool": "list_directory",
-      "decisionId": "924ca17a-9452-4171-a47c-8d3daa4183d0"
-    },
-    "confidence": 1.1455199398063222e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "fact",
-      "tool",
-      "list_directory"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "e975a11b-c11d-4910-bd44-56e47a7e0e42",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 14)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "924ca17a-9452-4171-a47c-8d3daa4183d0"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "6003677c-fa89-434a-8039-d72641dae63b",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 13)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "d1c49d38-56c6-4423-9e79-0004d8541f24"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1b1d0378-ddbb-48fa-8702-686bb8d9f7c0",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 12)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "94520339-2881-449f-9045-839de0ab7bcc"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "a6fbc9f3-bbf3-40b7-8d5f-757cd7d18008",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 11)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "baadc618-d950-4384-8962-5040ec43107d"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "ecbb5be1-a517-4a36-a2c9-96c5820bf4ca",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 10)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "6a10ebad-cd1d-4887-a045-c74d4d95c6c3"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "86c995a7-4a55-4ebd-aca1-10cc30ebeb05",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 9)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "1cc708b4-8ecc-412b-857b-90788b146ac9"
-    },
-    "confidence": 9.287999511943145e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330650,
-    "lastAccessedAt": 1784773330650,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "95ca97a8-86da-45bf-b76c-bd7eb1439e58",
-    "type": "skill",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"function (init|update|draw|gameLoop|startGame|resetGame|spawn|checkCollision|attack|takeDamage|useAbility|levelUp|gameOver)\",\"total\":31,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\farm-",
-    "source": {
-      "taskId": "task-1784710909457",
-      "tool": "search_files",
-      "decisionId": "9d520855-9b24-4059-8a82-529bf23773b7"
-    },
-    "confidence": 1.3003202947009762e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "af981ae3-d0b5-4c5f-b58d-346344d68392",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 8)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "9d520855-9b24-4059-8a82-529bf23773b7"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "c4ba5593-16c9-45ac-bcc1-6e35c9cec2f1",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "fd6e949a-af8f-4700-aa91-c69b786f2d87"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "277f2993-47c0-4869-a25e-3fa725f8a5be",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "c21495a4-cfff-495e-8ac4-5fe227bf606c"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1184dcc6-4432-45a3-962c-e884cf2e81ad",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 6)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "dabf2499-62a8-404f-81ff-d80d94707162"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f91d0cfb-7b6f-44da-8872-f76002919643",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 5)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "6a7881f9-d834-463d-89dd-1a105550151c"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "aaf5c1a0-e73e-44a4-8150-2502254510ce",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 4)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "2f558ba9-7927-4c46-b043-69919ce37b03"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "bd068466-fc8e-46f7-87e2-d66d7495b24a",
-    "type": "skill",
-    "content": "Tool \"execute_command\" returned: \"<!DOCTYPE html>\\n<html lang=\\\"vi\\\">\\n<head>\\n    <meta charset=\\\"UTF-8\\\">\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\n    <title>🎮 ISEKAI RPG - Enhanced Edition<",
-    "source": {
-      "taskId": "task-1784710909457",
-      "tool": "execute_command",
-      "decisionId": "052984fb-3a85-4f3a-bd52-12de087b56c5"
-    },
-    "confidence": 1.3019583188888736e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784779378207,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "execute_command"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "e92dbaa7-7569-4426-b99c-709a98e0194f",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 3)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "052984fb-3a85-4f3a-bd52-12de087b56c5"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "8d9764b5-d92a-4b6c-b8e0-2364f24f5756",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "d6f0e1ee-b414-4334-95ca-da75803c6b16"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "5fe94689-57f1-4ef5-bc7d-ee42a3981fff",
-    "type": "skill",
-    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784710918436\",\"plan_status\":\"pending\",\"current_item_index\":0,\"items_count\":6,\"items\":[\"0: [pending] Đọc nốt file game chính (từ dòng 300 đến hết) để có toàn bộ code\",\"1: [",
-    "source": {
-      "taskId": "task-1784710909457",
-      "tool": "update_plan",
-      "decisionId": "14110a57-2458-48a3-a0a2-e7ecf0120dd4"
-    },
-    "confidence": 1.3003202947009762e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330656,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "update_plan"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "a0f4403c-61b4-44ab-8449-f917628ca9b5",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784710909457",
-      "decisionId": "14110a57-2458-48a3-a0a2-e7ecf0120dd4"
-    },
-    "confidence": 9.288002105006968e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330651,
-    "lastAccessedAt": 1784773330651,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "bfdd58b4-fffe-4c4c-ab51-23ba3d1f8b2a",
-    "type": "belief",
-    "content": "Belief: Tool \"search_files\" is frequently relied upon across tasks. Tool \"search_files\" returned: {\"pattern\":\"<script>|</script>\",\"total\":9,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\DEPLOYMENT-GUIDE.md\",\"line\":139,\"content\":\"**isekai-rpg-advanced.html** - trong `<script>` section:\"},{\"file\":\"",
-    "source": {
-      "taskId": "task-1784694082889",
-      "tool": "search_files"
-    },
-    "confidence": 2.1705711185945714e-7,
-    "importance": 0.5,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "pattern",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "bf2e1cb2-68d6-4a3d-8f9f-e148158edbe6",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 10)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "7c2ebf3c-1737-45bc-b293-042cd7fb0c94"
-    },
-    "confidence": 9.288004698071528e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "c92aa793-e364-4856-adbd-931c7599a2e7",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 9)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "de442a2e-0260-482e-b866-70aeffe344e7"
-    },
-    "confidence": 9.288004698071528e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "33a67de1-efc6-4e66-8ec9-12b0ce29b46a",
-    "type": "fact",
-    "content": "Decision: Call quote_from_source — Reason: Tool selected (cycle 8)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "608d767b-dec1-4648-b3d4-983334ce40ca"
-    },
-    "confidence": 9.288004698071528e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "b8100c04-a405-4e20-8e88-991db46ed10d",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "2ce6fe6c-bd62-4057-b606-21e8658e898f"
-    },
-    "confidence": 9.288004698071528e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "06dc0a92-bb44-4ad3-90f0-b3a618219dca",
-    "type": "skill",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"class Player|class Enemy|class Sprite|class Item|class Projectile\",\"total\":4,\"results\":[{\"file\":\"knowledge\\\\wiki\\\\projects\\\\isekai-rpg-enhanced.html\",\"line\":347,\"content\":\"class Sprite {\"}",
-    "source": {
-      "taskId": "task-1784694082889",
-      "tool": "search_files",
-      "decisionId": "f9aa2fb6-8126-45ce-adcb-051e1543d115"
-    },
-    "confidence": 1.300320657730013e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "84f5f7fe-5d29-4dec-ac6c-e5cc0f420b0d",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "f9aa2fb6-8126-45ce-adcb-051e1543d115"
-    },
-    "confidence": 9.288004698071528e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1721d28a-4f2e-4d2c-9756-11082c0b8126",
-    "type": "belief",
-    "content": "Belief: Tool \"read_file\" is frequently relied upon across tasks. Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\n<html lang=\\\"vi\\\">\\n<head>\\n    <meta charset=\\\"UTF-8\\\">\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\n    <title>🎮 ISEKAI RPG - Enhanc",
-    "source": {
-      "taskId": "task-1784694082889",
-      "tool": "read_file"
-    },
-    "confidence": 2.1705711185945714e-7,
-    "importance": 0.5,
-    "decayRate": 0.5,
-    "createdAt": 1784773330652,
-    "lastAccessedAt": 1784773330652,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "pattern",
-      "tool",
-      "read_file"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "c9615d76-cf74-4af0-a7fc-ad055428c1fe",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 6)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "3e60c947-7896-4bfe-a643-3bc9b01acfd9"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "b3b6de43-d99f-4e93-94ff-4a60c64670b4",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 5)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "5fa3fe5b-c220-45d8-8c30-88bed34884e1"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "a48eaa9d-8747-4f9d-8c12-a8434961ae1e",
-    "type": "belief",
-    "content": "Belief: Tool \"list_directory\" is frequently relied upon across tasks. Tool \"list_directory\" returned: [{\"name\":\"affordable-iot-devices-guide.md\",\"type\":\"file\"},{\"name\":\"DEPLOYMENT-GUIDE.md\",\"type\":\"file\"},{\"name\":\"farm-game-2d.md\",\"type\":\"file\"},{\"name\":\"farm-game-systems-detailed.md\",\"type\":\"file\"},{",
-    "source": {
-      "taskId": "task-1784694082889",
-      "tool": "list_directory"
-    },
-    "confidence": 2.17057162358574e-7,
-    "importance": 0.5,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "pattern",
-      "tool",
-      "list_directory"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "2f4107ad-e7b5-4991-ab1d-4dfbdf59d24d",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 4)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "015ec033-c231-4af7-a0a9-78d05d3439ac"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "1ad07aa7-478a-4538-bf4f-e85719a1127d",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "620ffbff-69b5-4fb5-8961-128515094811"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "83feec3e-5583-452f-b3fc-02fd575aed66",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "ccb8f77b-81d1-4e76-8ea5-1ace7c1e6b5b"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "9bc048ca-01fc-4fdd-b6b4-eb47754ab64d",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784694082889",
-      "decisionId": "0c7c008d-9aa0-445d-80dd-f1861c5f36b3"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "db403ce2-e1bc-4923-8d2d-fdbfedae7d77",
-    "type": "skill",
-    "content": "Tool \"search_knowledge_graph\" returned: {\"keyword\":\"game 2d isekai rpg bug\",\"total_results\":0,\"results\":[]}",
-    "source": {
-      "taskId": "task-1784693406580",
-      "tool": "search_knowledge_graph",
-      "decisionId": "32722f27-27b9-4796-ba0c-91e60166e8da"
-    },
-    "confidence": 0.000011153313661232604,
-    "importance": 0.7,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784789739474,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_knowledge_graph"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "3329a82a-c1c0-4f98-9694-5f3182e65740",
-    "type": "fact",
-    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 10)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "32722f27-27b9-4796-ba0c-91e60166e8da"
-    },
-    "confidence": 9.288007291136795e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330653,
-    "lastAccessedAt": 1784773330653,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "433d7171-69a2-45a5-913e-f5364ddb56df",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 9)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "44f91384-3266-4f73-af65-319b136c1360"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "94170063-3e09-4671-8cf8-1ca2fa32b70e",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 8)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "b4c094c3-3b9b-4ddd-93cd-66a4eaebe30d"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "3a5176cd-6edb-40ed-b5f7-90fe8ba9735a",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "35ac51cf-573f-4e6e-8a23-b0460884e9c2"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "7edb28ec-317a-48c5-8362-2fb1a3082dc5",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 6)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "da5638dd-5fc4-4cde-af31-1e4338c6900f"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "54b88962-2fb4-4ea7-96af-4efcde7c5294",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 5)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "d5fdf2cf-57a5-4b72-8736-9f257669b59d"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "a8613e25-fd51-42e8-a089-a6323d2d3658",
-    "type": "fact",
-    "content": "Tool \"list_directory\" returned: [{\"name\":\"affordable-iot-devices-guide.md\",\"type\":\"file\"},{\"name\":\"DEPLOYMENT-GUIDE.md\",\"type\":\"file\"},{\"name\":\"farm-game-2d.md\",\"type\":\"file\"},{\"name\":\"farm-game-systems-detailed.md\",\"type\":\"file\"},{",
-    "source": {
-      "taskId": "task-1784693406580",
-      "tool": "list_directory",
-      "decisionId": "1e014900-d408-433c-9d42-9c8f18610643"
-    },
-    "confidence": 1.1471592427601096e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784779378210,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "fact",
-      "tool",
-      "list_directory"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "67111754-5e0d-4dbf-9423-abc98c244dc0",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 4)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "1e014900-d408-433c-9d42-9c8f18610643"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "78c0a0bb-2963-4874-92ca-f2a71df3c706",
-    "type": "skill",
-    "content": "Tool \"search_files\" returned: {\"pattern\":\"isekai-rpg.*\\\\.html\",\"total\":20,\"results\":[{\"file\":\".git\\\\index\",\"line\":34,\"content\":\"\\u0000.knowledge/wiki/projects/isekai-player-guide.md\\u0000\\u0000\\u0000\\u0000jL��\\u0000�t�jL��\\u0000�t",
-    "source": {
-      "taskId": "task-1784693406580",
-      "tool": "search_files",
-      "decisionId": "e9f2f794-b68c-4f2c-83fb-e4b7ea7d586e"
-    },
-    "confidence": 1.3035974312052531e-8,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784779378210,
-    "accessCount": 0,
-    "reinforcementCount": 3,
-    "linkedMemoryIds": [],
-    "tags": [
-      "skill",
-      "tool",
-      "search_files"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "870fd8c3-bcfb-40c3-a8b6-f3e403c3941b",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 3)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "e9f2f794-b68c-4f2c-83fb-e4b7ea7d586e"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "099bc91e-2a10-4991-a40c-c8ca6752ef43",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "3e5f3f9d-a842-47a5-ae18-6b975d3a1974"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "6eb0b151-0c61-47eb-aa08-7dc0c0b0bd0f",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "b8811d06-d2c3-4c68-98da-bb63039e343b"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "c1e657d3-4ee3-4fa4-b55c-3fc3f122ba61",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "660a7a5c-3377-4998-ad93-cd28e9ab2969"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f3585a88-bece-49d3-895b-3a9f643d6114",
-    "type": "belief",
-    "content": "Belief: Tool \"update_plan\" is frequently relied upon across tasks. Tool \"update_plan\" returned: {\"plan_id\":\"plan-default-1784693448490\",\"plan_status\":\"pending\",\"current_item_index\":0,\"items_count\":7,\"items\":[\"0: [pending] Đọc toàn bộ source game (server.py + game HTML/JS)\",\"1: [pending] Phân tíc",
-    "source": {
-      "taskId": "task-1784693406580",
-      "tool": "update_plan"
-    },
-    "confidence": 2.1705721285770287e-7,
-    "importance": 0.5,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "pattern",
-      "tool",
-      "update_plan"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "74db76c1-9758-4073-a57c-5d0251d12425",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784693406580",
-      "decisionId": "e0001a25-ea0a-4df5-800b-84be4f9214f2"
-    },
-    "confidence": 9.28800988420279e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330654,
-    "lastAccessedAt": 1784773330654,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "8c14c0f8-6bdd-4a27-9faf-1ac2015d35fc",
-    "type": "fact",
-    "content": "Completed task: bạn từng dev rồi, kiểm tra lại hệ thống đi Coral (130080ms)",
-    "source": {
-      "taskId": "task-1784693219546"
-    },
-    "confidence": 0.00000211035429484813,
-    "importance": 0.6,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "task",
-      "completed"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "842e6b25-f8cd-4e53-9a1a-0305742a09b1",
-    "type": "fact",
-    "content": "Decision: Call search_files — Reason: Tool selected (cycle 9)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "1020cabd-1bd6-4c2e-93bb-c780e5a42351"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "abecf46d-1467-4508-9eb1-55baa4e42558",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 8)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "526e7dc3-a9f6-40d3-a890-61f39bf04899"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "056c9a4f-8df1-4ced-8e30-f4c26cf1cdff",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 7)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "1c4553e7-5d03-40f5-ad15-bff1df0e62b9"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "b994ca8c-3fcb-4fb6-9cfe-63beb2e93ed9",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 6)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "367f426b-cd57-41d0-bf07-6acad501ed11"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "c0e5b706-737c-47c7-bfa8-d17e0f3f7692",
-    "type": "fact",
-    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 5)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "1f4a796d-ea40-494a-97c0-bc71d87e56fc"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "45d0d2d4-357a-4911-9a44-4bf565b70b1b",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 4)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "2fc76d95-250e-45f7-9009-017afb02dd53"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "e3907c9d-3b1f-40f0-bf56-201b05e98aa6",
-    "type": "fact",
-    "content": "Decision: Call read_file — Reason: Tool selected (cycle 3)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "527e0912-a58d-4d57-a232-c3d4bac36d35"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "e9236d1e-c8f4-4813-b5ec-e2199a3b3e50",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "a0c4f488-704f-496a-bf2c-380b699b7a78"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "d645092e-1948-43a4-a623-a3e40bbcdeb4",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "f9b84239-7b93-48f3-add4-02a2738b7247"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "86bea6d3-3bdd-41cb-9941-0bbc122528a9",
-    "type": "fact",
-    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 2)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "d4ed7cda-3076-401d-9246-31727fb777f5"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
-    "id": "f7612eb1-2284-464e-8b45-e28038da5902",
-    "type": "fact",
-    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 1)",
-    "source": {
-      "taskId": "task-1784693219546",
-      "decisionId": "45916bc3-1426-41b1-806f-7268dd09fb6e"
-    },
-    "confidence": 9.288012477269518e-9,
-    "importance": 0.4,
-    "decayRate": 0.5,
-    "createdAt": 1784773330655,
-    "lastAccessedAt": 1784773330655,
-    "accessCount": 0,
-    "reinforcementCount": 0,
-    "linkedMemoryIds": [],
-    "tags": [
-      "decision"
-    ],
-    "status": "decaying",
-    "pinned": false,
-    "archived": true
-  },
-  {
     "id": "1d5c9fb2-e14a-4052-af71-7a37d4c01d98",
     "type": "skill",
     "content": "Tool \"session_search\" returned: {\"query\":\"kiểm tra hệ thống dev hệ thống system check\",\"total\":10,\"results\":[{\"content\":\"Check ▉\",\"score\":0,\"sessionId\":\"-1003929826480\",\"type\":\"human\",\"tags\":[\"user_message\",\"telegram\"],\"timestamp\":\"",
@@ -24988,20 +22552,20 @@
       "tool": "memory_search",
       "decisionId": "515beb54-53ee-47b2-a4b7-16d6e27f9528"
     },
-    "confidence": 0.5797318733242849,
+    "confidence": 0.6097318733242849,
     "importance": 0.4,
     "decayRate": 0.5,
     "createdAt": 1784955880619,
-    "lastAccessedAt": 1784976180035,
+    "lastAccessedAt": 1784977718262,
     "accessCount": 0,
-    "reinforcementCount": 2,
+    "reinforcementCount": 3,
     "linkedMemoryIds": [],
     "tags": [
       "fact",
       "tool",
       "memory_search"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -30588,20 +28152,20 @@
       "tool": "delegate_task",
       "decisionId": "c8a05938-66d4-47d7-a0f0-8d70ac25b4c6"
     },
-    "confidence": 0.7829584488684037,
+    "confidence": 0.8129584488684037,
     "importance": 0.4,
     "decayRate": 0.5,
     "createdAt": 1784966343088,
-    "lastAccessedAt": 1784976016570,
+    "lastAccessedAt": 1784977718265,
     "accessCount": 0,
-    "reinforcementCount": 2,
+    "reinforcementCount": 3,
     "linkedMemoryIds": [],
     "tags": [
       "skill",
       "tool",
       "delegate_task"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -30939,20 +28503,20 @@
       "tool": "memory_add",
       "decisionId": "031343e6-f64b-43bf-83f2-3688edfc59ca"
     },
-    "confidence": 0.6773491832511723,
+    "confidence": 0.7073491832511724,
     "importance": 0.4,
     "decayRate": 0.5,
     "createdAt": 1784975699408,
-    "lastAccessedAt": 1784976016568,
+    "lastAccessedAt": 1784977718264,
     "accessCount": 0,
-    "reinforcementCount": 1,
+    "reinforcementCount": 2,
     "linkedMemoryIds": [],
     "tags": [
       "fact",
       "tool",
       "memory_add"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -31129,20 +28693,20 @@
       "tool": "write_file",
       "decisionId": "99d4d81a-fe02-4bd2-9cdb-6c4d91c4f572"
     },
-    "confidence": 0.6773491854247958,
+    "confidence": 0.7073491854247959,
     "importance": 0.4,
     "decayRate": 0.5,
     "createdAt": 1784975699409,
-    "lastAccessedAt": 1784976016569,
+    "lastAccessedAt": 1784977718264,
     "accessCount": 0,
-    "reinforcementCount": 1,
+    "reinforcementCount": 2,
     "linkedMemoryIds": [],
     "tags": [
       "fact",
       "tool",
       "write_file"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -34174,20 +31738,20 @@
       "tool": "execute_command",
       "decisionId": "a01d0db4-1d6c-441d-949c-a6be88d84f3b"
     },
-    "confidence": 0.7478370520000422,
+    "confidence": 0.8078370520000423,
     "importance": 0.4,
     "decayRate": 0.5,
     "createdAt": 1784976016571,
-    "lastAccessedAt": 1784976016571,
+    "lastAccessedAt": 1784977718267,
     "accessCount": 0,
-    "reinforcementCount": 0,
+    "reinforcementCount": 2,
     "linkedMemoryIds": [],
     "tags": [
       "skill",
       "tool",
       "execute_command"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -35267,20 +32831,20 @@
       "tool": "execute_code",
       "decisionId": "c0162746-0bd8-4ba2-a4f9-6c5caf3c5013"
     },
-    "confidence": 0.6484375019806943,
+    "confidence": 0.6784375019806943,
     "importance": 0.5,
     "decayRate": 0.5,
     "createdAt": 1784976016575,
-    "lastAccessedAt": 1784976016575,
+    "lastAccessedAt": 1784977718264,
     "accessCount": 0,
-    "reinforcementCount": 0,
+    "reinforcementCount": 1,
     "linkedMemoryIds": [],
     "tags": [
       "fact",
       "tool",
       "execute_code"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -35485,20 +33049,20 @@
       "tool": "search_knowledge_graph",
       "decisionId": "7cc0d79e-d435-410c-a516-d1cc0936c5ec"
     },
-    "confidence": 0.7488968052930123,
+    "confidence": 0.8388968052930124,
     "importance": 0.7,
     "decayRate": 0.5,
     "createdAt": 1784976182629,
-    "lastAccessedAt": 1784976182629,
+    "lastAccessedAt": 1784977718267,
     "accessCount": 0,
-    "reinforcementCount": 0,
+    "reinforcementCount": 3,
     "linkedMemoryIds": [],
     "tags": [
       "skill",
       "tool",
       "search_knowledge_graph"
     ],
-    "status": "dormant",
+    "status": "reinforced",
     "pinned": false,
     "archived": false
   },
@@ -35715,6 +33279,2501 @@
       "completed"
     ],
     "status": "dormant",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6c0b1ab8-9266-47cf-a8c1-cc0e0381b61f",
+    "type": "fact",
+    "content": "Completed task: Game 2d dev đến đâu rồi (40450ms)",
+    "source": {
+      "taskId": "task-1784976174793"
+    },
+    "confidence": 0.8,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1784977718256,
+    "lastAccessedAt": 1784977718256,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "00e105ef-c2d1-478e-b1ef-56caaa4dd35c",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"# 📚 Hệ Thống Quái Vật, Cấp Độ & Vật Phẩm — Anime Isekai 2025-2026\\n\\n## 🎮 Tổng Quan\\nTài liệu tổng hợp các hệ thống game (monster, level, item) từ top 30 anime isekai 2025-2026.\\n\\n---\\n",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "read_file",
+      "decisionId": "4a17b6c2-b793-4b0d-b152-3c3448effcaf"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718259,
+    "lastAccessedAt": 1784977718259,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "9abcab6d-f2d7-4124-8a8c-523bf86b2621",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "4a17b6c2-b793-4b0d-b152-3c3448effcaf"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718259,
+    "lastAccessedAt": 1784977718259,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "77d890f1-10ad-48fe-b837-e66b8c6b907b",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"# 🎮 Game Farm 2D — Hệ Thống Chi Tiết & Implementation Guide\\n\\n## 📋 Tổng Quan\\nDựa trên các anime isekai top 2025-2026, mình tạo một **farming game 2D hybrid system** kết hợp:\\n- **Hell ",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "read_file",
+      "decisionId": "6bef01d1-5483-4a1a-9a5e-25d8f6ad530f"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718260,
+    "lastAccessedAt": 1784977718260,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "14a27fa3-0ee9-4467-b818-98ce761422eb",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "6bef01d1-5483-4a1a-9a5e-25d8f6ad530f"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718260,
+    "lastAccessedAt": 1784977718260,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4de66884-48bd-4e6f-9994-5b28eeed10dc",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "read_file",
+      "decisionId": "84459763-8ddf-407a-adba-0f662088e70d"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718261,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8ea0e6a8-a9e3-417a-9c2f-874188449eb7",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "84459763-8ddf-407a-adba-0f662088e70d"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718261,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a8469f11-6ea7-4b41-8f47-05240b066447",
+    "type": "skill",
+    "content": "Tool \"search_files\" returned: {\"pattern\":\"game|rpg|isekai\",\"total\":20,\"results\":[{\"file\":\"games\\\\isekai-rpg-enhanced.html\",\"line\":6,\"content\":\"<title>🎮 ISEKAI RPG - Enhanced Edition</title>\"},{\"file\":\"games\\\\isekai-rpg-enhanced.h",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "search_files",
+      "decisionId": "0e3129da-7ca4-4656-8d4b-6efebd2f08a9"
+    },
+    "confidence": 0.8400000000000001,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 3,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_files"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "72654117-eb3e-4cff-9f11-756e97467b08",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "0e3129da-7ca4-4656-8d4b-6efebd2f08a9"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718261,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "188d6b5b-d477-4f54-93c3-286d3f2d6c5b",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"isekai-rpg-enhanced.html\",\"type\":\"file\"}]",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "list_directory",
+      "decisionId": "e456fbb2-998f-4745-bcc4-bd1ae0b43b1a"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718261,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f5ff1781-8df4-4893-a623-3436acc6cfb7",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "e456fbb2-998f-4745-bcc4-bd1ae0b43b1a"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718261,
+    "lastAccessedAt": 1784977718261,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "769576cc-549f-47c5-9075-4e7644963ad2",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "7cc0d79e-d435-410c-a516-d1cc0936c5ec"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6484a5f1-1f58-4778-ac23-870f748bf9b9",
+    "type": "skill",
+    "content": "Tool \"session_search\" returned: {\"query\":\"game 2d dev\",\"total\":10,\"results\":[{\"content\":\"Game 2d dev đến đâu rồi\",\"score\":0,\"sessionId\":\"8967780585\",\"type\":\"human\",\"tags\":[\"user_message\",\"telegram\"],\"timestamp\":\"2026-07-25T07:52:40.",
+    "source": {
+      "taskId": "task-1784976174793",
+      "tool": "session_search",
+      "decisionId": "370a99ee-66ee-4593-9e12-b4ad56fe01eb"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "session_search"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6e25cc6c-7535-41cc-bf91-6b78e52bbf08",
+    "type": "fact",
+    "content": "Decision: Call session_search — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "370a99ee-66ee-4593-9e12-b4ad56fe01eb"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6399d2bc-6137-4c1d-b425-c58867f88ac3",
+    "type": "fact",
+    "content": "Decision: Call memory_search — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784976174793",
+      "decisionId": "e5ab06d1-537b-475a-a898-49072aa588be"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a1bed906-5ad9-44ac-bdeb-3c0730a7f490",
+    "type": "fact",
+    "content": "Completed task: Coral ơi (13999ms)",
+    "source": {
+      "taskId": "task-1784975720554"
+    },
+    "confidence": 0.8,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7b4d03b7-7160-45e2-8680-41f0917ae90f",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784975725489\",\"plan_status\":\"completed\",\"message\":\"✅ All 1 item(s) completed. Plan finished.\",\"summary\":[\"0: [completed] Chào lại và hỏi người dùng cần giúp gì — Đã chào l",
+    "source": {
+      "taskId": "task-1784975720554",
+      "tool": "update_plan",
+      "decisionId": "5f1c2a05-0986-48aa-abeb-3a86d6a48a6a"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "af805a4c-fe2d-4854-a1b1-1d6a5ec49490",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784975720554",
+      "decisionId": "5f1c2a05-0986-48aa-abeb-3a86d6a48a6a"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "378fd772-2561-4efd-a601-75c25480fa57",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784975725489\",\"plan_status\":\"pending\",\"current_item_index\":0,\"items_count\":1,\"items\":[\"0: [pending] Chào lại và hỏi người dùng cần giúp gì\"],\"message\":\"✅ Plan created with",
+    "source": {
+      "taskId": "task-1784975720554",
+      "tool": "update_plan",
+      "decisionId": "b79cc3ef-d76d-4f89-9cee-e2ab8fbb429b"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "b4e4e33e-b034-4b1d-8032-e0b29c1ef539",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784975720554",
+      "decisionId": "b79cc3ef-d76d-4f89-9cee-e2ab8fbb429b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "32584d34-77d6-4a36-b276-4cfb5ce6e29e",
+    "type": "fact",
+    "content": "Completed task: có nhiều map không? có cốt truyện gì không? có giới hạn gì không? có boss thế giới hồi sinh không? có boss ẩn không? có giải đố không? có đấu giải không? có cơ chế nấng cấp trang bị không? có thời tra (4987640ms)",
+    "source": {
+      "taskId": "task-1784966163410"
+    },
+    "confidence": 0.8,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1784977718262,
+    "lastAccessedAt": 1784977718262,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "fd5394fb-f5a9-4b67-971d-247a99937a52",
+    "type": "fact",
+    "content": "Decision: Call write_file — Reason: Tool selected (cycle 69)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "dd756ce5-8fa9-41c6-b564-db8823886f5d"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4c0d69f9-9266-4002-a902-ae3e2de15c3b",
+    "type": "belief",
+    "content": "Belief: Tool \"update_plan\" is frequently relied upon across tasks. Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"aborted\",\"stop_reason\":\"Cannot complete - delegate_task bị lỗi JSON parsing liên tục. User cần xác nhận cách tiếp tục.\",\"message\":\"🛑 Plan abo",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan"
+    },
+    "confidence": 0.7,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "38df9239-5880-4596-8296-4cf77c4b1977",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"aborted\",\"stop_reason\":\"Cannot complete - delegate_task bị lỗi JSON parsing liên tục. User cần xác nhận cách tiếp tục.\",\"message\":\"🛑 Plan abo",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "07c84f03-0765-41da-ad09-91cd17957f96"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "067d4d3f-4ae3-49f6-99a2-a14b7cdcbfe5",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 68)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "07c84f03-0765-41da-ad09-91cd17957f96"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4a2a0942-dc6a-43aa-bcf2-a53028077949",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"running\",\"current_item_index\":4,\"completed_item\":3,\"next_item\":{\"index\":4,\"description\":\"Thông báo hoàn thành\"},\"message\":\"✅ Item 3 completed.",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "27ea92db-9c2c-4120-a8b5-bc98cbf760c7"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a6a2bd78-36d4-49f0-8bf8-eb17afe51c79",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 66)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "27ea92db-9c2c-4120-a8b5-bc98cbf760c7"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "b4384980-a5b2-496d-b24c-94ebe9dbc0ff",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"rpg-spec.md\",\"type\":\"file\"}]",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "list_directory",
+      "decisionId": "158cdba6-b5be-444f-a248-6e874a98b118"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "f4483b57-7c43-4c8a-9e09-b502991bf26c",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 65)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "158cdba6-b5be-444f-a248-6e874a98b118"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "193d3088-b24d-426d-b63a-2d905ef63fa6",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 64)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "55fc4a93-4c12-4115-8c91-36e2a9d7e21b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1ddb513d-bbb2-4674-8703-a7d83e5e58cc",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 62)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "706ad70f-cbb4-432b-b0eb-fcbd2124096e"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ed1c4f37-4222-4484-89f9-606a1842ad51",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 51)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "465838a4-0717-48c4-90a1-59a77a1e1108"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718263,
+    "lastAccessedAt": 1784977718263,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ebaa4da2-9b3e-4e19-bb08-45ceb4746481",
+    "type": "fact",
+    "content": "Decision: Call memory_add — Reason: Tool selected (cycle 45)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "031343e6-f64b-43bf-83f2-3688edfc59ca"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4723841b-6892-4919-8f7b-d9fb3e137563",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 44)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "955485fb-2360-474d-a9a3-c14cd1a235ec"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "dcf5e36c-742c-44c6-a3ef-f40389731844",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 43)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "70febbee-4d71-4edb-a3e2-11ef2b8f89f2"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "7e0a892c-39ed-43a2-ab81-6c092cfe6c6a",
+    "type": "belief",
+    "content": "Belief: Tool \"read_file\" is frequently relied upon across tasks. Tool \"read_file\" returned: {\"content\":\"# RPG Game Specification\\n\\n## Features Required:\\n1. 5 Maps: forest, desert, ice, volcano, void with portals\\n2. Story: intro, NPC, 5+ quests  \\n3. 4 Classes: Warrior, Mage, Ranger, Assas",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "read_file"
+    },
+    "confidence": 0.7,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c90b15ea-8d4b-4032-bd6c-10b18174b3e4",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"# RPG Game Specification\\n\\n## Features Required:\\n1. 5 Maps: forest, desert, ice, volcano, void with portals\\n2. Story: intro, NPC, 5+ quests  \\n3. 4 Classes: Warrior, Mage, Ranger, Assas",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "read_file",
+      "decisionId": "4be27352-9d18-4a50-8f19-58b0495802a8"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8903c6b4-2a75-4f5f-ad6a-a16107adb6b7",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 40)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "4be27352-9d18-4a50-8f19-58b0495802a8"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e05e1a21-4058-4841-8080-09fa2929d70a",
+    "type": "fact",
+    "content": "Decision: Call execute_code — Reason: Tool selected (cycle 39)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "4ed2b4b3-76ef-4855-b678-5511b0686730"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "10ac4597-b034-48c0-af7a-0e1c669d28e7",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 38)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "62e92187-08fa-4ffb-b788-27ebd682c46b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "124f86f8-b9f7-4072-a9d2-e96ca79d3fc2",
+    "type": "fact",
+    "content": "Decision: Call write_file — Reason: Tool selected (cycle 37)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "99d4d81a-fe02-4bd2-9cdb-6c4d91c4f572"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "69d022b6-a711-4a4e-8adc-74fd2fb30f3d",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 33)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "7f4f4c83-9295-4a4d-9f74-9f8d06e5979b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "3fd3acc2-f682-48ad-97f5-e889a97ae5b6",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 28)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "d77329e9-82ee-40ac-b484-fdaf7442b314"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c1893b57-5ba7-47a1-a1de-c13e7eed0ee6",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 27)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "345a492a-9305-4be6-8bfc-547459b40218"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c8557d29-87a2-4606-974e-753ec1f2d3cb",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 16)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "c0cf6686-e88c-45e4-9cd9-026c5ea877cf"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718264,
+    "lastAccessedAt": 1784977718264,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a2253ae9-ecf1-442f-beb4-642bf93887db",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 15)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "d55b646a-5c2b-4029-984d-7df42ab84396"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "fa88e33a-1d46-4121-8e73-1550217090e6",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"running\",\"current_item_index\":3,\"completed_item\":2,\"next_item\":{\"index\":3,\"description\":\"Xây dựng lại game với đầy đủ tính năng\"},\"message\":\"✅",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "678cead3-ba68-46d1-83ca-e2825f698a58"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4a4bba5f-e60e-422a-b8c5-61b6a41dc646",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 14)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "678cead3-ba68-46d1-83ca-e2825f698a58"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a8ffad39-895f-47f1-b490-affdd102dc38",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"running\",\"current_item_index\":2,\"completed_item\":1,\"next_item\":{\"index\":2,\"description\":\"So sánh với tiêu chuẩn game\"},\"message\":\"✅ Item 1 com",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "5ca6205b-ba28-4bc7-a22c-baf8027cb1cd"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d0b2513c-c85e-41bb-bcb1-c4dd95f7c495",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 13)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "5ca6205b-ba28-4bc7-a22c-baf8027cb1cd"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "0351a932-241a-47cb-b08d-0d197fab4f38",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"running\",\"current_item_index\":1,\"completed_item\":0,\"next_item\":{\"index\":1,\"description\":\"Kiểm tra các tính năng: map, cốt truyện, class, trang",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "4894c10b-7f33-4b9e-8c1b-a7f919637943"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "da216665-a7d8-4cb2-a418-b8b5b5f4e842",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 12)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "4894c10b-7f33-4b9e-8c1b-a7f919637943"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "b5602591-adf1-40a5-b9f2-7b750da86b7c",
+    "type": "fact",
+    "content": "Decision: Call delegate_task — Reason: Tool selected (cycle 11)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "c8a05938-66d4-47d7-a0f0-8d70ac25b4c6"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "c597dec2-8f5e-4854-8810-5f337fa8882b",
+    "type": "skill",
+    "content": "Tool \"update_plan\" returned: {\"plan_id\":\"plan-8967780585-1784966298949\",\"plan_status\":\"pending\",\"current_item_index\":0,\"items_count\":5,\"items\":[\"0: [pending] Phân tích code game hiện tại\",\"1: [pending] Kiểm tra các tính năng: map",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "update_plan",
+      "decisionId": "df072f29-fea3-4a6b-b77b-3b282d6ae95a"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718265,
+    "lastAccessedAt": 1784977718265,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "update_plan"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8210229a-2a35-41f7-8f8a-86cb3e893750",
+    "type": "fact",
+    "content": "Decision: Call update_plan — Reason: Tool selected (cycle 10)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "df072f29-fea3-4a6b-b77b-3b282d6ae95a"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "48522653-217f-4731-a872-020e271a1101",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "read_file",
+      "decisionId": "ff55d1dd-c71e-48af-bbfc-180f5e25d035"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "eaa133b8-a86b-49f1-8693-d8e4572c98d4",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 9)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "ff55d1dd-c71e-48af-bbfc-180f5e25d035"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "eeee72f9-c64a-4bb8-b92c-6cb36d8f3e7a",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 8)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "3c31f52b-0b4d-4e65-9679-cba2fed54dfb"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a41827df-226e-453b-9a78-641e44cf7a0a",
+    "type": "belief",
+    "content": "Belief: Tool \"search_files\" is frequently relied upon across tasks. Tool \"search_files\" returned: {\"pattern\":\"class|equipment|upgrade|story|quest|puzzle|arena|boss|random|item|weapon|armor\",\"total\":50,\"results\":[{\"file\":\"games\\\\isekai-rpg-enhanced.html\",\"line\":20,\"content\":\"align-items: center;\"},",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "search_files"
+    },
+    "confidence": 0.7,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "search_files"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "0f9de17c-a4c9-4ea5-87fb-66bff6a77089",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 7)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "5ee38917-dda3-44cb-88e8-f22055d72b8e"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d1260adf-4079-4af7-8ed6-cf4d1d818ab4",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 6)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "0caa232b-537e-41ae-893f-e912cda76cfd"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ff1731e3-6378-4a7e-8d2b-9b2f126172b2",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 5)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "036724b4-360c-4554-8d5a-73de5076598f"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "0ecf281c-5d58-42cb-8dd1-3a68acace64a",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 5)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "5072e70b-86a1-41f7-9813-a34c391dffe4"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718266,
+    "lastAccessedAt": 1784977718266,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ef9924d9-8710-40f7-b2e9-a743f984005a",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 4)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "a01d0db4-1d6c-441d-949c-a6be88d84f3b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "52d313cd-a26c-45b0-baea-b08b0cff836e",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "bd0f3ba2-bb97-414d-b207-7599cd246ce0"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "693e28ed-d969-4cf3-bb83-659bf42cbb4f",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "read_file",
+      "decisionId": "e8068fd9-983e-42f0-ac18-d54ab8662a48"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "730155f8-aaa5-47c6-9ac2-b2cfb70ae039",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "e8068fd9-983e-42f0-ac18-d54ab8662a48"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "915bf889-0b8e-4963-a522-e3899ec45332",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "3aa97295-4a39-45f7-8769-e32bb9001bf8"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4f0fda33-f59f-41e2-aea6-5d8a862c1429",
+    "type": "belief",
+    "content": "Belief: Tool \"search_knowledge_graph\" is frequently relied upon across tasks. Tool \"search_knowledge_graph\" returned: {\"keyword\":\"game design standard tiêu chuẩn game\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "search_knowledge_graph"
+    },
+    "confidence": 0.7,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "0a256f43-147f-4b84-93ce-f33db7193360",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "3b761a34-52b8-4142-b46e-2e69ff738e4c"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a065827c-02e4-4ea7-a3a4-9f770f72e43d",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784966163410",
+      "tool": "read_file",
+      "decisionId": "d1a00186-0368-44ac-b3f3-964256e21c26"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "34271605-53a6-4623-ad62-10a0e8e0319f",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784966163410",
+      "decisionId": "d1a00186-0368-44ac-b3f3-964256e21c26"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a77d34e6-c562-434b-afed-4484d3d219e8",
+    "type": "fact",
+    "content": "Completed task: Bạn đang dev nó, check cụ thể (98068ms)",
+    "source": {
+      "taskId": "task-1784965994800"
+    },
+    "confidence": 0.8,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "d18962c1-2a55-4f0c-a660-2f26a70bf157",
+    "type": "skill",
+    "content": "Tool \"search_files\" returned: {\"pattern\":\"gameLoop|update\\\\(|draw\\\\(|class Game|class Player\",\"total\":17,\"results\":[{\"file\":\"games\\\\isekai-rpg-enhanced.html\",\"line\":448,\"content\":\"draw() {\"},{\"file\":\"games\\\\isekai-rpg-enhanced.htm",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "search_files",
+      "decisionId": "ae9be7c1-cfa7-4645-8099-114eb0fdffea"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_files"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "5a2434b5-b740-48f9-8cd9-8eb6a40175b1",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 4)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "ae9be7c1-cfa7-4645-8099-114eb0fdffea"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718267,
+    "lastAccessedAt": 1784977718267,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "bff88095-8274-4342-bc85-8c3354a2f806",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "read_file",
+      "decisionId": "4419698a-c8dd-43f5-9e47-5a3ca983f036"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "e5cf1071-a3a0-4906-b581-29979897763f",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "4419698a-c8dd-43f5-9e47-5a3ca983f036"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "68a2197e-d53b-4322-8c67-e861683c9db3",
+    "type": "skill",
+    "content": "Tool \"search_files\" returned: {\"pattern\":\"class |function |const |let \",\"total\":5,\"results\":[{\"file\":\"games\\\\isekai-rpg-enhanced.html\",\"line\":299,\"content\":\"const canvas = document.getElementById('gameCanvas');\"},{\"file\":\"games\\\\i",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "search_files",
+      "decisionId": "95285318-e0e9-4de1-8a57-073d7a9f70e3"
+    },
+    "confidence": 0.75,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_files"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "540843eb-8fd9-4aee-87f5-9c1e3cf61abf",
+    "type": "fact",
+    "content": "Decision: Call search_files — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "95285318-e0e9-4de1-8a57-073d7a9f70e3"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "64d270b5-382e-4a81-8476-edf7e08c499e",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "6ee8bbe9-5fdf-435d-8d3d-02f450fc8ff3"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "196a6dc5-804b-4cd1-a4df-d1a938f26a55",
+    "type": "fact",
+    "content": "Decision: Call execute_command — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "e558bc19-c4eb-4add-9e09-c7e31edfcfa9"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a21996f3-a7de-4793-940a-857a4166ed0e",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "0fe6e9ac-9b3a-4fed-aa5b-ab37f0640ff8"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "431bc5ba-4e47-4f0f-8394-0035e255f7b8",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "93159a88-cf27-4b46-9cce-899386079d6a"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "cfe26599-9175-4184-9b81-2f60a8982522",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "3f7f63b2-72fe-478f-a277-285ba4f9705b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "fd2d876b-32e5-4557-b486-756c925b6f33",
+    "type": "belief",
+    "content": "Belief: Tool \"list_directory\" is frequently relied upon across tasks. Tool \"list_directory\" returned: [{\"name\":\"isekai-rpg-enhanced.html\",\"type\":\"file\"}]",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "list_directory"
+    },
+    "confidence": 0.7,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "pattern",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "0ce5d85f-f0c0-451e-a267-4f4f70718240",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"isekai-rpg-enhanced.html\",\"type\":\"file\"}]",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "list_directory",
+      "decisionId": "0ff317e7-32f6-4d82-9877-25f5de4bbfe6"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ea80e518-0f0f-4344-a345-3a7d7d1d0062",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "0ff317e7-32f6-4d82-9877-25f5de4bbfe6"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "cbc89a49-89af-44c1-a6b0-bef1b6f994e6",
+    "type": "skill",
+    "content": "Tool \"read_file\" returned: {\"content\":\"<!DOCTYPE html>\\r\\n<html lang=\\\"vi\\\">\\r\\n<head>\\r\\n    <meta charset=\\\"UTF-8\\\">\\r\\n    <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\">\\r\\n    <title>🎮 ISEKAI RP",
+    "source": {
+      "taskId": "task-1784965994800",
+      "tool": "read_file",
+      "decisionId": "ab29aef7-8aca-4d6a-874e-9e6a90617948"
+    },
+    "confidence": 0.75,
+    "importance": 0.5,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "read_file"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "6c8c2705-cbc9-49a4-8f27-375465ccdb8a",
+    "type": "fact",
+    "content": "Decision: Call read_file — Reason: Tool selected (cycle 1)",
+    "source": {
+      "taskId": "task-1784965994800",
+      "decisionId": "ab29aef7-8aca-4d6a-874e-9e6a90617948"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "4741573f-de77-469a-b6b2-b09fefbb3001",
+    "type": "fact",
+    "content": "Completed task: Game 2d dev đến đâu rồi (35682ms)",
+    "source": {
+      "taskId": "task-1784965924655"
+    },
+    "confidence": 0.8,
+    "importance": 0.6,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "task",
+      "completed"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "38dfa696-328e-41e7-9b7f-2ce5df5d2b8b",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: []",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "4554ae9c-baf7-45be-a41c-54d2cdc7ff5a"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "2a35b81a-4a10-498d-8fdd-1ae4d507eee6",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "4554ae9c-baf7-45be-a41c-54d2cdc7ff5a"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "5a860aa4-8b7a-46ea-a6dd-303644f2ee76",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"coral.db\",\"type\":\"file\"},{\"name\":\"coral.db-shm\",\"type\":\"file\"},{\"name\":\"coral.db-wal\",\"type\":\"file\"},{\"name\":\"cron.db\",\"type\":\"file\"},{\"name\":\"cron.db-shm\",\"type\":\"file\"},{\"name\":\"cron.db-wa",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "f14bdc79-69c0-4158-bf4a-e10ead3eacff"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "920010a1-f2c7-475d-ab7a-65002d40cd0b",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "f14bdc79-69c0-4158-bf4a-e10ead3eacff"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "8b791d94-ad81-4533-87e4-ef30d89150e1",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"engine\",\"type\":\"directory\"},{\"name\":\"entities\",\"type\":\"directory\"},{\"name\":\"systems\",\"type\":\"directory\"}]",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "3e769190-8103-46a5-ad00-f8214adc3d96"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "cf98e8f4-b280-4d9a-88c5-a56fc8dbf9a4",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "3e769190-8103-46a5-ad00-f8214adc3d96"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "be508d58-5903-45e2-a924-e45c6d88f42e",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"maps\",\"type\":\"directory\"},{\"name\":\"sounds\",\"type\":\"directory\"},{\"name\":\"sprites\",\"type\":\"directory\"}]",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "2dabc85b-60cd-41b1-807f-da832aa13fb0"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ad8a5560-3bfb-4bc3-868e-08f1ce6f398a",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "2dabc85b-60cd-41b1-807f-da832aa13fb0"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718268,
+    "lastAccessedAt": 1784977718268,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "ae3c37e2-e4bf-43b8-bc0c-3606b9df20f6",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\"isekai-rpg-enhanced.html\",\"type\":\"file\"}]",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "b935c1ed-1d86-413a-b1e4-df49ce7bd9db"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a6213778-476d-4977-971f-41455ed6a02c",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 3)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "b935c1ed-1d86-413a-b1e4-df49ce7bd9db"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "3bbddc90-64a9-497a-88eb-cf9710045ba5",
+    "type": "fact",
+    "content": "Tool \"list_directory\" returned: [{\"name\":\".coral\",\"type\":\"directory\"},{\"name\":\".dockerignore\",\"type\":\"file\"},{\"name\":\".env\",\"type\":\"file\"},{\"name\":\".env.example\",\"type\":\"file\"},{\"name\":\".git\",\"type\":\"directory\"},{\"name\":\".github\",\"t",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "list_directory",
+      "decisionId": "1f6fd37f-3b1a-4389-b051-068f4ad76bdc"
+    },
+    "confidence": 0.65,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "fact",
+      "tool",
+      "list_directory"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "a339139b-1862-4528-bab3-3d28a3040417",
+    "type": "fact",
+    "content": "Decision: Call list_directory — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "1f6fd37f-3b1a-4389-b051-068f4ad76bdc"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1ea8d75d-b6b2-4faa-9473-8b792ea6c184",
+    "type": "skill",
+    "content": "Tool \"search_knowledge_graph\" returned: {\"keyword\":\"farm game 2d dev\",\"total_results\":0,\"results\":[]}",
+    "source": {
+      "taskId": "task-1784965924655",
+      "tool": "search_knowledge_graph",
+      "decisionId": "02d9dc18-7ea7-47f0-9330-2ff92d1d405b"
+    },
+    "confidence": 0.78,
+    "importance": 0.7,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 1,
+    "linkedMemoryIds": [],
+    "tags": [
+      "skill",
+      "tool",
+      "search_knowledge_graph"
+    ],
+    "status": "reinforced",
+    "pinned": false,
+    "archived": false
+  },
+  {
+    "id": "1501fac8-0521-440f-b7eb-4971cf60a1ec",
+    "type": "fact",
+    "content": "Decision: Call search_knowledge_graph — Reason: Tool selected (cycle 2)",
+    "source": {
+      "taskId": "task-1784965924655",
+      "decisionId": "02d9dc18-7ea7-47f0-9330-2ff92d1d405b"
+    },
+    "confidence": 0.6,
+    "importance": 0.4,
+    "decayRate": 0.5,
+    "createdAt": 1784977718269,
+    "lastAccessedAt": 1784977718269,
+    "accessCount": 0,
+    "reinforcementCount": 0,
+    "linkedMemoryIds": [],
+    "tags": [
+      "decision"
+    ],
+    "status": "active",
     "pinned": false,
     "archived": false
   }
