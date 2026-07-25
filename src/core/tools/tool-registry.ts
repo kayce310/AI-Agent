@@ -281,6 +281,13 @@ async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
     system: './system.js',
     search: './search.js',
     browser: './browser.js',
+    // New: Hermes-equivalent tools
+    todo: './todo.js',
+    memory: './memory.js',
+    send_message: './send-message.js',
+    cron: './cron.js',
+    execute_code: './execute-code.js',
+    process: './process.js',
   };
   for (const [name, modulePath] of Object.entries(pluginModules)) {
     try {

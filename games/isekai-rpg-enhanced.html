@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 ISEKAI RPG - Enhanced Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            display: flex;
+            gap: 15px;
+            max-width: 1300px;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        canvas {
+            background: linear-gradient(135deg, #0a0e27 0%, #0f3460 100%);
+            border: 4px solid #e94560;
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+        }
+
+        .hud {
+            background: #16213e;
+            padding: 15px;
+            border: 2px solid #e94560;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #a8dadc;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e94560;
+            font-family: 'Courier New', monospace;
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 18px;
+            background: #0f3460;
+            border: 1px solid #e94560;
+            margin-top: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #ff006e);
+            width: 100%;
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.8);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #16213e;
+            padding: 15px;
+            border: 2px solid #e94560;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 650px;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #0f3460;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 4px;
+        }
+
+        .sidebar-section {
+            background: #0f3460;
+            padding: 12px;
+            border-radius: 3px;
+            border-left: 3px solid #e94560;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #a8dadc;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .inventory-item, .log-line, .ability {
+            font-size: 12px;
+            color: #fff;
+            padding: 6px 8px;
+            margin: 3px 0;
+            background: rgba(233, 69, 96, 0.15);
+            border-left: 2px solid #e94560;
+            border-radius: 2px;
+        }
+
+        .log-line {
+            font-size: 11px;
+            color: #a8dadc;
+            padding: 4px 6px;
+        }
+
+        .ability {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ability:hover {
+            background: rgba(233, 69, 96, 0.3);
+            transform: translateX(3px);
+        }
+
+        .ability-key {
+            display: inline-block;
+            background: #e94560;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 10px;
+        }
+
+        .controls {
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #e94560;
+        }
+
+        .control-text {
+            font-size: 11px;
+            color: #a8dadc;
+            margin: 3px 0;
+            line-height: 1.4;
+        }
+
+        .status-good { color: #06d6a0; }
+        .status-warning { color: #ffd60a; }
+        .status-danger { color: #e94560; }
+
+        .wave-indicator {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffd60a;
+            text-align: center;
+            padding: 5px;
+            background: rgba(255, 214, 10, 0.1);
+            border-radius: 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                max-height: none;
+            }
+            .hud {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div class="hud">
+                <div class="stat">
+                    <div class="stat-label">❤️ HP</div>
+                    <div class="health-bar">
+                        <div class="health-fill" id="healthBar"></div>
+                    </div>
+                    <div class="stat-value"><span id="hp">100</span>/<span id="maxHp">100</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">⭐ Level</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">✨ EXP</div>
+                    <div class="stat-value"><span id="exp">0</span>/<span id="expMax">100</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">💀 Kills</div>
+                    <div class="stat-value" id="kills">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">📊 Stats</div>
+                <div class="control-text"><span class="status-good">⚔️ ATK:</span> <span id="atk">10</span></div>
+                <div class="control-text"><span class="status-good">🛡️ DEF:</span> <span id="def">5</span></div>
+                <div class="control-text"><span class="status-good">💨 SPD:</span> <span id="spd">3</span></div>
+            </div>
+
+            <div class="wave-indicator" id="waveIndicator">Wave: 1</div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">💾 Save/Load</div>
+                <button onclick="saveGame()" style="background:#4CAF50;color:#fff;padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin:3px;">💾 Save</button>
+                <button onclick="loadGame()" style="background:#2196F3;color:#fff;padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin:3px;">📂 Load</button>
+                <button onclick="resetGame()" style="background:#f44336;color:#fff;padding:8px 15px;border:none;border-radius:4px;cursor:pointer;margin:3px;">🔄 Reset</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">🎯 Abilities</div>
+                <div class="ability" onclick="useAbility('power_strike')">
+                    <span class="ability-key">Q</span>Power Strike (30% dmg)
+                </div>
+                <div class="ability" onclick="useAbility('heal')">
+                    <span class="ability-key">W</span>Heal (50 HP, cooldown)
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">🎒 Inventory</div>
+                <div id="inventory"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">📜 Battle Log</div>
+                <div id="gameLog" style="max-height: 120px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="sidebar-section controls">
+                <div class="sidebar-title">⌨️ Controls</div>
+                <div class="control-text">↑↓←→ Move / WASD</div>
+                <div class="control-text">SPACE / LMB Attack</div>
+                <div class="control-text">Q Power Strike</div>
+                <div class="control-text">W Heal</div>
+                <div class="control-text">R Use Potion</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ============ CONSTANTS ============
+        const TILE_SIZE = 32;
+        const GRID_WIDTH = canvas.width / TILE_SIZE;
+        const GRID_HEIGHT = canvas.height / TILE_SIZE;
+
+        // ============ GAME STATE ============
+        let gameState = {
+            player: null,
+            enemies: [],
+            particles: [],
+            items: [],
+            level: 1,
+            exp: 0,
+            expNeeded: 100,
+            inventory: [],
+            log: [],
+            gameTime: 0,
+            kills: 0,
+            wave: 1,
+            boss: null,
+            gold: 0,
+            abilityCD: { power_strike: 0, heal: 0, fireball: 0, shield: 0 }
+        };
+
+        // ============ BOSS DATA ============
+        const BOSS_DATA = [
+            { name: 'Goblin King', hp: 500, atk: 15, color: '#8B0000', emoji: '👺', reward: 500 },
+            { name: 'Orc Warlord', hp: 800, atk: 20, color: '#006400', emoji: '👹', reward: 800 },
+            { name: 'Dragon', hp: 1500, atk: 30, color: '#FF4500', emoji: '🐉', reward: 1500 },
+            { name: 'Demon Lord', hp: 2500, atk: 40, color: '#4B0082', emoji: '😈', reward: 2500 },
+            { name: 'World Eater', hp: 5000, atk: 60, color: '#000000', emoji: '🌑', reward: 5000 }
+        ];
+
+        // ============ SAVE/LOAD SYSTEM ============
+        function saveGame() {
+            const saveData = {
+                player: { x: gameState.player.x, y: gameState.player.y, hp: gameState.player.hp, maxHp: gameState.player.maxHp, attack: gameState.player.attack, defense: gameState.player.defense, speed: gameState.player.speed },
+                level: gameState.level, exp: gameState.exp, expNeeded: gameState.expNeeded,
+                inventory: gameState.inventory, kills: gameState.kills, wave: gameState.wave,
+                gold: gameState.gold, saveTime: Date.now()
+            };
+            localStorage.setItem('isekai_rpg_save', JSON.stringify(saveData));
+            addLog('💾 Game saved!'); playSaveSound();
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('isekai_rpg_save');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.player.hp = data.player.hp;
+                gameState.player.maxHp = data.player.maxHp;
+                gameState.player.attack = data.player.attack;
+                gameState.player.defense = data.player.defense;
+                gameState.player.speed = data.player.speed;
+                gameState.level = data.level;
+                gameState.exp = data.exp;
+                gameState.expNeeded = data.expNeeded;
+                gameState.inventory = data.inventory || [];
+                gameState.kills = data.kills;
+                gameState.wave = data.wave;
+                gameState.gold = data.gold || 0;
+                addLog('📂 Game loaded!'); playSaveSound();
+            } else { addLog('❌ No save found!'); }
+        }
+
+        function resetGame() {
+            if (confirm('Reset game? All progress will be lost!')) {
+                localStorage.removeItem('isekai_rpg_save');
+                location.reload();
+            }
+        }
+
+        function checkBossSpawn() {
+            if (gameState.wave % 5 === 0 && !gameState.boss && gameState.wave > 0) {
+                const bossIndex = Math.min(Math.floor(gameState.wave / 5) - 1, BOSS_DATA.length - 1);
+                const b = BOSS_DATA[bossIndex];
+                gameState.boss = { x: canvas.width/2, y: 100, width: 60, height: 60, hp: b.hp, maxHp: b.hp, atk: b.atk, color: b.color, name: b.name, emoji: b.emoji, reward: b.reward, vx: 0, vy: 0, speed: 1 };
+                addLog(`🔥 BOSS: ${b.emoji} ${b.name}!`); playBossSound();
+            }
+        }
+
+        function updateBoss() {
+            if (!gameState.boss) return;
+            const boss = gameState.boss;
+            const dx = gameState.player.x - boss.x, dy = gameState.player.y - boss.y, dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 80) { boss.vx = (dx/dist)*boss.speed; boss.vy = (dy/dist)*boss.speed; }
+            else if (Math.random() < 0.02) { gameState.player.takeDamage(boss.atk); addLog(`💥 ${boss.name} attacks! -${boss.atk} HP`); createParticles(gameState.player.x, gameState.player.y, '#ff0000', 5); }
+            boss.x += boss.vx; boss.y += boss.vy;
+            boss.x = Math.max(30, Math.min(boss.x, canvas.width-30));
+            boss.y = Math.max(30, Math.min(boss.y, canvas.height-30));
+            if (boss.hp <= 0) { addLog(`🎉 BOSS DEFEATED! +${boss.reward} Gold!`); playKillSound(); playLevelUpSound(); gameState.gold += boss.reward; gameState.exp += 200; gameState.boss = null; createParticles(canvas.width/2, canvas.height/2, '#FFD700', 50); }
+        }
+
+        function drawBoss() {
+            if (!gameState.boss) return;
+            const boss = gameState.boss;
+            ctx.fillStyle = boss.color; ctx.fillRect(boss.x-30, boss.y-30, 60, 60);
+            ctx.font = '40px Arial'; ctx.textAlign = 'center'; ctx.fillText(boss.emoji, boss.x, boss.y+10);
+            ctx.fillStyle = '#333'; ctx.fillRect(boss.x-40, boss.y-50, 80, 10);
+            ctx.fillStyle = '#ff0000'; ctx.fillRect(boss.x-40, boss.y-50, 80*(boss.hp/boss.maxHp), 10);
+            ctx.fillStyle = '#fff'; ctx.font = '14px Arial'; ctx.fillText(boss.name, boss.x, boss.y-55);
+        }
+
+        // ============ PIXEL ART DRAWING ============
+        function drawPixelCharacter(x, y, color, emotion = 'normal') {
+            ctx.fillStyle = color;
+            // Body
+            ctx.fillRect(x + 8, y + 8, 16, 20);
+            // Head
+            ctx.fillRect(x + 10, y + 2, 12, 12);
+            // Arms
+            ctx.fillRect(x + 4, y + 10, 4, 14);
+            ctx.fillRect(x + 24, y + 10, 4, 14);
+            // Legs
+            ctx.fillRect(x + 10, y + 28, 4, 8);
+            ctx.fillRect(x + 18, y + 28, 4, 8);
+
+            // Eyes
+            ctx.fillStyle = color === '#4a90e2' ? '#000' : '#ff0000';
+            ctx.fillRect(x + 11, y + 4, 2, 2);
+            ctx.fillRect(x + 19, y + 4, 2, 2);
+
+            // Mouth
+            if (emotion === 'happy') {
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(x + 16, y + 8, 2, 0, Math.PI);
+                ctx.stroke();
+            }
+        }
+
+        // ============ SPRITE CLASS ============
+        class Sprite {
+            constructor(x, y, color, type = 'player') {
+                this.x = x;
+                this.y = y;
+                this.width = 32;
+                this.height = 36;
+                this.color = color;
+                this.type = type;
+                this.hp = 100;
+                this.maxHp = 100;
+                this.animFrame = 0;
+            }
+
+            draw() {
+                drawPixelCharacter(this.x, this.y, this.color, this.animFrame % 10 < 5 ? 'happy' : 'normal');
+                this.drawHpBar();
+                this.animFrame++;
+            }
+
+            drawHpBar() {
+                const barWidth = this.width;
+                const barHeight = 3;
+                const x = this.x;
+                const y = this.y - 8;
+
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x, y, barWidth, barHeight);
+
+                const hpPercent = this.hp / this.maxHp;
+                ctx.fillStyle = hpPercent > 0.5 ? '#06d6a0' : hpPercent > 0.25 ? '#ffd60a' : '#e94560';
+                ctx.fillRect(x, y, barWidth * hpPercent, barHeight);
+
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, barWidth, barHeight);
+            }
+
+            takeDamage(amount) {
+                this.hp -= amount;
+                return this.hp <= 0;
+            }
+
+            heal(amount) {
+                this.hp = Math.min(this.hp + amount, this.maxHp);
+            }
+        }
+
+        // ============ PLAYER ============
+        class Player extends Sprite {
+            constructor(x, y, playerId = 1, color = '#4a90e2') {
+                super(x, y, color, `player${playerId}`);
+                this.vx = 0;
+                this.vy = 0;
+                this.speed = 2;
+                this.attack = 10;
+                this.defense = 5;
+                this.inventory = [];
+                this.cooldown = 0;
+                this.maxHp = 100;
+                this.hp = 100;
+                this.playerId = playerId;
+                this.isLocal = playerId === 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.x = Math.max(0, Math.min(this.x, canvas.width - this.width));
+                this.y = Math.max(0, Math.min(this.y, canvas.height - this.height));
+
+                if (this.cooldown > 0) this.cooldown--;
+
+                gameState.enemies.forEach(enemy => {
+                    if (this.isColliding(enemy)) {
+                        this.takeDamage(1);
+                        addLog(`💥 Hit! HP: ${this.hp}`); playHitSound();
+                    }
+                });
+
+                gameState.items = gameState.items.filter(item => {
+                    if (this.isColliding(item)) {
+                        this.collectItem(item);
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            isColliding(other) {
+                return this.x < other.x + other.width &&
+                       this.x + this.width > other.x &&
+                       this.y < other.y + other.height &&
+                       this.y + this.height > other.y;
+            }
+
+            attack_action(targets) {
+                if (this.cooldown > 0) return;
+
+                targets.forEach(target => {
+                    const damage = Math.max(1, this.attack - Math.floor(Math.random() * 3));
+                    if (target.takeDamage(damage)) {
+                        gameState.exp += 50;
+                        gameState.kills++;
+                        addLog(`🎉 Kill! +50 EXP`); playKillSound();
+                        gameState.enemies = gameState.enemies.filter(e => e.hp > 0);
+                    } else {
+                        addLog(`⚔️ Hit ${damage} dmg`);
+                        createParticles(target.x, target.y, damage);
+                    }
+                });
+
+                this.cooldown = 15;
+            }
+
+            power_strike(targets) {
+                if (gameState.abilityCD.power_strike > 0) return;
+
+                targets.forEach(target => {
+                    const damage = Math.floor(this.attack * 1.3);
+                    if (target.takeDamage(damage)) {
+                        gameState.exp += 75;
+                        gameState.kills++;
+                        addLog(`💥 Power Strike! +75 EXP`);
+                        gameState.enemies = gameState.enemies.filter(e => e.hp > 0);
+                    } else {
+                        addLog(`⚡ Power Strike: ${damage} dmg`);
+                        createParticles(target.x, target.y, damage, '#ffff00');
+                    }
+                });
+
+                gameState.abilityCD.power_strike = 60;
+            }
+
+            collectItem(item) {
+                this.inventory.push(item);
+                addLog(`📦 ${item.name}`);
+            }
+        }
+
+        // ============ ENEMY ============
+        class Enemy extends Sprite {
+            constructor(x, y) {
+                super(x, y, '#e74c3c', 'enemy');
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = (Math.random() - 0.5) * 1;
+                this.speed = 1;
+                this.attack = 5;
+                this.maxHp = 40 + gameState.level * 5;
+                this.hp = this.maxHp;
+                this.ai_timer = 0;
+            }
+
+            update() {
+                this.ai_timer++;
+
+                const dx = gameState.player.x - this.x;
+                const dy = gameState.player.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 200) {
+                    this.vx = (dx / distance) * this.speed;
+                    this.vy = (dy / distance) * this.speed;
+                } else {
+                    if (this.ai_timer % 60 === 0) {
+                        this.vx = (Math.random() - 0.5) * 1;
+                        this.vy = (Math.random() - 0.5) * 1;
+                    }
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.x = Math.max(0, Math.min(this.x, canvas.width - this.width));
+                this.y = Math.max(0, Math.min(this.y, canvas.height - this.height));
+            }
+        }
+
+        // ============ ITEM ============
+        class Item {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.width = 16;
+                this.height = 16;
+                this.type = type;
+                this.name = type === 'potion' ? '💊 Potion' : '💰 Gold';
+                this.value = type === 'potion' ? 30 : 10;
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === 'potion' ? '#ff69b4' : '#ffd700';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.type === 'potion' ? '💊' : '🪙', this.x + 8, this.y + 12);
+            }
+        }
+
+        // ============ PARTICLES ============
+        function createParticles(x, y, amount, color = '#ff6b6b') {
+            for (let i = 0; i < 5; i++) {
+                gameState.particles.push({
+                    x: x + Math.random() * 20 - 10,
+                    y: y + Math.random() * 20 - 10,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4 - 2,
+                    life: 30,
+                    color: color,
+                    text: amount.toString()
+                });
+            }
+        }
+
+        // ============ GAME LOGIC ============
+        function spawnEnemies() {
+            const count = 3 + gameState.level;
+            for (let i = 0; i < count; i++) {
+                let x, y, tooClose = true;
+                while (tooClose) {
+                    x = Math.random() * (canvas.width - 50) + 25;
+                    y = Math.random() * (canvas.height - 50) + 25;
+                    const dx = x - gameState.player.x;
+                    const dy = y - gameState.player.y;
+                    tooClose = Math.sqrt(dx*dx + dy*dy) < 200;
+                }
+                gameState.enemies.push(new Enemy(x, y));
+            }
+        }
+
+        function spawnItems() {
+            if (Math.random() < 0.02) {
+                const type = Math.random() < 0.3 ? 'potion' : 'gold';
+                gameState.items.push(new Item(
+                    Math.random() * (canvas.width - 16),
+                    Math.random() * (canvas.height - 16),
+                    type
+                ));
+            }
+        }
+
+        function addLog(text) {
+            gameState.log.unshift(text);
+            if (gameState.log.length > 12) gameState.log.pop();
+            updateUI();
+        }
+
+        function useAbility(ability) {
+            if (ability === 'power_strike') {
+                const closeEnemies = gameState.enemies.filter(enemy => {
+                    const dx = enemy.x - gameState.player.x;
+                    const dy = enemy.y - gameState.player.y;
+                    return Math.sqrt(dx*dx + dy*dy) < 100;
+                });
+                gameState.player.power_strike(closeEnemies);
+            } else if (ability === 'heal') {
+                if (gameState.abilityCD.heal > 0) {
+                    addLog('⏳ Heal on cooldown');
+                    return;
+                }
+                gameState.player.heal(50);
+                addLog('💚 Heal +50 HP');
+                gameState.abilityCD.heal = 120;
+            }
+        }
+
+        function update() {
+            gameState.player.update();
+            checkBossSpawn();
+            updateBoss();
+            gameState.enemies.forEach(enemy => enemy.update());
+            
+            gameState.particles = gameState.particles.filter(p => {
+                p.life--;
+                p.x += p.vx;
+                p.y += p.vy;
+                return p.life > 0;
+            });
+
+            spawnItems();
+
+            // Cooldown update
+            gameState.abilityCD.power_strike = Math.max(0, gameState.abilityCD.power_strike - 1);
+            gameState.abilityCD.heal = Math.max(0, gameState.abilityCD.heal - 1);
+
+            if (gameState.exp >= gameState.expNeeded) {
+                gameState.exp -= gameState.expNeeded;
+                gameState.level++;
+                gameState.wave++;
+                gameState.expNeeded = Math.floor(gameState.expNeeded * 1.2);
+                gameState.player.attack += 3;
+                gameState.player.defense += 1;
+                gameState.player.maxHp += 15;
+                gameState.player.heal(15);
+                addLog(`⭐ LEVEL UP! Lv.${gameState.level}`);
+                spawnEnemies();
+            }
+
+            if (gameState.enemies.length < 3 + gameState.level) {
+                spawnEnemies();
+            }
+
+            gameState.gameTime++;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a0e27';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid
+            ctx.strokeStyle = 'rgba(233, 69, 96, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= GRID_WIDTH; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * TILE_SIZE, 0);
+                ctx.lineTo(i * TILE_SIZE, canvas.height);
+                ctx.stroke();
+            }
+
+            // Items
+            gameState.items.forEach(item => item.draw());
+
+            // Enemies
+            gameState.enemies.forEach(enemy => enemy.draw());
+            drawBoss();
+
+            // Player
+            gameState.player.draw();
+
+            // Particles
+            gameState.particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 30;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.text, p.x, p.y);
+                ctx.globalAlpha = 1;
+            });
+
+            // HUD text
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Courier New';
+            ctx.fillText(`Lv.${gameState.level} | Enemies: ${gameState.enemies.length}`, 10, 25);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ============ INPUT ============
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                const closeEnemies = gameState.enemies.filter(enemy => {
+                    const dx = enemy.x - gameState.player.x;
+                    const dy = enemy.y - gameState.player.y;
+                    return Math.sqrt(dx*dx + dy*dy) < 80;
+                });
+                gameState.player.attack_action(closeEnemies);
+            }
+
+            if (e.key.toLowerCase() === 'q') {
+                useAbility('power_strike');
+            }
+
+            if (e.key.toLowerCase() === 'w') {
+                useAbility('heal');
+            }
+
+            if (e.key.toLowerCase() === 'r') {
+                const potions = gameState.inventory.filter(i => i.type === 'potion');
+                if (potions.length > 0) {
+                    gameState.player.heal(30);
+                    gameState.inventory = gameState.inventory.filter(i => i.type !== 'potion');
+                    addLog('💊 Potion +30 HP');
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        function handleInput() {
+            gameState.player.vx = 0;
+            gameState.player.vy = 0;
+
+            if (keys['arrowup'] || keys['w']) gameState.player.vy = -gameState.player.speed;
+            if (keys['arrowdown'] || keys['s']) gameState.player.vy = gameState.player.speed;
+            if (keys['arrowleft'] || keys['a']) gameState.player.vx = -gameState.player.speed;
+            if (keys['arrowright'] || keys['d']) gameState.player.vx = gameState.player.speed;
+        }
+
+        // ============ UI ============
+        function updateUI() {
+            handleInput();
+
+            document.getElementById('healthBar').style.width = (gameState.player.hp / gameState.player.maxHp * 100) + '%';
+            document.getElementById('hp').textContent = gameState.player.hp;
+            document.getElementById('maxHp').textContent = gameState.player.maxHp;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('exp').textContent = gameState.exp;
+            document.getElementById('expMax').textContent = gameState.expNeeded;
+            document.getElementById('atk').textContent = gameState.player.attack;
+            document.getElementById('def').textContent = gameState.player.defense;
+            document.getElementById('spd').textContent = gameState.player.speed;
+            document.getElementById('kills').textContent = gameState.kills;
+            document.getElementById('gold').textContent = gameState.gold;
+            document.getElementById('waveIndicator').textContent = gameState.boss ? `🔥 BOSS: ${gameState.boss.name}` : `Wave: ${gameState.wave}`;
+            document.getElementById('waveIndicator').textContent = `Wave: ${gameState.wave}`;
+
+            const invHtml = gameState.inventory.map(item => `<div class="inventory-item">${item.name}</div>`).join('');
+            document.getElementById('inventory').innerHTML = invHtml || '<div class="inventory-item">Empty</div>';
+
+            const logHtml = gameState.log.map(line => `<div class="log-line">${line}</div>`).join('');
+            document.getElementById('gameLog').innerHTML = logHtml;
+
+            if (gameState.player.hp <= 0) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#e94560';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Level: ${gameState.level} | Kills: ${gameState.kills}`, canvas.width / 2, canvas.height / 2 + 50);
+            }
+        }
+
+        // ============ INIT ============
+        function init() { initMultiplayer();
+            gameState.player = new Player(canvas.width / 2, canvas.height / 2);
+            spawnEnemies();
+            addLog('🎮 Game Started!');
+            addLog('Move: Arrow Keys');
+            addLog('Attack: SPACE');
+            gameLoop();
+            playSound('start');
+        }
+
+        // Sound system
+        const sounds = {};
+        function loadSound(name, url) {
+            const audio = new Audio(url);
+            sounds[name] = audio;
+        }
+
+        function playSound(name) {
+            if (sounds[name]) {
+                sounds[name].currentTime = 0;
+                sounds[name].play().catch(e => {});
+            }
+        }
+
+        // Create basic sound URLs (using simple beep tones)
+        function createSoundUrls() {
+            for (let i = 0; i < 5; i++) {
+                const audio = new Audio(`data:audio/wav;base64,${generateBeep(i)}`);
+                sounds[`beep${i}`] = audio;
+            }
+        }
+
+        function generateBeep(freq) {
+            // Simple beep generation
+            return 'UklGRiIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVRpeU0AAAAB'; // Placeholder
+        }
+
+        // Sound effects for game events
+        function playHitSound() { playSound('beep1'); }
+        function playKillSound() { playSound('beep2'); }
+        function playLevelUpSound() { playSound('beep3'); }
+        function playBossSound() { playSound('beep4'); }
+        function playSaveSound() { playSound('beep0'); }
+
+        init();
+    </script>
+</body>
+</html>

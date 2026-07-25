@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
+    "prestart": "npm run build",
     "start": "node dist/scripts/start-telegram.js",
     "start:dev": "npx tsx src/scripts/start-telegram.ts",
     "config:9router": "npx tsx scripts/configure-9router.ts",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
+    "jsdom": "^29.1.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.4.5",

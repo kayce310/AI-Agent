@@ -1,47 +1,34 @@
 /**
- * @file Coral Command System — Slash commands for Telegram
+ * @file Coral Telegram Command Adapter
  * @layer modules
- * @depends-on src/core/llm/provider-registry.ts, src/platform/telegram/session-manager.ts
+ * @depends-on src/core/commands/registry.ts
  * @imported-by src/modules/telegram/index.ts
  * @owner telegram-module
  *
- * Inspired by Hermes Agent command system.
- * Provides interactive InlineKeyboard for /model selection.
+ * Telegram-specific command adapter.
+ * - Delegates generic commands (help, status) to core CommandRegistry
+ * - Keeps Telegram-specific UI (InlineKeyboard for /model)
+ * - Keeps admin/user management (Telegram-specific auth flow)
  */
 
 import { Context } from 'grammy';
 import { ProviderRegistry } from '../../core/llm/provider-registry.js';
-import { SessionManager } from '../../platform/telegram/session-manager.js';
+import { SessionManager } from '../../core/session-manager.js';
+import { CommandRegistry as CoreRegistry } from '../../core/commands/registry.js';
+import type { CommandContext } from '../../core/commands/types.js';
 import { Logger } from '../../core/logger.js';
 import { DashboardServer } from '../../core/events/http-server.js';
 import { getTaskQueue } from '../../core/task-queue.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 const log = new Logger({ module: 'Commands' });
-
-/** Resolve tunnel-url.txt relative to project root */
-function readTunnelUrl(): string {
-  try {
-    const dir = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
-    const urlPath = path.resolve(dir, '../../../tunnel-url.txt');
-    const url = fs.readFileSync(urlPath, 'utf8').trim();
-    return url || 'không có';
-  } catch {
-    return 'không có';
-  }
-}
 
 // ──────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────
-
-export interface Command {
-  name: string;
-  description: string;
-  handler: (ctx: Context, args: string[]) => Promise<void>;
-}
 
 interface ModelInfo {
   id: string;
@@ -67,9 +54,6 @@ interface ModelPickerState {
 // InlineKeyboard Builder
 // ──────────────────────────────────────────────
 
-/**
- * Build an inline keyboard markup object compatible with grammy TypeScript API.
- */
 function inlineKeyboard(
   rows: Array<Array<{ text: string; callback_data: string }>>
 ): { inline_keyboard: Array<Array<{ text: string; callback_data: string }>> } {
@@ -77,11 +61,26 @@ function inlineKeyboard(
 }
 
 // ──────────────────────────────────────────────
-// Command Registry
+// Telegram Command Bridge
 // ──────────────────────────────────────────────
 
+/**
+ * Build a core CommandContext from a Telegram context.
+ */
+function buildCoreContext(ctx: Context, args: string[]): CommandContext {
+  return {
+    platform: 'telegram',
+    userId: String(ctx.from?.id || 'unknown'),
+    channelId: String(ctx.chat?.id || 'unknown'),
+    isAdmin: false, // Will be checked in handler
+    isAllowed: false, // Will be checked in handler
+    args,
+    platformContext: { tgCtx: ctx },
+  };
+}
+
 export class CommandRegistry {
-  private commands: Map<string, Command> = new Map();
+  private commands: Map<string, { name: string; description: string; handler: (ctx: Context, args: string[]) => Promise<void> }> = new Map();
   private sessionManager: SessionManager;
   private userSessions: Map<string, { selectedModel: string }>;
   private modelPickerState: Map<string, ModelPickerState> = new Map();
@@ -96,26 +95,46 @@ export class CommandRegistry {
   }
 
   // ──────────────────────────────────────────────
-  // Command Registration
+  // Command Registration (Telegram-local, for platform-specific commands)
   // ──────────────────────────────────────────────
 
   private registerDefaultCommands(): void {
-    this.register({
-      name: 'model',
-      description: 'Chọn model AI — hiển thị nút bấm chọn trực tiếp',
-      handler: this.handleModel.bind(this),
-    });
-
+    // ── Commands delegated to core CommandRegistry ──
     this.register({
       name: 'help',
       description: 'Xem danh sách tất cả lệnh',
-      handler: this.handleHelp.bind(this),
+      handler: async (ctx, args) => {
+        const { userManager } = await import('./user-manager.js');
+        const userId = String(ctx.from?.id || 'unknown');
+        const isAdmin = userManager.isAdmin(userId);
+        const coreCtx = buildCoreContext(ctx, args);
+        coreCtx.isAdmin = isAdmin;
+        coreCtx.isAllowed = userManager.isAllowed(userId);
+        const result = await CoreRegistry.getInstance().execute('help', coreCtx);
+        await ctx.reply(result.text, { parse_mode: 'Markdown' });
+      },
     });
 
     this.register({
       name: 'status',
       description: 'Xem trạng thái hệ thống Coral',
-      handler: this.handleStatus.bind(this),
+      handler: async (ctx, args) => {
+        const { userManager } = await import('./user-manager.js');
+        const userId = String(ctx.from?.id || 'unknown');
+        if (!userManager.isAllowed(userId)) return;
+        const coreCtx = buildCoreContext(ctx, args);
+        coreCtx.isAdmin = userManager.isAdmin(userId);
+        coreCtx.isAllowed = true;
+        const result = await CoreRegistry.getInstance().execute('status', coreCtx);
+        await ctx.reply(result.text, { parse_mode: 'Markdown' });
+      },
+    });
+
+    // ── Telegram-specific commands ──
+    this.register({
+      name: 'model',
+      description: 'Chọn model AI — hiển thị nút bấm chọn trực tiếp',
+      handler: this.handleModel.bind(this),
     });
 
     this.register({
@@ -130,7 +149,6 @@ export class CommandRegistry {
       handler: this.handleWorld.bind(this),
     });
 
-    // ── Task Commands (Phase 3) ──
     this.register({
       name: 'list',
       description: 'Danh sách tác vụ nền đang chạy',
@@ -148,21 +166,38 @@ export class CommandRegistry {
       description: 'Khởi động lại Coral',
       handler: this.handleRestart.bind(this),
     });
+
+    // ── Session Commands (will be moved to core in future) ──
+    this.register({
+      name: 'new',
+      description: 'Tạo session mới — lưu session cũ vào lịch sử',
+      handler: this.handleNew.bind(this),
+    });
+
+    this.register({
+      name: 'sessions',
+      description: 'Xem danh sách tất cả session',
+      handler: this.handleSessions.bind(this),
+    });
+
+    this.register({
+      name: 'switch',
+      description: 'Chuyển sang session cũ — /switch <sessionId>',
+      handler: this.handleSwitch.bind(this),
+    });
   }
 
-  register(command: Command): void {
+  register(command: { name: string; description: string; handler: (ctx: Context, args: string[]) => Promise<void> }): void {
     this.commands.set(command.name, command);
   }
 
-  get(name: string): Command | undefined {
+  get(name: string): { name: string; description: string; handler: (ctx: Context, args: string[]) => Promise<void> } | undefined {
     return this.commands.get(name);
   }
 
-  getAll(): Command[] {
+  getAll(): { name: string; description: string; handler: (ctx: Context, args: string[]) => Promise<void> }[] {
     return Array.from(this.commands.values());
   }
-
-  // ──────────────────────────────────────────────
   // Command Handlers
   // ──────────────────────────────────────────────
 
@@ -188,103 +223,6 @@ export class CommandRegistry {
     const modelName = args[0];
     this.userSessions.set(userId, { selectedModel: modelName });
     await ctx.reply(`✅ Đã chọn model: *${modelName}*\n\nModel này sẽ được dùng cho tin nhắn tiếp theo.`);
-  }
-
-  private async handleHelp(ctx: Context, _args: string[]): Promise<void> {
-    const userId = String(ctx.from?.id || 'unknown');
-    const { userManager } = await import('./user-manager.js');
-    if (!userManager.isAllowed(userId)) return;
-
-    const commands = this.getAll();
-    const lines: string[] = [
-      '🤖 **Coral AI Agent — Lệnh**',
-      '',
-      'Tôi có thể: • Trả lời câu hỏi, thực thi code, quản lý file, tìm kiếm thông tin.',
-      'Đơn giản là gửi tin nhắn và tôi sẽ xử lý!',
-      '',
-      '**Lệnh:**',
-    ];
-
-    for (const cmd of commands) {
-      lines.push(`• /${cmd.name} — ${cmd.description}`);
-    }
-
-    if (userManager.isAdmin(userId)) {
-      lines.push('', '**Admin:**');
-      lines.push('• /allow <userId> — Thêm user');
-      lines.push('• /disallow <userId> — Xóa user');
-      lines.push('• /users — Danh sách user');
-    }
-
-    await ctx.reply(lines.join('\n'));
-  }
-
-  private async handleStatus(ctx: Context, args: string[]): Promise<void> {
-    const userId = String(ctx.from?.id || 'unknown');
-
-    const { userManager } = await import('./user-manager.js');
-    if (!userManager.isAllowed(userId)) return;
-
-    // If task ID provided, show task status instead of system status
-    if (args.length > 0) {
-      const taskId = args[0];
-      const taskQueue = getTaskQueue();
-      const task = taskQueue.getStatus(taskId);
-      if (!task) {
-        await ctx.reply(`❌ Không tìm thấy tác vụ \`${taskId}\``);
-        return;
-      }
-      const statusIcons: Record<string, string> = {
-        queued: '⏳', running: '🔄', completed: '✅', failed: '❌', cancelled: '🚫',
-      };
-      const icon = statusIcons[task.status] || '❓';
-      const lines = [
-        `${icon} **Task: \`${taskId}\`**`,
-        '',
-        `📋 Trạng thái: **${task.status}**`,
-        `📝 Mô tả: ${task.request.task || 'không rõ'}`,
-        `⏱ Tạo: ${new Date(task.createdAt).toLocaleString('vi-VN')}`,
-      ];
-      if (task.startedAt) lines.push(`🔄 Bắt đầu: ${new Date(task.startedAt).toLocaleString('vi-VN')}`);
-      if (task.completedAt) lines.push(`✅ Kết thúc: ${new Date(task.completedAt).toLocaleString('vi-VN')}`);
-      if (task.progress) lines.push(`📊 Tiến độ: ${task.progress}`);
-      if (task.error) lines.push(`⚠️ Lỗi: ${task.error.slice(0, 200)}`);
-      await ctx.reply(lines.join('\n'));
-      return;
-    }
-
-    // System status (existing)
-    const registry = new ProviderRegistry();
-    registry.loadFromConfig();
-
-    const modelSpecs = registry.getModelSpecs();
-    const memory = process.memoryUsage();
-    const uptime = process.uptime();
-
-    const currentSession = this.userSessions.get(userId);
-    const currentModel = currentSession?.selectedModel || (modelSpecs.length > 0 ? modelSpecs[0].id : 'auto/best-free');
-
-    const role = userManager.isAdmin(userId) ? '👑 Admin' : '👤 User';
-
-    const status = [
-      '🌊 **Coral Status**',
-      '',
-      `📱 Platform: Telegram`,
-      `👤 Role: ${role}`,
-      `🧠 Model hiện tại: \`${currentModel}\``,
-      `📊 Models available: \`${modelSpecs.length}\``,
-      `💾 Memory: ${(memory.heapUsed / 1024 / 1024).toFixed(1)}MB / ${(memory.heapTotal / 1024 / 1024).toFixed(1)}MB`,
-      `⏱️ Uptime: ${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
-      `🗄️ Memories: Active`,
-      `📊 Dashboard: ${(() => {
-        const srv = (globalThis as any).__coral_dashboardServer;
-        if (!srv) return '🔴 Off (gửi /dashboard để bật)';
-        const tun = (globalThis as any).__coral_tunnelUrl;
-        return `🟢 Online (http://localhost:8766)${tun ? `\n🌐 Tunnel: ${tun}` : ''}`;
-      })()}`,
-    ].join('\n');
-
-    await ctx.reply(status);
   }
 
   // ── Dashboard Command ──
@@ -438,17 +376,132 @@ export class CommandRegistry {
     // Give Telegram time to deliver the message before exiting
     setTimeout(() => {
       log.info('Restart requested by user via /restart');
-      // ponytail: self-spawn — works without PM2/bat loop
-      const { spawn } = require('child_process');
-      const child = spawn(process.execPath, process.argv.slice(1), {
-        cwd: process.cwd(),
-        stdio: 'inherit',
-        detached: true,
-        windowsHide: true,
-      });
-      child.unref();
-      process.exit(0);
+      try {
+        const scriptPath = path.resolve(process.argv[1] || 'dist/scripts/start-telegram.js');
+        const child = spawn(process.execPath, [scriptPath], {
+          cwd: process.cwd(),
+          stdio: 'ignore',
+          detached: true,
+          windowsHide: true,
+        });
+        child.unref();
+        process.exit(0);
+      } catch (err: any) {
+        log.error(`Restart spawn failed: ${err.message}`);
+      }
     }, 1500);
+  }
+
+  // ──────────────────────────────────────────────
+  // Session Commands
+  // ──────────────────────────────────────────────
+
+  private async handleNew(ctx: Context, _args: string[]): Promise<void> {
+    const userId = String(ctx.from?.id || 'unknown');
+    const { userManager } = await import('./user-manager.js');
+    if (!userManager.isAllowed(userId)) return;
+
+    const newSession = await this.sessionManager.archiveSession(userId);
+    this.userSessions.delete(userId);
+
+    await ctx.reply(
+      `✅ **Session mới đã tạo!**\n\n` +
+      `🆔 \`${newSession.sessionId.slice(0, 8)}\`...\n` +
+      `📅 ${new Date(newSession.createdAt).toLocaleString('vi-VN')}\n\n` +
+      `Session cũ đã được lưu vào lịch sử. Dùng /sessions để xem danh sách.`
+    );
+  }
+
+  private async handleSessions(ctx: Context, _args: string[]): Promise<void> {
+    const userId = String(ctx.from?.id || 'unknown');
+    const { userManager } = await import('./user-manager.js');
+    if (!userManager.isAllowed(userId)) return;
+
+    const { active, history } = this.sessionManager.listSessions(userId);
+
+    const lines: string[] = ['📋 **Danh sách Sessions**', ''];
+
+    if (active) {
+      const model = active.model || 'default';
+      const title = active.title || 'Chưa có tin nhắn';
+      const age = this.formatAge(active.createdAt);
+      lines.push(`🟢 **Đang active:**`);
+      lines.push(`  🆔 \`${active.sessionId.slice(0, 8)}\`...`);
+      lines.push(`  📝 ${title}`);
+      lines.push(`  🧠 Model: \`${model}\``);
+      lines.push(`  ⏱️ Tạo: ${age}`);
+      lines.push('');
+    }
+
+    if (history.length === 0) {
+      lines.push('📚 Không có session nào trong lịch sử.');
+    } else {
+      lines.push(`📚 **Lịch sử (${history.length} session):**`);
+      lines.push('');
+      for (let i = 0; i < Math.min(history.length, 10); i++) {
+        const s = history[i];
+        const model = s.model || 'default';
+        const title = s.title || 'Chưa có tin nhắn';
+        const age = this.formatAge(s.createdAt);
+        const shortId = s.sessionId.slice(0, 8);
+        lines.push(`${i + 1}. \`${shortId}\` — ${title}`);
+        lines.push(`   🧠 ${model} | ⏱️ ${age}`);
+      }
+      if (history.length > 10) {
+        lines.push(`   ... và ${history.length - 10} session nữa`);
+      }
+      lines.push('');
+      lines.push('Dùng /switch <sessionId> để chuyển session.');
+    }
+
+    await ctx.reply(lines.join('\n'));
+  }
+
+  private async handleSwitch(ctx: Context, args: string[]): Promise<void> {
+    const userId = String(ctx.from?.id || 'unknown');
+    const { userManager } = await import('./user-manager.js');
+    if (!userManager.isAllowed(userId)) return;
+
+    if (args.length < 1) {
+      await ctx.reply('📝 Cách dùng: /switch <sessionId>\n\nDùng /sessions để xem danh sách session.');
+      return;
+    }
+
+    const sessionId = args[0];
+    const switched = await this.sessionManager.switchSession(userId, sessionId);
+
+    if (!switched) {
+      await ctx.reply(`❌ Không tìm thấy session \`${sessionId}\`.\n\nDùng /sessions để xem danh sách.`);
+      return;
+    }
+
+    if (switched.model) {
+      this.userSessions.set(userId, { selectedModel: switched.model });
+    }
+
+    const title = switched.title || 'Chưa có tin nhắn';
+    await ctx.reply(
+      `✅ **Đã chuyển session!**\n\n` +
+      `🆔 \`${switched.sessionId.slice(0, 8)}\`...\n` +
+      `📝 ${title}\n` +
+      `🧠 Model: \`${switched.model || 'default'}\`\n\n` +
+      `Tiếp tục trò chuyện từ session cũ!`
+    );
+  }
+
+  /**
+   * Format timestamp to human-readable age string
+   */
+  private formatAge(timestamp: number): string {
+    const diff = Date.now() - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'vừa xong';
+    if (minutes < 60) return `${minutes} phút trước`;
+    if (hours < 24) return `${hours} giờ trước`;
+    return `${days} ngày trước`;
   }
 
   // ──────────────────────────────────────────────

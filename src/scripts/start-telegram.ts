@@ -117,8 +117,7 @@ function acquireFileLock(): boolean {
           } else {
             console.warn(`${ts()} ⚠️ Could not kill PID ${oldPid} — trying to force-start anyway`);
           }
-          // Wait briefly for cleanup
-          try { execSync('sleep 1', { timeout: 2000 }); } catch {}
+          // ponytail: taskkill is synchronous, no wait needed
         } else {
           console.log(`${ts()} 🗑️ Stale lock (PID ${oldPid} no longer running)`);
         }
@@ -318,6 +317,17 @@ async function start() {
   await gateway.startAdapter('telegram');
 
   console.log(`${ts()} ✅ Gateway running with ${gateway.adapterCount} adapter(s): ${gateway.registeredPlatforms.join(', ')}`);
+
+  // Check for restart marker and notify user
+  try {
+    const { readRestartMarker } = await import('./restart-notify.js');
+    const marker = readRestartMarker();
+    if (marker?.chatId) {
+      await bridge.sendMessage(marker.chatId, '✅ Coral đã khởi động lại thành công!');
+    }
+  } catch (e) {
+    // Quiet - marker check is best-effort
+  }
 
   // Start Dashboard HTTP/WS server
   try {

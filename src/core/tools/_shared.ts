@@ -87,22 +87,39 @@ export function loadProcessedFiles(): string[] {
 }
 
 /**
- * Whitelisted command prefixes — intentionally restrictive.
- * Security over convenience: only safe, read-only commands allowed.
- * Removed: npx (arbitrary package exec), curl/wget (network exfil),
- * python (arbitrary code exec), powershell/cmd (shell injection risk).
+ * Whitelisted command prefixes — expanded for full agent capabilities.
+ * Security via execFileSync (no shell) + risk-gate for dangerous commands.
  */
 const COMMAND_WHITELIST_PREFIXES = [
+  // VCS
   'git',
-  'node', 'npx tsx',       // npx tsx for running .ts scripts; bare npx removed
-  'python', 'pip', 'npm', 'npx', 'curl', 'ngrok', 'cloudflared',
-  'docker-compose', 'docker',
-  'ls', 'dir', 'cat', 'type', 'echo',
-  'pdftotext',
-  'code',
-  // System inspection — safe read-only commands
-  'ps', 'df', 'whoami', 'uname',
-  'tasklist', 'wmic', 'systeminfo',
+  // Runtime & package managers
+  'node', 'npx tsx', 'npx', 'python', 'pip', 'npm',
+  // Network tools
+  'curl', 'wget', 'ngrok', 'cloudflared', 'ssh', 'scp', 'rsync',
+  'ping', 'nslookup', 'dig', 'traceroute', 'netstat', 'ss',
+  // Container & deploy
+  'docker-compose', 'docker', 'docker compose',
+  // File viewing (read-only)
+  'ls', 'dir', 'cat', 'type', 'echo', 'head', 'tail', 'less', 'more',
+  'wc', 'sort', 'uniq', 'cut', 'tr', 'diff', 'xxd', 'od',
+  // File search
+  'grep', 'rg', 'ag', 'find', 'fd', 'which', 'where', 'locate',
+  // File operations (safe via execFileSync)
+  'mkdir', 'touch', 'cp', 'mv', 'rm', 'rmdir',
+  // Archive
+  'tar', 'zip', 'unzip', '7z', 'gzip', 'gunzip',
+  // System inspection
+  'ps', 'df', 'whoami', 'uname', 'date', 'time', 'uptime',
+  'env', 'printenv', 'set', 'path',
+  'tasklist', 'wmic', 'systeminfo', 'hostname',
+  // Process management
+  'kill', 'pkill', 'taskkill',
+  // Cron
+  'crontab', 'at',
+  // Misc
+  'pdftotext', 'code', 'code-server',
+  'base64', 'md5sum', 'sha256sum',
 ];
 
 /**

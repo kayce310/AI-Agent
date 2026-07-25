@@ -411,6 +411,32 @@ const browserVision: Tool = {
 
 // ── Plugin Export ──
 
+// ── Browser Press — keyboard shortcut / key press ──
+const browserPress: Tool = {
+  name: 'browser_press',
+  description: 'Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts (Escape, ArrowDown, etc).',
+  schema: {
+    type: 'object',
+    properties: {
+      key: { type: 'string', description: 'Key to press (Enter, Tab, Escape, ArrowDown, F5, Ctrl+a, etc)' },
+    },
+    required: ['key'],
+  },
+  execute: async (args: Record<string, any>) => {
+    const key = String(args.key || '');
+    if (!key) return { error: 'key is required' };
+    try {
+      const page = await getPage();
+      await page.keyboard.press(key as any);
+      return { pressed: key };
+    } catch (err: any) {
+      return { error: `Keyboard press failed: ${err.message}` };
+    }
+  },
+};
+
+// ── Plugin Export ──
+
 const plugin: ToolPlugin = {
   name: 'browser',
   tools: [
@@ -424,6 +450,7 @@ const plugin: ToolPlugin = {
     browserConsole,
     browserGetImages,
     browserVision,
+    browserPress,
   ],
 };
 

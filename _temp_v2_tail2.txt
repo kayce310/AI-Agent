@@ -1,0 +1,124 @@
+function gameLoop() {
+            if (!gameState.gameRunning) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // Clear
+            ctx.fillStyle = 'rgba(26, 77, 46, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update
+            updatePlayer();
+            updateEnemies();
+            updateParticles();
+
+            // Spawn
+            spawnCounter++;
+            const spawnRate = 60 - gameState.player.level * 2;
+            if (spawnCounter > spawnRate && gameState.enemies.length < 20) {
+                spawnEnemy();
+                spawnCounter = 0;
+            }
+
+            // Draw
+            drawEnemies();
+            drawParticles();
+            drawPlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ==================== GAME OVER ====================
+        function gameOver() {
+            gameState.gameRunning = false;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ff0000';
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.font = '20px Arial';
+            ctx.fillStyle = '#ffff00';
+            ctx.fillText(`Level: ${gameState.player.level} | Gold: ${gameState.player.gold} | Kills: ${gameState.player.kills}`,
+                        canvas.width / 2, canvas.height / 2 + 20);
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function saveGame() {
+            localStorage.setItem('farmGameSave', JSON.stringify(gameState));
+            alert('✅ Game saved!');
+        }
+
+        function loadGame() {
+            const save = localStorage.getItem('farmGameSave');
+            if (save) {
+                Object.assign(gameState, JSON.parse(save));
+                gameState.enemies = [];
+                gameState.particles = [];
+                gameState.gameRunning = true;
+                alert('✅ Game loaded!');
+            } else {
+                alert('❌ No save found!');
+            }
+        }
+
+        function resetGame() {
+            if (confirm('Are you sure? This will reset everything!')) {
+                location.reload();
+            }
+        }
+
+        function toggleDifficulty() {
+            const difficulties = ['easy', 'normal', 'hard'];
+            const idx = difficulties.indexOf(gameState.player.difficulty);
+            gameState.player.difficulty = difficulties[(idx + 1) % 3];
+            alert(`📊 Difficulty: ${gameState.player.difficulty.toUpperCase()}`);
+        }
+
+        // ==================== START GAME ====================
+        const player = gameState.player;
+        gameLoop();
+    </script>
+</body>
+</html>
+```
+
+---
+
+## 🎮 Cách Chơi
+
+### Phím Điều Khiển
+- **WASD / Arrow Keys**: Di chuyển
+- **Mouse Click**: Tấn công quái
+- **1-5**: Dùng skill
+- **ESC**: Pause (sau này)
+
+### Hệ Thống
+- 🧟 6 tier quái (E→S)
+- 📊 Level → stat tăng
+- 💎 Rarity system
+- 🎯 Boss battles
+- 💾 Save/Load
+
+### Tiến Độ
+- Level 1-10: Farm Tier E (Goblin, Slime)
+- Level 11-25: Tier D (Orc, Wolf)
+- Level 26-45: Tier C (Troll, Wyvern)
+- Level 46+: Tier B-S (Boss)
+
+---
+
+## 📋 Next Steps
+
+- [ ] Thêm animation smooth
+- [ ] Shop system
+- [ ] Equipment upgrades
+- [ ] Leaderboard
+- [ ] Mobile support
+- [ ] Audio effects
+
+
+
+---
+#game #development #farming #monster #progression

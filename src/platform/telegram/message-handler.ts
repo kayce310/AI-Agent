@@ -57,8 +57,8 @@ export class TelegramMessageHandler {
    * Handle an incoming Telegram message — Hermes-style.
    * AI nhận mọi tin nhắn, tự quyết định cách xử lý (tool calling, research, etc.)
    */
-  async handleMessage(message: TelegramMessage): Promise<TelegramResponse> {
-    const { userId, text, chatId } = message;
+  async handleMessage(message: TelegramMessage & { modelId?: string }): Promise<TelegramResponse> {
+    const { userId, text, chatId, modelId } = message;
 
     // Get or create session
     let session = this.sessionManager.getSession(userId);
@@ -74,7 +74,7 @@ export class TelegramMessageHandler {
       const result = await this.coralAgent.process({
         sessionId: session.sessionId,
         messages: [{ role: 'user', content: text, timestamp: Date.now() }],
-        modelId: 'default',
+        modelId: modelId || 'default',
         agentName: 'Coral',
         protocol: 'telegram',
         mentionPrefix: '',

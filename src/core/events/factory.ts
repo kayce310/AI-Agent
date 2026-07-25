@@ -21,10 +21,12 @@ import {
   MemoryWriteSchema,
   ErrorEventSchema,
   BaseEventSchema,
+  BehaviorPlanGeneratedSchema,
 } from './types.js';
 
 // Reasoning updated schema (not in types.ts yet)
 import { z } from 'zod';
+import type { BehaviorPlan } from '../behavior/types.js';
 const ReasoningUpdatedSchema = BaseEventSchema.extend({
   type: z.literal('reasoning_updated'),
   payload: z.object({
@@ -153,5 +155,20 @@ export class EventFactory {
       type: 'reasoning_updated' as any,
       payload: { taskId, chunk, isFinal },
     } as unknown as AgentEvent;
+  }
+
+  static behaviorPlanGenerated(plan: BehaviorPlan): AgentEvent {
+    return BehaviorPlanGeneratedSchema.parse({
+      ...this.createBase('behavior_plan_generated'),
+      payload: {
+        planId: plan.id,
+        sourceEventId: plan.sourceEventId,
+        sourceEventType: plan.sourceEventType,
+        taskId: plan.taskId,
+        actions: plan.actions,
+        emotion: plan.emotion,
+        confidence: plan.confidence,
+      },
+    });
   }
 }

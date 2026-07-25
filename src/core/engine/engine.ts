@@ -35,6 +35,8 @@ import { RateLimiter, RateLimiterGroup, PerUserRateLimiter } from '../security/r
 import { MemoryTemporal } from '../memory/memory-temporal.js';
 import { CoralStorage, getStorage } from '../memory/sqlite-storage.js';
 import { MemoryBlock } from '../memory/memory-log.js';
+import { shouldRecallMemory } from '../memory/memory-retrieval-gate.js';
+import { MemoryConsolidation } from '../memory/memory-consolidation.js';
 import { EventBus } from '../events/bus.js';
 import { EventStore } from '../events/store.js';
 import { StructuredLogger } from '../events/logger.js';
@@ -48,6 +50,9 @@ import { getContextManager } from '../context-window.js';
 import { TaskQueue, getTaskQueue } from '../task-queue.js';
 import { worldModel } from '../world/model.js';
 import { R } from '../runtime-instrumentation.js';
+import type { UpdatePlanContext } from '../plan/types.js';
+import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD } from '../plan/types.js';
+import { classifyError } from '../plan/error-classifier.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -104,7 +109,7 @@ function parseToolArgs(raw: unknown): Record<string, unknown> {
  * Vietnamese: ~2-3 chars/token; English: ~4 chars/token.
  * Slightly overestimates to be safe. No external model call.
  */
-function estimateTokenCount(text: string): number {
+export function estimateTokenCount(text: string): number {
   if (!text) return 0;
   const cjkChars = (text.match(/[㐀-鿿]/g) || []).length;
   const otherChars = text.length - cjkChars;
@@ -117,7 +122,7 @@ function estimateTokenCount(text: string): number {
  * Strategy: truncate contextFiles section (separated by '--- ' markers).
  * Falls back to truncating the last 30% of the whole prompt.
  */
-function truncatePrompt(prompt: string, maxTokens: number): string {
+export function truncatePrompt(prompt: string, maxTokens: number): string {
   const tokens = estimateTokenCount(prompt);
   if (tokens <= maxTokens) return prompt;
 
@@ -163,13 +168,18 @@ export class Engine extends EventEmitter {
   private checkpointStore: CheckpointStore;
   private taskQueue: TaskQueue;
 
+  /** Mutable context ref for update_plan tool (B2: sessionId from Engine, not LLM args; D3: onPlanCreated callback) */
+  private updatePlanCtx: UpdatePlanContext;
+
   /** In-flight promise dedup — same key = same promise */
   private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
+  private consolidation!: MemoryConsolidation;
 
   constructor(registry?: ProviderRegistry) {
     super();
     this.registry = registry ?? new ProviderRegistry();
     this.modelRouter = new ModelRouter();
+    this.consolidation = new MemoryConsolidation(this.modelRouter);
     this.memory = new MemoryFacade();
     this.hooks = globalHooks;
     this.privilegeGuard = new PrivilegeGuard({
@@ -195,6 +205,13 @@ export class Engine extends EventEmitter {
     this.eventLogger = new StructuredLogger(this.eventBus);
     this.checkpointStore = getCheckpoint();
     this.taskQueue = getTaskQueue();
+    this.updatePlanCtx = {
+      currentSessionId: 'default',
+      onPlanCreated: (_itemCount: number) => {
+        // Placeholder — real implementation sets maxToolCycles
+        // via closure in processInner() before agent.run()
+      },
+    };
   }
 
   private sanitizeResponse(content: string): string {
@@ -212,7 +229,6 @@ export class Engine extends EventEmitter {
     await evolutionEngine.init();
     // Note: loadDefaultRules() removed — rule system simplified out
     this.toolRegistry = await getDefaultRegistry();
-    await ensureToolDefinitionsLoaded();
     evolutionEngine.attachToHooks(this.hooks);
     this.privilegeGuard.attachToHooks(this.hooks);
     this.modelRouter = await buildDefaultRouter(this.registry);
@@ -222,6 +238,17 @@ export class Engine extends EventEmitter {
     const delegatePlugin = createDelegatePlugin(this.agentRegistry);
     this.toolRegistry.use(delegatePlugin);
     log.info(`CrewAI delegation registered: ${this.agentRegistry.listAgents().join(', ')}`);
+
+    // ── State-Driven Task Plan: Register update_plan tool ──
+    const { createUpdatePlanPlugin } = await import('../plan/update-plan-tool.js');
+    this.toolRegistry.use(createUpdatePlanPlugin(this.checkpointStore, this.updatePlanCtx));
+    log.info('State-Driven Task Plan registered (update_plan tool)');
+
+    // ── Preload tool definitions AFTER all plugins are registered ──
+    // BUG FIX: ensureToolDefinitionsLoaded() snapshot tool list at call time.
+    // Must be called AFTER delegatePlugin + updatePlanPlugin are registered,
+    // otherwise delegate_task and update_plan are never sent to the LLM.
+    await ensureToolDefinitionsLoaded();
 
     // ── Auxiliary LLM call for context compression ──
     // Uses a separate LLM call with lower max_tokens for summarization
@@ -349,13 +376,14 @@ export class Engine extends EventEmitter {
       this.eventLogger.toolCall(taskId, decisionId, callId, toolName, toolArgs);
     }, 90);
 
-    // ═══ EVENT BUS: tool:result → tool_finished + file events ═══
+    // ═══ EVENT BUS: tool:result → tool_finished + file events + error classification ═══
     this.agent.onEvent('tool:result', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
       const taskId = this.currentTaskId;
       const toolName = (data.toolName as string) || 'unknown';
       const toolArgs = parseToolArgs(data.args);
-      const result = JSON.stringify(data.result);
+      const rawResult = data.result;
+      const result = JSON.stringify(rawResult);
 
       // Fetch callId + decisionId from queue (FIFO — matches call order)
       const queue = this.pendingCallIds.get(toolName) || [];
@@ -370,6 +398,34 @@ export class Engine extends EventEmitter {
       const success = !result.includes('"error"');
       this.eventLogger.toolResult(taskId, decisionId, callId, toolName, success, 0, toolArgs, result.substring(0, 500));
 
+      // A1: Classify errors and attach to active plan item
+      if (!success) {
+        let errorMsg = '';
+        if (rawResult && typeof rawResult === 'object' && 'error' in rawResult) {
+          errorMsg = String((rawResult as any).error);
+        } else {
+          errorMsg = result.slice(0, 500);
+        }
+        const category = classifyError(errorMsg);
+        // Store errorCategory in the current plan item if there's an active plan
+        const plan = this.checkpointStore.getPlan(sessionId);
+        if (plan && (plan.status === 'running' || plan.status === 'pending')) {
+          const currentItem = plan.items[plan.currentItemIndex];
+          if (currentItem && currentItem.status !== 'completed') {
+            currentItem.errorCategory = category;
+            currentItem.error = errorMsg.slice(0, 300);
+            if (category === 'security') {
+              // Security error → abort entire plan
+              plan.status = 'aborted';
+              plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
+              log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
+            }
+            this.checkpointStore.setPlan(sessionId, plan);
+            log.info(`[Engine A1] Tool ${toolName} error classified as "${category}": ${errorMsg.slice(0, 100)}`);
+          }
+        }
+      }
+
       // Emit file events for file-writing tools
       const filePath = this.extractFilePath(toolName, toolArgs);
       if (filePath) {
@@ -379,6 +435,7 @@ export class Engine extends EventEmitter {
       if (result && result !== 'undefined' && result !== 'null') {
         await globalMemoryStore.add('task', `Tool ${toolName}: ${result.substring(0, 500)}`, {
           tags: ['tool_result', toolName], sessionId,
+          source: { type: 'tool', uri: toolName },
         });
         await this.agenticMemory.addBlockForAgent('engine', {
           type: 'task', content: `Tool ${toolName}: ${result.substring(0, 500)}`,
@@ -597,22 +654,30 @@ export class Engine extends EventEmitter {
     // ── MEMORY RECALL (Phase 1) ──
     // Query memory store for relevant context before building prompt
     let memoryContext: string | undefined;
-    try {
-      const memoryBlocks = await globalMemoryStore.query(userMessage, {
-        topK: 10,
-        sessionId, // Prefer session-specific memories first
-      });
-      if (memoryBlocks.length > 0) {
-        const memoryLines = memoryBlocks.map((block, i) => {
-          const timeStr = block.timestamp ? new Date(block.timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' }) : 'unknown';
-          const tags = block.tags?.length ? ` [${block.tags.join(', ')}]` : '';
-          return `${i + 1}. [${block.type}${tags}] (${timeStr}): ${block.content.substring(0, 200)}`;
+    // Waku-inspired retrieval gate: skip memory for trivial messages (greetings, fillers)
+    const msgStr = typeof userMessage === 'string' ? userMessage : '';
+    const gateDecision = shouldRecallMemory(msgStr);
+    if (gateDecision.shouldRetrieve) {
+      try {
+        const memoryBlocks = await globalMemoryStore.query(userMessage, {
+          topK: 10,
+          sessionId,
+          sourceTypes: ['user', 'web', 'cron', 'legacy'], // ponytail: exclude raw tool blocks — noisy + injection risk
         });
-        memoryContext = memoryLines.join('\n');
-        log.info(`Memory recall: ${memoryBlocks.length} block(s) for "${userMessage.substring(0, 50)}"`);
+        if (memoryBlocks.length > 0) {
+          const memoryLines = memoryBlocks.map((block, i) => {
+            const timeStr = block.timestamp ? new Date(block.timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' }) : 'unknown';
+            const tags = block.tags?.length ? ` [${block.tags.join(', ')}]` : '';
+            return `${i + 1}. [${block.type}${tags}] (${timeStr}): ${block.content.substring(0, 200)}`;
+          });
+          memoryContext = memoryLines.join('\n');
+          log.info(`Memory recall: ${memoryBlocks.length} block(s) for "${msgStr.substring(0, 50)}"`);
+        }
+      } catch (err: any) {
+        log.warn(`Memory recall failed: ${err.message}`);
       }
-    } catch (err: any) {
-      log.warn(`Memory recall failed: ${err.message}`);
+    } else {
+      log.debug(`Memory gate: skipped recall (reason: ${gateDecision.reason})`);
     }
 
     // ── LEARNING CONTEXT (Phase 6) ──
@@ -629,9 +694,104 @@ export class Engine extends EventEmitter {
     // ponytail: inject cached world state (no re-probe)
     const worldState = worldModel.getState();
 
-    // Build system prompt
+    // ── STATE-DRIVEN TASK PLAN: Check for active plan ──
+    let planContext: string | undefined;
+    const activePlan = this.checkpointStore.getPlan(sessionId);
+    if (activePlan) {
+      // Resume paused_limit automatically (no user input needed)
+      if (activePlan.status === 'paused_limit') {
+        activePlan.status = 'running';
+        this.checkpointStore.setPlan(sessionId, activePlan);
+        log.info(`[Engine] Auto-resumed plan ${activePlan.id} from paused_limit → running`);
+      }
+
+      // Nếu plan bị stuck → inject thông điệp khác hẳn (output contract)
+      if (activePlan.status === 'stuck') {
+        const stuckItem = activePlan.items[activePlan.currentItemIndex];
+        const completedItems = activePlan.items.filter(i => i.status === 'completed');
+        const completedStr = completedItems.length > 0
+          ? completedItems.map(i => `- ✅ Item ${i.index}: ${i.description}`).join('\n')
+          : '(chưa có)';
+        const stuckLines = stuckItem
+          ? `⚠️ Đang bị kẹt ở bước: ${stuckItem.description}
+Đã thử ${stuckItem.consecutiveFailedAttempts || 0} lần liên tiếp không thành công.
+Lỗi gần nhất: ${stuckItem.error || 'N/A'}
+
+Để tiếp tục, bạn có thể:
+- (a) Thử cách khác → gọi tool mới
+- (b) Bỏ qua bước này → update_plan(action='skip_item', item_index=${stuckItem.index}, reason="...")
+- (c) Dừng hẳn → update_plan(action='abort', reason="...")`
+          : '';
+
+        planContext = `## 📋 PLAN BỊ KẸT (Stuck Task Plan)
+ID: ${activePlan.id}
+Mục tiêu: ${activePlan.goal}
+Trạng thái: stuck (bị kẹt), cần bạn quyết định hướng đi khác.
+Các bước trước đó đã hoàn thành:
+${completedStr}
+
+${stuckLines}
+`;
+        log.info(`[Engine] Plan ${activePlan.id} is stuck at item ${activePlan.currentItemIndex}`);
+      } else {
+        // Build normal active plan context
+        const itemLines = activePlan.items.map(item => {
+          const check = item.status === 'completed' ? '[✅]' :
+                        item.status === 'in_progress' ? '[🔄]' :
+                        item.status === 'failed' ? '[❌]' :
+                        item.status === 'skipped' ? '[⏭️]' :
+                        item.status === 'pending' ? '[⬜]' : '[⬜]';
+          const result = item.resultSummary ? ` — ${item.resultSummary}` : '';
+          const err = item.error ? ` ⚠️ ${item.error}` : '';
+          return `${check} Item ${item.index}: ${item.description}${result}${err}`;
+        }).join('\n');
+
+        planContext = `## 📋 KẾ HOẠCH HIỆN TẠI (Active Task Plan)
+ID: ${activePlan.id}
+Mục tiêu: ${activePlan.goal}
+Trạng thái: ${activePlan.status}
+Vị trí hiện tại: item ${activePlan.currentItemIndex}/${activePlan.items.length}
+
+Các item:
+${itemLines}
+
+⚠️ QUY TẮC: Bạn ĐANG thực thi plan này.
+- Item đang làm: ${activePlan.items[activePlan.currentItemIndex]?.description || 'N/A'}
+- Item đã hoàn thành: GIỮ NGUYÊN, không làm lại.
+- Để đánh dấu item hoàn thành: update_plan(action='complete_item', item_index=N, result_summary="...")
+- Để bỏ qua item lỗi: update_plan(action='skip_item', item_index=N, reason="...")
+- KHÔNG tạo plan mới. KHÔNG gọi update_plan(action='create') khi đã có plan active.
+`;
+      }
+
+      // maxToolCycles luôn là ABSOLUTE_SAFETY_CEILING (cầu chì tuyệt đối, không phải budget công việc)
+      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
+      log.info(`[Engine] Plan ${activePlan.id}: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING} (stagnation tracking is primary)`);
+    } else {
+      // No active plan → Planning Phase: instruct LLM to create one
+      // maxToolCycles cũng là ABSOLUTE_SAFETY_CEILING — stagnation tracking là tín hiệu dừng chính
+      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
+      log.info(`[Engine] No active plan: maxToolCycles set to ${ABSOLUTE_SAFETY_CEILING}`);
+
+      planContext = `## 📋 LẬP KẾ HOẠCH (Planning Phase) — BẮT BUỘC
+
+⚠️ Đây là request MỚI. Bạn PHẢI gọi \`update_plan\` NGAY để tạo kế hoạch trước khi làm bất kỳ việc gì khác.
+
+QUY TRÌNH BẮT BUỘC:
+1. Cycle đầu tiên: gọi \`update_plan(action='create', items=[...])\` với danh sách các bước cần làm.
+2. Sau đó thực thi từng bước, dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước.
+3. Khi hết items → plan tự động completed.
+
+LƯU Ý:
+- Kể cả request chỉ có 1 bước (VD: trả lời câu hỏi đơn giản) cũng PHẢI gọi update_plan(action='create', items=['Trả lời câu hỏi: ...']).
+- items là mảng các string mô tả bước công việc.
+- KHÔNG có exception. KHÔNG có fast path.
+`;
+    }
+
+    // Build system prompt WITHOUT planContext first (B1: protect from truncation)
     const promptBuilder = new PromptBuilder();
-    const systemPrompt = promptBuilder.buildSystem({
+    const basePrompt = promptBuilder.buildSystem({
       agentName: request.agentName,
       mentionPrefix: request.mentionPrefix,
       task: request.task,
@@ -642,47 +802,83 @@ export class Engine extends EventEmitter {
       constraints: request.constraints,
       currentRequest: request.messages[request.messages.length - 1]?.content || '',
       worldContext: worldState,
+      platformMeta: request.platformMeta,
+      // planContext deliberately omitted — appended AFTER truncation below
     });
 
-    // ── Prompt Length Guard (Tier 1 Fix) ──
-    const MAX_PROMPT_TOKENS = 3000; // ~safe limit for most models
-    const estimatedTokens = estimateTokenCount(systemPrompt);
-    if (estimatedTokens > MAX_PROMPT_TOKENS) {
-      log.warn(`Prompt too long: ~${estimatedTokens} tokens (max ${MAX_PROMPT_TOKENS}). Truncating context.`);
-      this.emit('alert:prompt_truncated', { originalTokens: estimatedTokens, maxTokens: MAX_PROMPT_TOKENS });
-      // Truncate contextFiles (largest contributor) to fit
-      const truncatedPrompt = truncatePrompt(systemPrompt, MAX_PROMPT_TOKENS);
-      const agentRequest: EngineRequest = { ...request, systemPrompt: truncatedPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
-      try {
-        const result = await this.agent.run(agentRequest); // TODO: Gateway cần pass AbortSignal để cancel hoạt động end-to-end
-        if (result.toolCycles === 0) {
-          this.responseCache.set(cacheKey, result.content, 120_000);
-        }
-        const duration = Date.now() - startTime;
-        this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', true, duration, result.content.substring(0, 500));
-        // ── CHECKPOINT: Mark success ──
-        this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
-        return { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed };
-      } catch (agentErr: any) {
-        const duration = Date.now() - startTime;
-        this.eventLogger.error(agentErr.message, agentErr.stack, 'ENGINE_AGENT_FAILED');
-        this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', false, duration, agentErr.message);
-        // ── CHECKPOINT: Mark failure ──
-        this.checkpointStore.failed(taskId, { message: agentErr.message, stack: agentErr.stack });
-        return { content: `❌ Lỗi khi xử lý: ${agentErr.message}`, modelUsed: 'none', providerUsed: 'none' };
-      }
+    // ── Prompt Length Guard — planContext APPENDED AFTER truncation (B1) ──
+    const MAX_PROMPT_TOKENS = 3000;
+    let promptBody = basePrompt;
+    const estimatedBaseTokens = estimateTokenCount(promptBody);
+    if (estimatedBaseTokens > MAX_PROMPT_TOKENS) {
+      log.warn(`Prompt too long: ~${estimatedBaseTokens} tokens (max ${MAX_PROMPT_TOKENS}). Truncating context.`);
+      this.emit('alert:prompt_truncated', { originalTokens: estimatedBaseTokens, maxTokens: MAX_PROMPT_TOKENS });
+      promptBody = truncatePrompt(promptBody, MAX_PROMPT_TOKENS);
     }
+    // B1: Append planContext AFTER truncation — guaranteed not to be cut
+    const systemPrompt = planContext ? `${promptBody}\n\n${planContext}` : promptBody;
+
+    // Set up B2 context for this request
+    // D3: onPlanCreated — set maxToolCycles to ABSOLUTE_SAFETY_CEILING (stagnation is primary signal)
+    this.updatePlanCtx.currentSessionId = sessionId;
+    this.updatePlanCtx.onPlanCreated = (_itemCount: number) => {
+      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
+      log.info(`[Engine] onPlanCreated: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING}`);
+    };
+
+    // ── B4: Shared handler for cycle-limit-hit (cầu chì tuyệt đối chống runaway) ──
+    const handleCycleLimit = (result: any): EngineResponse | null => {
+      if (!result.cycleLimitReached) return null;
+      const plan = activePlan ? this.checkpointStore.getPlan(sessionId) : null;
+      if (plan && (plan.status === 'running' || plan.status === 'pending')) {
+        const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
+        if (hitAbsoluteCeiling) {
+          log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);
+        }
+        plan.status = 'paused_limit';
+        plan.stopReason = hitAbsoluteCeiling ? `absolute_safety_ceiling (${result.toolCycles})` : `maxToolCycles (${result.toolCycles})`;
+        this.checkpointStore.setPlan(sessionId, plan);
+        log.info(`[Engine] Plan ${plan.id} → paused_limit after ${result.toolCycles} cycles`);
+      }
+      // B3: Structured output contract
+      let contract = `⏸️ **Plan paused** — đã dùng ${result.toolCycles} tool cycles (giới hạn ${this.agent.getMaxToolCycles()}).\n\n`;
+      if (plan) {
+        const stats = { completed: 0, skipped: 0, failed: 0, inProgress: 0, pending: 0 };
+        for (const i of plan.items) {
+          if (i.status === 'completed') stats.completed++;
+          else if (i.status === 'skipped') stats.skipped++;
+          else if (i.status === 'failed') stats.failed++;
+          else if (i.status === 'in_progress') stats.inProgress++;
+          else if (i.status === 'pending') stats.pending++;
+        }
+        contract += `**Tiến độ:** ${stats.completed} ✅ | ${stats.skipped} ⏭️ | ${stats.failed} ❌ | ${stats.inProgress} 🔄 | ${stats.pending} ⬜ (tổng ${plan.items.length})\n`;
+        if (plan.currentItemIndex < plan.items.length) {
+          const current = plan.items[plan.currentItemIndex];
+          contract += `**Đang dở:** Item ${current.index}: ${current.description}\n`;
+          const remaining = plan.items.filter(i => i.status === 'pending' || i.status === 'in_progress').map(i => `- Item ${i.index}: ${i.description}`);
+          if (remaining.length > 0) {
+            contract += `**Còn lại:**\n${remaining.join('\n')}\n`;
+          }
+        }
+        contract += `**Lý do dừng:** ${plan.stopReason || 'maxToolCycles'}\n`;
+        contract += `_Gửi tin nhắn mới để tiếp tục._`;
+      }
+      return { content: contract, modelUsed: 'paused_limit', providerUsed: 'paused_limit' };
+    };
 
     const agentRequest: EngineRequest = { ...request, systemPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
 
     try {
-      R.waitBegin({ requestId, label: 'agent.run', callerFile: 'engine.ts', callerLine: 671 });
-      const result = await this.agent.run(agentRequest); // TODO: Gateway cần pass AbortSignal để cancel hoạt động end-to-end
+      R.waitBegin({ requestId, label: 'agent.run', callerFile: 'engine.ts', callerLine: 700 });
+      const result = await this.agent.run(agentRequest);
+
+      // ── Handle cycle limit hit mid-plan → paused_limit (B4: shared handler) ──
+      const pausedResponse = handleCycleLimit(result);
+      if (pausedResponse) return pausedResponse;
 
       // Smart cache write: ONLY if no tools were called (pure LLM knowledge response)
-      // Side-effect tracking via recordToolCall() handles tool detection in ResponseCache.set()
       if (result.toolCycles === 0) {
-        const ttl = 120_000; // 2 min TTL for pure factual responses
+        const ttl = 120_000;
         this.responseCache.set(cacheKey, result.content, ttl);
         log.info(`Stored (no tools, TTL=${ttl/1000}s): "${result.content.slice(0, 50)}"`);
       } else {

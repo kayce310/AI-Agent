@@ -156,6 +156,34 @@ export const WorldDeltaSchema = BaseEventSchema.extend({
   }),
 });
 
+// ═══ BEHAVIOR EVENTS (Phase 0-1) ═══
+export const BehaviorPlanGeneratedSchema = BaseEventSchema.extend({
+  type: z.literal('behavior_plan_generated'),
+  payload: z.object({
+    planId: z.string().uuid(),
+    sourceEventId: z.string().uuid(),
+    sourceEventType: z.string(),
+    taskId: z.string().optional(),
+    actions: z.array(z.record(z.string(), z.unknown())).min(1),
+    emotion: z.string().optional(),
+    confidence: z.number().min(0).max(1).optional(),
+  }),
+});
+
+// ═══ BEHAVIOR EVENTS (Phase 3) ═══
+export const EmotionAnnotatedSchema = BaseEventSchema.extend({
+  type: z.literal('emotion_annotated'),
+  payload: z.object({
+    emotionTag: z.string(),
+    sessionId: z.string().optional(),
+  }),
+});
+
+export const BehaviorEmotionStatsSchema = BaseEventSchema.extend({
+  type: z.literal('behavior_emotion_stats'),
+  payload: z.record(z.string(), z.unknown()),
+});
+
 // ═══ UNION TYPE ═══
 export const AgentEventSchema = z.discriminatedUnion('type', [
   TaskCreatedSchema,
@@ -170,6 +198,9 @@ export const AgentEventSchema = z.discriminatedUnion('type', [
   MemoryWriteSchema,
   ErrorEventSchema,
   WorldDeltaSchema,
+  BehaviorPlanGeneratedSchema,
+  EmotionAnnotatedSchema,
+  BehaviorEmotionStatsSchema,
 ]);
 
 export type AgentEvent = z.infer<typeof AgentEventSchema>;
@@ -188,4 +219,7 @@ export enum EventType {
   MEMORY_WRITE = 'memory_write',
   REASONING_UPDATE = 'reasoning:update',
   ERROR = 'error',
+  BEHAVIOR_PLAN_GENERATED = 'behavior_plan_generated',
+  EMOTION_ANNOTATED = 'emotion_annotated',
+  BEHAVIOR_EMOTION_STATS = 'behavior_emotion_stats',
 }

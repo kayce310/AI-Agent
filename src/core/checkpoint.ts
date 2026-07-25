@@ -30,6 +30,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from './logger.js';
+import type { TaskPlan } from './plan/types.js';
 
 const log = new Logger({ module: 'Checkpoint' });
 
@@ -59,6 +60,8 @@ export interface CheckpointSnapshot {
   status: 'started' | 'in_progress' | 'completed' | 'failed';
   startedAt: string;
   cycles: CycleData[];
+  /** MỚI — State-Driven Task Plan, replaces old heuristic intent detection */
+  plan?: TaskPlan;
   error?: {
     message: string;
     stack?: string;
@@ -220,6 +223,55 @@ export class CheckpointStore {
     log.info(`[CP] failed: ${requestId} — ${error.message.slice(0, 100)}`);
   }
 
+  // ── Plan Management (State-Driven Task Plan) ──
+
+  /**
+   * Save or update a TaskPlan for a session's checkpoint.
+   */
+  setPlan(sessionId: string, plan: TaskPlan): void {
+    // Find the checkpoint for this session (latest active one)
+    const snapshot = this.getLatestForSession(sessionId);
+    if (!snapshot) {
+      log.warn(`[CP] setPlan: no active checkpoint for session ${sessionId}`);
+      return;
+    }
+    snapshot.plan = plan;
+    this.dirty = true;
+    log.info(`[CP] setPlan: session=${sessionId} plan=${plan.id} status=${plan.status} items=${plan.items.length}`);
+  }
+
+  /**
+   * Get the active TaskPlan for a session, if any.
+   */
+  getPlan(sessionId: string): TaskPlan | null {
+    const snapshot = this.getLatestForSession(sessionId);
+    return snapshot?.plan ?? null;
+  }
+
+  /**
+   * Check whether a session has an active plan (status ∈ {pending, running, paused_limit, waiting_user}).
+   * Used by Engine routing to decide whether to enter Planning Phase or inject existing plan.
+   */
+  hasActivePlan(sessionId: string): boolean {
+    const plan = this.getPlan(sessionId);
+    if (!plan) return false;
+    return plan.status === 'pending'
+      || plan.status === 'running'
+      || plan.status === 'paused_limit'
+      || plan.status === 'waiting_user';
+  }
+
+  /**
+   * Remove a plan from a session's checkpoint.
+   */
+  clearPlan(sessionId: string): void {
+    const snapshot = this.getLatestForSession(sessionId);
+    if (snapshot) {
+      delete snapshot.plan;
+      this.dirty = true;
+    }
+  }
+
   // ── Read / Restore ──
 
   /**
@@ -256,12 +308,13 @@ export class CheckpointStore {
 
   private async loadFromDisk(): Promise<void> {
     try {
-      const files = fs.readdirSync(this.config.checkpointDir)
+      const allFiles = fs.readdirSync(this.config.checkpointDir)
         .filter(f => f.startsWith('cp-') && f.endsWith('.json'))
-        .sort()
-        .slice(-this.config.maxFiles);
+        .sort();
 
-      for (const file of files) {
+      // Load only the newest maxFiles
+      const loadFiles = allFiles.slice(-this.config.maxFiles);
+      for (const file of loadFiles) {
         try {
           const content = fs.readFileSync(path.join(this.config.checkpointDir, file), 'utf-8');
           const data = JSON.parse(content);
@@ -269,6 +322,21 @@ export class CheckpointStore {
             this.snapshots.set(data.requestId, data as CheckpointSnapshot);
           }
         } catch { /* skip corrupt files */ }
+      }
+
+      // Delete excess files from disk (oldest first, beyond maxFiles)
+      const excessCount = allFiles.length - this.config.maxFiles;
+      if (excessCount > 0) {
+        let deleted = 0;
+        for (const file of allFiles.slice(0, excessCount)) {
+          try {
+            fs.unlinkSync(path.join(this.config.checkpointDir, file));
+            deleted++;
+          } catch { /* skip locked/in-use files */ }
+        }
+        if (deleted > 0) {
+          log.info(`[CP] loadFromDisk: cleaned ${deleted} excess checkpoint file(s) from disk`);
+        }
       }
 
       log.info(`Loaded ${this.snapshots.size} checkpoint(s) from disk`);
@@ -308,12 +376,15 @@ export class CheckpointStore {
 
       // Keep track of which requestIds are still in-progress
       const inProgressIds = new Set<string>();
-      for (const [rid, snap] of this.snapshots) {
+      for (const [rid, snap] of Array.from(this.snapshots.entries())) {
         if (snap.status !== 'completed') inProgressIds.add(rid);
       }
 
+      // Index-based iteration: files[0..maxFiles-1] are newest → keep
+      // files[maxFiles..] are oldest → safe to delete (unless in-progress)
       let deletedCount = 0;
-      for (const file of files) {
+      for (let i = this.config.maxFiles; i < files.length; i++) {
+        const file = files[i];
         // Skip files for in-progress checkpoints
         if (inProgressIds.size > 0) {
           let isInProgress = false;
@@ -323,15 +394,26 @@ export class CheckpointStore {
               break;
             }
           }
-          if (isInProgress && files.length > deletedCount + inProgressIds.size) continue;
+          if (isInProgress) continue;
         }
 
-        if (files.indexOf(file) >= this.config.maxFiles) {
-          try {
-            fs.unlinkSync(path.join(this.config.checkpointDir, file));
-            deletedCount++;
-          } catch { /* skip */ }
-        }
+        try {
+          fs.unlinkSync(path.join(this.config.checkpointDir, file));
+          deletedCount++;
+        } catch { /* skip */ }
+      }
+
+      // ── TTL cleanup for plans ──
+      // Plans in {paused_limit, waiting_user} that exceed abandonAfterMs → auto-abort
+      const nowMs = Date.now();
+      for (const [, snapshot] of this.snapshots) {
+        const plan = snapshot.plan;
+        if (!plan) continue;
+        if (plan.status !== 'paused_limit' && plan.status !== 'waiting_user') continue;
+        if (nowMs - plan.createdAt <= plan.abandonAfterMs) continue;
+        plan.status = 'aborted';
+        plan.stopReason = 'ttl_expired';
+        log.info(`[CP] TTL abort: plan ${plan.id} — expired after ${((nowMs - plan.createdAt) / 1000 / 60).toFixed(1)} min`);
       }
 
       this.dirty = false;

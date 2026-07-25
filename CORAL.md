@@ -18,7 +18,7 @@ Before writing to `src/`:
 | Directory | Purpose | Import Rule |
 |-----------|---------|-------------|
 | `src/core/` | Engine, orchestrator, security, memory | Cannot import `src/modules/` |
-| `src/modules/` | Platform adapters (Discord, Telegram) | Import core via `../../core` only |
+| `src/modules/` | Platform adapters (Telegram) | Import core via `../../core` only |
 | `knowledge/` | Wiki, skills, blueprints | Read-only, no code |
 | `config/` | Provider configs | Not imported by `src/` |
 | `scripts/` | Utility scripts | Cannot import `src/core/` |

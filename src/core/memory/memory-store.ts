@@ -44,6 +44,8 @@ export interface MemoryQueryOptions {
   timeRange?: [string, string]; // [startISO, endISO]
   tags?: string[];
   sessionId?: string;
+  /** Filter by source types — exclude raw tool blocks from recall */
+  sourceTypes?: Array<'user' | 'tool' | 'web' | 'cron' | 'legacy'>;
 }
 
 /** Äá»‹nh nghÄ©a source gá»‘c cho migration */
@@ -154,6 +156,8 @@ export class MemoryStore {
       ttl?: number;
       /** Importance score 0.0–1.0 */
       importance?: number;
+      /** Provenance: where this data came from */
+      source?: { type: 'user' | 'tool' | 'web' | 'cron' | 'legacy'; uri?: string };
     },
   ): Promise<MemoryBlock> {
     await this.ensureLoaded();
@@ -175,6 +179,7 @@ export class MemoryStore {
       ttl: opts?.ttl || undefined,
       expiresAt,
       importance: opts?.importance || undefined,
+      source: opts?.source || undefined,
     };
 
     this.blocks.push(block);
@@ -276,6 +281,12 @@ export class MemoryStore {
     // Filter by sessionId
     if (opts?.sessionId) {
       results = results.filter(b => b.sessionId === opts.sessionId);
+    }
+
+    // Filter by source types (exclude noisy tool output from recall)
+    if (opts?.sourceTypes?.length) {
+      const allowed = new Set(opts.sourceTypes);
+      results = results.filter(b => !b.source || allowed.has(b.source.type));
     }
 
     // Score by keyword overlap với query text

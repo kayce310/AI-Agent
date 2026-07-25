@@ -32,6 +32,9 @@ import { CircuitBreaker, engineCircuitBreaker } from '../circuit-breaker.js';
 import type { CheckpointStore } from '../checkpoint.js';
 import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
+import { checkGoalDrift } from '../security/goal-drift-monitor.js';
+import { SAFETY_CEILING, STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -128,6 +131,8 @@ export interface AgentResult {
   providerUsed: string;
   toolCycles: number;
   finished: boolean;
+  /** MỚI — true when the ReAct loop exited because maxToolCycles was hit (not a normal finish) */
+  cycleLimitReached?: boolean;
 }
 
 // ── Agent Class ──
@@ -153,12 +158,12 @@ export class Agent extends EventEmitter {
     this.hooks = config.hooks ?? globalHooks;
     this.tracer = config.tracer;
     this.maxToolCycles = config.maxToolCycles ?? MAX_TOOL_CALL_CYCLES;
-        this.maxReadCalls = config.maxReadCalls ?? MAX_READ_CALLS;
-        this.auxiliaryLlmCall = config.auxiliaryLlmCall;
-        this.debug = config.debug ?? false;
-        this.circuitBreaker = engineCircuitBreaker;
-        this.checkpointStore = config.checkpointStore;
-        this.contextManager = config.contextManager ?? getContextManager();
+    this.maxReadCalls = config.maxReadCalls ?? MAX_READ_CALLS;
+    this.auxiliaryLlmCall = config.auxiliaryLlmCall;
+    this.debug = config.debug ?? false;
+    this.circuitBreaker = engineCircuitBreaker;
+    this.checkpointStore = config.checkpointStore;
+    this.contextManager = config.contextManager ?? getContextManager();
 
     // Auto-attach tracer to hooks if provided
     if (this.tracer) {
@@ -169,8 +174,6 @@ export class Agent extends EventEmitter {
     // NOT auto-wired to task:complete — that would run "npx vitest run" after EVERY response,
     // even for simple conversational queries. Janitor is for verifying system integrity
     // after intentional code/tool write operations, not for chat responses.
-    this.maxReadCalls = config.maxReadCalls ?? MAX_READ_CALLS;
-
   }
 
   get hookRegistry(): HookRegistry {
@@ -180,6 +183,27 @@ export class Agent extends EventEmitter {
   /** Get the engine circuit breaker (for monitoring) */
   get circuitBreakerState() {
     return this.circuitBreaker;
+  }
+
+  /**
+   * Set max tool cycles at runtime.
+   * Used by Engine when a plan is created, so the limit matches plan complexity.
+   * The effective cap is ABSOLUTE_SAFETY_CEILING (see plan/types.ts) — this is
+   * a hard safety ceiling against runaway loops, not a normal work budget.
+   * Returns the new effective limit.
+   */
+  setMaxToolCycles(newMax: number): number {
+    const effective = Math.max(1, Math.min(newMax, ABSOLUTE_SAFETY_CEILING));
+    this.maxToolCycles = effective;
+    log.info(`[Agent] maxToolCycles set to ${effective} (requested: ${newMax})`);
+    return effective;
+  }
+
+  /**
+   * Get the current max tool cycles limit.
+   */
+  getMaxToolCycles(): number {
+    return this.maxToolCycles;
   }
 
   /**
@@ -228,6 +252,7 @@ export class Agent extends EventEmitter {
     let cleaned = content
       .replace(/<longcat_tool_call[\s\S]*?<\/longcat_tool_call>/gi, '')
       .replace(/<tool_call[\s\S]*?<\/tool_call>/gi, '')
+      .replace(/\[EMOTION:\s*\w+\s*\]/gi, '')  // Phase 3: strip emotion tag from user display
       .trim();
     // Dedup consecutive duplicate paragraphs (provider streaming workaround)
     cleaned = this.deduplicateResponse(cleaned);
@@ -266,30 +291,6 @@ export class Agent extends EventEmitter {
       });
       throw err;
     }
-  }
-
-  // ── Private: Check if question is self-referential ──
-  private isSelfReferential(message: string): boolean {
-    const selfPatterns = [
-      /bạn\s+là\s+ai/i,
-      /bạn\s+thực\s+hiện\s+.*thế\s+nào/i,
-      /kiến\s+trúc/i,
-      /cấu\s+trúc/i,
-      /tools?\s+của\s+bạn/i,
-      /bạn\s+có\s+những/i,
-      /flow\s+xử\s+lý/i,
-      /quy\s+trình/i,
-      /bạn\s+làm\s+gì/i,
-      /bạn\s+biết\s+gì/i,
-      /hãy\s+giới\s+thiệu\s+bản\s+thân/i,
-      /giới\s+thiệu\s+về\s+bạn/i,
-      /who\s+are\s+you/i,
-      /your\s+architecture/i,
-      /your\s+tools/i,
-      /how\s+do\s+you\s+work/i,
-      /what\s+can\s+you\s+do/i,
-    ];
-    return selfPatterns.some(p => p.test(message));
   }
 
   // ── Private: Token-Aware Context Management ──
@@ -445,40 +446,17 @@ export class Agent extends EventEmitter {
     // ── Token-aware context budget check ──
     await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
 
-    // ── Self-referential shortcut ──
-    // If the question is about Coral itself, skip tool loop entirely
-    const lastUserMsg = historyMessages.filter((m: any) => m.role === 'user').pop()?.content || '';
-    if (this.isSelfReferential(lastUserMsg)) {
-      log.info(`Self-referential detected: "${lastUserMsg.slice(0,50)}" → direct LLM call (no tools)`);
-      try {
-        const modelResult = await this.modelRouter.route(messages, {
-          model: request.modelId && request.modelId !== 'default' ? request.modelId : undefined,
-          tools: [],  // No tools — answer directly from system prompt
-          maxTokens: 4096,
-        });
-        let content = modelResult.content || '';
-        content = content.replace(/^[\w\/\.-]+:\s*/m, '');
-        content = this.sanitizeFinalResponse(content);
-
-        evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
-
-        return {
-          content,
-          modelUsed: modelResult.modelUsed,
-          providerUsed: modelResult.providerUsed,
-          toolCycles: 0,
-          finished: true,
-        };
-      } catch (err: any) {
-        // Fall through to normal ReAct loop on error
-        log.info(`Direct call failed, falling back to ReAct loop: ${err.message}`);
-      }
-    }
-
+    // ── State-Driven Task Plan handles intent routing ──
+    // No more regex-based isSelfReferential shortcut.
+    // The LLM decides via update_plan tool based on the plan context in the prompt.
     let toolCallCycles = 0;
     let finalContent = '';
     let readToolCount = 0;      // Track read-heavy tool calls for loop detection
     let readLoopForced = false; // Prevent duplicate force-synthesis injections
+    // ── Guard chống "tuyên bố ý định" (intention declaration) ──
+    let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
+    let guardTriggered = false;    // đánh dấu Guard đã kích hoạt trong task này
+    let intentionGuardCount = 0;   // số lần Guard trigger (tránh loop vô hạn)
     const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
     const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
@@ -613,8 +591,24 @@ export class Agent extends EventEmitter {
         if (modelResult.finishReason === 'stop') {
           R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
           let rawContent = modelResult.content || '';
+
+          // Phase 3: Extract emotion_tag BEFORE sanitization
+          const parsedEmotion = parseEmotionTag(rawContent);
+          if (parsedEmotion.valid) {
+            log.info(`[EMOTION] Parsed emotion_tag: ${parsedEmotion.tag}`);
+          }
+
           rawContent = rawContent.replace(/^[\w\/\.-]+:\s*/m, '');
           finalContent = this.sanitizeFinalResponse(rawContent);
+
+          // Phase 3: Publish emotion annotation via hooks (→ EventBus)
+          if (parsedEmotion.valid && parsedEmotion.tag) {
+            this.hooks.emit('emotion:annotated' as any, {
+              sessionId: request.sessionId,
+              emotionTag: parsedEmotion.tag,
+              sourceEventId: requestId,
+            }).catch(() => {});
+          }
 
           const responseType = classifyResponse(finalContent, modelResult.toolCalls || []);
 
@@ -643,6 +637,33 @@ export class Agent extends EventEmitter {
               toolCycles: toolCallCycles,
               finished: true,
             };
+          }
+
+          // ── Intention Guard: ngăn model kết thúc task khi chỉ tuyên bố ý định ──
+          if (!guardTriggered && !hasCreatedPlan && intentionGuardCount < 2) {
+            const lastAssistantContent = modelResult.content || '';
+            // Regex phát hiện "Let me create/build/implement...", "I will fix...", "I'll rebuild..."
+            const intentionRegex = /^(let|let's|i('ll| will)|going to|we'll|we will|i am going to|tôi sẽ|để tôi|hãy để tôi)\s+(create|build|rebuild|implement|fix|update|modify|add|remove|rework|start|begin|delete|write|make|refactor|restructure|redesign|rewrite|overhaul)/i;
+
+            if (intentionRegex.test(lastAssistantContent.trim())) {
+              guardTriggered = true;
+              intentionGuardCount++;
+              log.warn(`[IntentionGuard] Cycle ${toolCallCycles}: Guard triggered — model tuyên bố ý định nhưng chưa hành động. Content: "${finalContent.slice(0, 80)}..."`);
+
+              // Chèn system message yêu cầu model hành động ngay
+              messages.push({
+                role: 'system',
+                content: '[GUARD] Bạn vừa tuyên bố một ý định nhưng chưa thực hiện hành động nào. '
+                  + 'QUY TẮC: Không được dừng lại ở đây. '
+                  + '1. GỌI TOOL NGAY — không được mô tả ý định bằng text. '
+                  + '2. Nếu cần lập kế hoạch, gọi update_plan(action=\'create\', items=[...]) NGAY. '
+                  + '3. Chỉ trả lời FINAL_ANSWER khi bạn đã hoàn thành công việc và có kết quả cụ thể. '
+                  + 'KHÔNG được phép viết "Tôi sẽ...", "Let me...", "I will..." mà không kèm tool call.'
+              });
+
+              toolCallCycles++;
+              continue; // Quay lại đầu vòng lặp để model phản hồi
+            }
           }
 
           /* final response — everything reachable here is a valid FINAL_ANSWER */
@@ -694,6 +715,16 @@ export class Agent extends EventEmitter {
            R.rawToolCalls({ requestId, cycle: toolCallCycles, raw: JSON.stringify(modelResult.toolCalls), status: 'AFTER_PARSER' });
            // Emit intermediate response if model provided text before tool calls
            if (modelResult.content) {
+             // Phase 3: Extract emotion from pre-tool-call text
+             const parsedEmotion = parseEmotionTag(modelResult.content);
+             if (parsedEmotion.valid && parsedEmotion.tag) {
+               this.hooks.emit('emotion:annotated' as any, {
+                 sessionId: request.sessionId,
+                 emotionTag: parsedEmotion.tag,
+                 sourceEventId: requestId,
+               }).catch(() => {});
+             }
+
              await this.hooks.emit('model:intermediate_response', {
                sessionId: request.sessionId,
                content: modelResult.content,
@@ -714,6 +745,30 @@ export class Agent extends EventEmitter {
 
           // ── Token-aware context budget check (after tool call) ──
           await this.ensureTokenBudget(messages, 128_000, request.sessionId, (request as any).focusTopic);
+
+          // A3: Set current plan item to in_progress if tools are NOT just update_plan
+          let prevItemIndex = -1;
+          if (this.checkpointStore && request.sessionId) {
+            try {
+              const activePlan = this.checkpointStore.getPlan(request.sessionId);
+              if (activePlan && (activePlan.status === 'pending' || activePlan.status === 'running')) {
+                const currentItem = activePlan.items[activePlan.currentItemIndex];
+                if (currentItem && currentItem.status === 'pending') {
+                  // Check if at least one tool call is NOT update_plan (actual work starting)
+                  const hasRealWork = modelResult.toolCalls?.some(
+                    (tc: any) => tc.function?.name !== 'update_plan'
+                  );
+                  if (hasRealWork) {
+                    currentItem.status = 'in_progress';
+                    if (activePlan.status === 'pending') activePlan.status = 'running';
+                    this.checkpointStore.setPlan(request.sessionId, activePlan);
+                    log.info(`[Agent A3] Plan item ${currentItem.index} → in_progress`);
+                  }
+                }
+                prevItemIndex = activePlan.currentItemIndex;
+              }
+            } catch (_) { /* non-critical — plan tracking best-effort */ }
+          }
 
           // Collect tool call data for checkpoint
           const executedToolCalls: Array<{id: string; name: string; args: Record<string, unknown>}> = [];
@@ -749,6 +804,17 @@ export class Agent extends EventEmitter {
               this.checkpointStore.markToolRunning(request.checkpointRequestId, toolCall.id);
             }
 
+            // ── hasCreatedPlan: detect update_plan(create) calls ──
+            if (toolCall.function.name === 'update_plan') {
+              try {
+                const planArgs = JSON.parse(toolCall.function.arguments || '{}');
+                if (planArgs.action === 'create') {
+                  hasCreatedPlan = true;
+                  log.info(`[IntentionGuard] hasCreatedPlan set true (update_plan create)`);
+                }
+              } catch { /* ignore parse errors */ }
+            }
+
             // Show thinking: tool call starting
             if (request.onThinking) {
               const fnName = toolCall.function.name;
@@ -781,6 +847,14 @@ export class Agent extends EventEmitter {
               tool_call_id: toolCall.id,
               content: cappedResult,
             });
+            // ── Goal-drift check: inject reminder if agent deviates from task ──
+            const task = request.task || '';
+            if (task && toolCallCycles > 1) {
+              const driftReminder = checkGoalDrift(task, cappedResult);
+              if (driftReminder) {
+                messages.push({ role: 'system', content: driftReminder });
+              }
+            }
 
             // Collect for checkpoint
             executedToolCalls.push({
@@ -836,6 +910,40 @@ export class Agent extends EventEmitter {
               executedToolCalls,
               executedToolResults,
             );
+          }
+
+          // ── Stagnation tracking: increment consecutiveFailedAttempts if no progress ──
+          if (this.checkpointStore && request.sessionId && prevItemIndex >= 0) {
+            try {
+              const sp = this.checkpointStore.getPlan(request.sessionId);
+              if (sp && (sp.status === 'running' || sp.status === 'pending')) {
+                // Check if currentItemIndex changed OR current item was completed
+                const currentIdx = sp.currentItemIndex;
+                const currentItem = sp.items[currentIdx];
+                const wasItemCompleted = currentIdx !== prevItemIndex ||
+                  (currentItem && currentItem.status === 'completed');
+                if (wasItemCompleted) {
+                  // Progress made — reset counter on the item that was completed (previous index)
+                  const prevItem = sp.items[prevItemIndex];
+                  if (prevItem) {
+                    prevItem.consecutiveFailedAttempts = 0;
+                    log.info(`[Stagnation] Item ${prevItemIndex} completed → counter reset`);
+                  }
+                } else {
+                  // No progress — increment counter on current item
+                  if (currentItem && currentItem.status !== 'completed' && currentItem.status !== 'skipped') {
+                    currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
+                    log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD}`);
+                    if (currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
+                      sp.status = 'stuck';
+                      sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
+                      log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                    }
+                  }
+                }
+                this.checkpointStore.setPlan(request.sessionId, sp);
+              }
+            } catch (_) { /* non-critical */ }
           }
 
           R.state({ event: 'CONTINUE', requestId, cycle: toolCallCycles, finishReason: 'tool_calls' });
@@ -923,39 +1031,17 @@ export class Agent extends EventEmitter {
       }
     }
 
-    // ── Max cycles exceeded → Graceful Fallback ──
+    // ── Max cycles exceeded → Report back so Engine can decide pause/continue ──
     R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'max_cycles' });
     R.state({ event: 'RETURN_MAX_CYCLES', requestId, cycle: toolCallCycles });
-    // Extract recent context from conversation to provide a meaningful response
-    const recentUserMessages = messages
-      .filter((m: any) => m.role === 'user')
-      .slice(-3)
-      .map((m: any) => m.content)
-      .filter(Boolean);
-    const recentAssistant = messages
-      .filter((m: any) => m.role === 'assistant' && m.content)
-      .slice(-2)
-      .map((m: any) => m.content)
-      .filter(Boolean);
-
-    let fallbackContent: string;
-    if (recentAssistant.length > 0) {
-      // We had partial answers — synthesize them
-      fallbackContent = recentAssistant[recentAssistant.length - 1];
-    } else if (recentUserMessages.length > 0) {
-      // No assistant answer yet — provide a brief helpful response
-      const lastQuestion = recentUserMessages[recentUserMessages.length - 1];
-      fallbackContent = `Câu hỏi của bạn rất chi tiết: "${lastQuestion.slice(0, 100)}"\n\nTôi đã cố gắng tìm thông tin nhưng cần thêm thời gian. Bạn có thể:\n1. Hỏi chi tiết hơn về một phần cụ thể\n2. Đặt câu hỏi đơn giản hơn\n3. Thử lại sau`;
-    } else {
-      fallbackContent = 'Xin lỗi, tôi gặp khó khăn trong việc xử lý yêu cầu này. Bạn có thể thử lại với câu hỏi đơn giản hơn.';
-    }
 
     return {
-      content: fallbackContent,
+      content: '',
       modelUsed: 'unknown',
       providerUsed: 'unknown',
       toolCycles: toolCallCycles,
-      finished: true,
+      finished: false,
+      cycleLimitReached: true,
     };
   }
 }

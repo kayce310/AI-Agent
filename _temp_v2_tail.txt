@@ -1,0 +1,66 @@
+Total len: 24915
+Found at: 18558
+    for (const p of gameState.particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 60;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.text, p.x, p.y);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // ==================== DRAWING ====================
+        function drawPlayer() {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+        }
+
+        function drawEnemies() {
+            for (const enemy of gameState.enemies) {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x - enemy.width / 2, enemy.y - enemy.height / 2, enemy.width, enemy.height);
+
+                // Health bar
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(enemy.x - 10, enemy.y - 25, 20, 3);
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(enemy.x - 10, enemy.y - 25, 20 * (enemy.hp / enemy.maxHp), 3);
+            }
+        }
+
+        // ==================== UI UPDATE ====================
+        function updateUI() {
+            const player = gameState.player;
+            document.getElementById('level').textContent = player.level;
+            document.getElementById('exp').textContent = Math.floor(player.exp);
+            document.getElementById('expNeeded').textContent = player.expNeeded;
+            document.getElementById('gold').textContent = player.gold;
+            document.getElementById('kills').textContent = player.kills;
+            document.getElementById('hp').textContent = Math.floor(player.hp);
+            document.getElementById('atk').textContent = player.atk;
+            document.getElementById('def').textContent = player.def;
+            document.getElementById('spd').textContent = player.speed.toFixed(1);
+            document.getElementById('int').textContent = player.int;
+
+            // Bars
+            document.getElementById('hpBar').style.width = (player.hp / player.maxHp * 100) + '%';
+            document.getElementById('manaBar').style.width = (player.mana / player.maxMana * 100) + '%';
+            document.getElementById('expBar').style.width = (player.exp / player.expNeeded * 100) + '%';
+
+            // Stats
+            const playTime = (Date.now() - gameState.gameStartTime) / 1000 / 60; // minutes
+            const goldPerHour = Math.floor(player.gold / (playTime / 60));
+            document.getElementById('goldPerHour').textContent = goldPerHour;
+            document.getElementById('totalDmg').textContent = player.atk;
+            document.getElementById('totalDef').textContent = player.def;
+            document.getElementById('totalKills').textContent = player.kills;
+        }
+
+        // ==================== GAME LOOP ====================
+        let spawnCounter = 0;
+        function gameLoop() {
+            if (!gameState.gameRunning) {
+                requestAnimationFrame(gameLoop);
+                return;
+    

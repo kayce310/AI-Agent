@@ -9,7 +9,9 @@ export interface SessionState {
   createdAt: number;
   lastActivity: number;
   introSent: boolean;
-  messages: any[]; // New: Store message history for agent context
+  messages: any[]; // Store message history for agent context
+  title?: string; // Human-readable title (from first message)
+  model?: string; // Model used in this session
 }
 
 export interface SessionActivityEvent {
@@ -32,17 +34,20 @@ const SESSION_FILE = path.join(
 );
 
 /**
- * SessionManager: TTL-based session cache WITH disk persistence
+ * SessionManager: TTL-based session cache WITH disk persistence + multi-session history
  *
  * Keeps Coral agent stateless while providing session continuity to users.
  * Sessions expire after 15 minutes of inactivity.
  * Disk persistence survives Coral restart (not related to TTL).
  * State is saved to disk and restored on restart.
  * 
+ * Multi-session: supports /new (archive + create), /switch (restore old), /sessions (list all).
+ * 
  * SECURITY: Uses mutex locks to prevent race conditions in concurrent access.
  */
 export class SessionManager {
   private sessions = new Map<string, SessionState>();
+  private sessionHistory = new Map<string, SessionState[]>(); // userId -> archived sessions
   private readonly TTL_MS = 15 * 60 * 1000; // 15 minutes (matches test expectations)
   private cleanupInterval: NodeJS.Timeout | null = null;
   private dirty = false;
@@ -59,15 +64,12 @@ export class SessionManager {
 
   /**
    * Acquire mutex lock for a user (prevents race conditions)
-   * ponytail: simple promise-queue pattern — waiter yields until lock resolves
    */
   private async acquireLock(userId: string): Promise<void> {
     R.sessionLock({ event: 'LOCK_ACQUIRE', userId });
     while (this.locks.has(userId)) {
-      // Wait for existing lock to release
       await this.locks.get(userId)!.promise;
     }
-    // Create new lock for this acquirer
     let resolve: () => void;
     const promise = new Promise<void>((r) => {
       resolve = r;
@@ -83,31 +85,26 @@ export class SessionManager {
     R.sessionLock({ event: 'LOCK_RELEASE', userId });
     const lock = this.locks.get(userId);
     if (lock) {
-      lock.resolve(); // Signal waiting acquirers
+      lock.resolve();
       this.locks.delete(userId);
     }
   }
 
   /**
    * Get existing session or create new one (THREAD-SAFE)
-   * Checks TTL and creates fresh session if expired
    */
   async getOrCreateSession(userId: string): Promise<SessionState> {
     await this.acquireLock(userId);
     try {
       const existing = this.sessions.get(userId);
-
-      // Check if session expired
       if (existing && this.isExpired(existing)) {
+        this.addToHistory(userId, existing);
         this.sessions.delete(userId);
         return this.createNewSession(userId);
       }
-
-      // Return existing or create new
       if (!existing) {
         return this.createNewSession(userId);
       }
-
       existing.lastActivity = Date.now();
       this.markDirty();
       return existing;
@@ -126,13 +123,133 @@ export class SessionManager {
       createdAt: Date.now(),
       lastActivity: Date.now(),
       introSent: false,
-      messages: [], // Initialize messages array
+      messages: [],
     };
     this.sessions.set(userId, session);
     this.markDirty();
     this.save();
     return session;
   }
+
+  // ──────────────────────────────────────────────
+  // Multi-Session Methods
+  // ──────────────────────────────────────────────
+
+  /**
+   * Archive current active session to history, then create a new one.
+   */
+  async archiveSession(userId: string): Promise<SessionState> {
+    await this.acquireLock(userId);
+    try {
+      const existing = this.sessions.get(userId);
+      if (existing) {
+        this.addToHistory(userId, existing);
+      }
+      return this.createNewSession(userId);
+    } finally {
+      this.releaseLock(userId);
+    }
+  }
+
+  /**
+   * Switch to a previous session by sessionId.
+   */
+  async switchSession(userId: string, sessionId: string): Promise<SessionState | null> {
+    await this.acquireLock(userId);
+    try {
+      const history = this.sessionHistory.get(userId) || [];
+      const idx = history.findIndex(s => s.sessionId === sessionId || s.sessionId.startsWith(sessionId));
+      if (idx === -1) return null;
+
+      const target = history.splice(idx, 1)[0];
+
+      const current = this.sessions.get(userId);
+      if (current) {
+        this.addToHistory(userId, current);
+      }
+
+      target.lastActivity = Date.now();
+      this.sessions.set(userId, target);
+      this.markDirty();
+      this.save();
+      return target;
+    } finally {
+      this.releaseLock(userId);
+    }
+  }
+
+  /**
+   * List all sessions for a user (active + archived).
+   */
+  listSessions(userId: string): { active: SessionState | null; history: SessionState[] } {
+    const active = this.sessions.get(userId) || null;
+    const history = (this.sessionHistory.get(userId) || [])
+      .sort((a, b) => b.lastActivity - a.lastActivity);
+    return { active, history };
+  }
+
+  /**
+   * Add session to history (internal)
+   */
+  private addToHistory(userId: string, session: SessionState): void {
+    if (!this.sessionHistory.has(userId)) {
+      this.sessionHistory.set(userId, []);
+    }
+    const history = this.sessionHistory.get(userId)!;
+    const existing = history.findIndex(s => s.sessionId === session.sessionId);
+    if (existing >= 0) {
+      history[existing] = session;
+    } else {
+      history.push(session);
+    }
+    while (history.length > 50) {
+      history.shift();
+    }
+  }
+
+  /**
+   * Set title for a session (from first message)
+   */
+  async setSessionTitle(userId: string, title: string): Promise<void> {
+    await this.acquireLock(userId);
+    try {
+      const session = this.sessions.get(userId);
+      if (session && !session.title) {
+        session.title = title.slice(0, 100);
+        this.markDirty();
+      }
+    } finally {
+      this.releaseLock(userId);
+    }
+  }
+
+  /**
+   * Set model for a session
+   */
+  async setSessionModel(userId: string, model: string): Promise<void> {
+    await this.acquireLock(userId);
+    try {
+      const session = this.sessions.get(userId);
+      if (session) {
+        session.model = model;
+        this.markDirty();
+      }
+    } finally {
+      this.releaseLock(userId);
+    }
+  }
+
+  /**
+   * Get a specific session by ID from history (without switching)
+   */
+  getSessionFromHistory(userId: string, sessionId: string): SessionState | null {
+    const history = this.sessionHistory.get(userId) || [];
+    return history.find(s => s.sessionId === sessionId || s.sessionId.startsWith(sessionId)) || null;
+  }
+
+  // ──────────────────────────────────────────────
+  // Existing Methods
+  // ──────────────────────────────────────────────
 
   /**
    * Mark intro as sent for this session (THREAD-SAFE)
@@ -189,7 +306,13 @@ export class SessionManager {
     });
 
     if (expired.length > 0) {
-      expired.forEach(userId => this.sessions.delete(userId));
+      expired.forEach(userId => {
+        const session = this.sessions.get(userId);
+        if (session) {
+          this.addToHistory(userId, session);
+        }
+        this.sessions.delete(userId);
+      });
       this.markDirty();
     }
   }
@@ -214,9 +337,8 @@ export class SessionManager {
       lastActivity: Date.now(),
       introSent: false,
       createdAt: Date.now(),
-      messages: [], // Initialize messages array
+      messages: [],
     };
-
     this.sessions.set(userId, session);
     this.save();
     return session;
@@ -237,7 +359,10 @@ export class SessionManager {
 
   private save(): void {
     try {
-      const data = Object.fromEntries(this.sessions.entries());
+      const data = {
+        active: Object.fromEntries(this.sessions.entries()),
+        history: Object.fromEntries(this.sessionHistory.entries()),
+      };
       fs.writeFileSync(SESSION_FILE, JSON.stringify(data, null, 2));
       this.dirty = false;
     } catch { /* silent — non-critical */ }
@@ -248,9 +373,27 @@ export class SessionManager {
       if (fs.existsSync(SESSION_FILE)) {
         const raw = fs.readFileSync(SESSION_FILE, 'utf8');
         const data = JSON.parse(raw);
-        for (const [userId, session] of Object.entries(data) as [string, SessionState][]) {
-          if (session && !this.isExpired(session)) {
-            this.sessions.set(userId, session);
+
+        // Handle both old format (flat map) and new format ({active, history})
+        if (data.active && typeof data.active === 'object') {
+          for (const [userId, session] of Object.entries(data.active) as [string, SessionState][]) {
+            if (session && !this.isExpired(session)) {
+              this.sessions.set(userId, session);
+            }
+          }
+          if (data.history) {
+            for (const [userId, sessions] of Object.entries(data.history) as [string, SessionState[]][]) {
+              if (Array.isArray(sessions)) {
+                this.sessionHistory.set(userId, sessions);
+              }
+            }
+          }
+        } else {
+          // Old format: flat map of userId -> SessionState
+          for (const [userId, session] of Object.entries(data) as [string, SessionState][]) {
+            if (session && !this.isExpired(session)) {
+              this.sessions.set(userId, session);
+            }
           }
         }
       }
@@ -266,6 +409,7 @@ export class SessionManager {
     }
     if (this.dirty) this.save();
     this.sessions.clear();
+    this.sessionHistory.clear();
   }
 
   /**

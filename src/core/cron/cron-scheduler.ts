@@ -9,6 +9,7 @@
 
 import { Logger } from '../logger.js';
 import { CronStore, getCronStore } from './cron-store.js';
+import { globalMemoryStore } from '../memory/memory-store.js';
 const log = new Logger({ module: 'Cron' });
 
 /**
@@ -142,6 +143,13 @@ export class CronScheduler {
         timeout_ms: job.timeoutMs ?? 0,
       });
       this.store.completeRun(runId, result);
+      // ponytail: flush cron insight into memory for cross-session retrieval
+      if (result && result.length > 10) {
+        globalMemoryStore.add('task', `[Cron:${job.name}] ${result.substring(0, 2000)}`, {
+          tags: ['cron', job.name],
+          sessionId: 'system',
+        }).catch(e => log.debug(`Cron→Memory write failed: ${e}`));
+      }
       if (result) {
         // Fire alert callback if set
         if (this.onAlert) {

@@ -62,6 +62,8 @@ export interface MemoryBlock {
   expiresAt?: string;
   /** Importance score 0.0–1.0 — higher = survives cleanup longer */
   importance?: number;
+  /** Provenance: where this block came from (Waku-inspired: track source for security) */
+  source?: { type: 'user' | 'tool' | 'web' | 'cron' | 'legacy'; uri?: string };
 }
 
 /** Operation types Ä‘Æ°á»£c log */

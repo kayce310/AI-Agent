@@ -92,14 +92,6 @@ src/core/
 │   ├── tracer.ts             # OpenTelemetry-like SDK (27 tests GREEN)
 │   └── (no dependencies)
 │
-├── smarthome/                 # IoT device management
-│   ├── device-registry.ts    # Device discovery
-│   ├── smarthome-manager.ts  # Command execution
-│   ├── providers/
-│   │   └── xiaomi.ts         # Xiaomi Mi Home adapter
-│   ├── types.ts              # Device interfaces
-│   └── index.ts              # Barrel export
-│
 ├── agents/                    # Multi-agent coordination
 │   ├── agent-registry.ts     # Agent discovery & lifecycle
 │   ├── delegate.ts           # Agent → Agent delegation

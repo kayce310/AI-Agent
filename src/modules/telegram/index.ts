@@ -25,7 +25,7 @@ const log = new Logger({ module: 'Telegram' });
 import { ActivityReporter } from './activity-reporter.js';
 import { userManager } from './user-manager.js';
 import { TelegramMessageHandler } from '../../platform/telegram/message-handler.js';
-import { SessionManager } from '../../platform/telegram/session-manager.js';
+import { SessionManager } from '../../core/session-manager.js';
 import { CommandRegistry } from './commands.js';
 import { ProactiveEngine } from '../../core/proactive/proactive-engine.js';
 import 'dotenv/config';
@@ -216,19 +216,36 @@ export class TelegramBridge implements PlatformAdapter {
   }
 
   async start(): Promise<void> {
-    if (this.status === 'running') return;
+      if (this.status === 'running') return;
 
-    this.status = 'starting';
+      this.status = 'starting';
 
-    // Start bot with long polling
-    this.bot.start({
-      onStart: () => {
-        log.info("Bot started successfully");
-      },
-    });
+      // Register slash commands in Telegram menu (shows when user types /)
+      console.log(`${ts()} 📝 Registering Telegram bot commands...`);
+      await this.bot.api.setMyCommands([
+        { command: 'start', description: 'Chào mừng / bắt đầu' },
+        { command: 'help', description: 'Hướng dẫn sử dụng' },
+        { command: 'status', description: 'Trạng thái bot' },
+        { command: 'new', description: 'Tạo session mới' },
+        { command: 'sessions', description: 'Danh sách sessions' },
+        { command: 'switch', description: 'Chuyển session' },
+        { command: 'model', description: 'Chọn model AI' },
+        { command: 'list', description: 'Danh sách task đang chạy' },
+        { command: 'cancel', description: 'Hủy task' },
+        { command: 'dashboard', description: 'Bật/tắt dashboard' },
+        { command: 'restart', description: 'Khởi động lại bot' },
+      ]);
+      console.log(`${ts()} ✅ Telegram bot commands registered`);
 
-    this.status = 'running';
-  }
+      // Start bot with long polling
+      this.bot.start({
+        onStart: () => {
+          log.info("Bot started successfully");
+        },
+      });
+
+      this.status = 'running';
+    }
 
   async stop(): Promise<void> {
     if (this.status === 'stopped') return;
@@ -309,6 +326,10 @@ export class TelegramBridge implements PlatformAdapter {
       await this.commandRegistry.get('dashboard')?.handler(ctx, []);
     });
 
+    this.bot.command('restart', async (ctx) => {
+      await this.commandRegistry.get('restart')?.handler(ctx, []);
+    });
+
     // ── Task Commands (Phase 3) ──
     this.bot.command('list', async (ctx) => {
       await this.commandRegistry.get('list')?.handler(ctx, []);
@@ -319,13 +340,27 @@ export class TelegramBridge implements PlatformAdapter {
       await this.commandRegistry.get('cancel')?.handler(ctx, args);
     });
 
-    // ── Handle legacy commands (backward compatibility) ──
-    this.bot.command('models', async (ctx) => {
-      const userId = String(ctx.from?.id || 'unknown');
-      if (!userManager.isAllowed(userId)) return;
+    // ── Session Commands ──
+    this.bot.command('new', async (ctx) => {
+      await this.commandRegistry.get('new')?.handler(ctx, []);
+    });
 
-      // Redirect to /model
-      await this.commandRegistry.get('model')?.handler(ctx, []);
+    this.bot.command('sessions', async (ctx) => {
+      await this.commandRegistry.get('sessions')?.handler(ctx, []);
+    });
+
+    this.bot.command('switch', async (ctx) => {
+      const args = (ctx.match?.toString().trim().split(/\s+/) || []).filter(a => a.length > 0);
+      await this.commandRegistry.get('switch')?.handler(ctx, args);
+    });
+
+    // Handle legacy commands (backward compatibility)
+    this.bot.command('models', async (ctx) => {
+    const userId = String(ctx.from?.id || 'unknown');
+    if (!userManager.isAllowed(userId)) return;
+
+    // Redirect to /model
+    await this.commandRegistry.get('model')?.handler(ctx, []);
     });
 
     this.bot.command('allow', async (ctx) => {
@@ -405,19 +440,29 @@ export class TelegramBridge implements PlatformAdapter {
 
     // ── Handle callback queries (inline keyboard) ──
     this.bot.on('callback_query:data', async (ctx) => {
-      const query = ctx.callbackQuery;
-      const data = query.data;
-      const chatId = String(query.message?.chat?.id || 'unknown');
+      try {
+        const query = ctx.callbackQuery;
+        const data = query.data;
+        const chatId = String(query.message?.chat?.id || 'unknown');
 
-      // Route to command registry handler
-      if (data && (
-        data.startsWith('mp:') ||
-        data.startsWith('mm:') ||
-        data.startsWith('mg:') ||
-        data === 'mb' ||
-        data === 'mx'
-      )) {
-        await this.commandRegistry.handleCallbackQuery(ctx, data, chatId);
+        log.info(`[CB] callback_query data=${data} chatId=${chatId}`);
+
+        // Route to command registry handler
+        if (data && (
+          data.startsWith('mp:') ||
+          data.startsWith('mm:') ||
+          data.startsWith('mg:') ||
+          data === 'mb' ||
+          data === 'mx'
+        )) {
+          await this.commandRegistry.handleCallbackQuery(ctx, data, chatId);
+        } else {
+          // Always answer unmatched callbacks to prevent loading spinner
+          await ctx.answerCallbackQuery().catch(() => {});
+        }
+      } catch (err) {
+        log.error(`[CB] callback_query error: ${err}`);
+        try { await ctx.answerCallbackQuery({ text: '⚠️ Error' }).catch(() => {}); } catch {}
       }
     });
 
@@ -485,7 +530,7 @@ export class TelegramBridge implements PlatformAdapter {
       this.processingMessages.add(messageId);
 
       // Get or create session (TTL-based)
-      const session = this.sessionManager.getOrCreateSession(userId);
+      const session = await this.sessionManager.getOrCreateSession(userId);
 
       // Start activity reporter
       this.reporter.start(chatId, messageId);
@@ -503,7 +548,14 @@ export class TelegramBridge implements PlatformAdapter {
           const models = registry.listModels();
           selectedModel = models.length > 0 ? models[0] : 'auto/best-free';
         }
-        
+
+        // Track model and title for session management
+        this.sessionManager.setSessionModel(userId, selectedModel);
+        // Set session title from first message (if not set yet)
+        if (text && text.length > 0) {
+          this.sessionManager.setSessionTitle(userId, text.slice(0, 100));
+        }
+
         const adapterMsg: AdapterMessage = {
           messageId,
           userId,
@@ -664,7 +716,7 @@ export class TelegramBridge implements PlatformAdapter {
       this.processingMessages.add(messageId);
 
       // Get or create session (TTL-based, channel-scoped)
-      const session = this.sessionManager.getOrCreateSession(userId);
+      const session = await this.sessionManager.getOrCreateSession(userId);
 
       // Start activity reporter
       this.reporter.start(chatId, messageId);

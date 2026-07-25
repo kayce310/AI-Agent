@@ -472,6 +472,74 @@ const plugin: ToolPlugin = {
           return { error: `Lỗi khi kiểm tra skills: ${err.message}` };
         }
       }
+    },
+
+    // ── Tool 5: skill_manage ──────────────────────
+    // Create / patch / delete skill files. Hermes-equivalent.
+    {
+      name: 'skill_manage',
+      description: 'Manage skill files: create/patch/delete SKILL.md or linked files in knowledge/agents-skills/{category}/{slug}/.',
+      schema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['create', 'patch', 'delete', 'write_file', 'remove_file'], description: 'Action to perform' },
+          slug: { type: 'string', description: 'Skill slug (e.g. typescript-language)' },
+          category: { type: 'string', description: 'Skill category (e.g. common, typescript)' },
+          content: { type: 'string', description: 'File content (for create/write_file)' },
+          old_string: { type: 'string', description: 'Text to find (for patch)' },
+          new_string: { type: 'string', description: 'Replacement text (for patch)' },
+          file_path: { type: 'string', description: 'Relative file path from skill dir (for write_file/remove_file, e.g. references/api.md)' }
+        },
+        required: ['action', 'slug', 'category']
+      },
+      execute(args: Record<string, any>) {
+        try {
+          const { action, slug, category, content, old_string, new_string, file_path } = args;
+          const skillDir = path.join(AGENTS_SKILLS_DIR, category, slug);
+          const skillFile = path.join(skillDir, 'SKILL.md');
+
+          if (action === 'create') {
+            if (secureRuntime.safeExists(skillFile)) return { error: `Skill ${slug} already exists` };
+            secureRuntime.safeMkdir(skillDir);
+            secureRuntime.safeWriteFile(skillFile, content || `---\nname: ${slug}\ndescription: \ntags: []\n---\n\n# ${slug}\n`);
+            return { success: true, action: 'create', path: skillFile };
+          }
+
+          if (action === 'delete') {
+            if (!secureRuntime.safeExists(skillFile)) return { error: `Skill ${slug} not found` };
+            secureRuntime.safeRm(skillDir);
+            return { success: true, action: 'delete', slug };
+          }
+
+          if (action === 'patch') {
+            if (!secureRuntime.safeExists(skillFile)) return { error: `Skill ${slug} not found` };
+            if (!old_string) return { error: 'old_string required for patch' };
+            const content = secureRuntime.safeReadFile(skillFile);
+            if (!content.includes(old_string)) return { error: 'old_string not found in SKILL.md' };
+            secureRuntime.safeWriteFile(skillFile, content.replace(old_string, new_string || ''));
+            return { success: true, action: 'patch', path: skillFile };
+          }
+
+          if (action === 'write_file') {
+            const target = file_path ? path.join(skillDir, file_path) : skillFile;
+            const dir = path.dirname(target);
+            if (!secureRuntime.safeExists(dir)) secureRuntime.safeMkdir(dir);
+            secureRuntime.safeWriteFile(target, content || '');
+            return { success: true, action: 'write_file', path: target };
+          }
+
+          if (action === 'remove_file') {
+            const target = path.join(skillDir, file_path || '');
+            if (!secureRuntime.safeExists(target)) return { error: `File not found: ${file_path}` };
+            secureRuntime.safeUnlink(target);
+            return { success: true, action: 'remove_file', path: target };
+          }
+
+          return { error: `Unknown action: ${action}` };
+        } catch (err: any) {
+          return { error: `skill_manage failed: ${err.message}` };
+        }
+      }
     }
   ]
 };

@@ -70,6 +70,8 @@
   var isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
   var autoRotateSpeed = isMobile ? 0.002 : 0;
   var autoRotateAngle = 0;
+  var animTime = 0;
+  var onBehaviorTick = null;   // Phase 2: BehaviorRenderer hook
 
   // ═══ EVENT HIGHLIGHT MANAGER ═══
   var HighlightManager = {
@@ -737,6 +739,11 @@
       currentFps = Math.round(frameCount / (elapsed / 1000));
       fpsTimer = 0;
       frameCount = 0;
+    }
+
+    // Phase 2: BehaviorRenderer tick — called every frame with (animTime, deltaTime)
+    if (onBehaviorTick) {
+      try { onBehaviorTick(animTime, 0.02); } catch (e) { /* renderer error, don't break main loop */ }
     }
 
     // Static layout - no animation
@@ -1533,6 +1540,12 @@ function destroyGraph2D() {
     getMode: function () {
       return currentMode;
     },
+
+    // Phase 2: Expose Three.js internals for BehaviorRenderer
+    getScene: function () { return scene; },
+    getGraphGroup: function () { return graphGroup; },
+    getCamera: function () { return camera; },
+    setBehaviorTick: function (fn) { onBehaviorTick = fn; },
 
     destroy: function () {
       isActive = false;
