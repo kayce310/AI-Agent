@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 ISEKAI RPG - Complete Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            user-select: none;
+        }
+        .container { display: flex; gap: 15px; max-width: 1400px; }
+        .game-area { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        canvas {
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1a4e 60%, #0d0d2b 100%);
+            border: 3px solid #e94560;
+            display: block;
+            image-rendering: pixelated;
+            box-shadow: 0 0 30px rgba(233,69,96,0.3), inset 0 0 60px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            width: 800px;
+            height: 600px;
+        }
+        .hud {
+            background: rgba(22,33,62,0.95);
+            padding: 12px 15px;
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: 1.8fr 1fr 1fr 0.8fr 0.8fr;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 10px; color: #a8dadc; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #e94560; }
+        .hp-container { display: flex; flex-direction: column; gap: 2px; }
+        .health-bar { width: 100%; height: 14px; background: #0f3460; border: 1px solid #e94560; border-radius: 2px; overflow: hidden; position: relative; }
+        .health-fill { height: 100%; background: linear-gradient(90deg, #e94560, #ff006e); width: 100%; transition: width 0.15s; }
+        .health-text { font-size: 12px; color: #fff; text-align: center; }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(22,33,62,0.95);
+            padding: 12px;
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 640px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+        .sidebar::-webkit-scrollbar { width: 5px; }
+        .sidebar::-webkit-scrollbar-track { background: #0f3460; border-radius: 3px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #e94560; border-radius: 3px; }
+
+        .section {
+            background: rgba(15,52,96,0.6);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #e94560;
+        }
+        .section-title { font-size: 12px; font-weight: bold; color: #a8dadc; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .item-row {
+            font-size: 12px;
+            padding: 4px 6px;
+            margin: 2px 0;
+            background: rgba(233,69,96,0.1);
+            border-left: 2px solid #e94560;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-row .item-name { color: #fff; }
+        .item-row .item-stat { color: #06d6a0; font-size: 10px; }
+
+        .log-line { font-size: 11px; color: #a8dadc; padding: 3px 5px; border-bottom: 1px solid rgba(233,69,96,0.1); }
+        .log-line:first-child { color: #ffd60a; font-weight: bold; }
+
+        .shop-panel {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15,12,41,0.97);
+            border: 3px solid #ffd60a;
+            border-radius: 12px;
+            padding: 25px;
+            min-width: 400px;
+            z-index: 100;
+            box-shadow: 0 0 60px rgba(255,214,10,0.2);
+            display: none;
+        }
+        .shop-panel.active { display: block; }
+        .shop-title { font-size: 24px; color: #ffd60a; text-align: center; margin-bottom: 15px; }
+        .shop-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; margin: 6px 0;
+            background: rgba(255,214,10,0.08);
+            border: 1px solid rgba(255,214,10,0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .shop-item:hover { background: rgba(255,214,10,0.18); transform: translateX(5px); }
+        .shop-item .name { font-weight: bold; }
+        .shop-item .desc { font-size: 11px; color: #a8dadc; }
+        .shop-item .price { color: #ffd60a; font-weight: bold; }
+        .shop-close { 
+            display: block; margin: 15px auto 0;
+            padding: 8px 24px;
+            background: #e94560;
+            border: none; color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .shop-close:hover { background: #ff006e; }
+
+        .btn {
+            padding: 6px 14px;
+            background: #e94560;
+            border: none; color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #ff006e; transform: translateY(-1px); }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+        .btn-gold { background: #b8860b; }
+        .btn-gold:hover { background: #ffd700; }
+
+        .wave-banner {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd60a;
+            text-shadow: 0 0 40px rgba(255,214,10,0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            transition: opacity 0.5s;
+        }
+        .wave-banner.show { opacity: 1; }
+
+        .eq-slot {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            margin: 2px 0;
+            background: rgba(6,214,160,0.1);
+            border-left: 2px solid #06d6a0;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .eq-slot .slot-label { color: #a8dadc; min-width: 55px; }
+        .eq-slot .slot-item { color: #06d6a0; }
+
+        .status-good { color: #06d6a0; }
+        .status-warning { color: #ffd60a; }
+        .status-danger { color: #e94560; }
+        .status-rare { color: #9b59b6; }
+
+        #tooltip {
+            position: fixed;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid #e94560;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+            max-width: 220px;
+        }
+
+        @media (max-width: 1100px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; max-height: 300px; }
+            canvas { width: 100%; height: auto; aspect-ratio: 4/3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div class="hud">
+                <div class="stat">
+                    <div class="stat-label">❤️ HP</div>
+                    <div class="hp-container">
+                        <div class="health-bar"><div class="health-fill" id="healthBar"></div></div>
+                        <div class="health-text" id="healthText">100 / 100</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">⚔️ TẤN CÔNG</div>
+                    <div class="stat-value" id="attack">10</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">🛡️ PHÒNG THỦ</div>
+                    <div class="stat-value" id="defense">5</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">💰 VÀNG</div>
+                    <div class="stat-value" id="gold">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">⭐ CẤP</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">🎮 NHÂN VẬT</div>
+                <div class="eq-slot"><span class="slot-label">CLASS:</span><span class="slot-item" id="className">Warrior</span></div>
+                <div class="eq-slot"><span class="slot-label">HP:</span><span class="slot-item" id="playerHP">100</span></div>
+                <div class="eq-slot"><span class="slot-label">MP:</span><span class="slot-item" id="playerMP">50</span></div>
+                <div class="eq-slot"><span class="slot-item" id="classDesc">Tấn công mạnh, phòng thủ tốt</span></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🎒 TÚI ĐỒ</div>
+                <div id="inventory"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">⚡ KỸ NĂNG</div>
+                <div id="skills"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🛡️ TRANG BỊ</div>
+                <div id="equipment"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">💎 ĐỒ PHỤ</div>
+                <div id="cosmetics"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📍 BẢN ĐỒ</div>
+                <div id="mapInfo"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📊 LOG TRẬP CHIẾN</div>
+                <div id="logContainer"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">⚙️ HỆ THỐNG</div>
+                <button class="btn btn-sm" onclick="saveGame()">💾 Lưu game</button>
+                <button class="btn btn-sm" onclick="loadGame()">📂 Tải game</button>
+                <button class="btn btn-sm" onclick="toggleShop()">🏪 Cửa hàng</button>
+                <button class="btn btn-sm" onclick="toggleArena()">⚔️ Đấu trường</button>
+                <button class="btn btn-sm" onclick="toggleMapSelect()">🗺️ Chọn bản đồ</button>
+                <button class="btn btn-sm" onclick="toggleSettings()">⚙️ Cài đặt</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shopPanel" class="shop-panel">
+        <div class="shop-title">🏪 CỬA HÀNG</div>
+        <div id="shopItems"></div>
+        <button class="shop-close" onclick="toggleShop()">Đóng</button>
+    </div>
+
+    <div id="arenaPanel" class="shop-panel">
+        <div class="shop-title">⚔️ ĐẤU TRƯỜNG</div>
+        <div id="arenaInfo"></div>
+        <button class="shop-close" onclick="toggleArena()">Đóng</button>
+    </div>
+
+    <div id="mapSelectPanel" class="shop-panel">
+        <div class="shop-title">🗺️ CHỌN BẢN ĐỒ</div>
+        <div id="mapSelectItems"></div>
+        <button class="shop-close" onclick="toggleMapSelect()">Đóng</button>
+    </div>
+
+    <div id="settingsPanel" class="shop-panel">
+        <div class="shop-title">⚙️ CÀI ĐẶT</div>
+        <div style="margin: 10px 0;">
+            <label><input type="checkbox" id="autoSave"> Auto Save</label>
+        </div>
+        <div style="margin: 10px 0;">
+            <label><input type="checkbox" id="soundEnabled"> Âm thanh</label>
+        </div>
+        <div style="margin: 10px 0;">
+            <label><input type="checkbox" id="vibrationEnabled"> Rung</label>
+        </div>
+        <div style="margin: 10px 0;">
+            <label>Ngôn ngữ:</label>
+            <select id="languageSelect">
+                <option value="vi">Tiếng Việt</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+        <button class="shop-close" onclick="toggleSettings()">Đóng</button>
+    </div>
+
+    <div class="wave-banner" id="waveBanner"></div>
+    <div id="tooltip"></div>
+
+    <script>
+        // Global game state
+        const gameState = {
+            canvas: null,
+            ctx: null,
+            keys: {},
+            player: {
+                x: 400, y: 300, vx: 0, vy: 0, speed: 2,
+                attack: 10, defense: 5, hp: 100, maxHp: 100,
+                mp: 50, maxMp: 50, level: 1, exp: 0, nextExp: 100,
+                class: 'warrior', inventory: [], equipped: { weapon: null, armor: null, ring: null },
+                skills: [], learnedSkills: ['power_strike', 'heal'],
+                cosmetics: { skin: 'default', hair: 'short', outfit: 'common' },
+                buffs: [], cooldowns: { fireball: 0, power_strike: 0, heal: 0 },
+                achievements: [], quests: [], party: [], guild: null,
+                gold: 0, potions: 1, megaPotions: 0, statusEffects: [],
+                lastSave: 0, autoSave: true, soundEnabled: true, vibrationEnabled: false
+            },
+            currentMap: 'forest_1',
+            maps: {
+                'forest_1': { name: 'Rừng Nguyên Sinh', width: 800, height: 600, enemies: ['slime', 'bat'], bosses: [], items: ['potion'], traps: [], puzzles: [], npcs: [] },
+                'dungeon_1': { name: 'Hang Động Cổ', width: 800, height: 600, enemies: ['skeleton', 'goblin'], bosses: ['boss_1'], items: ['potion', 'mega_potion'], traps: ['spike'], puzzles: ['pressure_plate'], npcs: ['merchant'] },
+                'city_1': { name: 'Thị trấn Light', width: 800, height: 600, enemies: [], bosses: [], items: ['potion', 'mega_potion'], traps: [], puzzles: [], npcs: ['inn_keeper', 'trainer', 'blacksmith'] },
+                'mountain_1': { name: 'Núi Thần', width: 800, height: 600, enemies: ['orc', 'ghost'], bosses: ['boss_2'], items: ['potion'], traps: ['fire_wall'], puzzles: ['riddle'], npcs: [] },
+                'castle_1': { name: 'Lâu Đài Dark', width: 800, height: 600, enemies: ['demon', 'boss_3'], bosses: ['world_boss_1'], items: ['mega_potion'], traps: ['teleportation'], puzzles: ['lock'], npcs: ['wizard'] }
+            },
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            bossRageActive: { boss_1: false, boss_2: false, boss_3: false, world_boss_1: false },
+            waves: [],
+            waveActive: false,
+            waveCount: 0,
+            waveBannerTimer: 0,
+            log: [],
+            shopItems: [],
+            arenaActive: false,
+            arenaParticipants: [],
+            gamePaused: false,
+            lastTime: 0,
+            fps: 60,
+            animationTime: 0,
+            worldBossResurrected: false,
+            hiddenBosses: [],
+            puzzles: [],
+            npcs: [],
+            weather: 'clear',
+            timeOfDay: 'day',
+            dayNightCycle: 0,
+            savedGames: [],
+            achievements: [],
+            guildWars: [],
+            worldEvents: [],
+            pvpActive: false,
+            partyActive: false,
+            tradingPost: [],
+            crafting: { recipes: [], materials: [] },
+            questLog: [],
+            skillTree: { warrior: ['power_strike', 'shield_block', 'rage'], mage: ['fireball', 'heal', 'ice_shard'], rogue: ['backstab', 'poison_dart', 'stealth'], paladin: ['holy_smite', 'divine_shield', 'heal_aura'] },
+            skillUnlocks: { warrior: [], mage: [], rogue: [], paladin: [] },
+            equipmentUpgrades: { weapon: [], armor: [], ring: [] },
+            cosmeticItems: { skins: [], hairs: [], outfits: [], titles: [] },
+            randomSeed: Math.random(),
+            language: 'vi'
+        };
+
+        // Class definitions
+        const CLASSES = {
+            warrior: {
+                name: 'Warrior', desc: 'Chiến binh mạnh mẽ, phòng thủ tốt', hp: 120, mp: 30,
+                attack: { base: 15, growth: 3 }, defense: { base: 8, growth: 2 },
+                skills: ['power_strike', 'shield_block', 'rage'],
+                passive: 'Critical Strike +10%',
+                color: '#e94560', image: 'warrior'
+            },
+            mage: {
+                name: 'Mage', desc: 'Phù thủy thông thạo phép thuật', hp: 80, mp: 120,
+                attack: { base: 8, growth: 2 }, defense: { base: 3, growth: 1 },
+                skills: ['fireball', 'heal', 'ice_shard'],
+                passive: 'Mana Regeneration +20%',
+                color: '#4a90e2', image: 'mage'
+            },
+            rogue: {
+                name: 'Rogue', desc: 'Xảo quyệt, tốc độ cao, đánh lén', hp: 90, mp: 60,
+                attack: { base: 12, growth: 2 }, defense: { base: 4, growth: 1 },
+                skills: ['backstab', 'poison_dart', 'stealth'],
+                passive: 'Stealth Duration +50%',
+                color: '#06d6a0', image: 'rogue'
+            },
+            paladin: {
+                name: 'Paladin', desc: 'Hiệp sĩ thần thánh, bảo vệ đồng minh', hp: 150, mp: 80,
+                attack: { base: 10, growth: 2 }, defense: { base: 10, growth: 2 },
+                skills: ['holy_smite', 'divine_shield', 'heal_aura'],
+                passive: 'Divine Protection +15%',
+                color: '#9b59b6', image: 'paladin'
+            }
+        };
+
+        // Initialize game
+        function init() {
+            gameState.canvas = document.getElementById('gameCanvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            gameState.player.skills = CLASSES.warrior.skills;
+            loadGame();
+            setupEventListeners();
+            gameLoop();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            window.addEventListener('keydown', (e) => { gameState.keys[e.key.toLowerCase()] = true; });
+            window.addEventListener('keyup', (e) => { gameState.keys[e.key.toLowerCase()] = false; });
+            document.getElementById('languageSelect').addEventListener('change', (e) => { gameState.language = e.target.value; updateUI(); });
+        }
+
+        // Game loop
+        function gameLoop() {
+            const now = Date.now();
+            const deltaTime = (now - gameState.lastTime) / 1000;
+            gameState.lastTime = now;
+            gameState.animationTime += deltaTime;
+
+            if (!gameState.gamePaused) {
+                update(deltaTime);
+                render();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Update game logic
+        function update(deltaTime) {
+            updatePlayerMovement();
+            updateEnemies();
+            updateProjectiles();
+            updateParticles();
+            updateWaves();
+            updateBuffs();
+            updateDayNightCycle();
+            updateAutoSave();
+            checkCollisions();
+            updateUI();
+            gameState.animationTime = (gameState.animationTime + deltaTime) % 60;
+        }
+
+        // Player movement
+        function updatePlayerMovement() {
+            gameState.player.vx = 0; gameState.player.vy = 0;
+            if (gameState.keys['arrowup'] || gameState.keys['w']) gameState.player.vy = -gameState.player.speed;
+            if (gameState.keys['arrowdown'] || gameState.keys['s']) gameState.player.vy = gameState.player.speed;
+            if (gameState.keys['arrowleft'] || gameState.keys['a']) gameState.player.vx = -gameState.player.speed;
+            if (gameState.keys['arrowright'] || gameState.keys['d']) gameState.vx = gameState.player.speed;
+
+            gameState.player.x += gameState.player.vx;
+            gameState.player.y += gameState.player.vy;
+
+            // Keep player in bounds
+            gameState.player.x = Math.max(0, Math.min(gameState.canvas.width - 16, gameState.player.x));
+            gameState.player.y = Math.max(0, Math.min(gameState.canvas.height - 16, gameState.player.y));
+        }
+
+        // Enemy system
+        const ENEMY_TYPES = {
+            slime: { name: 'Slime', hp: 30, maxHp: 30, attack: 5, speed: 1, exp: 10, color: '#06d6a0', image: 'slime' },
+            bat: { name: 'Bat', hp: 25, maxHp: 25, attack: 4, speed: 2, exp: 8, color: '#9b59b6', image: 'bat' },
+            skeleton: { name: 'Skeleton', hp: 40, maxHp: 40, attack: 6, speed: 1, exp: 12, color: '#a8dadc', image: 'skeleton' },
+            goblin: { name: 'Goblin', hp: 35, maxHp: 35, attack: 5, speed: 1.5, exp: 10, color: '#ffd60a', image: 'goblin' },
+            orc: { name: 'Orc', hp: 60, maxHp: 60, attack: 8, speed: 1, exp: 15, color: '#e94560', image: 'orc' },
+            ghost: { name: 'Ghost', hp: 45, maxHp: 45, attack: 7, speed: 2, exp: 13, color: '#4a90e2', image: 'ghost' },
+            demon: { name: 'Demon', hp: 80, maxHp: 80, attack: 12, speed: 1.5, exp: 20, color: '#9b59b6', image: 'demon' }
+        };
+
+        const BOSS_DATA = {
+            boss_1: { name: 'Orc Lord', hp: 150, maxHp: 150, attack: 15, speed: 1, exp: 50, color: '#e94560', image: 'boss_1' },
+            boss_2: { name: 'Dragon', hp: 200, maxHp: 200, attack: 20, speed: 1.2, exp: 80, color: '#ff006e', image: 'boss_2' },
+            boss_3: { name: 'Dark Knight', hp: 180, maxHp: 180, attack: 18, speed: 1, exp: 70, color: '#2c3e50', image: 'boss_3' },
+            world_boss_1: { name: 'World Boss', hp: 500, maxHp: 500, attack: 30, speed: 1.5, exp: 200, color: '#ffd700', image: 'world_boss' }
+        };
+
+        function spawnEnemy(type, x, y) {
+            const enemyData = ENEMY_TYPES[type] || ENEMY_TYPES.slime;
+            const enemy = {
+                x, y, vx: 0, vy: 0, speed: enemyData.speed,
+                hp: enemyData.hp, maxHp: enemyData.maxHp,
+                attack: enemyData.attack, name: enemyData.name,
+                type, color: enemyData.color, image: enemyData.image,
+                exp: enemyData.exp, lastAttackTime: 0,
+                state: 'patrol', target: null, path: [],
+                isBoss: false, isHidden: false, isRage: false
+            };
+            gameState.enemies.push(enemy);
+            addLog(`👹 ${enemyData.name} xuất hiện!`);
+        }
+
+        function spawnBoss(type, x, y) {
+            const bossData = BOSS_DATA[type];
+            const boss = {
+                x, y, vx: 0, vy: 0, speed: bossData.speed,
+                hp: bossData.hp, maxHp: bossData.maxHp,
+                attack: bossData.attack, name: bossData.name,
+                type, color: bossData.color, image: bossData.image,
+                exp: bossData.exp, lastAttackTime: 0,
+                state: 'patrol', target: null, path: [],
+                isBoss: true, isHidden: false, isRage: false,
+                rageThreshold: Math.floor(bossData.maxHp * 0.5)
+            };
+            gameState.enemies.push(boss);
+            addLog(`👹 ${bossData.name} xuất hiện! (Boss)`);
+        }
+
+        function updateEnemies() {
+            gameState.enemies.forEach((enemy, index) => {
+                if (enemy.hp <= 0) {
+                    gameState.enemies.splice(index, 1);
+                    gameState.player.exp += enemy.exp;
+                    checkLevelUp();
+                    return;
+                }
+
+                const dx = gameState.player.x - enemy.x;
+                const dy = gameState.player.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 80) {
+                    enemy.vx = (dx / dist) * enemy.speed;
+                    enemy.vy = (dy / dist) * enemy.speed;
+                } else if (Math.random() < 0.02 * (enemy.isRage ? 2 : 1)) {
+                    gameState.player.takeDamage(enemy.attack);
+                    addLog(`💥 ${enemy.name} tấn công! -${enemy.attack} HP`);
+                    createParticles(gameState.player.x, gameState.player.y, '#ff0000', 5);
+                }
+
+                if (enemy.isBoss && enemy.hp < enemy.rageThreshold && !enemy.isRage) {
+                    enemy.isRage = true;
+                    gameState.bossRageActive[enemy.type] = true;
+                    addLog(`🔥 ${enemy.name} nổi giận!`);
+                }
+
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+            });
+        }
+
+        // Player class methods
+        gameState.player.takeDamage = function(damage) {
+            const reduced = Math.max(1, damage - this.defense);
+            this.hp = Math.max(0, this.hp - reduced);
+            createParticles(this.x, this.y, '#ff0000', 5);
+            if (this.hp <= 0) {
+                addLog('💀 Bạn đã chết!');
+                this.respawn();
+            }
+        };
+
+        gameState.player.heal = function(amount) {
+            this.hp = Math.min(this.maxHp, this.hp + amount);
+            addLog(`💚 Bạn hồi phục ${amount} HP`);
+        };
+
+        gameState.player.usePotion = function() {
+            if (this.potions > 0) {
+                this.potions--;
+                this.heal(30);
+            } else {
+                addLog('❌ Không còn bình thuốc!');
+            }
+        };
+
+        gameState.player.respawn = function() {
+            this.x = 400; this.y = 300;
+            this.hp = this.maxHp;
+            this.vx = this.vy = 0;
+        };
+
+        // Equipment system
+        function createEquipment(type, tier) {
+            const tiers = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+            const tierName = tiers[tier] || 'common';
+            const stats = {
+                attack: Math.floor(Math.random() * 10 * (tier + 1)),
+                defense: Math.floor(Math.random() * 8 * (tier + 1)),
+                hp: Math.floor(Math.random() * 20 * (tier + 1)),
+                mp: Math.floor(Math.random() * 15 * (tier + 1))
+            };
+            return {
+                name: `${type} ${tierName.charAt(0).toUpperCase() + tierName.slice(1)}`,
+                type, tier, stats,
+                description: `${type} cấp ${tierName}`
+            };
+        }
+
+        // Shop system
+        function updateShop() {
+            gameState.shopItems = [];
+            gameState.shopItems.push({ name: 'Thuốc hồi máu', desc: '+30 HP', price: 50, type: 'potion' });
+            gameState.shopItems.push({ name: 'Thuốc hồi máu lớn', desc: '+100 HP', price: 200, type: 'mega_potion' });
+            gameState.shopItems.push({ name: 'Tonic Sức mạnh', desc: 'Tăng tấn công 5 trong 5 phút', price: 150, type: 'strength_tonic' });
+            gameState.shopItems.push({ name: 'Áo giáp Sắt', desc: 'Tăng phòng thủ 10 trong 5 phút', price: 150, type: 'iron_skin' });
+
+            const weapon = createEquipment('Weapon', 2);
+            const armor = createEquipment('Armor', 1);
+            const ring = createEquipment('Ring', 0);
+
+            gameState.shopItems.push({ name: weapon.name, desc: `+${weapon.stats.attack} ATK, +${weapon.stats.defense} DEF`, price: 500, type: 'weapon', item: weapon });
+            gameState.shopItems.push({ name: armor.name, desc: `+${armor.stats.defense} DEF, +${armor.stats.hp} HP`, price: 400, type: 'armor', item: armor });
+            gameState.shopItems.push({ name: ring.name, desc: `+${ring.stats.mp} MP, +${ring.stats.attack} ATK`, price: 300, type: 'ring', item: ring });
+        }
+
+        // Arena system
+        function updateArena() {
+            if (!gameState.arenaActive) return;
+
+            gameState.arenaParticipants.push(gameState.player);
+            gameState.arenaParticipants.forEach((participant, index) => {
+                if (participant.hp <= 0) {
+                    gameState.arenaParticipants.splice(index, 1);
+                }
+            });
+
+            if (gameState.arenaParticipants.length <= 1) {
+                addLog('🏆 Trận đấu kết thúc! Người chiến thắng: ' + (gameState.arenaParticipants[0] ? 'Bạn' : 'Không ai'));
+                gameState.arenaActive = false;
+                gameState.arenaParticipants = [];
+            }
+        }
+
+        // Wave system
+        function startWave(waveNumber) {
+            gameState.waveActive = true;
+            gameState.waveCount = waveNumber;
+            gameState.waveBannerTimer = 200;
+            addLog(`🌊 SÓNG ${waveNumber} BẮT ĐẦU!`);
+
+            const map = gameState.maps[gameState.currentMap];
+            const enemyCounts = {
+                'forest_1': { slime: 3, bat: 2 },
+                'dungeon_1': { skeleton: 2, goblin: 1 },
+                'mountain_1': { orc: 2, ghost: 1 },
+                'castle_1': { demon: 1, boss_3: 1 }
+            };
+
+            const counts = enemyCounts[gameState.currentMap] || { slime: 2 };
+            let spawnCount = 0;
+            const totalEnemies = Object.values(counts).reduce((a, b) => a + b, 0);
+
+            function spawnNext() {
+                if (spawnCount >= totalEnemies) {
+                    gameState.waveActive = false;
+                    return;
+                }
+
+                for (const [type, count] of Object.entries(counts)) {
+                    if (spawnCount < totalEnemies) {
+                        spawnEnemy(type, Math.random() * (gameState.canvas.width - 32) + 16, Math.random() * (gameState.canvas.height - 32) + 16);
+                        spawnCount++;
+                        break;
+                    }
+                }
+
+                setTimeout(spawnNext, 1000);
+            }
+
+            spawnNext();
+        }
+
+        function updateWaves() {
+            if (gameState.waveBannerTimer > 0) {
+                gameState.waveBannerTimer--;
+                if (gameState.waveBannerTimer <= 100) {
+                    const banner = document.getElementById('waveBanner');
+                    banner.classList.add('show');
+                    banner.textContent = `SÓNG ${gameState.waveCount}`;
+                }
+            } else {
+                document.getElementById('waveBanner').classList.remove('show');
+            }
+        }
+
+        // UI functions
+        function updateUI() {
+            document.getElementById('healthBar').style.width = (gameState.player.hp / gameState.player.maxHp * 100) + '%';
+            document.getElementById('healthText').textContent = `${gameState.player.hp} / ${gameState.player.maxHp}`;
+            document.getElementById('attack').textContent = gameState.player.attack;
+            document.getElementById('defense').textContent = gameState.player.defense;
+            document.getElementById('gold').textContent = gameState.player.gold;
+            document.getElementById('level').textContent = gameState.player.level;
+            document.getElementById('className').textContent = CLASSES[gameState.player.class].name;
+            document.getElementById('playerHP').textContent = gameState.player.hp;
+            document.getElementById('playerMP').textContent = gameState.player.mp;
+            document.getElementById('classDesc').textContent = CLASSES[gameState.player.class].desc;
+
+            // Update inventory
+            const inventoryDiv = document.getElementById('inventory');
+            inventoryDiv.innerHTML = '';
+            gameState.player.inventory.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `<span class="item-name">${item.name}</span><span class="item-stat">+${item.stats.attack} ATK</span>`;
+                div.onclick = () => equipItem(index);
+                inventoryDiv.appendChild(div);
+            });
+
+            // Update skills
+            const skillsDiv = document.getElementById('skills');
+            skillsDiv.innerHTML = '';
+            gameState.player.learnedSkills.forEach(skill => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `<span class="item-name">${skill}</span><span class="item-stat">Kỹ năng</span>`;
+                skillsDiv.appendChild(div);
+            });
+
+            // Update equipment
+            const equipmentDiv = document.getElementById('equipment');
+            equipmentDiv.innerHTML = '';
+            Object.entries(gameState.player.equipped).forEach(([slot, item]) => {
+                if (item) {
+                    const div = document.createElement('div');
+                    div.className = 'eq-slot';
+                    div.innerHTML = `<span class="slot-label">${slot}:</span><span class="slot-item">${item.name}</span>`;
+                    equipmentDiv.appendChild(div);
+                }
+            });
+
+            // Update cosmetics
+            const cosmeticsDiv = document.getElementById('cosmetics');
+            cosmeticsDiv.innerHTML = '';
+            Object.entries(gameState.player.cosmetics).forEach(([type, value]) => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `<span class="item-name">${type}: ${value}</span>`;
+                cosmeticsDiv.appendChild(div);
+            });
+
+            // Update map info
+            const mapInfoDiv = document.getElementById('mapInfo');
+            const map = gameState.maps[gameState.currentMap];
+            mapInfoDiv.innerHTML = `<div class="item-row"><span class="item-name">${map.name}</span></div><div class="item-row"><span class="item-name">Tầm thường: ${map.enemies.join(', ')}</span></div><div class="item-row"><span class="item-name">Boss: ${map.bosses.join(', ') || 'Không có'}</span></div>`;
+
+            // Update shop items
+            const shopItemsDiv = document.getElementById('shopItems');
+            if (shopItemsDiv) {
+                shopItemsDiv.innerHTML = '';
+                gameState.shopItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'shop-item';
+                    div.innerHTML = `<div><span class="name">${item.name}</span><span class="desc">${item.desc}</span></div><span class="price">${item.price} 💰</span>`;
+                    div.onclick = () => buyItem(item);
+                    shopItemsDiv.appendChild(div);
+                });
+            }
+
+            // Update arena info
+            const arenaInfoDiv = document.getElementById('arenaInfo');
+            if (arenaInfoDiv) {
+                arenaInfoDiv.innerHTML = `<div class="item-row"><span class="item-name">Trạng thái: ${gameState.arenaActive ? 'Đang diễn ra' : 'Không hoạt động'}</span></div><div class="item-row"><span class="item-name">Người tham gia: ${gameState.arenaParticipants.length}</span></div>`;
+            }
+
+            // Update map select
+            const mapSelectDiv = document.getElementById('mapSelectItems');
+            if (mapSelectDiv) {
+                mapSelectDiv.innerHTML = '';
+                Object.entries(gameState.maps).forEach(([key, map]) => {
+                    const div = document.createElement('div');
+                    div.className = 'shop-item';
+                    div.innerHTML = `<div><span class="name">${map.name}</span><span class="desc">${map.enemies.length} kẻ thù, ${map.bosses.length} boss</span></div>`;
+                    div.onclick = () => changeMap(key);
+                    mapSelectDiv.appendChild(div);
+                });
+            }
+
+            // Update language
+            document.getElementById('languageSelect').value = gameState.language;
+        }
+
+        // Game actions
+        function equipItem(index) {
+            const item = gameState.player.inventory[index];
+            if (!item) return;
+
+            const slot = item.type;
+            if (gameState.player.equipped[slot]) {
+                gameState.player.inventory.push(gameState.player.equipped[slot]);
+            }
+            gameState.player.equipped[slot] = item;
+            gameState.player.inventory.splice(index, 1);
+            gameState.player.attack += item.stats.attack;
+            gameState.player.defense += item.stats.defense;
+            gameState.player.maxHp += item.stats.hp;
+            gameState.player.hp = Math.min(gameState.player.hp, gameState.player.maxHp);
+            gameState.player.maxMp += item.stats.mp;
+            gameState.player.mp = Math.min(gameState.player.mp, gameState.player.maxMp);
+            addLog(`🎒 Trang bị ${item.name}`);
+        }
+
+        function buyItem(item) {
+            if (gameState.player.gold >= item.price) {
+                gameState.player.gold -= item.price;
+                if (item.type === 'potion') {
+                    gameState.player.potions++;
+                } else if (item.type === 'mega_potion') {
+                    gameState.player.megaPotions++;
+                } else {
+                    gameState.player.inventory.push(item.item);
+                }
+                addLog(`🛒 Mua ${item.name} với giá ${item.price} 💰`);
+                toggleShop();
+            } else {
+                addLog('❌ Không đủ vàng!');
+            }
+        }
+
+        function changeMap(mapKey) {
+            gameState.currentMap = mapKey;
+            gameState.player.x = 400; gameState.player.y = 300;
+            gameState.enemies = [];
+            const map = gameState.maps[mapKey];
+            map.bosses.forEach(bossType => {
+                spawnBoss(bossType, Math.random() * (gameState.canvas.width - 32) + 16, Math.random() * (gameState.canvas.height - 32) + 16);
+            });
+            map.enemies.forEach(enemyType => {
+                for (let i = 0; i < 2; i++) {
+                    spawnEnemy(enemyType, Math.random() * (gameState.canvas.width - 32) + 16, Math.random() * (gameState.canvas.height - 32) + 16);
+                }
+            });
+            addLog(`🗺️ Chuyển đến ${map.name}`);
+            toggleMapSelect();
+        }
+
+        // Controls
+        function toggleShop() {
+            updateShop();
+            document.getElementById('shopPanel').classList.toggle('active');
+        }
+
+        function toggleArena() {
+            gameState.arenaActive = !gameState.arenaActive;
+            document.getElementById('arenaPanel').classList.toggle('active');
+            if (gameState.arenaActive) {
+                addLog('⚔️ Đấu trường đã được kích hoạt!');
+            }
+        }
+
+        function toggleMapSelect() {
+            document.getElementById('mapSelectPanel').classList.toggle('active');
+        }
+
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('active');
+        }
+
+        // Save/Load
+        function saveGame() {
+            const saveData = {
+                player: gameState.player,
+                currentMap: gameState.currentMap,
+                enemies: gameState.enemies,
+                waveCount: gameState.waveCount,
+                language: gameState.language,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('isekai_rpg_save', JSON.stringify(saveData));
+            addLog('💾 Game saved!');
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('isekai_rpg_save');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.assign(gameState.player, data.player);
+                gameState.currentMap = data.currentMap;
+                gameState.enemies = data.enemies;
+                gameState.waveCount = data.waveCount;
+                gameState.language = data.language || 'vi';
+                addLog('📂 Game loaded!');
+            }
+        }
+
+        // Helper functions
+        function addLog(text) {
+            gameState.log.unshift(text);
+            if (gameState.log.length > 12) gameState.log.pop();
+            updateUI();
+        }
+
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    life: 30,
+                    color
+                });
+            }
+        }
+
+        function updateParticles() {
+            gameState.particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1;
+                p.life--;
+                if (p.life <= 0) {
+                    gameState.particles.splice(index, 1);
+                }
+            });
+        }
+
+        function checkLevelUp() {
+            if (gameState.player.exp >= gameState.player.nextExp) {
+                gameState.player.level++;
+                gameState.player.nextExp = gameState.player.level * 100;
+                gameState.player.maxHp += 20;
+                gameState.player.hp = gameState.player.maxHp;
+                gameState.player.maxMp += 10;
+                gameState.player.mp = gameState.player.maxMp;
+                addLog(`⭐ Level Up! Now level ${gameState.player.level}`);
+            }
+        }
+
+        function updateBuffs() {
+            gameState.player.buffs = gameState.player.buffs.filter(buff => {
+                buff.duration--;
+                return buff.duration > 0;
+            });
+        }
+
+        function updateDayNightCycle() {
+            gameState.dayNightCycle++;
+            if (gameState.dayNightCycle > 600) {
+                gameState.timeOfDay = gameState.timeOfDay === 'day' ? 'night' : 'day';
+                gameState.dayNightCycle = 0;
+                addLog(`🌙 ${gameState.timeOfDay === 'day' ? 'Ngày' : 'Đêm'} đã thay đổi!`);
+            }
+        }
+
+        function updateAutoSave() {
+            if (gameState.player.autoSave && Date.now() - gameState.player.lastSave > 60000) {
+                saveGame();
+                gameState.player.lastSave = Date.now();
+            }
+        }
+
+        function checkCollisions() {
+            // Check player-enemy collisions
+            gameState.enemies.forEach(enemy => {
+                const dx = enemy.x - gameState.player.x;
+                const dy = enemy.y - gameState.player.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 32) {
+                    gameState.player.takeDamage(enemy.attack);
+                }
+            });
+        }
+
+        // Render functions
+        function render() {
+            gameState.ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+
+            // Draw background
+            const gradient = gameState.ctx.createLinearGradient(0, 0, gameState.canvas.width, gameState.canvas.height);
+            if (gameState.timeOfDay === 'day') {
+                gradient.addColorStop(0, '#0a0e27');
+                gradient.addColorStop(0.6, '#1a1a4e');
+                gradient.addColorStop(1, '#0d0d2b');
+            } else {
+                gradient.addColorStop(0, '#0a0e27');
+                gradient.addColorStop(0.6, '#2c1810');
+                gradient.addColorStop(1, '#1a0a0a');
+            }
+            gameState.ctx.fillStyle = gradient;
+            gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+
+            // Draw particles
+            gameState.particles.forEach(p => {
+                gameState.ctx.fillStyle = p.color;
+                gameState.ctx.fillRect(p.x, p.y, 2, 2);
+            });
+
+            // Draw enemies
+            gameState.enemies.forEach(enemy => {
+                gameState.ctx.fillStyle = enemy.color;
+                gameState.ctx.fillRect(enemy.x, enemy.y, 32, 32);
+
+                // Draw HP bar
+                const hpPercent = enemy.hp / enemy.maxHp;
+                gameState.ctx.fillStyle = '#0f3460';
+                gameState.ctx.fillRect(enemy.x, enemy.y - 10, 32, 4);
+                gameState.ctx.fillStyle = enemy.isRage ? '#ff006e' : '#06d6a0';
+                gameState.ctx.fillRect(enemy.x, enemy.y - 10, 32 * hpPercent, 4);
+            });
+
+            // Draw player
+            gameState.ctx.fillStyle = CLASSES[gameState.player.class].color;
+            gameState.ctx.fillRect(gameState.player.x, gameState.player.y, 32, 32);
+
+            // Draw projectiles
+            gameState.projectiles.forEach((p, index) => {
+                gameState.ctx.fillStyle = '#ffd60a';
+                gameState.ctx.fillRect(p.x, p.y, 8, 8);
+            });
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

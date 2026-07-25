@@ -811,8 +811,7 @@ export class CommandRegistry {
           'Chọn model:',
         ].join('\n');
 
-        await ctx.editMessageText({
-          text,
+        await ctx.editMessageText(text, {
           reply_markup: keyboard,
         }).catch(() => {});
         await ctx.answerCallbackQuery().catch(() => {});
@@ -840,8 +839,7 @@ export class CommandRegistry {
           'Chọn model:',
         ].join('\n');
 
-        await ctx.editMessageText({
-          text,
+        await ctx.editMessageText(text, {
           reply_markup: keyboard,
         }).catch(() => {});
         await ctx.answerCallbackQuery().catch(() => {});
@@ -878,9 +876,7 @@ export class CommandRegistry {
           'Model này sẽ được dùng cho tin nhắn tiếp theo.',
         ].join('\n');
 
-        await ctx.editMessageText({
-          text: confirmText,
-        }).catch(() => {});
+        await ctx.editMessageText(confirmText, {}).catch(() => {});
         await ctx.answerCallbackQuery({ text: 'Model switched!' }).catch(() => {});
 
         // Clean up state
@@ -919,8 +915,7 @@ export class CommandRegistry {
           'Chọn provider:',
         ].join('\n');
 
-        await ctx.editMessageText({
-          text,
+        await ctx.editMessageText(text, {
           reply_markup: keyboard,
         }).catch(() => {});
         await ctx.answerCallbackQuery().catch(() => {});
@@ -929,9 +924,7 @@ export class CommandRegistry {
 
       // ── Cancel ──
       if (data === 'mx') {
-        await ctx.editMessageText({
-          text: '❌ Đã hủy chọn model.',
-        }).catch(() => {});
+        await ctx.editMessageText('❌ Đã hủy chọn model.', {}).catch(() => {});
         await ctx.answerCallbackQuery().catch(() => {});
         this.modelPickerState.delete(chatId);
         return;
