@@ -453,11 +453,13 @@ export class Agent extends EventEmitter {
     let finalContent = '';
     let readToolCount = 0;      // Track read-heavy tool calls for loop detection
     let readLoopForced = false; // Prevent duplicate force-synthesis injections
-    // ── Guard chống "tuyên bố ý định" (intention declaration) ──
+    // ── Execution state machine: PLANNING → EXECUTING → DONE ──
+    // Thay thế IntentionGuard cũ — model-agnostic, dùng cấu trúc response để quyết định
     let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
-    let guardTriggered = false;    // đánh dấu Guard đã kích hoạt trong task này
-    let intentionGuardCount = 0;   // số lần Guard trigger (tránh loop vô hạn)
-    let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập intentionGuardCount
+    let executionPhase: 'init' | 'planning' | 'executing' | 'done' = 'init';
+    let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
+    const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
+    let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
     const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
     const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
@@ -641,34 +643,68 @@ export class Agent extends EventEmitter {
             };
           }
 
-          // ── Intention Guard: ngăn model kết thúc task khi chỉ tuyên bố ý định ──
-          if (!guardTriggered && !hasCreatedPlan && intentionGuardCount < 2) {
-            const lastAssistantContent = modelResult.content || '';
-            // Regex phát hiện "Let me create/build/implement...", "I will fix...", "I'll rebuild..."
-            const intentionRegex = /^(let|let's|i('ll| will)|going to|we'll|we will|i am going to|tôi sẽ|để tôi|hãy để tôi)\s+(create|build|rebuild|implement|fix|update|modify|add|remove|rework|start|begin|delete|write|make|refactor|restructure|redesign|rewrite|overhaul)/i;
+          // ── Stall Detection (model-agnostic): thay thế IntentionGuard cũ ──
+          // Duy nhất nguồn sự thật: cấu trúc response có tool call hay không.
+          // Không dùng finish_reason, không regex text.
+          const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
 
-            if (intentionRegex.test(lastAssistantContent.trim())) {
-              guardTriggered = true;
-              intentionGuardCount++;
-              log.warn(`[IntentionGuard] Cycle ${toolCallCycles}: Guard triggered — model tuyên bố ý định nhưng chưa hành động. Content: "${finalContent.slice(0, 80)}..."`);
+          // Cập nhật phase dựa trên việc plan đã được tạo
+          if (executionPhase === 'init' && hasCreatedPlan) executionPhase = 'planning';
 
-              // Chèn system message yêu cầu model hành động ngay
-              messages.push({
-                role: 'system',
-                content: '[GUARD] Bạn vừa tuyên bố một ý định nhưng chưa thực hiện hành động nào. '
-                  + 'QUY TẮC: Không được dừng lại ở đây. '
-                  + '1. GỌI TOOL NGAY — không được mô tả ý định bằng text. '
-                  + '2. Nếu cần lập kế hoạch, gọi update_plan(action=\'create\', items=[...]) NGAY. '
-                  + '3. Chỉ trả lời FINAL_ANSWER khi bạn đã hoàn thành công việc và có kết quả cụ thể. '
-                  + 'KHÔNG được phép viết "Tôi sẽ...", "Let me...", "I will..." mà không kèm tool call.'
-              });
-
-              toolCallCycles++;
-              continue; // Quay lại đầu vòng lặp để model phản hồi
+          if (!turnHasAction) {
+            stallCount++;
+            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (hasCreatedPlan=${hasCreatedPlan}, phase=${executionPhase})`);
+          } else {
+            if (stallCount > 0) {
+              log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
             }
+            stallCount = 0;
           }
 
-          /* final response — everything reachable here is a valid FINAL_ANSWER */
+          // Xử lý leo thang theo stallCount
+          if (stallCount >= MAX_STALL && hasCreatedPlan) {
+            // stall >= 3 mà đã có plan → dừng với lỗi rõ ràng (không trả text làm FINAL_ANSWER)
+            log.warn(`[Stall] Max stalls (${MAX_STALL}) reached — aborting`);
+            R.state({
+              event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles,
+            });
+            return {
+              content: `[E3] ❌ Agent stalled after plan creation: ${stallCount} consecutive turns without tool execution. Plan may need to be simplified or re-created.`,
+              modelUsed: modelResult.modelUsed || 'unknown',
+              providerUsed: modelResult.providerUsed || 'unknown',
+              toolCycles: toolCallCycles,
+              finished: true,
+            };
+          }
+
+          if (stallCount === 1) {
+            // Lần stall đầu: inject system message, ép tool_choice='required' nếu đã có plan
+            const msg = hasCreatedPlan
+              ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
+              : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
+            messages.push({ role: 'system', content: msg });
+            if (hasCreatedPlan) {
+              // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
+              (modelOptions as any).toolChoice = 'required';
+            }
+            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
+            toolCallCycles++;
+            continue;
+          }
+
+          if (stallCount === 2 && hasCreatedPlan) {
+            // stall lần 2 với plan: ép cứng tool_choice='required'
+            (modelOptions as any).toolChoice = 'required';
+            messages.push({
+              role: 'system',
+              content: '[GUARD] Lần thứ hai: bạn KHÔNG được trả lời bằng text. Gọi tool ngay lập tức. Không mô tả, không giải thích, không xin lỗi. Chỉ gọi tool.'
+            });
+            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=2 — forcing tool_choice=required`);
+            toolCallCycles++;
+            continue;
+          }
+
+          /* final response — no stall, treat as valid FINAL_ANSWER */
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
           R.state({

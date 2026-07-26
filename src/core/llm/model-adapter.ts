@@ -73,6 +73,8 @@ export interface ModelOptions {
   tools?: any[];
   maxTokens?: number;
   temperature?: number;
+  /** tool_choice: 'auto' (default, model decides), 'required' (force tool call), 'none' (text only) */
+  toolChoice?: 'auto' | 'required' | 'none';
 }
 
 export interface ModelResponse {
@@ -160,7 +162,10 @@ export class RouterAdapter implements ModelAdapter {
     };
     if (options?.tools && options.tools.length > 0) {
       payload.tools = options.tools;
-      payload.tool_choice = 'auto';
+      payload.tool_choice = options.toolChoice === 'required' ? 'required' : 'auto';
+    } else if (options?.toolChoice === 'none') {
+      delete payload.tools;
+      delete payload.tool_choice;
     }
 
     const response = await resolved.provider.invoke(payload);
@@ -222,7 +227,10 @@ export class RouterAdapter implements ModelAdapter {
     };
     if (options?.tools && options.tools.length > 0) {
       payload.tools = options.tools;
-      payload.tool_choice = 'auto';
+      payload.tool_choice = options.toolChoice === 'required' ? 'required' : 'auto';
+    } else if (options?.toolChoice === 'none') {
+      delete payload.tools;
+      delete payload.tool_choice;
     }
 
     const response = await resolved.provider.invoke(payload);
@@ -366,7 +374,10 @@ export class LiteLLMAdapter implements ModelAdapter {
     };
     if (options?.tools && options.tools.length > 0) {
       payload.tools = options.tools;
-      payload.tool_choice = 'auto';
+      payload.tool_choice = options.toolChoice === 'required' ? 'required' : 'auto';
+    } else if (options?.toolChoice === 'none') {
+      delete payload.tools;
+      delete payload.tool_choice;
     }
 
     const response = await this.client.chat.completions.create(payload);

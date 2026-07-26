@@ -779,8 +779,12 @@ ${itemLines}
 
 QUY TRÌNH BẮT BUỘC:
 1. Cycle đầu tiên: gọi \`update_plan(action='create', items=[...])\` với danh sách các bước cần làm.
-2. Sau đó thực thi từng bước, dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước.
-3. Khi hết items → plan tự động completed.
+2. SAU KHI tạo plan, KHÔNG mô tả lại plan bằng văn bản. Gọi NGAY tool thực thi item đầu tiên.
+3. Dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước.
+4. Khi hết items → plan tự động completed.
+
+VÍ DỤ SAI: gọi update_plan(create) → viết text dài "Kế hoạch của tôi là 1. ... 2. ... 3. ..." và dừng.
+VÍ DỤ ĐÚNG: gọi update_plan(create) → gọi ngay tool để thực thi item 0 → complete_item(0) → item 1 → ... → hết items thì plan tự completed.
 
 LƯU Ý:
 - Kể cả request chỉ có 1 bước (VD: trả lời câu hỏi đơn giản) cũng PHẢI gọi update_plan(action='create', items=['Trả lời câu hỏi: ...']).
