@@ -829,6 +829,8 @@ LƯU Ý:
       this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       log.info(`[Engine] onPlanCreated: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING}`);
     };
+    // Khởi tạo evidence log trước mỗi agent.run() — agent loop tự động ghi tool call vào đây
+    this.updatePlanCtx.evidenceLog = this.checkpointStore.evidenceLog;
 
     // ── B4: Shared handler for cycle-limit-hit (cầu chì tuyệt đối chống runaway) ──
     const handleCycleLimit = (result: any): EngineResponse | null => {

@@ -460,6 +460,9 @@ export class Agent extends EventEmitter {
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
+    // ── Evidence log cho evidence-based completion ──
+    // Tự động ghi nhận mỗi tool call thành công, gắn với item đang active trong plan.
+    // Lưu vào checkpointStore.evidenceLog — shared với update_plan tool handler.
     const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
     const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
 
@@ -928,6 +931,25 @@ export class Agent extends EventEmitter {
                 : 'ok';
               await request.onThinking(`✅ ${toolCall.function.name} → ${resultPreview}`);
             }
+
+            // ── Evidence logging: ghi tool call vào evidenceLog cho item đang active ──
+            try {
+              if (this.checkpointStore && request.sessionId) {
+                const sp = this.checkpointStore.getPlan(request.sessionId);
+                if (sp && (sp.status === 'pending' || sp.status === 'running')) {
+                  const idx = sp.currentItemIndex;
+                  if (!this.checkpointStore.evidenceLog.has(idx)) this.checkpointStore.evidenceLog.set(idx, []);
+                  const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
+                  this.checkpointStore.evidenceLog.get(idx)!.push({
+                    toolName: toolCall.function.name,
+                    args: toolCall.function.arguments as Record<string, unknown>,
+                    result: toolResult,
+                    timestamp: Date.now(),
+                    success,
+                  });
+                }
+              }
+            } catch (_) { /* non-critical */ }
 
           }
           // ── Read-loop detection ──

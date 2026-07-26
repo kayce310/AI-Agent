@@ -38,6 +38,9 @@ export interface PlanItem {
   errorCategory?: 'transient' | 'permanent' | 'security';
   /** Số lần thử liên tiếp trên item này mà KHÔNG dẫn tới completed */
   consecutiveFailedAttempts: number;  // default 0
+  /** Nhóm tool được coi là "đủ bằng chứng" cho item này.
+   *  Nếu undefined hoặc rỗng, fallback: chỉ cần evidence log không rỗng. */
+  requiredToolGroups?: string[];
 }
 
 export type PlanStatus =
@@ -116,7 +119,27 @@ export function computePlanBudget(itemCount: number): number {
 export interface UpdatePlanContext {
   currentSessionId: string;
   onPlanCreated: (itemCount: number) => void;
+  /** Evidence log: tự động ghi nhận tool call thành công cho item đang active. */
+  evidenceLog?: EvidenceLog;
 }
+
+/**
+ * Evidence record — logged by orchestrator for each successful tool call
+ * while an item is active. Used by complete_item to validate real execution.
+ */
+export interface ToolCallRecord {
+  toolName: string;
+  args: Record<string, unknown>;
+  result: any;
+  timestamp: number;
+  success: boolean;
+}
+
+/**
+ * Map<itemIndex, ToolCallRecord[]> — evidence log for plan items.
+ * Automatically populated by the agent loop; read by update_plan handler.
+ */
+export type EvidenceLog = Map<number, ToolCallRecord[]>;
 
 /**
  * UpdatePlan tool argument schema.
