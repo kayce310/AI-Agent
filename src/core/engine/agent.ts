@@ -453,10 +453,8 @@ export class Agent extends EventEmitter {
     let finalContent = '';
     let readToolCount = 0;      // Track read-heavy tool calls for loop detection
     let readLoopForced = false; // Prevent duplicate force-synthesis injections
-    // ── Execution state machine: PLANNING → EXECUTING → DONE ──
-    // Thay thế IntentionGuard cũ — model-agnostic, dùng cấu trúc response để quyết định
-    let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
-    let executionPhase: 'init' | 'planning' | 'executing' | 'done' = 'init';
+    // ── Stall Guard — plan state derived from checkpointStore each iteration ──
+    // ponytail: no static flags (hasCreatedPlan, executionPhase) — derive from plan.status
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
@@ -592,7 +590,19 @@ export class Agent extends EventEmitter {
           reasoningContent: modelResult.reasoningContent || null,
         });
 
-        /* router used */
+        // ── Derive plan state from checkpointStore (no static flags) ──
+        // ponytail: computed each iteration, never cached — plan.status is single source of truth
+        let planExists = false;
+        let planComplete = false;
+        if (this.checkpointStore && request.sessionId) {
+          try {
+            const plan = this.checkpointStore.getPlan(request.sessionId);
+            if (plan) {
+              planExists = true;
+              planComplete = plan.status === 'completed' || plan.status === 'aborted' || plan.status === 'failed';
+            }
+          } catch { /* non-critical */ }
+        }
 
         // ── Handle finish_reason: stop ──
         if (modelResult.finishReason === 'stop') {
@@ -646,17 +656,17 @@ export class Agent extends EventEmitter {
             };
           }
 
-          // ── Stall Detection (model-agnostic): thay thế IntentionGuard cũ ──
-          // Duy nhất nguồn sự thật: cấu trúc response có tool call hay không.
-          // Không dùng finish_reason, không regex text.
+          // ── Stall Detection — derived plan state, no static flags ──
           const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
 
-          // Cập nhật phase dựa trên việc plan đã được tạo
-          if (executionPhase === 'init' && hasCreatedPlan) executionPhase = 'planning';
-
-          if (!turnHasAction) {
+          // Plan complete → text response is valid FINAL_ANSWER, skip stall detection
+          if (planComplete && !turnHasAction) {
+            log.info(`[Stall] Plan complete — text response accepted as FINAL_ANSWER`);
+            stallCount = 0;
+            // fall through to FINAL_ANSWER return below
+          } else if (!turnHasAction) {
             stallCount++;
-            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (hasCreatedPlan=${hasCreatedPlan}, phase=${executionPhase})`);
+            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (planExists=${planExists}, planComplete=${planComplete})`);
           } else {
             if (stallCount > 0) {
               log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
@@ -664,13 +674,10 @@ export class Agent extends EventEmitter {
             stallCount = 0;
           }
 
-          // Xử lý leo thang theo stallCount
-          if (stallCount >= MAX_STALL && hasCreatedPlan) {
-            // stall >= 3 mà đã có plan → dừng với lỗi rõ ràng (không trả text làm FINAL_ANSWER)
+          // Escalation — only when plan exists and not complete
+          if (stallCount >= MAX_STALL && planExists && !planComplete) {
             log.warn(`[Stall] Max stalls (${MAX_STALL}) reached — aborting`);
-            R.state({
-              event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles,
-            });
+            R.state({ event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles });
             return {
               content: `[E3] ❌ Agent stalled after plan creation: ${stallCount} consecutive turns without tool execution. Plan may need to be simplified or re-created.`,
               modelUsed: modelResult.modelUsed || 'unknown',
@@ -681,13 +688,11 @@ export class Agent extends EventEmitter {
           }
 
           if (stallCount === 1) {
-            // Lần stall đầu: inject system message, ép tool_choice='required' nếu đã có plan
-            const msg = hasCreatedPlan
+            const msg = planExists && !planComplete
               ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
               : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
             messages.push({ role: 'system', content: msg });
-            if (hasCreatedPlan) {
-              // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
+            if (planExists && !planComplete) {
               (modelOptions as any).toolChoice = 'required';
             }
             log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
@@ -695,8 +700,7 @@ export class Agent extends EventEmitter {
             continue;
           }
 
-          if (stallCount === 2 && hasCreatedPlan) {
-            // stall lần 2 với plan: ép cứng tool_choice='required'
+          if (stallCount === 2 && planExists && !planComplete) {
             (modelOptions as any).toolChoice = 'required';
             messages.push({
               role: 'system',
@@ -732,7 +736,7 @@ export class Agent extends EventEmitter {
 
           // ── LengthGuard: retry nếu chưa có plan và chưa retry lần nào ──
           // Nếu đã có plan, giữ nguyên hành vi cũ (return truncation ngay)
-          if (!hasCreatedPlan && lengthRetryCount < 1) {
+          if (!planExists && lengthRetryCount < 1) {
             log.warn(`[LengthGuard] Cycle ${toolCallCycles}: truncated before plan created — retrying (attempt ${lengthRetryCount + 1}/1)`);
             lengthRetryCount++;
             // KHÔNG giữ partialContent bị cắt vào history — tránh model tiếp nối câu dở dang
@@ -861,17 +865,6 @@ export class Agent extends EventEmitter {
             // ── Checkpoint: mark tool as running (prevents duplicate re-execution on crash) ──
             if (this.checkpointStore && request.checkpointRequestId) {
               this.checkpointStore.markToolRunning(request.checkpointRequestId, toolCall.id);
-            }
-
-            // ── hasCreatedPlan: detect update_plan(create) calls ──
-            if (toolCall.function.name === 'update_plan') {
-              try {
-                const planArgs = JSON.parse(toolCall.function.arguments || '{}');
-                if (planArgs.action === 'create') {
-                  hasCreatedPlan = true;
-                  log.info(`[IntentionGuard] hasCreatedPlan set true (update_plan create)`);
-                }
-              } catch { /* ignore parse errors */ }
             }
 
             // Show thinking: tool call starting
