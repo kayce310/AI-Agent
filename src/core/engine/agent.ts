@@ -35,6 +35,7 @@ import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import { SAFETY_CEILING, STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
+import { getRequestContext } from '../request-context.js';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -927,13 +928,14 @@ export class Agent extends EventEmitter {
 
             // ── Evidence logging: ghi tool call vào evidenceLog cho item đang active ──
             try {
-              if (this.checkpointStore && request.sessionId) {
+              const rctx = getRequestContext();
+              if (rctx && this.checkpointStore && request.sessionId) {
                 const sp = this.checkpointStore.getPlan(request.sessionId);
                 if (sp && (sp.status === 'pending' || sp.status === 'running')) {
                   const idx = sp.currentItemIndex;
-                  if (!this.checkpointStore.evidenceLog.has(idx)) this.checkpointStore.evidenceLog.set(idx, []);
+                  if (!rctx.evidenceLog.has(idx)) rctx.evidenceLog.set(idx, []);
                   const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
-                  this.checkpointStore.evidenceLog.get(idx)!.push({
+                  rctx.evidenceLog.get(idx)!.push({
                     toolName: toolCall.function.name,
                     args: toolCall.function.arguments as Record<string, unknown>,
                     result: toolResult,

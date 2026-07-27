@@ -24,6 +24,7 @@
 import type { Tool, ToolPlugin } from '../tools/tool-registry.js';
 import type { CheckpointStore } from '../checkpoint.js';
 import type { TaskPlan, PlanItem, UpdatePlanContext, EvidenceLog, ToolCallRecord } from './types.js';
+import { getRequestContext } from '../request-context.js';
 import { DEFAULT_ABANDON_MS, validateTransition, isPlanActive } from './types.js';
 import { Logger } from '../logger.js';
 
@@ -51,10 +52,10 @@ function makePlanItem(description: string, index: number): PlanItem {
 /**
  * Create the update_plan tool plugin.
  * @param checkpointStore - CheckpointStore for persistence
- * @param ctx - Mutable context ref (sessionId + callback injected by Engine)
+ * @param _ctx - DEPRECATED: now reads from AsyncLocalStorage (requestContext). Parameter kept for compat.
  */
-export function createUpdatePlanPlugin(checkpointStore: CheckpointStore, ctx: UpdatePlanContext): ToolPlugin {
-  const tool: Tool = {
+ export function createUpdatePlanPlugin(checkpointStore: CheckpointStore): ToolPlugin {
+   const tool: Tool = {
     name: 'update_plan',
     description: `QUẢN LÝ KẾ HOẠCH (State-Driven Task Plan) — BẮT BUỘC dùng cho MỌI request.
 
@@ -104,7 +105,8 @@ ACTIONS:
       }
 
       // ── sessionId from context (B2: NOT from LLM args) ──
-      const sessionId = ctx.currentSessionId || 'default';
+      const rctx = getRequestContext();
+      const sessionId = rctx?.sessionId || 'default';
 
       // ── action: create ──
       if (action === 'create') {
@@ -142,7 +144,7 @@ ACTIONS:
 
         // D3: Update cycle budget immediately via callback
         try {
-          ctx.onPlanCreated(itemsRaw.length);
+          rctx?.onPlanCreated(itemsRaw.length);
         } catch (cbErr: any) {
           log.warn(`[update_plan] onPlanCreated callback failed: ${cbErr.message}`);
         }
@@ -199,7 +201,7 @@ ACTIONS:
         // ── Evidence-based completion validation ──
         // Chỉ chấp nhận complete_item nếu có tool call thật đã được thực thi cho item này.
         // evidenceLog được orchestrator (agent loop) tự động ghi nhận.
-        const evidence: ToolCallRecord[] = (ctx.evidenceLog?.get(itemIndex)) || [];
+        const evidence: ToolCallRecord[] = (rctx?.evidenceLog?.get(itemIndex)) || [];
         if (evidence.length === 0) {
           return {
             error: `No evidence of tool execution for item ${itemIndex}. You must actually execute this item (call tools) before calling complete_item. Evidence log is empty.`,

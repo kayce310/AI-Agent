@@ -94,8 +94,6 @@ export class CheckpointStore {
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private snapshots: Map<string, CheckpointSnapshot> = new Map();
   private dirty = false;
-  /** Evidence log cho evidence-based completion — agent loop ghi, update_plan handler đọc */
-  evidenceLog: Map<number, Array<{ toolName: string; args: Record<string, unknown>; result: any; timestamp: number; success: boolean }>> = new Map();
 
   constructor(config?: CheckpointConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
