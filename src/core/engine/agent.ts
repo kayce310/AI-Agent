@@ -593,7 +593,7 @@ export class Agent extends EventEmitter {
         });
 
         // ── Derive plan state — ADR-000: single source of truth, no flags ──
-        const { planExists, planComplete } = derivePlanState(this.checkpointStore, request.sessionId);
+        const planState = derivePlanState(this.checkpointStore, request.sessionId);
 
         // ── Handle finish_reason: stop ──
         if (modelResult.finishReason === 'stop') {
@@ -651,13 +651,13 @@ export class Agent extends EventEmitter {
           const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
 
           // Plan complete → text response is valid FINAL_ANSWER, skip stall detection
-          if (planComplete && !turnHasAction) {
+          if ((planState.kind === 'completed') && !turnHasAction) {
             log.info(`[Stall] Plan complete — text response accepted as FINAL_ANSWER`);
             stallCount = 0;
             // fall through to FINAL_ANSWER return below
           } else if (!turnHasAction) {
             stallCount++;
-            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (planExists=${planExists}, planComplete=${planComplete})`);
+            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (kind=${planState.kind})`);
           } else {
             if (stallCount > 0) {
               log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
@@ -666,7 +666,7 @@ export class Agent extends EventEmitter {
           }
 
           // Escalation — only when plan exists and not complete
-          if (stallCount >= MAX_STALL && planExists && !planComplete) {
+          if (stallCount >= MAX_STALL && isGuardActive(planState)) {
             log.warn(`[Stall] Max stalls (${MAX_STALL}) reached — aborting`);
             R.state({ event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles });
             return {
@@ -679,11 +679,11 @@ export class Agent extends EventEmitter {
           }
 
           if (stallCount === 1) {
-            const msg = planExists && !planComplete
+            const msg = isGuardActive(planState)
               ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
               : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
             messages.push({ role: 'system', content: msg });
-            if (planExists && !planComplete) {
+            if (isGuardActive(planState)) {
               (modelOptions as any).toolChoice = 'required';
             }
             log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
@@ -691,7 +691,7 @@ export class Agent extends EventEmitter {
             continue;
           }
 
-          if (stallCount === 2 && planExists && !planComplete) {
+          if (stallCount === 2 && isGuardActive(planState)) {
             (modelOptions as any).toolChoice = 'required';
             messages.push({
               role: 'system',
@@ -727,7 +727,7 @@ export class Agent extends EventEmitter {
 
           // ── LengthGuard: retry nếu chưa có plan và chưa retry lần nào ──
           // Nếu đã có plan, giữ nguyên hành vi cũ (return truncation ngay)
-          if (!planExists && lengthRetryCount < 1) {
+          if (planState.kind === 'none' && lengthRetryCount < 1) {
             log.warn(`[LengthGuard] Cycle ${toolCallCycles}: truncated before plan created — retrying (attempt ${lengthRetryCount + 1}/1)`);
             lengthRetryCount++;
             // KHÔNG giữ partialContent bị cắt vào history — tránh model tiếp nối câu dở dang
