@@ -34,6 +34,7 @@ import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import { SAFETY_CEILING, STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 import { getRequestContext } from '../request-context.js';
 
@@ -591,19 +592,8 @@ export class Agent extends EventEmitter {
           reasoningContent: modelResult.reasoningContent || null,
         });
 
-        // ── Derive plan state from checkpointStore (no static flags) ──
-        // ponytail: computed each iteration, never cached — plan.status is single source of truth
-        let planExists = false;
-        let planComplete = false;
-        if (this.checkpointStore && request.sessionId) {
-          try {
-            const plan = this.checkpointStore.getPlan(request.sessionId);
-            if (plan) {
-              planExists = true;
-              planComplete = plan.status === 'completed' || plan.status === 'aborted' || plan.status === 'failed';
-            }
-          } catch { /* non-critical */ }
-        }
+        // ── Derive plan state — ADR-000: single source of truth, no flags ──
+        const { planExists, planComplete } = derivePlanState(this.checkpointStore, request.sessionId);
 
         // ── Handle finish_reason: stop ──
         if (modelResult.finishReason === 'stop') {

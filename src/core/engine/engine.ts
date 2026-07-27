@@ -53,6 +53,7 @@ import { R } from '../runtime-instrumentation.js';
 import { requestContext, getRequestContext } from '../request-context.js';
 import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
+import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -700,19 +701,21 @@ export class Engine extends EventEmitter {
 
     // ── STATE-DRIVEN TASK PLAN: Check for active plan ──
     let planContext: string | undefined;
+    // ADR-000: derive state from checkpointStore, no static flags
     const activePlan = this.checkpointStore.getPlan(sessionId);
-    if (activePlan) {
-      // Resume paused_limit automatically (no user input needed)
-      if (activePlan.status === 'paused_limit') {
-        activePlan.status = 'running';
-        this.checkpointStore.setPlan(sessionId, activePlan);
-        log.info(`[Engine] Auto-resumed plan ${activePlan.id} from paused_limit → running`);
-      }
+    // Auto-resume paused_limit (side effect, but scoped to this request)
+    if (activePlan?.status === 'paused_limit') {
+      activePlan.status = 'running';
+      this.checkpointStore.setPlan(sessionId, activePlan);
+      log.info(`[Engine] Auto-resumed plan ${activePlan.id} from paused_limit → running`);
+    }
+    const planState = derivePlanState(this.checkpointStore, sessionId);
 
-      // Nếu plan bị stuck → inject thông điệp khác hẳn (output contract)
-      if (activePlan.status === 'stuck') {
-        const stuckItem = activePlan.items[activePlan.currentItemIndex];
-        const completedItems = activePlan.items.filter(i => i.status === 'completed');
+    if (isGuardActive(planState)) {
+      const plan = activePlan!; // guaranteed non-null by isGuardActive(planState)
+      if (plan.status === 'stuck') {
+        const stuckItem = plan.items[plan.currentItemIndex];
+        const completedItems = plan.items.filter(i => i.status === 'completed');
         const completedStr = completedItems.length > 0
           ? completedItems.map(i => `- ✅ Item ${i.index}: ${i.description}`).join('\n')
           : '(chưa có)';
@@ -728,18 +731,17 @@ Lỗi gần nhất: ${stuckItem.error || 'N/A'}
           : '';
 
         planContext = `## 📋 PLAN BỊ KẸT (Stuck Task Plan)
-ID: ${activePlan.id}
-Mục tiêu: ${activePlan.goal}
+ID: ${plan.id}
+Mục tiêu: ${plan.goal}
 Trạng thái: stuck (bị kẹt), cần bạn quyết định hướng đi khác.
 Các bước trước đó đã hoàn thành:
 ${completedStr}
 
 ${stuckLines}
 `;
-        log.info(`[Engine] Plan ${activePlan.id} is stuck at item ${activePlan.currentItemIndex}`);
+        log.info(`[Engine] Plan ${plan.id} is stuck at item ${plan.currentItemIndex}`);
       } else {
-        // Build normal active plan context
-        const itemLines = activePlan.items.map(item => {
+        const itemLines = plan.items.map(item => {
           const check = item.status === 'completed' ? '[✅]' :
                         item.status === 'in_progress' ? '[🔄]' :
                         item.status === 'failed' ? '[❌]' :
@@ -751,16 +753,16 @@ ${stuckLines}
         }).join('\n');
 
         planContext = `## 📋 KẾ HOẠCH HIỆN TẠI (Active Task Plan)
-ID: ${activePlan.id}
-Mục tiêu: ${activePlan.goal}
-Trạng thái: ${activePlan.status}
-Vị trí hiện tại: item ${activePlan.currentItemIndex}/${activePlan.items.length}
+ID: ${plan.id}
+Mục tiêu: ${plan.goal}
+Trạng thái: ${plan.status}
+Vị trí hiện tại: item ${plan.currentItemIndex}/${plan.items.length}
 
 Các item:
 ${itemLines}
 
 ⚠️ QUY TẮC: Bạn ĐANG thực thi plan này.
-- Item đang làm: ${activePlan.items[activePlan.currentItemIndex]?.description || 'N/A'}
+- Item đang làm: ${plan.items[plan.currentItemIndex]?.description || 'N/A'}
 - Item đã hoàn thành: GIỮ NGUYÊN, không làm lại.
 - Để đánh dấu item hoàn thành: update_plan(action='complete_item', item_index=N, result_summary="...")
 - Để bỏ qua item lỗi: update_plan(action='skip_item', item_index=N, reason="...")
@@ -768,12 +770,10 @@ ${itemLines}
 `;
       }
 
-      // maxToolCycles luôn là ABSOLUTE_SAFETY_CEILING (cầu chì tuyệt đối, không phải budget công việc)
       this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
-      log.info(`[Engine] Plan ${activePlan.id}: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING} (stagnation tracking is primary)`);
+      log.info(`[Engine] Plan ${plan.id}: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING}`);
     } else {
       // No active plan → Planning Phase: instruct LLM to create one
-      // maxToolCycles cũng là ABSOLUTE_SAFETY_CEILING — stagnation tracking là tín hiệu dừng chính
       this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       log.info(`[Engine] No active plan: maxToolCycles set to ${ABSOLUTE_SAFETY_CEILING}`);
 

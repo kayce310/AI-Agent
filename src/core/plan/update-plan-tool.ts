@@ -18,13 +18,14 @@
  *   (d) return new state
  *
  * NO natural language reasoning in this handler.
- * sessionId is read from mutable context (UpdatePlanContext), NOT from LLM args.
+ * sessionId is read from AsyncLocalStorage (request-context), NOT from LLM args.
  */
 
 import type { Tool, ToolPlugin } from '../tools/tool-registry.js';
 import type { CheckpointStore } from '../checkpoint.js';
-import type { TaskPlan, PlanItem, UpdatePlanContext, EvidenceLog, ToolCallRecord } from './types.js';
+import type { TaskPlan, PlanItem } from './types.js';
 import { getRequestContext } from '../request-context.js';
+import { canCompleteItem } from './plan-state.js';
 import { DEFAULT_ABANDON_MS, validateTransition, isPlanActive } from './types.js';
 import { Logger } from '../logger.js';
 
@@ -201,22 +202,9 @@ ACTIONS:
         // ── Evidence-based completion validation ──
         // Chỉ chấp nhận complete_item nếu có tool call thật đã được thực thi cho item này.
         // evidenceLog được orchestrator (agent loop) tự động ghi nhận.
-        const evidence: ToolCallRecord[] = (rctx?.evidenceLog?.get(itemIndex)) || [];
-        if (evidence.length === 0) {
-          return {
-            error: `No evidence of tool execution for item ${itemIndex}. You must actually execute this item (call tools) before calling complete_item. Evidence log is empty.`,
-            plan_status: plan.status,
-            plan_id: plan.id,
-          };
-        }
-        // Nếu tất cả evidence đều lỗi → reject
-        const allFailed = evidence.every(e => !e.success);
-        if (allFailed) {
-          return {
-            error: `All tool calls for item ${itemIndex} failed. Cannot mark as completed. Consider calling skip_item instead if the task is impossible.`,
-            plan_status: plan.status,
-            plan_id: plan.id,
-          };
+        const evidenceCheck = canCompleteItem(rctx?.evidenceLog, itemIndex);
+        if (!evidenceCheck.ok) {
+          return { error: evidenceCheck.reason!, plan_status: plan.status, plan_id: plan.id };
         }
 
         // Validate transition: cho phép từ pending, running, stuck, waiting_user, paused_limit
