@@ -3,6 +3,10 @@
 > Coral Agent — orchestration agent managing TypeScript monorepo with layered architecture.
 
 ---
+**Before editing any state-related code (plan, session, task, item, evidence):** read
+`docs/adr/ADR-000-state-principles.md` first. These rules are mandatory, not advisory.
+Violations caused 3 cascading bugs (evidenceLog scope, plan-state derive, concurrency race).
+
 
 ## ⛔ File Write Rules
 
