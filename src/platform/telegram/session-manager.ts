@@ -2,9 +2,11 @@ import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { R } from '../../core/runtime-instrumentation.js';
+import type { ConversationSessionId } from '../../core/types/branded.js';
+import { asConversationSessionId } from '../../core/types/branded.js';
 
 export interface SessionState {
-  sessionId: string;
+  sessionId: ConversationSessionId;
   userId: string;
   createdAt: number;
   lastActivity: number;
@@ -118,7 +120,7 @@ export class SessionManager {
    */
   private createNewSession(userId: string): SessionState {
     const session: SessionState = {
-      sessionId: randomUUID(),
+      sessionId: asConversationSessionId(randomUUID()),
       userId,
       createdAt: Date.now(),
       lastActivity: Date.now(),
@@ -332,7 +334,7 @@ export class SessionManager {
     if (existing) return existing;
 
     const session: SessionState = {
-      sessionId: `session-${userId}-${Date.now()}`,
+      sessionId: asConversationSessionId(`session-${userId}-${Date.now()}`),
       userId,
       lastActivity: Date.now(),
       introSent: false,

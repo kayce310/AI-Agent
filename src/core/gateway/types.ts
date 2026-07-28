@@ -10,21 +10,23 @@
  * The Gateway orchestrates lifecycle and message routing.
  */
 
+import type { ConversationSessionId, UserId } from '../types/branded.js';
+
 // ──────────────────────────────────────────────
 // Core Message Types
 // ──────────────────────────────────────────────
 
 export interface CoralRequest {
   input: string;
-  userId: string;
-  sessionId: string;
+  userId: UserId;
+  sessionId: ConversationSessionId;
   platform: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface CoralResponse {
   output: string;
-  sessionId: string;
+  sessionId: ConversationSessionId;
   platform: string;
   metadata?: Record<string, unknown>;
 }
@@ -37,9 +39,9 @@ export interface AdapterMessage {
   /** Platform-specific message ID (for dedup) */
   messageId: string;
   /** Platform user ID */
-  userId: string;
-  /** Platform channel/chat ID (used as Coral sessionId) */
-  channelId: string;
+  userId: UserId;
+  /** Platform channel/chat ID (NOT a session identity) */
+  channelId: UserId;
   /** Raw text content */
   text: string;
   /** Platform name */

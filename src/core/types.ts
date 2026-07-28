@@ -50,9 +50,11 @@ export interface RequestReference {
   example: string;
 }
 
+import type { ConversationSessionId } from './types/branded.js';
+
 /** Đầu vào chuẩn cho Engine — platform-agnostic */
 export interface EngineRequest {
-  sessionId: string;
+  sessionId: ConversationSessionId;
   messages: ChatMessage[];
   modelId: string;
   agentName: string;
