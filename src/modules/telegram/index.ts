@@ -20,6 +20,7 @@
 
 import { Bot, Context } from 'grammy';
 import { PlatformAdapter, AdapterMessage, AdapterStatus, PlatformMeta } from '../../core/gateway/types.js';
+import { asUserId } from '../../core/types/branded.js';
 import { Logger } from '../../core/logger.js';
 const log = new Logger({ module: 'Telegram' });
 import { ActivityReporter } from './activity-reporter.js';
@@ -578,14 +579,15 @@ export class TelegramBridge implements PlatformAdapter {
 
         const adapterMsg: AdapterMessage = {
           messageId,
-          userId,
-          channelId: chatId,
+          userId: asUserId(userId),
+          channelId: asUserId(chatId),
           text,
           platform: 'telegram',
           isMention: true,
           timestamp: Date.now(),
           metadata: {
             model: selectedModel,  // Pass selected model
+            sessionId: session.sessionId, // ponytail: SessionManager UUID, not channelId
           },
         };
 
@@ -748,14 +750,15 @@ export class TelegramBridge implements PlatformAdapter {
         
         const adapterMsg: AdapterMessage = {
           messageId,
-          userId,
-          channelId: chatId,
+          userId: asUserId(userId),
+          channelId: asUserId(chatId),
           text,
           platform: 'telegram',
           isMention: true,
           timestamp: Date.now(),
           metadata: {
             model: selectedModel,  // Pass selected model
+            sessionId: session.sessionId, // ponytail: SessionManager UUID, not channelId
           },
         };
 

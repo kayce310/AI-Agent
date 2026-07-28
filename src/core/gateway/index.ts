@@ -15,6 +15,7 @@ import { CoralRequest, CoralResponse, PlatformAdapter, AdapterMessage } from './
 import { EngineRequest, ChatMessage } from '../types.js';
 import { globalMemoryStore } from '../memory/memory-store.js';
 import { missionLock } from '../security/mission-lock.js';
+import { asConversationSessionId, fromUserId } from '../types/branded.js';
 
 const log = new Logger({ module: 'Gateway' });
 
@@ -252,20 +253,22 @@ export class CoralGateway {
   async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<CoralResponse | null> {
     try {
       // ── MissionLock: validate every inbound message ──
-      const validation = missionLock.validateMessage(msg.text, msg.userId);
+      const validation = missionLock.validateMessage(msg.text, fromUserId(msg.userId));
       if (!validation.allowed) {
         log.warn(`MissionLock blocked message from ${msg.userId}`, { reason: validation.reason });
         return {
           output: `⚠️ Tin nhắn bị từ chối: ${validation.reason || 'Vi phạm an ninh'}`,
-          sessionId: msg.channelId,
+          sessionId: asConversationSessionId(fromUserId(msg.channelId)),
           platform: msg.platform,
         };
       }
 
+      // ponytail: prefer SessionManager UUID (reset via /new) over permanent channelId
+      const rawSessionId = (msg.metadata?.sessionId as string) || fromUserId(msg.channelId);
       const request: CoralRequest = {
         input: msg.text,
         userId: msg.userId,
-        sessionId: msg.channelId,
+        sessionId: asConversationSessionId(rawSessionId),
         platform: msg.platform as CoralRequest['platform'],
         metadata: msg.metadata,
       };

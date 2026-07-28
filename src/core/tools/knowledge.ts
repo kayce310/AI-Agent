@@ -13,6 +13,7 @@ import { isPathSafe, addProcessedFile } from './_shared.js';
 import { BASE_PATH } from './_shared.js';
 import { secureRuntime } from './tool-gateway.js';
 import { globalMemoryStore } from '../memory/memory-store.js';
+import { getRequestContext } from '../request-context.js';
 
 /**
  * Quét thư mục tìm kiếm keyword (dùng cho search_knowledge_graph)
@@ -150,10 +151,12 @@ const plugin: ToolPlugin = {
         const query = String(args.query || '');
         if (!query) return { error: 'query không được để trống' };
         const limit = Math.min(Number(args.limit) || 10, 50);
-        const sessionId = args.sessionId ? String(args.sessionId) : undefined;
+        // ponytail: default to current session — never query global without explicit sessionId
+        const sessionId = args.sessionId ? String(args.sessionId) : getRequestContext()?.sessionId;
+        if (!sessionId) return { error: 'sessionId không xác định — vui lòng truyền sessionId hoặc chạy trong context request' };
 
         const opts: any = { topK: limit };
-        if (sessionId) opts.sessionId = sessionId;
+        opts.sessionId = sessionId;
 
         const results = await globalMemoryStore.query(query, opts);
         return {
