@@ -5,6 +5,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CoralGateway } from '../src/core/gateway/index.js';
 import { PlatformAdapter, AdapterMessage, AdapterStatus, PlatformMeta } from '../src/core/gateway/types.js';
+import { asUserId } from '../src/core/types/branded.js';
+import { asConversationSessionId } from '../src/core/types/branded.js';
 
 function createMockAdapter(platform: string): PlatformAdapter {
   let messageHandler: ((msg: AdapterMessage) => Promise<any>) | null = null;
@@ -119,12 +121,31 @@ describe('CoralGateway', () => {
     it('should call engine.process with correct request', async () => {
       const response = await gateway.process({
         input: 'hello',
-        userId: 'user-1',
-        sessionId: 'test-session',
+        userId: asUserId('user-1'),
+        sessionId: asConversationSessionId('test-session'),
         platform: 'telegram',
       });
       expect(mockEngine.process).toHaveBeenCalled();
       expect(response.output).toBe('hello');
+    });
+  });
+
+  describe('handleAdapterMessage', () => {
+    it('should reject with error when metadata.sessionId is missing', async () => {
+      const adapter = createMockAdapter('telegram');
+      const msg: AdapterMessage = {
+        messageId: 'msg-1',
+        userId: asUserId('user-1'),
+        channelId: asUserId('chat-1'),
+        text: 'hello',
+        platform: 'telegram',
+        isMention: true,
+        timestamp: Date.now(),
+        metadata: {},
+      };
+      await expect(gateway.handleAdapterMessage(adapter, msg)).rejects.toThrow(
+        /missing metadata.sessionId/
+      );
     });
   });
 });

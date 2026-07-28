@@ -251,6 +251,15 @@ export class CoralGateway {
    * sending the response via its own platform-specific UI (edit, reply, etc.).
    */
   async handleAdapterMessage(adapter: PlatformAdapter, msg: AdapterMessage): Promise<CoralResponse | null> {
+    // ponytail: fail loud — missing metadata.sessionId means caller bypassed SessionManager
+    const rawSessionId = msg.metadata?.sessionId as string | undefined;
+    if (!rawSessionId) {
+      throw new Error(
+        `handleAdapterMessage: missing metadata.sessionId from ${msg.platform} adapter. ` +
+        `Caller must set metadata.sessionId via SessionManager.getOrCreateSession().`
+      );
+    }
+
     try {
       // ── MissionLock: validate every inbound message ──
       const validation = missionLock.validateMessage(msg.text, fromUserId(msg.userId));
@@ -263,8 +272,6 @@ export class CoralGateway {
         };
       }
 
-      // ponytail: prefer SessionManager UUID (reset via /new) over permanent channelId
-      const rawSessionId = (msg.metadata?.sessionId as string) || fromUserId(msg.channelId);
       const request: CoralRequest = {
         input: msg.text,
         userId: msg.userId,
