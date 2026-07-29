@@ -235,7 +235,7 @@ src/
 ### Test baseline
 
 - **56 test files**, **1008 tests** (2026-07-29)
-- **1 failed / 55 passed**, **2 failed tests / 1006 passed**
+- 1 file failed (2 tests trong file do) / 55 files passed, 1006 tests passed
 - Duration: ~20s
 
 ### Bien moi truong quan trong
@@ -267,7 +267,7 @@ src/
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse NEED_TOOL dead** | Format instruction da thay the, code cu van ton tai | P3 |
 | **errorCategory field unused** | Duoc set trong engine.ts nhung khong doc de retry | P2 |
-| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — chua fix** |
+| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — dang cho fail-loud fix hoan tat** |
 
 ### Orphan modules (can quyet dinh)
 
