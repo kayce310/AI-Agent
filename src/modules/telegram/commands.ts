@@ -434,17 +434,10 @@ export class CommandRegistry {
       const server = new DashboardServer(eventBus, { port: 8766, memoryApi });
       await server.start();
       (globalThis as any).__coral_dashboardServer = server;
-      // Start tunnel
-      let tunnelMsg = '';
-      try {
-        const storedUrl = (globalThis as any).__coral_tunnelUrl;
-        if (storedUrl) { tunnelMsg = `\n🌐 Tunnel: ${storedUrl}`; }
-      } catch {}
-      if (!tunnelMsg) {
-        const startTunnel = (globalThis as any).__coral_startTunnel;
-        if (startTunnel) startTunnel();
-        tunnelMsg = startTunnel ? '\n🌐 Tunnel sẽ được tạo trong vài giây.' : '';
-      }
+      // Start tunnel — always start fresh, ignore stale URL from file
+      const startTunnel = (globalThis as any).__coral_startTunnel;
+      if (startTunnel) startTunnel();
+      const tunnelMsg = startTunnel ? '\n🌐 Tunnel sẽ được tạo trong vài giây.' : '';
       await ctx.reply(`📊 Dashboard đang chạy tại http://localhost:8766${tunnelMsg}\n\nGửi /dashboard để tắt.`);
     } catch (e: any) {
       await ctx.reply(`❌ Không thể khởi động dashboard: ${e.message || e}`);

@@ -101,6 +101,23 @@ function acquireFileLock(): boolean {
       }
     }
   } catch {}
+  // ponytail: kill orphaned cloudflared from previous Coral instance
+  try {
+    const cfResult = execSync(
+      process.platform === 'win32'
+        ? `wmic process where "name='cloudflared.exe'" get processid`
+        : `pgrep -f cloudflared`,
+      { encoding: 'utf8', timeout: 3000, stdio: 'pipe' }
+    );
+    const cfPids = cfResult.split('\n')
+      .map(l => l.trim())
+      .filter(l => /^\d+$/.test(l))
+      .map(l => parseInt(l, 10));
+    for (const pid of cfPids) {
+      console.log(`${ts()} 🔴 Killing orphaned cloudflared (PID ${pid})`);
+      killProcess(pid);
+    }
+  } catch {}
 
   try {
     if (fs.existsSync(LOCK_FILE)) {
@@ -353,6 +370,15 @@ async function start() {
       // ponytail: expose tunnel start/stop so /dashboard command can control them
       (globalThis as any).__coral_startTunnel = startTunnel;
       (globalThis as any).__coral_stopTunnel = stopTunnel;
+      // ponytail: restore tunnel URL from file so /status and /dashboard can show it
+      try {
+        const urlPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../tunnel-url.txt');
+        const savedUrl = fs.readFileSync(urlPath, 'utf8').trim();
+        if (savedUrl.startsWith('https://')) {
+          (globalThis as any).__coral_tunnelUrl = savedUrl;
+          console.log(`${ts()} 🌐 Restored tunnel URL: ${savedUrl}`);
+        }
+      } catch {}
       console.log(`${ts()} 🧠 Memory system ready (dashboard off — use /dashboard to start)`);
     }
   } catch (e) {
