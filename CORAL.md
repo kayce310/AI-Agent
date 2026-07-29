@@ -237,6 +237,15 @@ src/
 - **56 test files**, **1008 tests** (2026-07-29)
 - 1 file failed (2 tests trong file do) / 55 files passed, 1006 tests passed
 - Duration: ~20s
+- **Luu y:** Day la baseline chinh thuc. So test co the dao dong (1006-1008) tuy theo
+  trang thai code tai thoi diem chay. Khong co file moi nao duoc them giua cac lan chay.
+
+### Security notes
+
+- **Rate-limit bypass fixed (2026-07-29):** `Engine.process()` used `request.sessionId`
+  as per-user rate-limit key. After session/identity fix, sessionId became a UUID (changes
+  on `/new`), making `/new` a free rate-limit reset. Fixed by adding `userId` field to
+  `EngineRequest` and using it (`request.userId`) for rate limiting instead.
 
 ### Bien moi truong quan trong
 
@@ -267,7 +276,7 @@ src/
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse NEED_TOOL dead** | Format instruction da thay the, code cu van ton tai | P3 |
 | **errorCategory field unused** | Duoc set trong engine.ts nhung khong doc de retry | P2 |
-| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — dang cho fail-loud fix hoan tat** |
+| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), con cho fail-loud sessionId** |
 
 ### Orphan modules (can quyet dinh)
 

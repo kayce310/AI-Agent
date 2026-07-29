@@ -199,6 +199,7 @@ export class CoralGateway {
 
     const engineRequest: EngineRequest = {
       sessionId,
+      userId: request.userId,
       messages: recentMessages,
       modelId: requestedModel,
       agentName: 'Coral',
