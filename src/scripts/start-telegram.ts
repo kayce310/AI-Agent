@@ -370,15 +370,9 @@ async function start() {
       // ponytail: expose tunnel start/stop so /dashboard command can control them
       (globalThis as any).__coral_startTunnel = startTunnel;
       (globalThis as any).__coral_stopTunnel = stopTunnel;
-      // ponytail: restore tunnel URL from file so /status and /dashboard can show it
-      try {
-        const urlPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../tunnel-url.txt');
-        const savedUrl = fs.readFileSync(urlPath, 'utf8').trim();
-        if (savedUrl.startsWith('https://')) {
-          (globalThis as any).__coral_tunnelUrl = savedUrl;
-          console.log(`${ts()} 🌐 Restored tunnel URL: ${savedUrl}`);
-        }
-      } catch {}
+      // ponytail: tunnel-url.txt is written by startTunnel() for file-level reference,
+      // but we do NOT restore it to __coral_tunnelUrl — it's always stale after a restart.
+      // /status will show "đang chờ tạo..." until the fresh tunnel provides its URL.
       console.log(`${ts()} 🧠 Memory system ready (dashboard off — use /dashboard to start)`);
     }
   } catch (e) {
