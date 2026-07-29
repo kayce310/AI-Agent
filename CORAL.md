@@ -209,7 +209,7 @@ src/
 | `core/security/secret-rotation.ts` | NGHI DEAD | 0 imports |
 | `core/security/consent.ts` | NGHI DEAD | 0 imports |
 | `core/orchestrator/delegation-orchestrator.ts` | ORPHAN | Intentionally unhooked |
-| `core/knowledge/entity-approval-queue.ts` | ORPHAN | HITL dependency da xoa |
+| ~~`core/knowledge/entity-approval-queue.ts`~~ | ~~ORPHAN~~ | ~~HITL dependency da xoa~~ **DA XOA (2026-07-29)** |
 | `core/tools/report.ts` | BUG | Returns "TODO" placeholder |
 | `Engine.sanitizeResponse()` (engine.ts:209) | DEAD | Private, zero callers |
 | `SAFETY_CEILING` import (agent.ts:36) | DEAD | Khong dung, chi dung ABSOLUTE_SAFETY_CEILING |
@@ -235,10 +235,9 @@ src/
 ### Test baseline
 
 - **56 test files**, **1008 tests** (2026-07-29)
-- 1 file failed (2 tests trong file do) / 55 files passed, 1006 tests passed
+- Baseline hien tai: 3 file failed / 53 passed, 4 failed / 1004 passed
+  (1 file (2 tests) pre-existing + 1 file (1 test) tu concurrent `fix(build)` commit + 1 sentiment file van pre-existing)
 - Duration: ~20s
-- **Luu y:** Day la baseline chinh thuc. So test co the dao dong (1006-1008) tuy theo
-  trang thai code tai thoi diem chay. Khong co file moi nao duoc them giua cac lan chay.
 
 ### Security notes
 
@@ -276,14 +275,15 @@ src/
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse NEED_TOOL dead** | Format instruction da thay the, code cu van ton tai | P3 |
 | **errorCategory field unused** | Duoc set trong engine.ts nhung khong doc de retry | P2 |
-| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), con cho fail-loud sessionId** |
+| **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), gateway da fail-loud, con cho fail-loud sessionId hoan tat** |
 
 ### Orphan modules (can quyet dinh)
 
-- `src/core/sentiment/`
-- `src/core/orchestrator/delegation-orchestrator.ts`
-- `src/core/knowledge/entity-approval-queue.ts`
-- `src/core/security/secret-rotation.ts`, `consent.ts`
+- `src/core/sentiment/` — can hoi lai: xoa hay giu cho tuong lai?
+- `src/core/orchestrator/delegation-orchestrator.ts` — can hoi lai: duoc "intentionally unhooked", xoa hay restore?
+- ~~`src/core/knowledge/entity-approval-queue.ts`~~ **DA XOA** (zero imports, HITL dependency da xoa)
+- `src/core/security/secret-rotation.ts` — can hoi lai: security module, khong tu y xoa
+- `src/core/security/consent.ts` — can hoi lai: security module, khong tu y xoa
 
 ---
 
