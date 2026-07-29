@@ -60,7 +60,7 @@ type PlanState =
   | { kind: 'executing'; planId: string; activeItemIndex: number } // đang thực thi item
   | { kind: 'completed'; planId: string }                // tất cả item done
   | { kind: 'failed'; planId: string; reason: string }   // có lỗi không phục hồi được
-  | { kind: 'abandoned'; planId: string };                // bị hủy giữa chừng
+  | { kind: 'aborted'; planId: string };                // bị hủy giữa chừng
 ```
 
 ### Transition hợp lệ (chỉ những transition này được phép, mọi transition khác bị từ chối)
@@ -71,10 +71,10 @@ planning    --tool_call-->   executing
 executing   --tool_call-->   executing        (item khác, hoặc cùng item retry)
 executing   --all_items_done--> completed
 executing   --unrecoverable_error--> failed
-executing   --user_abort-->  abandoned
+executing   --user_abort-->  aborted
 ```
 
-Không có transition nào đi ngược lại completed/failed/abandoned — muốn làm việc mới, phải create plan mới (state planning mới, planId mới).
+Không có transition nào đi ngược lại completed/failed/aborted — muốn làm việc mới, phải create plan mới (state planning mới, planId mới).
 
 ### Hàm dùng chung (single source of truth)
 
@@ -87,8 +87,8 @@ export function derivePlanState(
   const plan = checkpointStore.getPlan(sessionId);
   if (!plan) return { kind: 'none' };
   if (plan.status === 'completed') return { kind: 'completed', planId: plan.id };
-  if (plan.status === 'failed') return { kind: 'failed', planId: plan.id, reason: plan.failReason ?? 'unknown' };
-  if (plan.status === 'abandoned') return { kind: 'abandoned', planId: plan.id };
+  if (plan.status === 'failed') return { kind: 'failed', planId: plan.id, reason: plan.stopReason ?? 'unknown' };
+  if (plan.status === 'aborted') return { kind: 'aborted', planId: plan.id };
 
   const activeIndex = plan.items.findIndex(i => i.status !== 'completed');
   if (activeIndex === -1) return { kind: 'completed', planId: plan.id }; // fallback an toàn
@@ -115,7 +115,7 @@ Bắt buộc: agent.ts, engine.ts, update-plan-tool.ts — cả 3 file đều im
 ### Migration khỏi kiến trúc hiện tại
 
 - hasCreatedPlan, executionPhase (agent.ts) → xóa, thay bằng derivePlanState() gọi mỗi iteration.
-- if (activePlan) (engine.ts, đang truthy-check sai) → thay bằng isGuardActive(derivePlanState(...)).
+- if (activePlan) (engine.ts, đang truthy-check sai) → thay bằng isGuardActive(derivePlanState(...)). ✅ Đã fix (2026-07-29).
 - Logic validate riêng trong update-plan-tool.ts → thay bằng canCompleteItem().
 
 ## 5. NHỮNG GÌ CHƯA ĐƯỢC HÌNH THỨC HÓA (out of scope của ADR-001, cần ADR riêng nếu cần)

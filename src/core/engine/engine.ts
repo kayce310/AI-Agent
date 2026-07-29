@@ -242,7 +242,7 @@ export class Engine extends EventEmitter {
 
     // ── State-Driven Task Plan: Register update_plan tool ──
     const { createUpdatePlanPlugin } = await import('../plan/update-plan-tool.js');
-    this.toolRegistry.use(createUpdatePlanPlugin(this.checkpointStore, this.updatePlanCtx));
+    this.toolRegistry.use(createUpdatePlanPlugin(this.checkpointStore));
     log.info('State-Driven Task Plan registered (update_plan tool)');
 
     // ── Preload tool definitions AFTER all plugins are registered ──
@@ -837,7 +837,7 @@ LƯU Ý:
       log.info(`[Engine] onPlanCreated: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING}`);
     };
     // Khởi tạo evidence log trước mỗi agent.run() — agent loop tự động ghi tool call vào đây
-    this.updatePlanCtx.evidenceLog = this.checkpointStore.evidenceLog;
+    // ponytail: evidenceLog được orchestrator (agent loop) tự động ghi vào request context.
 
     // ── B4: Shared handler for cycle-limit-hit (cầu chì tuyệt đối chống runaway) ──
     const handleCycleLimit = (result: any): EngineResponse | null => {
