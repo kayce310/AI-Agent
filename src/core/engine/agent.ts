@@ -711,6 +711,18 @@ export class Agent extends EventEmitter {
           }
 
           /* final response — no stall, treat as valid FINAL_ANSWER */
+          // ── Goal-drift check for text responses ──
+          // (Tool-result drift check is further down in the tool-call handler)
+          const task = request.task || '';
+          if (task) {
+            const driftReminder = checkGoalDrift(task, finalContent);
+            if (driftReminder) {
+              log.warn(`[Engine] Goal drift detected in text response: "${finalContent.slice(0, 80)}..."`);
+              // Prepend goal reminder to the response so the user sees it
+              finalContent = driftReminder + '\n' + finalContent;
+            }
+          }
+
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});
 
           R.state({

@@ -40,11 +40,11 @@ const plugin: ToolPlugin = {
         // Simple built-in templates
         if (template === 'daily') {
           const now = new Date().toISOString().split('T')[0];
-          return `# Daily Report - ${now}\n\n## Overview\n${params.overview || 'No overview provided'}\n\n## Progress\n- TODO\n\n## Issues\n- None\n\n## Next Steps\n- None`;
+          return `# Daily Report - ${now}\n\n## Overview\n${params.overview || 'No overview provided'}\n\n## Progress\n- (No items yet)\n\n## Issues\n- None\n\n## Next Steps\n- None`;
         }
         if (template === 'weekly') {
           const now = new Date().toISOString().split('T')[0];
-          return `# Weekly Report - ${now}\n\n## Summary\n${params.summary || 'No summary provided'}\n\n## Work Done\n- TODO\n\n## Next Week\n- None\n\n## Blockers\n- None`;
+          return `# Weekly Report - ${now}\n\n## Summary\n${params.summary || 'No summary provided'}\n\n## Work Done\n- (No items yet)\n\n## Next Week\n- None\n\n## Blockers\n- None`;
         }
         if (template === 'meeting') {
           const now = new Date().toISOString().split('T')[0];
