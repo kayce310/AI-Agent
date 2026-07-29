@@ -22,7 +22,7 @@ import { getTaskQueue } from '../../core/task-queue.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 
 const log = new Logger({ module: 'Commands' });
 
@@ -559,8 +559,10 @@ export class CommandRegistry {
     setTimeout(() => {
       log.info('Restart requested by user via /restart');
       try {
+        // ponytail: build before restart so dist/ reflects latest source
+        execSync('npm run build', { cwd: process.cwd(), stdio: 'ignore' });
         const scriptPath = path.resolve(process.argv[1] || 'dist/scripts/start-telegram.js');
-        const child = spawn(process.execPath, [scriptPath], {
+        const child = spawn(process.execPath, ['--max-old-space-size=4096', scriptPath], {
           cwd: process.cwd(),
           stdio: 'ignore',
           detached: true,

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/scripts/start-telegram.js",
+    "start": "node --max-old-space-size=4096 dist/scripts/start-telegram.js",
     "start:dev": "npx tsx src/scripts/start-telegram.ts",
     "config:9router": "npx tsx scripts/configure-9router.ts",
     "test": "vitest run",
