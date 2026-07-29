@@ -33,8 +33,7 @@ import type { CheckpointStore } from '../checkpoint.js';
 import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
-import { SAFETY_CEILING, STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
-import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
+import { STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 import { getRequestContext } from '../request-context.js';
 
@@ -88,20 +87,21 @@ function checkAbort(signal?: AbortSignal): void {
  * no content-length threshold, no /let me/i pattern detection.
  * This mirrors exactly how Hermes agent handles responses: API structure only.
  */
-type ResponseType = 'NEED_TOOL' | 'FINAL_ANSWER' | 'UNPARSEABLE';
+type ResponseType = 'FINAL_ANSWER' | 'UNPARSEABLE';
 
-function classifyResponse(content: string, toolCalls: any[]): ResponseType {
-  // 1. Structured tool calls from API — highest priority
-  if (toolCalls.length > 0) return 'NEED_TOOL';
-
-  // 2. Empty / garbage content — no meaningful response at all
+/**
+ * Classify model text response — pure structure-based, no NLP heuristics.
+ * Tool calls are handled upstream (finishReason !== 'stop'), so when we
+ * reach here the model wrote text. Check if the text is meaningful.
+ * NEVER needed for tool call routing — that's handled by the API's built-in
+ * tool_call mechanism (format instruction in system prompt).
+ */
+function classifyResponse(content: string): ResponseType {
+  // Empty / garbage content — no meaningful response at all
   const trimmed = (content || '').trim();
   if (!trimmed || trimmed.length < 3) return 'UNPARSEABLE';
 
-  // 3. Everything else is FINAL_ANSWER
-  //    No NLP. No regex. No content-length threshold.
-  //    The model either called a tool (handled above) or wrote a text response.
-  //    Trust the text as the intended answer — even if it starts with "Let me".
+  // Everything else is FINAL_ANSWER — No NLP, no regex, no content-length threshold.
   return 'FINAL_ANSWER';
 }
 
@@ -455,8 +455,10 @@ export class Agent extends EventEmitter {
     let finalContent = '';
     let readToolCount = 0;      // Track read-heavy tool calls for loop detection
     let readLoopForced = false; // Prevent duplicate force-synthesis injections
-    // ── Stall Guard — plan state derived from checkpointStore each iteration ──
-    // ponytail: no static flags (hasCreatedPlan, executionPhase) — derive from plan.status
+    // ── Execution state machine: PLANNING → EXECUTING → DONE ──
+    // Thay thế IntentionGuard cũ — model-agnostic, dùng cấu trúc response để quyết định
+    let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
+    let executionPhase: 'init' | 'planning' | 'executing' | 'done' = 'init';
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
@@ -464,7 +466,8 @@ export class Agent extends EventEmitter {
     // Tự động ghi nhận mỗi tool call thành công, gắn với item đang active trong plan.
     // Lưu vào checkpointStore.evidenceLog — shared với update_plan tool handler.
     const READ_TOOLS = new Set(['read_file', 'list_directory', 'search_knowledge_graph']);
-    const MAX_READ_CALLS = 8;   // Max read-heavy calls before forcing synthesis
+    // Uses this.maxReadCalls (from config.maxReadCalls ?? env CORAL_MAX_READ_CALLS)
+    // NOT a local const — the config value respects env var overrides.
 
     while (toolCallCycles < this.maxToolCycles) {
       checkAbort(abortSignal);
@@ -592,8 +595,7 @@ export class Agent extends EventEmitter {
           reasoningContent: modelResult.reasoningContent || null,
         });
 
-        // ── Derive plan state — ADR-000: single source of truth, no flags ──
-        const planState = derivePlanState(this.checkpointStore, request.sessionId);
+        /* router used */
 
         // ── Handle finish_reason: stop ──
         if (modelResult.finishReason === 'stop') {
@@ -618,7 +620,7 @@ export class Agent extends EventEmitter {
             }).catch(() => {});
           }
 
-          const responseType = classifyResponse(finalContent, modelResult.toolCalls || []);
+          const responseType = classifyResponse(finalContent);
 
           if (responseType === 'UNPARSEABLE') {
             if (toolCallCycles < 2) {
@@ -647,17 +649,17 @@ export class Agent extends EventEmitter {
             };
           }
 
-          // ── Stall Detection — derived plan state, no static flags ──
+          // ── Stall Detection (model-agnostic): thay thế IntentionGuard cũ ──
+          // Duy nhất nguồn sự thật: cấu trúc response có tool call hay không.
+          // Không dùng finish_reason, không regex text.
           const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
 
-          // Plan complete → text response is valid FINAL_ANSWER, skip stall detection
-          if ((planState.kind === 'completed') && !turnHasAction) {
-            log.info(`[Stall] Plan complete — text response accepted as FINAL_ANSWER`);
-            stallCount = 0;
-            // fall through to FINAL_ANSWER return below
-          } else if (!turnHasAction) {
+          // Cập nhật phase dựa trên việc plan đã được tạo
+          if (executionPhase === 'init' && hasCreatedPlan) executionPhase = 'planning';
+
+          if (!turnHasAction) {
             stallCount++;
-            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (kind=${planState.kind})`);
+            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (hasCreatedPlan=${hasCreatedPlan}, phase=${executionPhase})`);
           } else {
             if (stallCount > 0) {
               log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
@@ -665,10 +667,13 @@ export class Agent extends EventEmitter {
             stallCount = 0;
           }
 
-          // Escalation — only when plan exists and not complete
-          if (stallCount >= MAX_STALL && isGuardActive(planState)) {
+          // Xử lý leo thang theo stallCount
+          if (stallCount >= MAX_STALL && hasCreatedPlan) {
+            // stall >= 3 mà đã có plan → dừng với lỗi rõ ràng (không trả text làm FINAL_ANSWER)
             log.warn(`[Stall] Max stalls (${MAX_STALL}) reached — aborting`);
-            R.state({ event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles });
+            R.state({
+              event: 'STALL_EXCEEDED', requestId, cycle: toolCallCycles,
+            });
             return {
               content: `[E3] ❌ Agent stalled after plan creation: ${stallCount} consecutive turns without tool execution. Plan may need to be simplified or re-created.`,
               modelUsed: modelResult.modelUsed || 'unknown',
@@ -679,11 +684,13 @@ export class Agent extends EventEmitter {
           }
 
           if (stallCount === 1) {
-            const msg = isGuardActive(planState)
+            // Lần stall đầu: inject system message, ép tool_choice='required' nếu đã có plan
+            const msg = hasCreatedPlan
               ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
               : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
             messages.push({ role: 'system', content: msg });
-            if (isGuardActive(planState)) {
+            if (hasCreatedPlan) {
+              // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
               (modelOptions as any).toolChoice = 'required';
             }
             log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
@@ -691,7 +698,8 @@ export class Agent extends EventEmitter {
             continue;
           }
 
-          if (stallCount === 2 && isGuardActive(planState)) {
+          if (stallCount === 2 && hasCreatedPlan) {
+            // stall lần 2 với plan: ép cứng tool_choice='required'
             (modelOptions as any).toolChoice = 'required';
             messages.push({
               role: 'system',
@@ -727,7 +735,7 @@ export class Agent extends EventEmitter {
 
           // ── LengthGuard: retry nếu chưa có plan và chưa retry lần nào ──
           // Nếu đã có plan, giữ nguyên hành vi cũ (return truncation ngay)
-          if (planState.kind === 'none' && lengthRetryCount < 1) {
+          if (!hasCreatedPlan && lengthRetryCount < 1) {
             log.warn(`[LengthGuard] Cycle ${toolCallCycles}: truncated before plan created — retrying (attempt ${lengthRetryCount + 1}/1)`);
             lengthRetryCount++;
             // KHÔNG giữ partialContent bị cắt vào history — tránh model tiếp nối câu dở dang
@@ -858,6 +866,17 @@ export class Agent extends EventEmitter {
               this.checkpointStore.markToolRunning(request.checkpointRequestId, toolCall.id);
             }
 
+            // ── hasCreatedPlan: detect update_plan(create) calls ──
+            if (toolCall.function.name === 'update_plan') {
+              try {
+                const planArgs = JSON.parse(toolCall.function.arguments || '{}');
+                if (planArgs.action === 'create') {
+                  hasCreatedPlan = true;
+                  log.info(`[IntentionGuard] hasCreatedPlan set true (update_plan create)`);
+                }
+              } catch { /* ignore parse errors */ }
+            }
+
             // Show thinking: tool call starting
             if (request.onThinking) {
               const fnName = toolCall.function.name;
@@ -918,14 +937,13 @@ export class Agent extends EventEmitter {
 
             // ── Evidence logging: ghi tool call vào evidenceLog cho item đang active ──
             try {
-              const rctx = getRequestContext();
-              if (rctx && this.checkpointStore && request.sessionId) {
+              if (this.checkpointStore && request.sessionId) {
                 const sp = this.checkpointStore.getPlan(request.sessionId);
                 if (sp && (sp.status === 'pending' || sp.status === 'running')) {
                   const idx = sp.currentItemIndex;
-                  if (!rctx.evidenceLog.has(idx)) rctx.evidenceLog.set(idx, []);
+                  if (!getRequestContext()?.evidenceLog.has(idx)) getRequestContext()?.evidenceLog.set(idx, []);
                   const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
-                  rctx.evidenceLog.get(idx)!.push({
+                  getRequestContext()?.evidenceLog.get(idx)!.push({
                     toolName: toolCall.function.name,
                     args: toolCall.function.arguments as Record<string, unknown>,
                     result: toolResult,
@@ -947,7 +965,7 @@ export class Agent extends EventEmitter {
                 readToolCount++;
               }
             }
-            if (readToolCount >= MAX_READ_CALLS) {
+            if (readToolCount >= this.maxReadCalls) {
               readLoopForced = true;
               messages.push({
                 role: 'system',

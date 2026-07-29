@@ -215,16 +215,6 @@ export class Engine extends EventEmitter {
     };
   }
 
-  private sanitizeResponse(content: string): string {
-    if (!content) return content;
-    return String(content)
-      .replace(/<longcat_tool_call[\s\S]*?<\/longcat_tool_call>/gi, '')
-      .replace(/<tool_call[\s\S]*?<\/tool_call>/gi, '')
-      .replace(/<longcat_arg_key>[\s\S]*?<\/longcat_arg_key>/gi, '')
-      .replace(/<longcat_arg_value>[\s\S]*?<\/longcat_arg_value>/gi, '')
-      .trim();
-  }
-
   async init(): Promise<void> {
     this.registry.loadFromConfig();
     await evolutionEngine.init();
