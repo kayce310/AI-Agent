@@ -53,6 +53,7 @@ import { R } from '../runtime-instrumentation.js';
 import type { UpdatePlanContext } from '../plan/types.js';
 import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
+import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
 ];
@@ -529,7 +530,7 @@ export class Engine extends EventEmitter {
     // WARNING: Must use request.userId (not request.sessionId) — sessionId is a
     // ConversationSessionId (UUID) that changes on /new, while userId is permanent.
     // Using sessionId here would allow /new to bypass rate limits.
-    const actualUserId = request.userId || request.sessionId || 'anonymous';
+    const actualUserId = request.userId || 'anonymous';
     if (!this.perUserLimiter.tryConsume(actualUserId)) {
       log.warn(`Per-user rate limit exceeded for ${actualUserId}`);
       auditLogger.log({ level: 'warn', category: 'rate_limit', userId: actualUserId, detail: 'Per-user rate limit exceeded' });
@@ -698,8 +699,11 @@ export class Engine extends EventEmitter {
     const worldState = worldModel.getState();
 
     // ── STATE-DRIVEN TASK PLAN: Check for active plan ──
+    // ADR-001: Use derivePlanState + isGuardActive instead of truthy-check on getPlan().
+    // A completed/failed/aborted plan is NOT active — only planning/executing states are.
     let planContext: string | undefined;
-    const activePlan = this.checkpointStore.getPlan(sessionId);
+    const planState = derivePlanState(this.checkpointStore, sessionId);
+    const activePlan = isGuardActive(planState) ? this.checkpointStore.getPlan(sessionId) : null;
     if (activePlan) {
       // Resume paused_limit automatically (no user input needed)
       if (activePlan.status === 'paused_limit') {
