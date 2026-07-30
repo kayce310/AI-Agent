@@ -34,6 +34,7 @@ import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import type { PrivilegeGuard } from '../security/privilege-guard.js';
+import { missionLock } from '../security/mission-lock.js';
 import { STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
@@ -727,6 +728,19 @@ export class Agent extends EventEmitter {
               // Prepend goal reminder to the response so the user sees it
               finalContent = driftReminder + '\n' + finalContent;
             }
+          }
+
+          // ── MissionLock: validate response for identity drift (R1.5) ──
+          const missionCheck = missionLock.validateResponse(finalContent);
+          if (!missionCheck.allowed) {
+            log.warn(`MissionLock blocked response: ${missionCheck.reason}`);
+            return {
+              content: `[GUARD] Response blocked: ${missionCheck.reason}`,
+              modelUsed: modelResult.modelUsed,
+              providerUsed: modelResult.providerUsed,
+              toolCycles: toolCallCycles,
+              finished: true,
+            };
           }
 
           evolutionEngine.recordSuccess(modelResult.modelUsed, 0).catch(() => {});

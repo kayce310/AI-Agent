@@ -38,6 +38,9 @@ export class MemoryFacade {
       ? message.content
       : String(message.content ?? '');
 
+    // Use channelId as session scope (matching getChannelHistory which also uses channelId)
+    // This keeps memory scoped to the channel, not per-user session — intentional design.
+    // Changing to sessionId would orphan existing channel-scoped history.
     await globalMemoryStore.add('session', content, {
       sessionId: channelId,
       tags: [message.role || 'user'],
