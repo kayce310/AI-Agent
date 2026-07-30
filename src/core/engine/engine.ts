@@ -50,7 +50,7 @@ import { getContextManager } from '../context-window.js';
 import { TaskQueue, getTaskQueue } from '../task-queue.js';
 import { worldModel } from '../world/model.js';
 import { R } from '../runtime-instrumentation.js';
-import type { UpdatePlanContext } from '../plan/types.js';
+import { requestContext, getRequestContext } from '../request-context.js';
 import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
@@ -162,15 +162,13 @@ export class Engine extends EventEmitter {
   private eventLogger!: StructuredLogger;
   private pendingCallIds: Map<string, Array<{callId: string; decisionId: string}>> = new Map();
   private tasksWithToolCalls: Set<string> = new Set();
-  private currentTaskId: string = 'default';
-
+  // currentTaskId removed — now per-request via requestContext (AsyncLocalStorage)
   private agentRegistry!: AgentRegistry;
   private learner!: SelfEvolutionLearner;
   private checkpointStore: CheckpointStore;
   private taskQueue: TaskQueue;
 
-  /** Mutable context ref for update_plan tool (B2: sessionId from Engine, not LLM args; D3: onPlanCreated callback) */
-  private updatePlanCtx: UpdatePlanContext;
+  // updatePlanCtx removed — now per-request via requestContext (AsyncLocalStorage)
 
   /** In-flight promise dedup — same key = same promise */
   private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
@@ -185,6 +183,7 @@ export class Engine extends EventEmitter {
     this.hooks = globalHooks;
     this.privilegeGuard = new PrivilegeGuard({
       rules: createDefaultAllowRules(),
+      defaultEffect: 'deny',  // Zero-Trust: reject unknown tools by default
       restrictedMode: false,
       restrictedAllowList: createRestrictedAllowList(),
     });
@@ -206,13 +205,6 @@ export class Engine extends EventEmitter {
     this.eventLogger = new StructuredLogger(this.eventBus);
     this.checkpointStore = getCheckpoint();
     this.taskQueue = getTaskQueue();
-    this.updatePlanCtx = {
-      currentSessionId: 'default',
-      onPlanCreated: (_itemCount: number) => {
-        // Placeholder — real implementation sets maxToolCycles
-        // via closure in processInner() before agent.run()
-      },
-    };
   }
 
   async init(): Promise<void> {
@@ -232,6 +224,7 @@ export class Engine extends EventEmitter {
 
     // ── State-Driven Task Plan: Register update_plan tool ──
     const { createUpdatePlanPlugin } = await import('../plan/update-plan-tool.js');
+    // updatePlanCtx removed — tool reads from getRequestContext() directly
     this.toolRegistry.use(createUpdatePlanPlugin(this.checkpointStore));
     log.info('State-Driven Task Plan registered (update_plan tool)');
 
@@ -269,6 +262,7 @@ export class Engine extends EventEmitter {
       auxiliaryLlmCall,            // ← Context compression now works!
       checkpointStore: this.checkpointStore, // ← Cycle-level persistence
       contextManager: getContextManager(),  // ← Token budget management
+      privilegeGuard: this.privilegeGuard,  // ← Direct tool authorization (defense-in-depth)
     };
     this.agent = new Agent(agentConfig);
 
@@ -276,7 +270,7 @@ export class Engine extends EventEmitter {
     
     // Phase 4E-B.3: Hook reasoning:update events from Agent streaming
     this.agent.on('reasoning:update', (data: any) => {
-      const taskId = this.currentTaskId;
+      const taskId = getRequestContext()?.taskId ?? 'unknown';
       const chunk = (data.chunk as string) || '';
       const isFinal = (data.isFinal as boolean) || false;
       
@@ -328,7 +322,7 @@ export class Engine extends EventEmitter {
     // ═══ EVENT BUS: tool:call → tool_called + decision_made ═══
     this.agent.onEvent('tool:call', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
-      const taskId = this.currentTaskId;
+      const taskId = getRequestContext()?.taskId ?? 'unknown';
       const toolName = (data.toolName as string) || 'unknown';
       const toolArgs = parseToolArgs(data.toolArgs);
       const cycle = (data.cycle as number) || 0;
@@ -370,7 +364,7 @@ export class Engine extends EventEmitter {
     // ═══ EVENT BUS: tool:result → tool_finished + file events + error classification ═══
     this.agent.onEvent('tool:result', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
-      const taskId = this.currentTaskId;
+      const taskId = getRequestContext()?.taskId ?? 'unknown';
       const toolName = (data.toolName as string) || 'unknown';
       const toolArgs = parseToolArgs(data.args);
       const rawResult = data.result;
@@ -437,7 +431,7 @@ export class Engine extends EventEmitter {
 
     this.agent.onEvent('model:response', async (data) => {
       const sessionId = (data.sessionId as string) || 'default';
-      const taskId = this.currentTaskId;
+      const taskId = getRequestContext()?.taskId ?? 'unknown';
       if (data.finishReason === 'stop' && data.content) {
         // Direct response path: no tools were called → emit decision_made so Mission Mode is never blind
         if (!this.tasksWithToolCalls.has(taskId)) {
@@ -634,11 +628,20 @@ export class Engine extends EventEmitter {
     const startTime = Date.now();
     const userMessage = request.messages[request.messages.length - 1]?.content || '';
     const taskId = `task-${Date.now()}`;
-    this.currentTaskId = taskId;
     const sessionId = request.sessionId || 'default';
     const requestId = request.sessionId || `req-${Date.now()}`;
     R.state({ event: 'RECEIVED', requestId, taskId });
     
+    // ── Per-request context via AsyncLocalStorage (eliminates concurrent-request races) ──
+    requestContext.enterWith({
+      sessionId,
+      taskId,
+      evidenceLog: new Map() as import('../plan/types.js').EvidenceLog,
+      onPlanCreated: (_itemCount: number) => {
+        this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
+      },
+    });
+
     // ── CHECKPOINT: Start tracking this request ──
     this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
     
@@ -819,15 +822,8 @@ LƯU Ý:
     // B1: Append planContext AFTER truncation — guaranteed not to be cut
     const systemPrompt = planContext ? `${promptBody}\n\n${planContext}` : promptBody;
 
-    // Set up B2 context for this request
-    // D3: onPlanCreated — set maxToolCycles to ABSOLUTE_SAFETY_CEILING (stagnation is primary signal)
-    this.updatePlanCtx.currentSessionId = sessionId;
-    this.updatePlanCtx.onPlanCreated = (_itemCount: number) => {
-      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
-      log.info(`[Engine] onPlanCreated: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING}`);
-    };
-    // Khởi tạo evidence log trước mỗi agent.run() — agent loop tự động ghi tool call vào đây
-    // ponytail: evidenceLog được orchestrator (agent loop) tự động ghi vào request context.
+    // B2: context for update_plan tool is set via requestContext.enterWith() at processInner top.
+    // onPlanCreated callback was also set there. updatePlanCtx on Engine singleton is removed.
 
     // ── B4: Shared handler for cycle-limit-hit (cầu chì tuyệt đối chống runaway) ──
     const handleCycleLimit = (result: any): EngineResponse | null => {

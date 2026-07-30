@@ -61,7 +61,8 @@ describe('Engine Guardrails Integration', () => {
     expect(engine.checkPrivilege('filesystem:write').allowed).toBe(false);
 
     engine.setRestrictedMode(false);
-    expect(engine.checkPrivilege('filesystem:write').allowed).toBe(true);
+    // With defaultEffect='deny', filesystem:write is denied even without restricted mode
+    expect(engine.checkPrivilege('filesystem:write').allowed).toBe(false);
   });
 
   it('engine setRestrictedAllowList() customizes allowed tools', () => {

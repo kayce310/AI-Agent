@@ -33,6 +33,7 @@ import type { CheckpointStore } from '../checkpoint.js';
 import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
+import type { PrivilegeGuard } from '../security/privilege-guard.js';
 import { STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
@@ -125,6 +126,8 @@ export interface AgentConfig {
   checkpointStore?: CheckpointStore;
   /** ContextWindowManager for token budget management */
   contextManager?: ContextWindowManager;
+  /** PrivilegeGuard for direct tool authorization (defense-in-depth) */
+  privilegeGuard?: PrivilegeGuard;
 }
 
 // ── Agent Result ──
@@ -153,6 +156,8 @@ export class Agent extends EventEmitter {
     private checkpointStore?: CheckpointStore;
     private contextManager: ContextWindowManager;
     private sessionStartTimes = new Map<string, number>();
+    /** PrivilegeGuard reference for direct tool authorization checks */
+    private enginePrivilegeGuard?: PrivilegeGuard;
 
   constructor(config: AgentConfig) {
     super();
@@ -167,6 +172,7 @@ export class Agent extends EventEmitter {
     this.circuitBreaker = engineCircuitBreaker;
     this.checkpointStore = config.checkpointStore;
     this.contextManager = config.contextManager ?? getContextManager();
+    this.enginePrivilegeGuard = config.privilegeGuard;
 
     // Auto-attach tracer to hooks if provided
     if (this.tracer) {
@@ -872,6 +878,21 @@ export class Agent extends EventEmitter {
                 }),
               });
               continue;
+            }
+
+            // ── Direct PrivilegeGuard check (defense-in-depth, independent of hook guard) ──
+            if (this.enginePrivilegeGuard) {
+              const pgCheck = this.enginePrivilegeGuard.check(toolCall.function.name);
+              if (!pgCheck.allowed) {
+                messages.push({
+                  role: 'tool',
+                  tool_call_id: toolCall.id,
+                  content: JSON.stringify({
+                    error: `TOOL_BLOCKED_BY_POLICY: ${toolCall.function.name} is not permitted — ${pgCheck.reason}`,
+                  }),
+                });
+                continue;
+              }
             }
 
             // ── Checkpoint: mark tool as running (prevents duplicate re-execution on crash) ──

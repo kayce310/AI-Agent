@@ -291,12 +291,13 @@ export class PrivilegeGuard {
    * Register as a HookRegistry guard handler.
    */
   attachToHooks(hooks: {
-    before: (event: any, handler: (...args: any[]) => any) => () => void;
+    before: (event: any, handler: (ctx: { event: string; timestamp: string; data: Record<string, unknown> }) => any) => () => void;
   }): () => void {
-    return hooks.before('tool:call', (data: Record<string, unknown>) => {
-      const toolName = typeof data.toolName === 'string' ? data.toolName : '';
-      const tags = Array.isArray(data.tags) ? (data.tags as string[]) : undefined;
-      let rawArgs = data.args ?? data.toolArgs;
+    return hooks.before('tool:call', (ctx) => {
+      const payload = ctx.data;
+      const toolName = typeof payload.toolName === 'string' ? payload.toolName : '';
+      const tags = Array.isArray(payload.tags) ? (payload.tags as string[]) : undefined;
+      let rawArgs = payload.args ?? payload.toolArgs;
       let args: Record<string, unknown> | undefined;
 
       if (typeof rawArgs === 'string') {
