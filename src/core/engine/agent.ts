@@ -34,6 +34,7 @@ import { ContextWindowManager, getContextManager } from '../context-window.js';
 import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import { STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 import { getRequestContext } from '../request-context.js';
 
@@ -455,10 +456,8 @@ export class Agent extends EventEmitter {
     let finalContent = '';
     let readToolCount = 0;      // Track read-heavy tool calls for loop detection
     let readLoopForced = false; // Prevent duplicate force-synthesis injections
-    // ── Execution state machine: PLANNING → EXECUTING → DONE ──
-    // Thay thế IntentionGuard cũ — model-agnostic, dùng cấu trúc response để quyết định
-    let hasCreatedPlan = false;     // true khi model gọi update_plan(create)
-    let executionPhase: 'init' | 'planning' | 'executing' | 'done' = 'init';
+    // ── Plan state derived from checkpointStore each iteration (ADR-001) ──
+    // Không dùng hasCreatedPlan/executionPhase boolean — derive từ getPlan() mỗi vòng lặp.
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
@@ -654,12 +653,13 @@ export class Agent extends EventEmitter {
           // Không dùng finish_reason, không regex text.
           const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
 
-          // Cập nhật phase dựa trên việc plan đã được tạo
-          if (executionPhase === 'init' && hasCreatedPlan) executionPhase = 'planning';
+          // ── Derive plan state từ checkpointStore (ADR-001: single source of truth) ──
+          const planState = derivePlanState(this.checkpointStore, request.sessionId);
+          const planIsActive = isGuardActive(planState);
 
           if (!turnHasAction) {
             stallCount++;
-            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (hasCreatedPlan=${hasCreatedPlan}, phase=${executionPhase})`);
+            log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (planState=${planState.kind})`);
           } else {
             if (stallCount > 0) {
               log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
@@ -668,7 +668,7 @@ export class Agent extends EventEmitter {
           }
 
           // Xử lý leo thang theo stallCount
-          if (stallCount >= MAX_STALL && hasCreatedPlan) {
+          if (stallCount >= MAX_STALL && planIsActive) {
             // stall >= 3 mà đã có plan → dừng với lỗi rõ ràng (không trả text làm FINAL_ANSWER)
             log.warn(`[Stall] Max stalls (${MAX_STALL}) reached — aborting`);
             R.state({
@@ -685,11 +685,11 @@ export class Agent extends EventEmitter {
 
           if (stallCount === 1) {
             // Lần stall đầu: inject system message, ép tool_choice='required' nếu đã có plan
-            const msg = hasCreatedPlan
+            const msg = planIsActive
               ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
               : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
             messages.push({ role: 'system', content: msg });
-            if (hasCreatedPlan) {
+            if (planIsActive) {
               // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
               (modelOptions as any).toolChoice = 'required';
             }
@@ -698,7 +698,7 @@ export class Agent extends EventEmitter {
             continue;
           }
 
-          if (stallCount === 2 && hasCreatedPlan) {
+          if (stallCount === 2 && planIsActive) {
             // stall lần 2 với plan: ép cứng tool_choice='required'
             (modelOptions as any).toolChoice = 'required';
             messages.push({
@@ -745,9 +745,10 @@ export class Agent extends EventEmitter {
           log.warn(`[TRUNCATED] Model hit max_tokens at cycle ${toolCallCycles}`);
           const partialContent = (modelResult.content || '').replace(/^[\w\/\.-]+:\s*/m, '').trim();
 
-          // ── LengthGuard: retry nếu chưa có plan và chưa retry lần nào ──
-          // Nếu đã có plan, giữ nguyên hành vi cũ (return truncation ngay)
-          if (!hasCreatedPlan && lengthRetryCount < 1) {
+          // ── LengthGuard: retry nếu chưa có plan active và chưa retry lần nào ──
+          // Nếu đã có plan active, giữ nguyên hành vi cũ (return truncation ngay)
+          const lengthGuardPlanState = derivePlanState(this.checkpointStore, request.sessionId);
+          if (!isGuardActive(lengthGuardPlanState) && lengthRetryCount < 1) {
             log.warn(`[LengthGuard] Cycle ${toolCallCycles}: truncated before plan created — retrying (attempt ${lengthRetryCount + 1}/1)`);
             lengthRetryCount++;
             // KHÔNG giữ partialContent bị cắt vào history — tránh model tiếp nối câu dở dang
@@ -878,13 +879,14 @@ export class Agent extends EventEmitter {
               this.checkpointStore.markToolRunning(request.checkpointRequestId, toolCall.id);
             }
 
-            // ── hasCreatedPlan: detect update_plan(create) calls ──
+            // ── Plan state is now derived from checkpointStore each iteration (ADR-001) ──
+            // Không cần set hasCreatedPlan — derivePlanState() đọc từ checkpointStore
+            // trực tiếp. Block này giữ lại để log nhưng không set flag.
             if (toolCall.function.name === 'update_plan') {
               try {
                 const planArgs = JSON.parse(toolCall.function.arguments || '{}');
                 if (planArgs.action === 'create') {
-                  hasCreatedPlan = true;
-                  log.info(`[IntentionGuard] hasCreatedPlan set true (update_plan create)`);
+                  log.info(`[Plan] update_plan(create) called — plan state will be derived on next iteration`);
                 }
               } catch { /* ignore parse errors */ }
             }
