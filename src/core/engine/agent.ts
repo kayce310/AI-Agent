@@ -734,14 +734,19 @@ export class Agent extends EventEmitter {
 
           /* final response — no stall, treat as valid FINAL_ANSWER */
           // ── Goal-drift check for text responses ──
-          // (Tool-result drift check is further down in the tool-call handler)
-          const task = request.task || '';
-          if (task) {
-            const driftReminder = checkGoalDrift(task, finalContent);
-            if (driftReminder) {
-              log.warn(`[Engine] Goal drift detected in text response: "${finalContent.slice(0, 80)}..."`);
-              // Prepend goal reminder to the response so the user sees it
-              finalContent = driftReminder + '\n' + finalContent;
+          // Only meaningful for multi-step tasks (active plan). For plain chat
+          // ("này Coral" → "Chào bạn!") the keyword overlap is ~0, which would
+          // prepend a [GOAL REMINDER] to EVERY reply — a 100% false positive.
+          const textDriftState = derivePlanState(this.checkpointStore, request.sessionId);
+          if (isGuardActive(textDriftState)) {
+            const task = request.task || '';
+            if (task) {
+              const driftReminder = checkGoalDrift(task, finalContent);
+              if (driftReminder) {
+                log.warn(`[Engine] Goal drift detected in text response: "${finalContent.slice(0, 80)}..."`);
+                // Prepend goal reminder to the response so the user sees it
+                finalContent = driftReminder + '\n' + finalContent;
+              }
             }
           }
 
@@ -993,8 +998,11 @@ export class Agent extends EventEmitter {
               content: toolMsgContent,
             });
             // ── Goal-drift check: inject reminder if agent deviates from task ──
+            // Only when a plan is active (multi-step task). Plain chat tool
+            // calls (search "này Coral") would otherwise false-positive.
+            const toolDriftState = derivePlanState(this.checkpointStore, request.sessionId);
             const task = request.task || '';
-            if (task && toolCallCycles > 1) {
+            if (task && isGuardActive(toolDriftState) && toolCallCycles > 1) {
               const driftReminder = checkGoalDrift(task, cappedResult);
               if (driftReminder) {
                 messages.push({ role: 'system', content: driftReminder });
