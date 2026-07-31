@@ -552,6 +552,16 @@ export class CommandRegistry {
     setTimeout(() => {
       log.info('Restart requested by user via /restart');
       try {
+        // Cleanup before process.exit(0) — process.exit bypasses gracefulShutdown,
+        // so we must stop the tunnel + dashboard explicitly here. Otherwise
+        // cloudflared is orphaned (Windows keeps child processes alive) and the
+        // next /dashboard spawns a second tunnel alongside the old one.
+        try { (globalThis as any).__coral_stopTunnel?.(); } catch {}
+        try {
+          const dash = (globalThis as any).__coral_dashboardServer;
+          if (dash) { dash.stop().catch(() => {}); }
+        } catch {}
+
         // ponytail: build before restart so dist/ reflects latest source
         execSync('npm run build', { cwd: process.cwd(), stdio: 'ignore' });
         const scriptPath = path.resolve(process.argv[1] || 'dist/scripts/start-telegram.js');
