@@ -137,6 +137,10 @@ export class DashboardServer {
       this.serveFile(res, 'src/dashboard/brain-tab.js', 'application/javascript; charset=utf-8');
       return;
     }
+    if (pathname === '/behavior-renderer.js') {
+      this.serveFile(res, 'src/dashboard/behavior-renderer.js', 'application/javascript; charset=utf-8');
+      return;
+    }
 
     // ═══ LOCAL THREE.JS (for headless / CDN-offline mode) ═══
     if (pathname === '/three.r128.min.js') {
@@ -443,9 +447,12 @@ export class DashboardServer {
     const fullPath = path.resolve(process.cwd(), filePath);
     fs.readFile(fullPath, (err, data) => {
       if (err) {
-        console.error(`[DashboardServer] Failed to serve ${filePath}:`, err.message);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Internal server error');
+        // ENOENT = route exists in code but file missing (config bug) → 404
+        // other errors → 500
+        const status = (err as NodeJS.ErrnoException).code === 'ENOENT' ? 404 : 500;
+        console.error(`[DashboardServer] Failed to serve ${filePath} (${status}):`, err.message);
+        res.writeHead(status, { 'Content-Type': 'text/plain' });
+        res.end(status === 404 ? 'Not found' : 'Internal server error');
         return;
       }
       res.writeHead(200, {
