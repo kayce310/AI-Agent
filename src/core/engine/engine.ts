@@ -635,16 +635,38 @@ export class Engine extends EventEmitter {
     const sessionId = request.sessionId || 'default';
     const requestId = request.sessionId || `req-${Date.now()}`;
     R.state({ event: 'RECEIVED', requestId, taskId });
-    
+
     // ── Per-request context via AsyncLocalStorage (eliminates concurrent-request races) ──
-    requestContext.enterWith({
+    // ADR-000 §2P3: per-request state must live in AsyncLocalStorage with a scoped
+    // lifecycle. We use run() (NOT enterWith): run() creates a NEW context scope that
+    // is automatically torn down when the callback completes — enterWith() sets the
+    // current context permanently, so a later request (or cron/timer/event-listener
+    // callback outside the request chain) would inherit the LAST request's context
+    // after the requests finish (verified empirically: leaked store after run).
+    const rctx: import('../request-context.js').RequestContext = {
       sessionId,
       taskId,
       evidenceLog: new Map() as import('../plan/types.js').EvidenceLog,
       onPlanCreated: (_itemCount: number) => {
         this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       },
-    });
+    };
+    return requestContext.run(rctx, () => this.processInnerScoped(request, cacheKey, {
+      startTime, userMessage, taskId, sessionId, requestId,
+    }));
+  }
+
+  /**
+   * Scoped body of processInner — runs inside requestContext.run() so all async
+   * operations spawned here (event handlers, tool calls, hooks) inherit the
+   * per-request context, and the context is torn down when this returns.
+   */
+  private async processInnerScoped(
+    request: EngineRequest,
+    cacheKey: string,
+    meta: { startTime: number; userMessage: string; taskId: string; sessionId: string; requestId: string },
+  ): Promise<EngineResponse> {
+    const { startTime, userMessage, taskId, sessionId, requestId } = meta;
 
     // ── CHECKPOINT: Start tracking this request ──
     this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');

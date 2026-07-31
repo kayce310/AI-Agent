@@ -123,4 +123,56 @@ describe('requestContext (AsyncLocalStorage isolation)', () => {
     expect(calls).toContain('A');
     expect(calls).toContain('B');
   });
+
+  // ADR-000 §2P3 guard: context MUST be torn down after run() completes.
+  // enterWith() (the wrong API) leaves the LAST request's context on the
+  // thread permanently — a cron/timer/EventEmitter callback starting after
+  // the requests finish would inherit stale session/taskId (data leak).
+  // This test fails if someone swaps run() → enterWith().
+  it('run() tears down context after completion (no leakage to later callbacks)', async () => {
+    await requestContext.run(
+      { sessionId: 'sess-X', taskId: 'task-X', evidenceLog: new Map(), onPlanCreated: () => {} },
+      async () => {
+        await new Promise(r => setTimeout(r, 5));
+        expect(getRequestContext()?.sessionId).toBe('sess-X');
+      }
+    );
+
+    // After run() completes, context must be null — NOT the last request's ctx
+    expect(getRequestContext()).toBeNull();
+
+    // A later async callback (simulating cron/event-listener outside a request)
+    // must NOT see the stale context.
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        expect(getRequestContext()).toBeNull();
+        resolve();
+      }, 5);
+    });
+  });
+
+  it('concurrent run() scopes never leak across each other or outward', async () => {
+    // Interleave two requests through the SAME async function shape as
+    // processInner: enterWith-style overwrite would corrupt reads.
+    const reads: string[] = [];
+    async function pseudoProcessInner(taskId: string, waitMs: number): Promise<void> {
+      await requestContext.run(
+        { sessionId: `s-${taskId}`, taskId, evidenceLog: new Map(), onPlanCreated: () => {} },
+        async () => {
+          await new Promise(r => setTimeout(r, waitMs));
+          reads.push(`${taskId}:${getRequestContext()?.taskId}`);
+        }
+      );
+    }
+
+    await Promise.all([pseudoProcessInner('A', 40), pseudoProcessInner('B', 10)]);
+
+    // Each request read its OWN context — no cross-contamination
+    expect(reads).toContain('A:A');
+    expect(reads).toContain('B:B');
+    expect(reads).toHaveLength(2);
+
+    // And nothing leaks after both finish
+    expect(getRequestContext()).toBeNull();
+  });
 });
