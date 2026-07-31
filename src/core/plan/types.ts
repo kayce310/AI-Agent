@@ -38,6 +38,10 @@ export interface PlanItem {
   errorCategory?: 'transient' | 'permanent' | 'security';
   /** Số lần thử liên tiếp trên item này mà KHÔNG dẫn tới completed */
   consecutiveFailedAttempts: number;  // default 0
+  /** Số lần lỗi TRANSIENT liên tiếp trên item này (timeout/network/rate-limit).
+   *  Không cộng vào consecutiveFailedAttempts — transient có thể tự khỏi.
+   *  Khi vượt MAX_TRANSIENT_RETRY thì chuyển xử lý như permanent. */
+  consecutiveTransientAttempts?: number;  // default 0
   /** Nhóm tool được coi là "đủ bằng chứng" cho item này.
    *  Nếu undefined hoặc rỗng, fallback: chỉ cần evidence log không rỗng. */
   requiredToolGroups?: string[];
@@ -78,6 +82,15 @@ export const DEFAULT_ABANDON_MS = 2 * 60 * 60 * 1000; // 2 hours
  * 5 lần: đủ để phân biệt giữa "cần thử lại" vs "thực sự bị kẹt".
  */
 export const STAGNATION_THRESHOLD = 5;
+
+/**
+ * MAX_TRANSIENT_RETRY — số lần lỗi transient liên tiếp (timeout/network/rate-limit)
+ * cho CÙNG 1 item trước khi coi như permanent.
+ * Transient không cộng vào consecutiveFailedAttempts (không kích hoạt stuck sớm),
+ * nhưng vẫn có giới hạn riêng để tránh vòng lặp vô hạn khi 1 lỗi "tưởng transient"
+ * thực ra không bao giờ tự khỏi.
+ */
+export const MAX_TRANSIENT_RETRY = 3;
 
 /**
  * ABSOLUTE_SAFETY_CEILING — cầu chì tuyệt đối chống runaway chi phí.

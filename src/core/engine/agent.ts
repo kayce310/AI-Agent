@@ -35,7 +35,8 @@ import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import type { PrivilegeGuard } from '../security/privilege-guard.js';
 import { missionLock } from '../security/mission-lock.js';
-import { STAGNATION_THRESHOLD, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { STAGNATION_THRESHOLD, MAX_TRANSIENT_RETRY, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 import { getRequestContext } from '../request-context.js';
@@ -868,6 +869,10 @@ export class Agent extends EventEmitter {
           // Collect tool call data for checkpoint
           const executedToolCalls: Array<{id: string; name: string; args: Record<string, unknown>}> = [];
           const executedToolResults: Array<{id: string; result: unknown}> = [];
+          // Error category of THIS cycle's tool calls — used by stagnation tracking below.
+          // Declared at cycle scope so the stagnation block (outside the tool loop) can read it.
+          // If multiple tools ran, the LAST failing category wins (worst-case approximation).
+          let cycleErrorCategory: 'transient' | 'permanent' | 'security' | undefined;
 
           for (const toolCall of modelResult.toolCalls) {
             if (toolCall.type !== 'function') {
@@ -953,10 +958,25 @@ export class Agent extends EventEmitter {
             // ponytail: cap tool result at 8KB to prevent OOM from large search/read results
             const rawResult = JSON.stringify(toolResult);
             const cappedResult = rawResult.length > 8192 ? rawResult.slice(0, 8192) + '...[truncated]' : rawResult;
+            // ── Error category decision: annotate tool result for the model ──
+            // transient: retriable, no note needed (model can retry)
+            // permanent: clear note so the model does NOT waste turns retrying the same call
+            // security: unchanged (engine.ts tool:result handler aborts the plan)
+            if (toolResult && typeof toolResult === 'object' && 'error' in toolResult) {
+              const errMsg = String((toolResult as any).error || '');
+              cycleErrorCategory = classifyError(errMsg);
+              if (cycleErrorCategory === 'permanent') {
+                log.info(`[ErrorCategory] permanent: ${toolCall.function.name} — ${errMsg.slice(0, 100)}`);
+              }
+            }
+            let toolMsgContent = cappedResult;
+            if (cycleErrorCategory === 'permanent') {
+              toolMsgContent = cappedResult + '\n\n⚠️ [ERROR_CATEGORY=permanent] Lỗi này là permanent (không phải do mạng/tạm thời) — thử lại với CÙNG tham số sẽ tiếp tục thất bại. Cân nhắc cách tiếp cận khác hoặc báo cáo không thể hoàn thành.';
+            }
             messages.push({
               role: 'tool',
               tool_call_id: toolCall.id,
-              content: cappedResult,
+              content: toolMsgContent,
             });
             // ── Goal-drift check: inject reminder if agent deviates from task ──
             const task = request.task || '';
@@ -1043,6 +1063,10 @@ export class Agent extends EventEmitter {
           }
 
           // ── Stagnation tracking: increment consecutiveFailedAttempts if no progress ──
+          // TRANSIENT errors (timeout/network/rate-limit) do NOT count toward the main
+          // counter — they can self-heal, so they must not trigger 'stuck' early.
+          // They get their own counter (consecutiveTransientAttempts) with a separate
+          // limit (MAX_TRANSIENT_RETRY); when exceeded, fall back to main counter.
           if (this.checkpointStore && request.sessionId && prevItemIndex >= 0) {
             try {
               const sp = this.checkpointStore.getPlan(request.sessionId);
@@ -1053,21 +1077,32 @@ export class Agent extends EventEmitter {
                 const wasItemCompleted = currentIdx !== prevItemIndex ||
                   (currentItem && currentItem.status === 'completed');
                 if (wasItemCompleted) {
-                  // Progress made — reset counter on the item that was completed (previous index)
+                  // Progress made — reset counters on the item that was completed (previous index)
                   const prevItem = sp.items[prevItemIndex];
                   if (prevItem) {
                     prevItem.consecutiveFailedAttempts = 0;
+                    prevItem.consecutiveTransientAttempts = 0;
                     log.info(`[Stagnation] Item ${prevItemIndex} completed → counter reset`);
                   }
                 } else {
-                  // No progress — increment counter on current item
+                  // No progress — decide which counter to increment based on error category
                   if (currentItem && currentItem.status !== 'completed' && currentItem.status !== 'skipped') {
-                    currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
-                    log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD}`);
-                    if (currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
-                      sp.status = 'stuck';
-                      sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
-                      log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                    if (cycleErrorCategory === 'transient' && (currentItem.consecutiveTransientAttempts || 0) < MAX_TRANSIENT_RETRY) {
+                      // Transient: count separately, do NOT trigger stuck
+                      currentItem.consecutiveTransientAttempts = (currentItem.consecutiveTransientAttempts || 0) + 1;
+                      log.info(`[Stagnation] Item ${currentIdx} transient attempt ${currentItem.consecutiveTransientAttempts}/${MAX_TRANSIENT_RETRY} (not counted as stuck)`);
+                      if (currentItem.consecutiveTransientAttempts >= MAX_TRANSIENT_RETRY) {
+                        log.warn(`[Stagnation] Item ${currentIdx} exceeded MAX_TRANSIENT_RETRY (${MAX_TRANSIENT_RETRY}) — promoting to permanent, next failure counts toward stuck`);
+                      }
+                    } else {
+                      // Permanent OR security OR transient-exceeded-limit: count toward stuck
+                      currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
+                      log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
+                      if (currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
+                        sp.status = 'stuck';
+                        sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
+                        log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                      }
                     }
                   }
                 }

@@ -277,7 +277,7 @@ src/
 |--------|----------|--------|
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse NEED_TOOL dead** | Format instruction da thay the, code cu van ton tai | P3 |
-| **errorCategory field unused** | Duoc set trong engine.ts nhung khong doc de retry | P2 |
+| **errorCategory retry logic** | **Da implement (2026-07-31):** transient khong cong vao `consecutiveFailedAttempts` (co counter rieng `consecutiveTransientAttempts`, limit `MAX_TRANSIENT_RETRY=3`, vuot -> coi nhu permanent); permanent -> tool result tra ve model co note "[ERROR_CATEGORY=permanent]" khuyen khong retry cung tham so; security -> abort plan (giu nguyen). Xem `agent.ts` stagnation block + `plan/types.ts` | ✅ done |
 | **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), gateway da fail-loud, con cho fail-loud sessionId hoan tat** |
 
 ### Orphan modules (can quyet dinh)
