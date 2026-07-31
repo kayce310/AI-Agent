@@ -293,6 +293,10 @@ export class Agent extends EventEmitter {
         sessionId: request.sessionId,
         result,
       });
+      // Cleanup per-request session-start bookkeeping (prevents unbounded Map growth)
+      if (request.sessionId) {
+        this.sessionStartTimes.delete(request.sessionId);
+      }
       return result;
     } catch (err: any) {
       await this.hooks.emit('task:error', {
@@ -300,6 +304,10 @@ export class Agent extends EventEmitter {
         error: err.message,
         stack: err.stack,
       });
+      // Cleanup on error path too
+      if (request.sessionId) {
+        this.sessionStartTimes.delete(request.sessionId);
+      }
       throw err;
     }
   }
@@ -350,24 +358,7 @@ export class Agent extends EventEmitter {
       }
     }
 
-    // 85%+: force compression + hard trim if still over
-    if (this.auxiliaryLlmCall) {
-      const result = await compressContext(messages, this.auxiliaryLlmCall, {
-        maxContext,
-        thresholdPct: 0.70,
-        tailProtect: 5,
-        force: true,
-        focusTopic,
-      });
-
-      if (result.compressed) {
-        messages.length = 0;
-        messages.push(...result.messages);
-        log.info(`Force compressed: ${result.tokensBefore?.toLocaleString()} → ${result.tokensAfter?.toLocaleString()} tokens`);
-      }
-    }
-
-    // 85%+: Use ContextWindowManager for importance-scored eviction
+    // 85%+: hard trim via zero-cost eviction FIRST, LLM compression as fallback
     const { total: afterCompress } = estimateTokens(messages);
     if (afterCompress > maxContext * 0.85) {
       const result = this.contextManager.evictToBudget(messages, sessionId);
@@ -385,6 +376,24 @@ export class Agent extends EventEmitter {
           evicted: result.evicted,
           saved: result.saved,
         });
+        return true;
+      }
+    }
+
+    // Still over budget after zero-cost eviction → LLM compression as last resort
+    if (this.auxiliaryLlmCall) {
+      const result = await compressContext(messages, this.auxiliaryLlmCall, {
+        maxContext,
+        thresholdPct: 0.70,
+        tailProtect: 5,
+        force: true,
+        focusTopic,
+      });
+
+      if (result.compressed) {
+        messages.length = 0;
+        messages.push(...result.messages);
+        log.info(`Force compressed: ${result.tokensBefore?.toLocaleString()} → ${result.tokensAfter?.toLocaleString()} tokens`);
         return true;
       }
     }
@@ -575,6 +584,11 @@ export class Agent extends EventEmitter {
               return await this.modelRouter.route(messages, modelOptions);
             }
           } catch (err: any) {
+            // Streaming path failed — fall back to plain invoke.
+            // NOTE: If the streaming failure is itself a provider outage, the fallback
+            // route() call will throw and THAT error propagates to the circuit breaker
+            // (no silent swallow). If route() succeeds, the provider is healthy and the
+            // circuit stays closed — correct behavior.
             log.warn(`[STREAMING] Failed, falling back to invoke(): ${err.message}`);
             return await this.modelRouter.route(messages, modelOptions);
           }

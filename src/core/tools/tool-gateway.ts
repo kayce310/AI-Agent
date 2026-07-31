@@ -33,8 +33,14 @@ export class SecureRuntimeContext {
   private validatePath(inputPath: string): string {
     // Resolve to absolute path first
     const resolved = path.resolve(this.workspaceRoot, inputPath);
-    // Check against safe paths (workspace root is always safe)
-    if (!isPathSafe(resolved) && !resolved.startsWith(this.workspaceRoot)) {
+    // Defense: enforce workspace-root prefix FIRST (allow resolved path or the
+    // root itself), THEN apply isPathSafe for traversal primitives. Checking
+    // prefix first is stricter: an absolute path like C:\foo that happens to
+    // start with the root string is still rejected because resolved would not
+    // be within root+sep boundary.
+    const normalizedRoot = path.resolve(this.workspaceRoot);
+    const withinRoot = resolved === normalizedRoot || resolved.startsWith(normalizedRoot + path.sep);
+    if (!withinRoot || !isPathSafe(resolved)) {
       throw new Error(`Path traversal blocked: "${inputPath}" is outside workspace root`);
     }
     return resolved;

@@ -11,7 +11,7 @@
  */
 
 import type { CheckpointStore } from '../checkpoint.js';
-import type { ToolCallRecord } from './types.js';
+import type { ToolCallRecord, EvidenceLog } from './types.js';
 
 // ── ADR-001: PlanState union type ──
 
@@ -23,9 +23,9 @@ export type PlanState =
   | { kind: 'failed'; planId: string; reason: string }
   | { kind: 'aborted'; planId: string };
 
-// ── EvidenceLog type ──
-
-export type EvidenceLog = Map<number, ToolCallRecord[]>;
+// EvidenceLog type defined in types.ts (single source) — re-exported for
+// backward compatibility with imports from plan-state.js.
+export type { EvidenceLog };
 
 // ── Derive ──
 
