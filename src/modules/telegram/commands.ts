@@ -579,10 +579,14 @@ export class CommandRegistry {
         // Always run the exact same entry as `npm start` (package.json), never
         // process.argv[1] — under tsx (start:dev) that path is a .ts file which
         // node cannot execute, silently keeping the old process alive.
+        // CRITICAL: child MUST use stdio:'ignore' — with 'inherit' the child
+        // shares the parent's stdio and dies together with it on Windows when
+        // process.exit() closes those handles. 'ignore' + detached:true lets
+        // the child survive the parent's exit.
         const scriptPath = path.resolve('dist/scripts/start-telegram.js');
         const child = spawn(process.execPath, ['--max-old-space-size=4096', scriptPath], {
           cwd: process.cwd(),
-          stdio: 'inherit',
+          stdio: 'ignore',
           detached: true,
           windowsHide: true,
         });
