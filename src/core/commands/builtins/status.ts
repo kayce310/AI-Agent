@@ -31,9 +31,11 @@ export const statusCommand: Command = {
       const dashboardServer = (globalThis as any).__coral_dashboardServer;
       const tunnelUrl = (globalThis as any).__coral_tunnelUrl;
       if (dashboardServer) {
-        lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại \`http://localhost:8766\``);
+        lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại http://localhost:8766`);
         if (tunnelUrl) {
-          lines.push(`🌐 **Tunnel:** \`${tunnelUrl}\``);
+          // PLAIN URL, NO backticks — Telegram renders the backtick as part of
+          // the link, producing a broken URL on click.
+          lines.push(`🌐 **Tunnel:** ${tunnelUrl}`);
         } else {
           lines.push(`🌐 **Tunnel:** đang chờ tạo...`);
         }

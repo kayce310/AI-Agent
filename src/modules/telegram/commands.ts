@@ -231,9 +231,12 @@ export class CommandRegistry {
           const dashboardServer = (globalThis as any).__coral_dashboardServer;
           const tunnelUrl = (globalThis as any).__coral_tunnelUrl;
           if (dashboardServer) {
-            lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại \`http://localhost:8766\``);
+            lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại http://localhost:8766`);
             if (tunnelUrl) {
-              lines.push(`🌐 **Tunnel:** \`${tunnelUrl}\``);
+              // PLAIN URL, NO backticks — Telegram would otherwise render the
+              // backtick as part of the link, producing a broken URL
+              // (DNS_PROBE_FINISHED_NXDOMAIN on click).
+              lines.push(`🌐 **Tunnel:** ${tunnelUrl}`);
               lines.push(`⏳ *Nếu mở link báo DNS không tìm thấy — đợi 1-2 phút cho Cloudflare cập nhật.*`);
             } else {
               lines.push(`🌐 **Tunnel:** đang chờ tạo...`);
