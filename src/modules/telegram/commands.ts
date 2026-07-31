@@ -234,6 +234,7 @@ export class CommandRegistry {
             lines.push(`📊 **Dashboard:** 🟢 **đang chạy** tại \`http://localhost:8766\``);
             if (tunnelUrl) {
               lines.push(`🌐 **Tunnel:** \`${tunnelUrl}\``);
+              lines.push(`⏳ *Nếu mở link báo DNS không tìm thấy — đợi 1-2 phút cho Cloudflare cập nhật.*`);
             } else {
               lines.push(`🌐 **Tunnel:** đang chờ tạo...`);
             }
@@ -437,7 +438,11 @@ export class CommandRegistry {
       // Start tunnel — always start fresh, ignore stale URL from file
       const startTunnel = (globalThis as any).__coral_startTunnel;
       if (startTunnel) startTunnel();
-      const tunnelMsg = startTunnel ? '\n🌐 Tunnel sẽ được tạo trong vài giây.' : '';
+      // Cloudflare quick-tunnel DNS can take up to a few minutes to propagate —
+      // opening the link immediately returns DNS_PROBE_FINISHED_NXDOMAIN.
+      const tunnelMsg = startTunnel
+        ? '\n🌐 Tunnel đang khởi tạo. Xem `/status` sau 1-2 phút để lấy link (DNS cần thời gian để hoạt động).'
+        : '';
       await ctx.reply(`📊 Dashboard đang chạy tại http://localhost:8766${tunnelMsg}\n\nGửi /dashboard để tắt.`);
     } catch (e: any) {
       await ctx.reply(`❌ Không thể khởi động dashboard: ${e.message || e}`);
