@@ -6,7 +6,7 @@ import { Logger } from '../src/core/logger.js';
 import { DefaultAgentRegistry } from '../src/core/agents/agent-registry.js';
 import { ProviderRegistry } from '../src/core/llm/provider-registry.js';
 import { ModelAdapter } from '../src/core/llm/model-adapter.js';
-import { ToolRegistry } from '../src/core/tools/registry.js';
+import { ToolRegistry } from '../src/core/tools/tool-registry.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

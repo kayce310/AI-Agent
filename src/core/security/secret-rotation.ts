@@ -56,6 +56,8 @@ export class SecretRotationChecker {
    * Check a single secret
    */
   checkSecret(metadata: SecretMetadata): RotationWarning | null {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31, chờ quan sát trước khi xóa.
+    log.info(`[USAGE-TRACE] secret-rotation.checkSecret called`, { timestamp: Date.now() });
     const now = Date.now();
     const daysOld = (now - metadata.lastRotated) / (1000 * 60 * 60 * 24);
 
@@ -81,6 +83,8 @@ export class SecretRotationChecker {
    * Check multiple secrets at once (e.g., on startup)
    */
   checkAll(secrets: SecretMetadata[]): RotationWarning[] {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] secret-rotation.checkAll called`, { timestamp: Date.now(), count: secrets?.length ?? 0 });
     const results: RotationWarning[] = [];
     for (const secret of secrets) {
       const warning = this.checkSecret(secret);
@@ -93,6 +97,8 @@ export class SecretRotationChecker {
    * Get all accumulated warnings
    */
   getWarnings(): RotationWarning[] {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] secret-rotation.getWarnings called`, { timestamp: Date.now() });
     return this.warnings;
   }
 
@@ -127,6 +133,8 @@ export class SecretRotationChecker {
 let rotationCheckerInstance: SecretRotationChecker | null = null;
 
 export function getSecretRotationChecker(policy?: RotationPolicy): SecretRotationChecker {
+  // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+  log.info(`[USAGE-TRACE] secret-rotation.getSecretRotationChecker called`, { timestamp: Date.now() });
   if (!rotationCheckerInstance) {
     rotationCheckerInstance = new SecretRotationChecker(policy);
   }

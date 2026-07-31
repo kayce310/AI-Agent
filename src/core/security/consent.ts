@@ -53,6 +53,8 @@ export class ConsentManager {
    * Initialize with SQLite database
    */
   async initialize(dbPath?: string): Promise<void> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31, chờ quan sát trước khi xóa.
+    log.info(`[USAGE-TRACE] consent.initialize called`, { timestamp: Date.now() });
     if (this.initialized) return;
 
     if (!this.db) {
@@ -100,6 +102,8 @@ export class ConsentManager {
     sessionId: string,
     purposes: string[] = ['data_processing', 'memory_storage']
   ): Promise<ConsentRecord> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.requestConsent called`, { timestamp: Date.now(), userId });
     // Check if existing valid consent exists
     const existing = await this.getConsent(userId);
     if (existing.hasConsent && !existing.isExpired) {
@@ -132,6 +136,8 @@ export class ConsentManager {
    * Grant consent (user agrees)
    */
   async grantConsent(userId: string, sessionId: string): Promise<void> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.grantConsent called`, { timestamp: Date.now(), userId });
     const now = Date.now();
 
     if (this.db.exec) {
@@ -153,6 +159,8 @@ export class ConsentManager {
    * Revoke consent
    */
   async revokeConsent(userId: string, sessionId: string): Promise<void> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.revokeConsent called`, { timestamp: Date.now(), userId });
     const now = Date.now();
 
     if (this.db.exec) {
@@ -173,6 +181,8 @@ export class ConsentManager {
    * Check consent status
    */
   async getConsent(userId: string, sessionId?: string): Promise<ConsentCheck> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.getConsent called`, { timestamp: Date.now(), userId });
     if (this.db.all) {
       const query = sessionId
         ? `SELECT * FROM consent_records WHERE userId = ? AND sessionId = ? ORDER BY id DESC LIMIT 1`
@@ -213,6 +223,8 @@ export class ConsentManager {
    * Check if user can proceed (has valid consent)
    */
   async canProceed(userId: string, sessionId?: string): Promise<boolean> {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.canProceed called`, { timestamp: Date.now(), userId });
     const check = await this.getConsent(userId, sessionId);
     return check.hasConsent && !check.isExpired;
   }
@@ -221,6 +233,8 @@ export class ConsentManager {
    * Get all consent records for a user
    */
   getAllRecords(userId: string): ConsentRecord[] {
+    // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+    log.info(`[USAGE-TRACE] consent.getAllRecords called`, { timestamp: Date.now(), userId });
     if (!this.db.all) return [];
     const stmt = this.db.prepare('SELECT * FROM consent_records WHERE userId = ? ORDER BY id DESC');
     const rows = stmt.all ? stmt.all(userId) : [];
@@ -233,6 +247,8 @@ export class ConsentManager {
 let consentManagerInstance: ConsentManager | null = null;
 
 export function getConsentManager(db?: any): ConsentManager {
+  // [USAGE-TRACE] orphan module — instrumented 2026-07-31.
+  log.info(`[USAGE-TRACE] consent.getConsentManager called`, { timestamp: Date.now() });
   if (!consentManagerInstance) {
     consentManagerInstance = new ConsentManager(db);
   }

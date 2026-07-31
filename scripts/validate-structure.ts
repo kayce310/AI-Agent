@@ -521,11 +521,10 @@ function checkADR000Compliance() {
 // Lịch sử: bug lặp lại 2 lần (currentTaskId, updatePlanCtx) — bị rebase/stash đưa lại.
 // Whitelist: field là service/config reference (contextManager, coralIdentityContext)
 // hoặc infrastructure event-correlation (pendingCallIds, tasksWithToolCalls — có cleanup).
+// Quét TOÀN BỘ src/core/ (không chỉ engine/agent) — mọi class singleton đều có thể phạm.
 function checkADR000PerRequestState() {
-  const files = [
-    path.join(BASE_PATH, 'src/core/engine/engine.ts'),
-    path.join(BASE_PATH, 'src/core/engine/agent.ts'),
-  ];
+  const srcCore = path.join(BASE_PATH, 'src/core');
+  const files = getFiles(srcCore, ['.ts', '.js']);
 
   // Whitelist: field KHÔNG phải per-request state (service/config/infrastructure)
   const WHITELIST_FIELDS = new Set([
@@ -534,6 +533,7 @@ function checkADR000PerRequestState() {
     'pendingCallIds',          // event-correlation queue (tool:call ↔ tool:result), có cleanup
     'tasksWithToolCalls',      // event-correlation set, có cleanup (clear >1000)
     'sessionStartTimes',       // Map<sessionId, timestamp> — chỉ đo duration, không phải state logic
+    'activeTaskId',            // TaskQueue worker state — queue chạy tuần tự 1 task/turn (không phải per-request)
   ]);
 
   // Pattern cụ thể: các biến từng gây bug (bắt cả nếu trong comment? KHÔNG — chỉ code thực thi)

@@ -181,11 +181,9 @@ src/
     proactive/
       proactive-engine.ts      # Keyword-triggered suggestions
     self-evolution/            # Learner, experience store
-    orchestrator/
-      delegation-orchestrator.ts  # ORPHAN (intentionally unhooked)
+    orchestrator/              # (delegation-orchestrator.ts DA XOA 2026-07-31)
     cron/                      # Cron scheduler
     world/                     # World model
-    sentiment/                 # ORPHAN (0 imports)
     commands/                  # types.ts, registry.ts, builtins/
     knowledge/                 # Entity store, graph query, semantic memory
   modules/telegram/
@@ -208,10 +206,10 @@ src/
 
 | File | Trang thai | Ghi chu |
 |------|-----------|---------|
-| `core/sentiment/` | ORPHAN | 0 imports tu ngoai module |
-| `core/security/secret-rotation.ts` | NGHI DEAD | 0 imports |
-| `core/security/consent.ts` | NGHI DEAD | 0 imports |
-| `core/orchestrator/delegation-orchestrator.ts` | ORPHAN | Intentionally unhooked |
+| ~~`core/sentiment/`~~ | ~~ORPHAN~~ | **DA XOA (2026-07-31)** — 0 imports, Python dep ngoai |
+| `core/security/secret-rotation.ts` | **orphan — instrumented** | 0 imports; da them USAGE-TRACE log (2026-07-31), cho quan sat 1-2 thang |
+| `core/security/consent.ts` | **orphan — instrumented** | 0 imports; da them USAGE-TRACE log (2026-07-31), cho quan sat 1-2 thang |
+| ~~`core/orchestrator/delegation-orchestrator.ts`~~ | ~~ORPHAN~~ | **DA XOA (2026-07-31)** — intentionally unhooked, zero imports |
 | ~~`core/knowledge/entity-approval-queue.ts`~~ | ~~ORPHAN~~ | ~~HITL dependency da xoa~~ **DA XOA (2026-07-29)** |
 | `core/tools/report.ts` | BUG | Returns "TODO" placeholder |
 | `Engine.sanitizeResponse()` (engine.ts:209) | DEAD | Private, zero callers |
@@ -238,8 +236,7 @@ src/
 ### Test baseline
 
 - **56 test files**, **1008 tests** (2026-07-29)
-- Baseline hien tai: 3 file failed / 53 passed, 4 failed / 1004 passed
-  (1 file (2 tests) pre-existing + 1 file (1 test) tu concurrent `fix(build)` commit + 1 sentiment file van pre-existing)
+- Baseline hien tai (2026-07-31, sau khi xoa sentiment test + them error-category test): 59 files / 1027 passed / 0 failed-pre-existing-trong-suite (sentiment-analyzer test da xoa cung module)
 - Duration: ~20s
 
 ### Security notes
@@ -282,11 +279,11 @@ src/
 
 ### Orphan modules (can quyet dinh)
 
-- `src/core/sentiment/` — can hoi lai: xoa hay giu cho tuong lai?
-- `src/core/orchestrator/delegation-orchestrator.ts` — can hoi lai: duoc "intentionally unhooked", xoa hay restore?
+- ~~`src/core/sentiment/`~~ **DA XOA (2026-07-31)**
+- ~~`src/core/orchestrator/delegation-orchestrator.ts`~~ **DA XOA (2026-07-31)**
 - ~~`src/core/knowledge/entity-approval-queue.ts`~~ **DA XOA** (zero imports, HITL dependency da xoa)
-- `src/core/security/secret-rotation.ts` — can hoi lai: security module, khong tu y xoa
-- `src/core/security/consent.ts` — can hoi lai: security module, khong tu y xoa
+- `src/core/security/secret-rotation.ts` — **instrumented (2026-07-31)**: them USAGE-TRACE log o moi export function chinh; xoa sau 1-2 thang neu khong thay log nao
+- `src/core/security/consent.ts` — **instrumented (2026-07-31)**: them USAGE-TRACE log o moi export function chinh; xoa sau 1-2 thang neu khong thay log nao
 
 ---
 

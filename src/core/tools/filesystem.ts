@@ -5,9 +5,10 @@
  * @owner core-tools
  *
  * ZERO-TRUST: All file I/O routes through secureRuntime (tool-gateway.ts).
+ * `fs` chỉ dùng cho TYPE (fs.Dirent) — không có runtime fs call.
  */
 
-import * as fs from 'fs';
+import type * as fs from 'fs';
 import * as path from 'path';
 import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, BASE_PATH } from './_shared.js';
