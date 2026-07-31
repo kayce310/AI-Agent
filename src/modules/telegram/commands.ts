@@ -562,12 +562,19 @@ export class CommandRegistry {
           if (dash) { dash.stop().catch(() => {}); }
         } catch {}
 
-        // ponytail: build before restart so dist/ reflects latest source
-        execSync('npm run build', { cwd: process.cwd(), stdio: 'ignore' });
-        const scriptPath = path.resolve(process.argv[1] || 'dist/scripts/start-telegram.js');
+        // ponytail: build before restart so dist/ reflects latest source.
+        // stdio 'inherit' so a failed build is visible in the console — with
+        // 'ignore' a TS error silently aborted the restart and the bot kept
+        // running OLD code while the user was told "restarting...".
+        execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' });
+
+        // Always run the exact same entry as `npm start` (package.json), never
+        // process.argv[1] — under tsx (start:dev) that path is a .ts file which
+        // node cannot execute, silently keeping the old process alive.
+        const scriptPath = path.resolve('dist/scripts/start-telegram.js');
         const child = spawn(process.execPath, ['--max-old-space-size=4096', scriptPath], {
           cwd: process.cwd(),
-          stdio: 'ignore',
+          stdio: 'inherit',
           detached: true,
           windowsHide: true,
         });
@@ -575,6 +582,7 @@ export class CommandRegistry {
         process.exit(0);
       } catch (err: any) {
         log.error(`Restart spawn failed: ${err.message}`);
+        try { (globalThis as any).__coral_startTunnel?.(); } catch {}
       }
     }, 1500);
   }
