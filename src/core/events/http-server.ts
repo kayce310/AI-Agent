@@ -491,6 +491,12 @@ export class DashboardServer {
 
   async stop(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Close active connections (WebSocket clients attached to this server)
+      // so server.close() can release the port immediately instead of waiting
+      // for idle connections. Node 18.2+ / 20+.
+      try {
+        (this.server as any).closeAllConnections?.();
+      } catch {}
       this.server.close((err) => {
         if (err) reject(err);
         else resolve();

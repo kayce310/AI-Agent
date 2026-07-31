@@ -175,6 +175,25 @@ let cronScheduler: CronScheduler | null = null;
 let isShuttingDown = false;
 let tunnelProcess: ReturnType<typeof spawn> | null = null;
 
+// ── Tunnel URL bookkeeping (ADR-000: single source of truth) ──
+// Runtime source of truth: globalThis.__coral_tunnelUrl (set only when a live
+// tunnel exists). File tunnel-url.txt is a file-level reference written on
+// tunnel creation and DELETED when the tunnel dies — never restore from file
+// (stale after restart, see dda8774a).
+
+function tunnelUrlFilePath(): string {
+  const dirname = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(dirname, '../../tunnel-url.txt');
+}
+
+function clearTunnelUrl(): void {
+  (globalThis as any).__coral_tunnelUrl = undefined;
+  try {
+    const urlPath = tunnelUrlFilePath();
+    if (fs.existsSync(urlPath)) fs.unlinkSync(urlPath);
+  } catch {}
+}
+
 // ── Cloudflared Tunnel (quick tunnel, auto-save URL) ──
 function startTunnel(): void {
   const cloudflaredPath = process.env.CLOUDFLARED_PATH
@@ -199,12 +218,11 @@ function startTunnel(): void {
       console.log(`${ts()} 🌐 Tunnel URL: ${url}`);
 
       // Save to project root (ESM-compatible path)
-      const dirname = path.dirname(fileURLToPath(import.meta.url));
-      const urlPath = path.resolve(dirname, '../../tunnel-url.txt');
+      const urlPath = tunnelUrlFilePath();
       try {
         fs.writeFileSync(urlPath, url, 'utf8');
       } catch {}
-      // ponytail: expose so /status and /dashboard commands can show it
+      // Expose so /status and /dashboard commands can show it
       (globalThis as any).__coral_tunnelUrl = url;
     }
   };
@@ -215,6 +233,8 @@ function startTunnel(): void {
   proc.on('error', (err) => {
     console.warn(`${ts()} ⚠️ Tunnel spawn error: ${err.message}`);
     tunnelProcess = null;
+    // No URL was ever set for this proc — ensure stale state is cleared
+    clearTunnelUrl();
   });
 
   proc.on('exit', (code) => {
@@ -222,6 +242,10 @@ function startTunnel(): void {
       console.warn(`${ts()} ⚠️ Tunnel exited with code ${code}`);
     }
     tunnelProcess = null;
+    // CRITICAL: the URL this tunnel produced is now dead (cloudflared quick
+    // tunnel dies with the process). Clear both the runtime value and the
+    // file so /status shows "đang chờ tạo..." and nobody reads a dead link.
+    clearTunnelUrl();
   });
 }
 
@@ -237,6 +261,9 @@ function stopTunnel(): void {
     } catch {}
     tunnelProcess = null;
   }
+  // kill triggers proc 'exit' which clears the URL; but be explicit so the
+  // dashboard-toggle path also clears stale state immediately.
+  clearTunnelUrl();
 }
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;
@@ -279,10 +306,19 @@ async function gracefulShutdown(signal: string) {
       await engineInstance.cleanup().catch(e => console.error(`Memory cleanup error: ${e}`));
     }
 
-    // 3. Stop dashboard server
-    if (dashboardServer) {
+    // 3. Stop dashboard server — may have been started via /dashboard command
+    // (stored on globalThis.__coral_dashboardServer, NOT the local var which is
+    // only used by the lite variant). Without this, port 8766 + WS connections
+    // leak across restarts, causing EADDRINUSE on the next /dashboard.
+    const runningDashboard: DashboardServer | null =
+      (globalThis as any).__coral_dashboardServer || dashboardServer;
+    if (runningDashboard) {
       console.log(`${ts()} 📊 Stopping dashboard server...`);
-      await dashboardServer.stop().catch(e => console.error(`Dashboard server error: ${e}`));
+      try {
+        (runningDashboard as any).server?.closeAllConnections?.();
+      } catch {}
+      await runningDashboard.stop().catch(e => console.error(`Dashboard server error: ${e}`));
+      (globalThis as any).__coral_dashboardServer = null;
     }
 
     // 5. Shutdown memory store (flush to disk)
@@ -367,6 +403,10 @@ async function start() {
       // Expose on globalThis so /dashboard command can start them later
       (globalThis as any).__coral_eventBus = eventBus;
       (globalThis as any).__coral_memoryApi = memoryApi;
+      // Start fresh: any tunnel-url.txt left from a previous process is stale
+      // (cloudflared died with that process). Clear it so nobody reads a dead
+      // link before the next /dashboard creates a live tunnel.
+      clearTunnelUrl();
       // ponytail: expose tunnel start/stop so /dashboard command can control them
       (globalThis as any).__coral_startTunnel = startTunnel;
       (globalThis as any).__coral_stopTunnel = stopTunnel;
