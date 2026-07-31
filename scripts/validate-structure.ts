@@ -10,6 +10,8 @@
  *   R5: Static Security Scan — raw fs/child_process import in tools = VIOLATION
  *   R6: Knowledge No Executable Code — .ts/.js in knowledge/ = VIOLATION
  *   R7: No Import from scripts/.coral — runtime code must not depend on infra = VIOLATION
+ *   R8: ADR-000 Compliance — PlanState derive/mutate logic outside allowed modules = VIOLATION
+ *   R9: ADR-000 §2P3 — per-request state (this.*TaskId/SessionId/Ctx/Evidence) on shared instance = VIOLATION
  *
  * Usage: npx tsx scripts/validate-structure.ts [--strict]
  *   --strict: exit code 1 on any violation (for CI/pre-commit)
@@ -398,6 +400,200 @@ function checkNoImportFromScriptsOrCoral() {
   }
 }
 
+// ── Rule 8: ADR-000 Compliance — State derive/mutate guard ──
+// ADR-000 §2: derivePlanState() tại src/core/plan/plan-state.ts là MODULE DUY NHẤT
+// được phép derive PlanState. Mọi nơi khác (agent.ts, engine.ts) phải IMPORT hàm này,
+// không tự re-implement. Cấm boolean lifecycle (hasCreatedPlan/executionPhase/isDone).
+//
+// LƯU Ý: update-plan-tool.ts LÀ orchestrator hợp lệ (ADR-000 nguyên tắc 4 — code quyết
+// định transition, model chỉ đề xuất) nên được whitelist. Rule này chỉ KIỂM TRA tuân thủ,
+// không tự derive state song song.
+function checkADR000Compliance() {
+  const srcCore = path.join(BASE_PATH, 'src/core');
+  const files = getFiles(srcCore, ['.ts', '.js']);
+
+  // Whitelist: orchestrator duy nhất được mutate plan (ADR-000 nguyên tắc 4)
+  const ORCHESTRATOR_FILES = new Set([
+    path.join(BASE_PATH, 'src/core/plan/update-plan-tool.ts'),
+  ]);
+
+  // Whitelist storage: CheckpointStore là storage layer thuần (setPlan/getPlan là API
+  // persist — không chứa logic derive). plan-state.ts đọc từ đây, update-plan-tool.ts ghi vào đây.
+  const STORAGE_FILES = new Set([
+    path.join(BASE_PATH, 'src/core/checkpoint.ts'),
+  ]);
+
+  // Các file được phép gọi derivePlanState() (single source) — module plan/ + engine
+  const ALLOWED_DERIVE_USERS = new Set([
+    path.join(BASE_PATH, 'src/core/plan/plan-state.ts'),
+    path.join(BASE_PATH, 'src/core/engine/agent.ts'),
+    path.join(BASE_PATH, 'src/core/engine/engine.ts'),
+  ]);
+
+  for (const file of files) {
+    const relFile = path.relative(BASE_PATH, file);
+    // Bỏ qua plan-state.ts chính nó (định nghĩa hàm)
+    if (file === path.join(BASE_PATH, 'src/core/plan/plan-state.ts')) continue;
+    const isOrchestrator = ORCHESTRATOR_FILES.has(file);
+    const isStorage = STORAGE_FILES.has(file);
+    const content = readFile(file);
+    const lineNumOf = (needle: string) => {
+      const idx = content.indexOf(needle);
+      return idx === -1 ? 1 : content.substring(0, idx).split('\n').length;
+    };
+
+    // 8a. Boolean lifecycle flags — set-once cho vòng đời nhiều giai đoạn (ADR-000 §2 nguyên tắc 2)
+    // Bỏ qua comment (// ...) và chuỗi trong prompt-builder (instruction text cho LLM, không phải code).
+    const codeOnly = content
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/`[^`]*`/g, ''); // bỏ backtick strings (prompt text)
+    const lifecycleFlagPatterns = [
+      /\bhasCreatedPlan\b/,
+      /\bexecutionPhase\b/,
+      /\bisPlanDone\b/,
+      /\bplanComplete\b/,
+    ];
+    for (const pattern of lifecycleFlagPatterns) {
+      if (pattern.test(codeOnly)) {
+        violations.push({
+          rule: 'R8-BooleanLifecycleFlag',
+          file: relFile,
+          line: lineNumOf(pattern.source.replace(/\\b/g, '')),
+          message: `ADR-000: Boolean lifecycle flag '${pattern.source.replace(/\\b/g, '')}' detected — use derivePlanState() + discriminated union instead`,
+          severity: 'ERROR',
+        });
+      }
+    }
+
+    // 8b. Derive PlanState ngoài plan-state.ts — mọi file phải IMPORT derivePlanState
+    // từ plan-state.js và GỌI nó (có dạng derivePlanState(...)), không tự suy luận.
+    const isAllowedDeriveUser = ALLOWED_DERIVE_USERS.has(file);
+    if (isAllowedDeriveUser) {
+      const hasCall = /derivePlanState\s*\(/.test(content);
+      const hasImport = /import[^;]*derivePlanState/.test(content);
+      if (!hasImport || !hasCall) {
+        violations.push({
+          rule: 'R8-DeriveMissing',
+          file: relFile,
+          line: 1,
+          message: `ADR-000: File must import and call derivePlanState() (single source of truth)`,
+          severity: 'ERROR',
+        });
+      }
+    }
+
+    // 8c. Cấm tự re-implement derive trong file KHÔNG thuộc whitelist:
+    // phát hiện code gán plan.status / plan.currentItemIndex dựa trên logic tự tính
+    // (ngoài orchestrator). pattern: `plan.status = ` hoặc `item.status = 'completed'`
+    // gắn với vòng lặp tự duyệt items.
+    if (!isOrchestrator && !isAllowedDeriveUser && !isStorage) {
+      // Chỉ bắt mutation trên object plan (không phải memory item / task queue / checkpoint log):
+      // - `plan.status = ` — gán trực tiếp
+      // - `item.status = 'completed'|'skipped'|'failed'` khi item thuộc plan (biến `item` trong
+      //   ngữ cảnh plan). Loại trừ `task.status` (task-queue), `memoryItem.status` (MemoryStore).
+      const mutatesPlanStatus = /plan\.status\s*=\s*['"](?:running|completed|failed|aborted|pending|stuck|paused_limit)['"]/.test(content);
+      const mutatesPlanItem = /item\.status\s*=\s*['"](?:completed|skipped|failed|in_progress)['"]/.test(content);
+      // Loại trừ các biến cùng tên khác: item.status trong context của TaskQueue/MemoryStore
+      // (chúng dùng `task.status` / `item.status = 'active'|'decaying'` — không khớp pattern trên)
+      if (mutatesPlanStatus || mutatesPlanItem) {
+        // Loại trừ: file chỉ ĐỊNH NGHĨA type/interface hoặc schema (types.ts) — không phải logic runtime
+        const isTypeOnly = /^(export\s+interface|export\s+type|export\s+enum)/m.test(content) && !/\bif\s*\(/.test(content);
+        if (!isTypeOnly) {
+          violations.push({
+            rule: 'R8-PlanStateMutateOutsideOrchestrator',
+            file: relFile,
+            line: lineNumOf('plan.status') || lineNumOf('item.status'),
+            message: `ADR-000: Plan state mutation detected outside allowed orchestrator (update-plan-tool.ts) — route through derivePlanState()`,
+            severity: 'ERROR',
+          });
+        }
+      }
+    }
+  }
+}
+
+// ── Rule 9: ADR-000 §2 nguyên tắc 3 — Per-request state trên instance dùng chung ──
+// Cấm: `this.currentTaskId`, `this.updatePlanCtx`, `this.evidenceLog`, `this.sessionId`,
+// `this.requestCtx` — per-request state phải ở RequestContext (AsyncLocalStorage),
+// không sống trên Engine/Agent instance (singleton) dùng chung.
+//
+// Lịch sử: bug lặp lại 2 lần (currentTaskId, updatePlanCtx) — bị rebase/stash đưa lại.
+// Whitelist: field là service/config reference (contextManager, coralIdentityContext)
+// hoặc infrastructure event-correlation (pendingCallIds, tasksWithToolCalls — có cleanup).
+function checkADR000PerRequestState() {
+  const files = [
+    path.join(BASE_PATH, 'src/core/engine/engine.ts'),
+    path.join(BASE_PATH, 'src/core/engine/agent.ts'),
+  ];
+
+  // Whitelist: field KHÔNG phải per-request state (service/config/infrastructure)
+  const WHITELIST_FIELDS = new Set([
+    'contextManager',          // service reference (agent.ts)
+    'coralIdentityContext',    // config tĩnh load 1 lần từ CORAL_IDENTITY_FILES (engine.ts)
+    'pendingCallIds',          // event-correlation queue (tool:call ↔ tool:result), có cleanup
+    'tasksWithToolCalls',      // event-correlation set, có cleanup (clear >1000)
+    'sessionStartTimes',       // Map<sessionId, timestamp> — chỉ đo duration, không phải state logic
+  ]);
+
+  // Pattern cụ thể: các biến từng gây bug (bắt cả nếu trong comment? KHÔNG — chỉ code thực thi)
+  const CRITICAL_PATTERNS = [
+    /\bthis\.updatePlanCtx\b/,
+    /\bthis\.currentTaskId\b/,
+    /\bthis\.evidenceLog\b/,
+    /\bthis\.requestCtx\b/,
+    /\bthis\.requestContext\b/,
+  ];
+  // Pattern tổng quát: this.<tên> kết thúc bằng TaskId|SessionId|Ctx|Evidence (per-request gợi ý)
+  // Yêu cầu field được DÙNG (có `=` assignment hoặc `.` member access) — không bắt declaration thuần.
+  const GENERIC_PATTERN = /this\.([a-zA-Z][a-zA-Z0-9]*?(?:TaskId|SessionId|Ctx|Evidence)[a-zA-Z0-9]*?)(?:\s*=|\.)/g;
+
+  for (const file of files) {
+    const relFile = path.relative(BASE_PATH, file);
+    const content = readFile(file);
+    // Bỏ comment + string — chỉ check code thực thi
+    const codeOnly = content
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/`[^`]*`/g, '');
+    const lineOf = (needle: string) => {
+      const idx = codeOnly.indexOf(needle);
+      return idx === -1 ? 1 : codeOnly.substring(0, idx).split('\n').length;
+    };
+
+    // 9a. Critical patterns — từng gây bug thực tế
+    for (const pattern of CRITICAL_PATTERNS) {
+      const m = codeOnly.match(pattern);
+      if (m) {
+        violations.push({
+          rule: 'R9-PerRequestStateOnInstance',
+          file: relFile,
+          line: lineOf(m[0]),
+          message: `ADR-000 §2P3: '${m[0]}' is per-request state on shared instance — use RequestContext (AsyncLocalStorage) instead`,
+          severity: 'ERROR',
+        });
+      }
+    }
+
+    // 9b. Generic pattern — this.<X>TaskId/SessionId/Ctx/Evidence (không trong whitelist)
+    const seen = new Set<string>();
+    let gm: RegExpExecArray | null;
+    while ((gm = GENERIC_PATTERN.exec(codeOnly)) !== null) {
+      const fieldName = gm[1];
+      if (WHITELIST_FIELDS.has(fieldName)) continue;
+      if (seen.has(fieldName)) continue;
+      seen.add(fieldName);
+      violations.push({
+        rule: 'R9-PerRequestStateOnInstance',
+        file: relFile,
+        line: lineOf(gm[0]),
+        message: `ADR-000 §2P3: 'this.${fieldName}' looks like per-request state on shared instance — use RequestContext (AsyncLocalStorage) or whitelist if service/config`,
+        severity: 'ERROR',
+      });
+    }
+  }
+}
+
 // ── Report ──
 function printReport() {
   console.log('\n🔍 Structure Validation Report');
@@ -463,6 +659,12 @@ function main() {
 
   console.log('Running R7: No Import from scripts/ or .coral/...');
   checkNoImportFromScriptsOrCoral();
+
+  console.log('Running R8: ADR-000 Compliance...');
+  checkADR000Compliance();
+
+  console.log('Running R9: Per-request state on instance...');
+  checkADR000PerRequestState();
 
   printReport();
 

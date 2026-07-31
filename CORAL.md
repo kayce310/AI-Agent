@@ -79,14 +79,17 @@ Agent loop iteration:
 - **ConversationSessionId** (`types/branded.ts`): UUID tao boi `SessionManager`, reset qua `/new`. Dung cho checkpoint, memory, plan.
 - **UserId** (`types/branded.ts`): Telegram user ID (vinh vien). Dung cho rate limit, access control.
 - **channelId:** Telegram chat ID (group/private). Khong duoc dung lam sessionId.
-- Ly do tach: tranh loi cu (Audit 2026-07-27) — `gateway/index.ts` dung `msg.channelId` lam sessionId, lam `/new` mat tac dung o Engine level. **Chua fix.**
+- Ly do tach: tranh loi cu (Audit 2026-07-27) — `gateway/index.ts` dung `msg.channelId` lam sessionId, lam `/new` mat tac dung o Engine level. **Da fix (e8d17ff4):** gateway doc `msg.metadata.sessionId` (UUID tu SessionManager), telegram adapter gui `session.sessionId` qua metadata; gateway fail-loud neu thieu.
+- **MemoryFacade scope** (`memory-facade.ts`): `addMessage(sessionId, ...)` va `getChannelHistory(sessionId)` nhan **ConversationSessionId** (UUID) lam key — KHONG phai channelId. Day la bo nho hoi thoai **ngan han, scope theo session** (reset khi `/new`), tuong duong checkpointer/thread-scoped trong LangGraph. Lua y: ten ham `getChannelHistory` la di san tu cu (MemoryCore) — thuc chat nhan sessionId, khong phai channelId.
+- **Memory dai han** (`globalMemoryStore`): van dung `sessionId` lam scope khi ghi tu gateway (`human`/`persona` tags). Neu can hoc xuyen session ve user (long-term), can dung `userId` rieng — chua implement.
+- **BUG da biet (chua fix):** `daily-digest.ts:17` (cron 24h) goi `getChannelHistory(channelId)` voi channelId tu env `KNOWLEDGE_CHANNEL_ID` — nhung ham nay tra ve blocks theo `sessionId` (UUID). Digest se khong tim thay messages. Can chinh lai: hoac digest doc theo sessionId, hoac them method rieng scope theo channelId. (Ghi nhan 2026-07-31 — ngoai pham vi task hien tai.)
 
 ### Per-request state isolation -> `request-context.ts`
 
 - `AsyncLocalStorage<RequestContext>` — chua `sessionId`, `taskId`, `evidenceLog`, `onPlanCreated`.
 - Fixes 3 concurrency bugs (evidenceLog scope, currentTaskId race, updatePlanCtx race).
 - `update-plan-tool.ts` doc `getRequestContext().sessionId` — KHONG tu LLM args (bao mat).
-- Engine tao context o dau `processInner()` qua `requestContext.run(ctx, ...)`.
+- Engine tao context o dau `processInner()` qua `requestContext.enterWith({sessionId, taskId, evidenceLog, onPlanCreated})` (engine.ts:640). Luu y: dung `enterWith()` thay vi `run()` vi `processInner` co nhieu diem return — context tu dong ap dung cho cac event handler async trong cung luong.
 
 ### Evidence-based plan completion
 

@@ -72,6 +72,14 @@ ${sanitized}
 // Chỉ giữ lại rules kỹ thuật tối thiểu
 const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 
+### 0. ADR COMPLIANCE — STATE-RELATED TASK (HARD RULE — Lớp 2 progressive)
+- Nếu task liên quan state (plan, session, task, item, evidence, checkpoint, derive state):
+  **BẮT BUỘC gọi \`load_architecture_rules\`** để tải ĐẦY ĐỦ ADR-000 TRƯỚC khi thực hiện.
+- \`architecture-contract.md\` (đã inject ở context files) chỉ là tóm tắt — không thay thế ADR-000.
+- Hàm derive PlanState DUY NHẤT là \`derivePlanState()\` tại \`src/core/plan/plan-state.ts\`.
+  Cấm tự suy luận trạng thái plan ở nơi khác. Cấm cờ boolean set-once (hasCreatedPlan, executionPhase).
+- KHÔNG gọi lại \`load_architecture_rules\` nếu đã tải trong request hiện tại (tránh lãng phí token).
+
 ### 1. ZERO WASTE TOKEN
 - KHÔNG đọc toàn bộ repo/wiki nếu chưa cần.
 - Chỉ tải đúng skill/knowledge cần dùng cho task hiện tại.

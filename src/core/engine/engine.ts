@@ -56,6 +56,10 @@ import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 const CORAL_IDENTITY_FILES = [
   'knowledge/wiki/core/soul.md',
+  // Lớp 1 (always-on): tóm tắt ADR-000 + single source of truth cho PlanState.
+  // Ngắn (~200 token), không phải bản sao ADR-000. Xem Lớp 2 (load_architecture_rules)
+  // để load full ADR khi task liên quan state.
+  'knowledge/wiki/core/architecture-contract.md',
 ];
 
 const log = new Logger({ module: 'Engine' });

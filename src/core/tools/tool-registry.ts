@@ -288,6 +288,8 @@ async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {
     cron: './cron.js',
     execute_code: './execute-code.js',
     process: './process.js',
+    // Lớp 2 (progressive): load full ADR-000 khi task liên quan state
+    architecture: './architecture.js',
   };
   for (const [name, modulePath] of Object.entries(pluginModules)) {
     try {
