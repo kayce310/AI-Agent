@@ -32,27 +32,29 @@ export class MemoryFacade {
    * Store a chat message as a memory block.
    * Uses 'session' type so it fits the existing MemoryBlockType union.
    * Tags include role so getHistory can reconstruct the original shape.
+   *
+   * NOTE: The key param is named `sessionId` — callers pass a ConversationSessionId
+   * (engine.ts saveMessage → this.memory.addMessage(sessionId, msg)). It was
+   * previously misnamed `channelId`, which implied channel-level scope, but the
+   * actual key used is whatever the caller passes (session UUID, rotated on /new).
    */
-  async addMessage(channelId: string, message: FacadeMessage): Promise<void> {
+  async addMessage(sessionId: string, message: FacadeMessage): Promise<void> {
     const content = typeof message.content === 'string'
       ? message.content
       : String(message.content ?? '');
 
-    // Use channelId as session scope (matching getChannelHistory which also uses channelId)
-    // This keeps memory scoped to the channel, not per-user session — intentional design.
-    // Changing to sessionId would orphan existing channel-scoped history.
     await globalMemoryStore.add('session', content, {
-      sessionId: channelId,
+      sessionId,
       tags: [message.role || 'user'],
     });
   }
 
   /**
-   * Reconstruct conversation history for a channel from stored blocks.
+   * Reconstruct conversation history for a session from stored blocks.
    * Returns the last 50 messages (matching MemoryCore's behaviour but larger).
    */
-  async getChannelHistory(channelId: string): Promise<FacadeMessage[]> {
-    const blocks = globalMemoryStore.getBlocksBySession(channelId);
+  async getChannelHistory(sessionId: string): Promise<FacadeMessage[]> {
+    const blocks = globalMemoryStore.getBlocksBySession(sessionId);
     if (!blocks.length) return [];
 
     // Sort oldest-first, take last 50
