@@ -22,7 +22,8 @@ import { getTaskQueue } from '../../core/task-queue.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { spawn, execSync } from 'child_process';
+import { spawn } from 'child_process';
+import * as os from 'os';
 
 const log = new Logger({ module: 'Commands' });
 
@@ -557,8 +558,10 @@ export class CommandRegistry {
     await ctx.reply('🔄 Đang khởi động lại Coral...');
 
     // Give Telegram time to deliver the message before exiting
-    setTimeout(() => {
+    setTimeout(async () => {
       log.info('Restart requested by user via /restart');
+      const notify = async (text: string) => { try { await ctx.reply(text); } catch {} };
+
       try {
         // Cleanup before process.exit(0) — process.exit bypasses gracefulShutdown,
         // so we must stop the tunnel + dashboard explicitly here. Otherwise
@@ -570,19 +573,39 @@ export class CommandRegistry {
           if (dash) { dash.stop().catch(() => {}); }
         } catch {}
 
-        // ponytail: build before restart so dist/ reflects latest source.
-        // stdio 'inherit' so a failed build is visible in the console — with
-        // 'ignore' a TS error silently aborted the restart and the bot kept
-        // running OLD code while the user was told "restarting...".
-        execSync('npm run build', { cwd: process.cwd(), stdio: 'inherit' });
+        // 1) Build fresh (equivalent of `npm start` prestart: npx tsc) WITHOUT
+        //    blocking the event loop. We spawn node → tsc directly instead of
+        //    `npm run build` because npm.cmd cannot be spawned without a shell
+        //    on Windows, and a shell may be missing in detached environments.
+        //    On failure: tell the user and keep the CURRENT instance running —
+        //    silently continuing with OLD code (or dying with zero processes)
+        //    was the actual "/restart does nothing" bug.
+        const tscPath = path.resolve('node_modules/typescript/bin/tsc');
+        const build = await new Promise<{ ok: boolean; output: string }>((resolve) => {
+          const p = spawn(process.execPath, [tscPath], {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+          let output = '';
+          p.stdout?.on('data', (d) => { output += d.toString(); });
+          p.stderr?.on('data', (d) => { output += d.toString(); });
+          p.on('error', (e) => resolve({ ok: false, output: `spawn error: ${e.message}` }));
+          p.on('close', (code) => resolve({ ok: code === 0, output }));
+        });
+        if (!build.ok) {
+          log.error(`Restart aborted — build failed:\n${build.output.slice(-2000)}`);
+          try { fs.unlinkSync(path.join(os.tmpdir(), 'coral-restart.json')); } catch {}
+          await notify(`❌ Restart aborted — build lỗi. Coral vẫn chạy code cũ.\n\`\`\`${build.output.slice(-500)}\`\`\``);
+          return;
+        }
 
-        // Always run the exact same entry as `npm start` (package.json), never
-        // process.argv[1] — under tsx (start:dev) that path is a .ts file which
-        // node cannot execute, silently keeping the old process alive.
-        // CRITICAL: child MUST use stdio:'ignore' — with 'inherit' the child
-        // shares the parent's stdio and dies together with it on Windows when
-        // process.exit() closes those handles. 'ignore' + detached:true lets
-        // the child survive the parent's exit.
+        // 2) Always run the exact same entry as `npm start` (package.json), never
+        //    process.argv[1] — under tsx (start:dev) that path is a .ts file which
+        //    node cannot execute, silently keeping the old process alive.
+        //    CRITICAL: child MUST use stdio:'ignore' — with 'inherit' the child
+        //    shares the parent's stdio and dies together with it on Windows when
+        //    process.exit() closes those handles. 'ignore' + detached:true lets
+        //    the child survive the parent's exit.
         const scriptPath = path.resolve('dist/scripts/start-telegram.js');
         const child = spawn(process.execPath, ['--max-old-space-size=4096', scriptPath], {
           cwd: process.cwd(),
@@ -590,11 +613,39 @@ export class CommandRegistry {
           detached: true,
           windowsHide: true,
         });
+
+        // 3) Watchdog: exit only once the child is confirmed alive. If the child
+        //    dies during boot we keep the current instance running and tell the
+        //    user — otherwise /restart could leave ZERO processes silently.
+        //    (If the child boots fine, its acquireFileLock kills this process —
+        //    that is the success case; the child sends the "restart done" notice.)
+        let settled = false;
+        const abort = async (why: string) => {
+          if (settled) return;
+          settled = true;
+          log.error(`Restart aborted — ${why}`);
+          try { await notify(`❌ Restart aborted — ${why}. Coral vẫn chạy code cũ.`); } catch {}
+        };
+        child.on('error', (e) => { void abort(`spawn lỗi: ${e.message}`); });
+        child.on('exit', (code) => { void abort(`instance mới thoát sớm (code ${code})`); });
         child.unref();
-        process.exit(0);
+
+        const deadline = Date.now() + 20_000;
+        const watch = setInterval(() => {
+          if (settled) { clearInterval(watch); return; }
+          let alive = true;
+          try { process.kill(child.pid ?? -1, 0); } catch { alive = false; }
+          if (!alive) { clearInterval(watch); void abort('instance mới chết trong lúc khởi động'); return; }
+          if (Date.now() >= deadline) {
+            clearInterval(watch);
+            log.info('Restart: new instance confirmed alive — exiting old process');
+            process.exit(0);
+          }
+        }, 1000);
       } catch (err: any) {
-        log.error(`Restart spawn failed: ${err.message}`);
+        log.error(`Restart failed: ${err.message}`);
         try { (globalThis as any).__coral_startTunnel?.(); } catch {}
+        try { await notify(`❌ Restart failed: ${err.message}. Coral vẫn chạy code cũ.`); } catch {}
       }
     }, 1500);
   }
