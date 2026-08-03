@@ -76,6 +76,8 @@ const TOOL_CATEGORY_MAP: Record<string, string[]> = {
   skills: ['load_skill', 'skill_view', 'check_stale_skills'],
   system: ['process_new_raw', 'execute_command', 'extract_formulas'],
   report: ['generate_report'],
+  memory: ['memory_search', 'memory_list', 'memory_add', 'session_search'],
+  process: ['process_list'],
 };
 
 const TOOL_ALIAS_MAP: Record<string, string[]> = {
@@ -88,6 +90,9 @@ const TOOL_ALIAS_MAP: Record<string, string[]> = {
   'skills:run': ['load_skill', 'skill_view'],
   'sandbox:execute': ['execute_command'],
   'report:generate': ['generate_report'],
+  'memory:read': ['memory_search', 'memory_list', 'session_search'],
+  'memory:write': ['memory_add'],
+  'process:list': ['process_list'],
 };
 
 function toolPatternMatches(pattern: string, toolName: string): boolean {
@@ -338,6 +343,9 @@ export function createDefaultAllowRules(): PrivilegeRule[] {
     { toolPattern: 'skills:list', effect: 'allow', reason: 'Explicitly allowed: list skills' },
     { toolPattern: 'sandbox:execute', effect: 'allow', reason: 'Explicitly allowed: sandbox exec' },
     { toolPattern: 'report:generate', effect: 'allow', reason: 'Explicitly allowed: report' },
+    { toolPattern: 'memory:read', effect: 'allow', reason: 'Explicitly allowed: memory read' },
+    { toolPattern: 'memory:write', effect: 'allow', reason: 'Explicitly allowed: memory write' },
+    { toolPattern: 'process:list', effect: 'allow', reason: 'Explicitly allowed: process list' },
   ];
 }
 

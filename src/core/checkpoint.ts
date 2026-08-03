@@ -94,6 +94,8 @@ export class CheckpointStore {
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private snapshots: Map<string, CheckpointSnapshot> = new Map();
   private dirty = false;
+  // ponytail: plan storage decoupled from request snapshot lifecycle (ADR-001)
+  private plans: Map<string, TaskPlan> = new Map();
 
   constructor(config?: CheckpointConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -229,13 +231,10 @@ export class CheckpointStore {
    * Save or update a TaskPlan for a session's checkpoint.
    */
   setPlan(sessionId: string, plan: TaskPlan): void {
-    // Find the checkpoint for this session (latest active one)
+    this.plans.set(sessionId, plan);
+    // also mirror onto active snapshot for persistence/restore
     const snapshot = this.getLatestForSession(sessionId);
-    if (!snapshot) {
-      log.warn(`[CP] setPlan: no active checkpoint for session ${sessionId}`);
-      return;
-    }
-    snapshot.plan = plan;
+    if (snapshot) snapshot.plan = plan;
     this.dirty = true;
     log.info(`[CP] setPlan: session=${sessionId} plan=${plan.id} status=${plan.status} items=${plan.items.length}`);
   }
@@ -244,8 +243,7 @@ export class CheckpointStore {
    * Get the active TaskPlan for a session, if any.
    */
   getPlan(sessionId: string): TaskPlan | null {
-    const snapshot = this.getLatestForSession(sessionId);
-    return snapshot?.plan ?? null;
+    return this.plans.get(sessionId) ?? this.getLatestForSession(sessionId)?.plan ?? null;
   }
 
   /**
@@ -265,6 +263,7 @@ export class CheckpointStore {
    * Remove a plan from a session's checkpoint.
    */
   clearPlan(sessionId: string): void {
+    this.plans.delete(sessionId);
     const snapshot = this.getLatestForSession(sessionId);
     if (snapshot) {
       delete snapshot.plan;

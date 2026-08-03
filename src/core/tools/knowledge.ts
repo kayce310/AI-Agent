@@ -137,13 +137,14 @@ const plugin: ToolPlugin = {
     },
     {
       name: 'session_search',
-      description: 'Search conversation history across all channels. Uses MemoryStore semantic query. Returns matching messages with session ID, content preview, and relevance score. Use to recall past discussions, decisions, or facts mentioned in previous conversations.',
+      description: 'Search conversation history. By default scoped to current session. Pass allSessions=true to search across all sessions (e.g. "sessions khác đang làm gì", "lịch sử toàn bộ"). Pass sessionId to filter a specific session.',
       schema: {
         type: 'object',
         properties: {
           query: { type: 'string', description: 'Keywords or phrase to search for in conversation history' },
           limit: { type: 'number', description: 'Max results (default: 10, max: 50)' },
-          sessionId: { type: 'string', description: 'Optional: filter by specific channel/session ID' },
+          sessionId: { type: 'string', description: 'Optional: filter by specific session ID' },
+          allSessions: { type: 'boolean', description: 'Set true to search across ALL sessions, not just current one' },
         },
         required: ['query'],
       },
@@ -151,12 +152,17 @@ const plugin: ToolPlugin = {
         const query = String(args.query || '');
         if (!query) return { error: 'query không được để trống' };
         const limit = Math.min(Number(args.limit) || 10, 50);
-        // ponytail: default to current session — never query global without explicit sessionId
-        const sessionId = args.sessionId ? String(args.sessionId) : getRequestContext()?.sessionId;
-        if (!sessionId) return { error: 'sessionId không xác định — vui lòng truyền sessionId hoặc chạy trong context request' };
 
         const opts: any = { topK: limit };
-        opts.sessionId = sessionId;
+
+        if (args.allSessions) {
+          // ponytail: explicit cross-session query — no sessionId filter
+        } else if (args.sessionId) {
+          opts.sessionId = String(args.sessionId);
+        } else {
+          // default: scope to current request session
+          opts.sessionId = getRequestContext()?.sessionId;
+        }
 
         const results = await globalMemoryStore.query(query, opts);
         return {
