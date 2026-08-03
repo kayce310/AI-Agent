@@ -89,7 +89,7 @@ Agent loop iteration:
 - `AsyncLocalStorage<RequestContext>` — chua `sessionId`, `taskId`, `evidenceLog`, `onPlanCreated`.
 - Fixes 3 concurrency bugs (evidenceLog scope, currentTaskId race, updatePlanCtx race).
 - `update-plan-tool.ts` doc `getRequestContext().sessionId` — KHONG tu LLM args (bao mat).
-- Engine tao context o dau `processInner()` qua `requestContext.enterWith({sessionId, taskId, evidenceLog, onPlanCreated})` (engine.ts:640). Luu y: dung `enterWith()` thay vi `run()` vi `processInner` co nhieu diem return — context tu dong ap dung cho cac event handler async trong cung luong.
+- Engine tao context qua `requestContext.run(rctx, () => this.processInnerScoped(...))` (engine.ts:656). **Dung `run()`, KHONG dung `enterWith()`** — `enterWith()` set context vinh vien tren thread: sau 2 concurrent requests, store giu lai context cua request cuoi, cron/timer/EventEmitter callback sau do ke thua stale sessionId/taskId. `run()` tao scope moi, tu dong tear down khi callback hoan thanh. Body da chuyen sang `processInnerScoped()` de xu ly nhieu return point. (Fix: commit 0d546010, ADR-000 §2P3.)
 
 ### Evidence-based plan completion
 
