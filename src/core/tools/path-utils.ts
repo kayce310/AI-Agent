@@ -31,3 +31,14 @@ export function isPathSafe(targetPath: string): boolean {
   const resolved = path.resolve(targetPath);
   return SAFE_PATHS.some(safe => resolved.startsWith(safe));
 }
+
+// ponytail: basename-only check — covers .env, .env.production, id_rsa, *.pem, credentials.*
+const SENSITIVE_BASENAME = /^\.env($|\.)|^id_(rsa|ed25519|ecdsa|dsa)$|\.pem$|^credentials(\..*)?$/i;
+
+/**
+ * Returns true if the file basename looks like a credential/secret file.
+ * Called by read_file before returning content.
+ */
+export function isSensitivePath(targetPath: string): boolean {
+  return SENSITIVE_BASENAME.test(path.basename(targetPath));
+}

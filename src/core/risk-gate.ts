@@ -19,6 +19,10 @@ const COMMAND_RISK: [RegExp, RiskLevel][] = [
   [/^taskkill\s+\/F\s+\/PID\s+[0-9]{1,4}$/, 'deny'],
   [/^docker\s+/, 'deny'],
   [/^shutdown|^reboot|^init\s+/, 'deny'],
+  // DENY — credential exfil
+  [/\.env(\s|$|\.)/i,    'deny'],  // cat .env, type .env.production, Get-Content .env
+  [/^(env|printenv)$/i,  'deny'],  // dump entire environment
+  [/^set(\s|$)/,         'deny'],  // Windows: set / set FOO (prints env vars)
   // ASK — network exfil risk
   [/^curl\s+/, 'ask'],
   [/^ngrok\s+/, 'ask'],

@@ -12,6 +12,7 @@ import type * as fs from 'fs';
 import * as path from 'path';
 import type { ToolPlugin } from './tool-registry.js';
 import { isPathSafe, BASE_PATH } from './_shared.js';
+import { isSensitivePath } from './path-utils.js';
 import { secureRuntime } from './tool-gateway.js';
 
 /** Recursive directory walk — returns absolute paths matching filter */
@@ -67,6 +68,9 @@ const plugin: ToolPlugin = {
         const targetPath = args.path;
         if (!isPathSafe(targetPath)) {
           return { error: `Đường dẫn ${targetPath} không được phép truy cập` };
+        }
+        if (isSensitivePath(targetPath)) {
+          return { error: `File ${targetPath} bị chặn bởi PrivilegeGuard (credential file)` };
         }
         if (!secureRuntime.safeExists(targetPath)) {
           return { error: `File ${targetPath} không tồn tại` };
