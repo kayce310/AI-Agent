@@ -194,11 +194,39 @@ export class MemoryLog {
   }
 
   /**
-   * Replay toÃ n bá»™ log tá»« Ä‘áº§u.
-   * Náº¿u cÃ³ snapshot, Ä‘á»c snapshot trÆ°á»›c, sau Ä‘Ã³ replay tá»« snapshot seq.
-   * Bao gá»“m cáº£ cÃ¡c file archive sau rotation.
+   * Compact: collapse the entire store into a fresh snapshot and delete old
+   * log files. After this, the snapshot IS the source of truth — old logs
+   * are redundant (replay reads snapshot + entries newer than snapshot seq).
+   * Used after retention/cap eviction so the next boot replays a small
+   * snapshot instead of hundreds of MB of logs.
+   */
+  async compact(blocks: MemoryBlock[]): Promise<void> {
+    await this.createSnapshot(blocks);
+    await this.sync();
+    if (this.logStream) {
+      const oldStream = this.logStream;
+      this.logStream = null;
+      await new Promise<void>((resolve, reject) => {
+        oldStream.close((err?: NodeJS.ErrnoException | null) => err ? reject(err) : resolve());
+      });
+    }
+    // Snapshot holds the full state — every other file in the dir (including the
+    // old store.log: replay reads+parses the whole file even when all entries
+    // are skipped, so keeping it would defeat compaction) is stale log data.
+    const files = await fs.readdir(this.logDir);
+    for (const f of files) {
+      if (f === SNAPSHOT_FILENAME || f === MANIFEST_FILENAME) continue;
+      await fs.unlink(path.join(this.logDir, f)).catch(() => {});
+    }
+    this.logStream = fsSync.createWriteStream(path.join(this.logDir, LOG_FILENAME), { flags: 'a' });
+  }
+
+  /**
+   * Replay toàn bộ log từ đầu.
+   * Nếu có snapshot, đọc snapshot trước, sau đó replay từ snapshot seq.
+   * Bao gồm cả các file archive sau rotation.
    *
-   * @returns danh sÃ¡ch blocks Ä‘Ã£ rebuild
+   * @returns danh sách blocks đã rebuild
    */
   async replay(): Promise<MemoryBlock[]> {
     const snapshot = await this.tryLoadSnapshot();

@@ -31,9 +31,12 @@ function makeMockLog() {
       if (entry.op === 'clear') blocks.length = 0;
     }),
     createSnapshot: vi.fn().mockResolvedValue(undefined),
+    compact: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     getStats: vi.fn().mockImplementation(() => ({ lastSeq: seq, totalOps: seq })),
     shouldSnapshot: vi.fn().mockReturnValue(false),
+    shouldRotate: vi.fn().mockReturnValue(false),
+    rotate: vi.fn().mockResolvedValue(undefined),
   };
   mockCreateMemoryLog.mockResolvedValue(log as any);
   return { log, blocks };
@@ -285,6 +288,56 @@ describe('MemoryTemporal', () => {
       await mem.close();
       expect(log.createSnapshot).toHaveBeenCalled();
       expect(log.close).toHaveBeenCalled();
+    });
+  });
+
+  describe('cleanupExpired (ADR-002 retention)', () => {
+    it('should evict blocks older than maxRetentionDays and compact', async () => {
+      const { log } = makeMockLog();
+      const mem = new MemoryTemporal({ logDir: '/tmp/test', maxRetentionDays: 30 });
+      await mem.init();
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(Date.now() - 40 * 86400000)); // 40 days ago → stale
+      await mem.addBlock('stale');
+      vi.useRealTimers();
+      await mem.addBlock('fresh'); // now → within retention
+
+      const removed = await mem.cleanupExpired();
+      expect(removed).toBe(1);
+      expect(mem.getStats().totalBlocks).toBe(1);
+      expect(log.compact).toHaveBeenCalledTimes(1);
+      expect((await mem.getAll())[0].content).toBe('fresh');
+    });
+
+    it('should cap at maxBlocks keeping the newest', async () => {
+      const { log } = makeMockLog();
+      const mem = new MemoryTemporal({ logDir: '/tmp/test', maxBlocks: 2 });
+      await mem.init();
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(Date.now() - 3 * 86400000));
+      await mem.addBlock('b0');
+      vi.setSystemTime(new Date(Date.now() - 2 * 86400000));
+      await mem.addBlock('b1');
+      vi.setSystemTime(new Date(Date.now() - 86400000));
+      await mem.addBlock('b2');
+      vi.useRealTimers();
+
+      const removed = await mem.cleanupExpired();
+      expect(removed).toBe(1);
+      expect(mem.getStats().totalBlocks).toBe(2);
+      expect(log.compact).toHaveBeenCalledTimes(1);
+      const kept = (await mem.getAll()).map(b => b.content).sort();
+      expect(kept).toEqual(['b1', 'b2']);
+    });
+
+    it('should be a no-op when nothing exceeds retention/cap', async () => {
+      const { log } = makeMockLog();
+      const mem = new MemoryTemporal({ logDir: '/tmp/test', maxRetentionDays: 30, maxBlocks: 100 });
+      await mem.init();
+      await mem.addBlock('recent');
+      const removed = await mem.cleanupExpired();
+      expect(removed).toBe(0);
+      expect(log.compact).not.toHaveBeenCalled();
     });
   });
 });

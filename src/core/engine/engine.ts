@@ -159,7 +159,6 @@ export class Engine extends EventEmitter {
   private rateLimiter: RateLimiterGroup;
   private perUserLimiter: PerUserRateLimiter;
   private temporalMemory: MemoryTemporal;
-  private agenticMemory: MemoryTemporal;
   private storage!: CoralStorage;
   private eventBus!: EventBus;
   private eventStore!: EventStore;
@@ -199,8 +198,9 @@ export class Engine extends EventEmitter {
     this.rateLimiter.add('requests', { tokensPerInterval: 60, intervalMs: 60_000, maxBurst: 10 });
     this.rateLimiter.add('tokens', { tokensPerInterval: 100_000, intervalMs: 60_000, maxBurst: 20_000 });
     this.perUserLimiter = new PerUserRateLimiter({ tokensPerInterval: 20, intervalMs: 60_000, maxBurst: 5 });
-    this.temporalMemory = new MemoryTemporal({ maxRetentionDays: 30 });
-    this.agenticMemory = new MemoryTemporal({ maxRetentionDays: 30 });
+    // Single episodic store — two MemoryTemporal instances on the same logDir
+    // double-loaded the same 480MB of logs (ADR-002: one source of truth).
+    this.temporalMemory = new MemoryTemporal({ maxRetentionDays: 30, maxBlocks: 5000 });
     this.storage = getStorage();
     // Initialize event tables
     this.storage.initEventTables();
@@ -314,14 +314,17 @@ export class Engine extends EventEmitter {
     this.taskQueue.start();
     log.info('TaskQueue background worker started');
 
+    // ── EPISODIC MEMORY: load + enforce retention (ADR-002) ──
+    // Boot copy of globalMemoryStore → temporal was amplification (re-added the
+    // same blocks to the append-log on every restart). Temporal is now a pure
+    // journal of events from this boot onward; cleanupExpired evicts beyond
+    // maxRetentionDays/maxBlocks and compacts the log once.
     try {
-      const existingBlocks = await globalMemoryStore.getAll();
-      for (const block of existingBlocks) {
-        await this.temporalMemory.addBlock(block.content || '', {
-          type: block.type, sessionId: block.sessionId, tags: block.tags, entities: block.entities,
-        });
-      }
-    } catch { /* silent */ }
+      const evicted = await this.temporalMemory.cleanupExpired();
+      if (evicted > 0) log.info(`Temporal memory: evicted ${evicted} stale blocks (retention/cap)`);
+    } catch (e) {
+      log.warn('Temporal memory cleanup failed — continuing with raw replay', { error: String(e) });
+    }
 
     // ═══ EVENT BUS: tool:call → tool_called + decision_made ═══
     this.agent.onEvent('tool:call', async (data) => {
@@ -426,7 +429,7 @@ export class Engine extends EventEmitter {
           tags: ['tool_result', toolName], sessionId,
           source: { type: 'tool', uri: toolName },
         });
-        await this.agenticMemory.addBlockForAgent('engine', {
+        await this.temporalMemory.addBlockForAgent('engine', {
           type: 'task', content: `Tool ${toolName}: ${result.substring(0, 500)}`,
           tags: ['tool_result', toolName], sessionId,
         });
@@ -454,7 +457,7 @@ export class Engine extends EventEmitter {
           );
         }
 
-        await this.agenticMemory.addBlockForAgent('engine', {
+        await this.temporalMemory.addBlockForAgent('engine', {
           type: 'session', content: String(data.content).substring(0, 1000),
           tags: ['assistant_response'], sessionId,
         });
@@ -499,7 +502,6 @@ export class Engine extends EventEmitter {
   getCache(): ResponseCache<string> { return this.responseCache; }
   getPrivilegeGuard(): PrivilegeGuard { return this.privilegeGuard; }
   getTemporalMemory(): MemoryTemporal { return this.temporalMemory; }
-  getAgenticMemory(): MemoryTemporal { return this.agenticMemory; }
   getMemoryFacade(): MemoryFacade { return this.memory; }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1049,7 +1051,6 @@ LƯU Ý:
     try {
       await Promise.all([
           this.temporalMemory.flush().catch((e: any) => log.warn('temporalMemory flush failed', { error: String(e) })),
-          this.agenticMemory.flush().catch((e: any) => log.warn('agenticMemory flush failed', { error: String(e) })),
           this.checkpointStore.flush().catch((e: any) => log.warn('checkpointStore flush failed', { error: String(e) })),
           this.taskQueue.flush().catch((e: any) => log.warn('taskQueue flush failed', { error: String(e) })),
         ]);
@@ -1086,7 +1087,6 @@ LƯU Ý:
     try {
       await Promise.all([
         this.temporalMemory.close().catch((e: any) => log.warn('temporalMemory close failed', { error: String(e) })),
-        this.agenticMemory.close().catch((e: any) => log.warn('agenticMemory close failed', { error: String(e) })),
         this.checkpointStore.shutdown().catch((e: any) => log.warn('checkpointStore shutdown failed', { error: String(e) })),
         this.taskQueue.stop().catch((e: any) => log.warn('taskQueue stop failed', { error: String(e) })),
       ]);

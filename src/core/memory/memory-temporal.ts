@@ -60,6 +60,8 @@ export interface MemoryConfig {
   logDir?: string;
   maxRetentionDays?: number;
   maxBlockSize?: number;
+  /** Hard cap on in-memory blocks — oldest evicted first (like MemoryStore.maxBlocks). */
+  maxBlocks?: number;
 }
 
 // ── MemoryTemporal Class ──
@@ -77,6 +79,7 @@ export class MemoryTemporal {
       logDir: config?.logDir ?? path.join(process.cwd(), 'knowledge', 'memory-temporal'),
       maxRetentionDays: config?.maxRetentionDays ?? 30,
       maxBlockSize: config?.maxBlockSize ?? 1024,
+      maxBlocks: config?.maxBlocks ?? 5000,
     };
   }
 
@@ -90,6 +93,31 @@ export class MemoryTemporal {
     // ponytail: guard against replay() returning non-array (empty/corrupt log)
     this.blocks = new Map(Array.isArray(replayed) ? replayed.map(b => [b.id, b]) : []);
     this.loaded = true;
+  }
+
+  /**
+   * Enforce retention policy: drop blocks older than maxRetentionDays, then
+   * cap the newest maxBlocks. When anything is removed, compact the log so
+   * the next boot replays a small snapshot instead of the whole history.
+   * Called once from engine.init() — single production boot path (ADR-002).
+   * @returns number of blocks evicted
+   */
+  async cleanupExpired(): Promise<number> {
+    await this.ensureLoaded();
+    const now = Date.now();
+    const retentionMs = this.config.maxRetentionDays * 24 * 60 * 60 * 1000;
+    const cutoff = now - retentionMs;
+    const all = Array.from(this.blocks.values());
+    const kept = all
+      .filter(b => new Date(b.timestamp).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(-this.config.maxBlocks);
+    const removed = all.length - kept.length;
+    if (removed > 0) {
+      this.blocks = new Map(kept.map(b => [b.id, b]));
+      await this.log.compact(kept);
+    }
+    return removed;
   }
 
   private async ensureLoaded(): Promise<void> {
@@ -130,6 +158,11 @@ export class MemoryTemporal {
 
     this.blocks.set(block.id, block);
     await this.log.append({ op: 'add', block });
+
+    // Log maintenance (pattern: memory-store.ts:197-200) — keep log bounded so
+    // next boot replays fast; rotation code existed but had no caller (ADR-002).
+    if (this.log.shouldRotate()) await this.log.rotate();
+    if (this.log.shouldSnapshot()) await this.log.createSnapshot(Array.from(this.blocks.values()));
 
     return block;
   }
