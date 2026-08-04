@@ -77,6 +77,7 @@ Agent loop iteration:
 ### Session/Identity model
 
 - **ConversationSessionId** (`types/branded.ts`): UUID tao boi `SessionManager`, reset qua `/new`. Dung cho checkpoint, memory, plan.
+- **/new vs /restart** (`commands.ts:546`): `/new` = session boundary ro rang (archive + tao UUID moi). `/restart` = **process restart, KHONG phai session boundary** — SessionManager persist `coral-sessions.json` (`$TEMP/coral-sessions.json`, TTL 15 phut) va restore UUID tu disk neu downtime < TTL. Context chi mat khi downtime > 15 phut (TTL behavior dung thiet ke, khong phai bug).
 - **UserId** (`types/branded.ts`): Telegram user ID (vinh vien). Dung cho rate limit, access control.
 - **channelId:** Telegram chat ID (group/private). Khong duoc dung lam sessionId.
 - Ly do tach: tranh loi cu (Audit 2026-07-27) — `gateway/index.ts` dung `msg.channelId` lam sessionId, lam `/new` mat tac dung o Engine level. **Da fix (e8d17ff4):** gateway doc `msg.metadata.sessionId` (UUID tu SessionManager), telegram adapter gui `session.sessionId` qua metadata; gateway fail-loud neu thieu.

@@ -259,18 +259,6 @@ export class CheckpointStore {
       || plan.status === 'waiting_user';
   }
 
-  /**
-   * Remove a plan from a session's checkpoint.
-   */
-  clearPlan(sessionId: string): void {
-    this.plans.delete(sessionId);
-    const snapshot = this.getLatestForSession(sessionId);
-    if (snapshot) {
-      delete snapshot.plan;
-      this.dirty = true;
-    }
-  }
-
   // ── Read / Restore ──
 
   /**

@@ -176,7 +176,13 @@ export function isPlanActive(status: PlanStatus): boolean {
  * Allowed state transitions.
  */
 const VALID_TRANSITIONS: Record<PlanStatus, PlanStatus[]> = {
-  pending:       ['running', 'aborted'],
+  // ponytail: pending → paused_limit là case THẬT — plan được create nhưng loop chạm
+  // maxToolCycles trước khi có tool call thật (A3 chưa promote). B4 (engine.ts:865)
+  // ghi paused_limit cho cả pending; xóa điều kiện = plan bị bỏ lại pending vô hạn
+  // (tái tạo bug drop-silently). Thêm transition thay vì bỏ guard (verdict 2026-08-04).
+  // pending → stuck cũng thật: runaway với empty content (E1/E2) làm stagnation đếm
+  // failure khi plan chưa bao giờ promote — fuse phải park được plan (agent.ts:1133).
+  pending:       ['running', 'aborted', 'paused_limit', 'stuck'],
   running:       ['running', 'completed', 'paused_limit', 'waiting_user', 'failed', 'aborted', 'stuck'],
   paused_limit:  ['running', 'aborted'],
   waiting_user:  ['running', 'aborted'],

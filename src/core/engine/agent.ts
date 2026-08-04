@@ -35,7 +35,7 @@ import { R } from '../runtime-instrumentation.js';
 import { checkGoalDrift } from '../security/goal-drift-monitor.js';
 import type { PrivilegeGuard } from '../security/privilege-guard.js';
 import { missionLock } from '../security/mission-lock.js';
-import { STAGNATION_THRESHOLD, MAX_TRANSIENT_RETRY, ABSOLUTE_SAFETY_CEILING } from '../plan/types.js';
+import { STAGNATION_THRESHOLD, MAX_TRANSIENT_RETRY, ABSOLUTE_SAFETY_CEILING, validateTransition } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
@@ -875,7 +875,16 @@ export class Agent extends EventEmitter {
                   );
                   if (hasRealWork) {
                     currentItem.status = 'in_progress';
-                    if (activePlan.status === 'pending') activePlan.status = 'running';
+                    if (activePlan.status === 'pending') {
+                      // ponytail: route qua validateTransition — pending→running hợp lệ,
+                      // fail-loud nếu state machine đổi (đừng silent-write như cũ)
+                      const transErr = validateTransition(activePlan.status, 'running');
+                      if (transErr) {
+                        log.warn(`⚠️ [Agent A3] REFUSED illegal transition ${activePlan.status} → running: ${transErr}`);
+                      } else {
+                        activePlan.status = 'running';
+                      }
+                    }
                     this.checkpointStore.setPlan(request.sessionId, activePlan);
                     log.info(`[Agent A3] Plan item ${currentItem.index} → in_progress`);
                   }
@@ -1121,9 +1130,16 @@ export class Agent extends EventEmitter {
                       currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
                       log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
                       if (currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
-                        sp.status = 'stuck';
-                        sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
-                        log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                        // ponytail: route qua validateTransition — pending/running→stuck
+                        // hợp lệ (types.ts); fail-loud nếu state machine đổi
+                        const transErr = validateTransition(sp.status, 'stuck');
+                        if (transErr) {
+                          log.warn(`⚠️ [Stagnation] REFUSED illegal transition ${sp.status} → stuck: ${transErr}`);
+                        } else {
+                          sp.status = 'stuck';
+                          sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
+                          log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                        }
                       }
                     }
                   }

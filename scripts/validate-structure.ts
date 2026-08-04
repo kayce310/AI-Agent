@@ -516,6 +516,25 @@ function checkADR000Compliance() {
         }
       }
     }
+
+    // 8d. ALLOWED_DERIVE_USERS (agent.ts/engine.ts) mutate plan status TRỰC TIẾP nhưng
+    // PHẢI qua validateTransition — nếu không, state machine có thể bị force-write
+    // transition bất hợp pháp (bug engine.ts:867: pending→paused_limit, audit 2026-08-04).
+    // Rule này bắt regression tương lai dạng "direct setPlan bypass" trong chính 2 file
+    // được phép derive — trước đây thoát hoàn toàn vì 8c chỉ quét file NGOÀI whitelist.
+    if (isAllowedDeriveUser) {
+      const mutatesPlanState = /(?:plan|activePlan|sp)\.status\s*=\s*['"]/.test(codeOnly);
+      const hasValidateTransition = /\bvalidateTransition\s*\(/.test(content);
+      if (mutatesPlanState && !hasValidateTransition) {
+        violations.push({
+          rule: 'R8-PlanMutateWithoutValidateTransition',
+          file: relFile,
+          line: lineNumOf('.status ='),
+          message: `ADR-000: Direct plan.status mutation in ALLOWED_DERIVE_USERS must go through validateTransition() — check state machine before force-write`,
+          severity: 'ERROR',
+        });
+      }
+    }
   }
 }
 

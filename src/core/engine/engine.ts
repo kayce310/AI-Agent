@@ -51,7 +51,7 @@ import { TaskQueue, getTaskQueue } from '../task-queue.js';
 import { worldModel } from '../world/model.js';
 import { R } from '../runtime-instrumentation.js';
 import { requestContext, getRequestContext } from '../request-context.js';
-import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD } from '../plan/types.js';
+import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD, validateTransition } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 const CORAL_IDENTITY_FILES = [
@@ -858,6 +858,15 @@ LƯU Ý:
       if (!result.cycleLimitReached) return null;
       const plan = activePlan ? this.checkpointStore.getPlan(sessionId) : null;
       if (plan && (plan.status === 'running' || plan.status === 'pending')) {
+        // ponytail: pending → paused_limit hợp lệ sau khi thêm transition vào
+        // VALID_TRANSITIONS (types.ts) — pending chạm limit là case thật (A3 chưa
+        // promote vì loop toàn update_plan/empty). Guard dưới đây fail-loud nếu
+        // transition bất hợp pháp (đừng silent-write như trước).
+        const transErr = validateTransition(plan.status, 'paused_limit');
+        if (transErr) {
+          log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${plan.status} → paused_limit: ${transErr}`);
+          return null;
+        }
         const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
         if (hitAbsoluteCeiling) {
           log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);

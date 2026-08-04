@@ -65,16 +65,20 @@ type PlanState =
 
 ### Transition hợp lệ (chỉ những transition này được phép, mọi transition khác bị từ chối)
 
-```
+```text
 none        --create-->      planning
 planning    --tool_call-->   executing
 executing   --tool_call-->   executing        (item khác, hoặc cùng item retry)
 executing   --all_items_done--> completed
 executing   --unrecoverable_error--> failed
 executing   --user_abort-->  aborted
+planning    --cycle_limit--> paused_limit     (*) plan tạo xong nhưng chạm maxToolCycles trước khi có tool call thật
+planning    --stagnation-->  stuck             (*) runaway empty-content loop đếm failure khi plan chưa promote
 ```
 
 Không có transition nào đi ngược lại completed/failed/aborted — muốn làm việc mới, phải create plan mới (state planning mới, planId mới).
+
+> **(*) Ghi chú audit 2026-08-04:** `VALID_TRANSITIONS` (types.ts) cho phép `pending → paused_limit` và `pending → stuck`. Lý do: A3 (agent.ts:869) chỉ promote `pending → running` khi có tool call thật (≠ update_plan). Nếu LLM tạo plan rồi loop toàn update_plan/empty (runaway), plan giữ nguyên `pending` khi chạm cycle limit / stagnation — fuse an toàn (engine.ts:865, agent.ts:1133) PHẢI park được plan, không được để kẹt `pending` vô hạn (tái tạo bug drop-silently). Các mutation này đều đi qua `validateTransition()` — REFUSE + log nếu bất hợp pháp.
 
 ### Hàm dùng chung (single source of truth)
 
