@@ -478,6 +478,11 @@ export class Agent extends EventEmitter {
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
+    // ── PlanObs: observational logging (HARD-RULE compliance data, NO branching) ──
+    // ponytail: chỉ ghi sự kiện thô — update_plan có được gọi ở cycle đầu không.
+    // Phân tích sau (tần suất bỏ qua plan theo độ phức tạp) dựa trên log này,
+    // không xây heuristic nào ở đây.
+    let updatePlanCalledInCycle1 = false;
     // ── Evidence log cho evidence-based completion ──
     // Tự động ghi nhận mỗi tool call thành công, gắn với item đang active trong plan.
     // Lưu vào checkpointStore.evidenceLog — shared với update_plan tool handler.
@@ -771,6 +776,9 @@ export class Agent extends EventEmitter {
             finishReason: 'stop',
             finalContent: finalContent.slice(0, 100),
           });
+          // ── PlanObs: log sự kiện hoàn thành — dữ liệu thô cho phân tích HARD-RULE ──
+          // ponytail: chỉ log, không branch. user_msg_len = proxy thô độ phức tạp.
+          log.info(`[PlanObs] session=${request.sessionId} finish=stop cycles=${toolCallCycles} cycle1_update_plan=${updatePlanCalledInCycle1} user_msg_len=${String(request.task || messages[0]?.content || '').length}`);
           return {
             content: finalContent,
             modelUsed: modelResult.modelUsed,
@@ -951,6 +959,8 @@ export class Agent extends EventEmitter {
             // Không cần set hasCreatedPlan — derivePlanState() đọc từ checkpointStore
             // trực tiếp. Block này giữ lại để log nhưng không set flag.
             if (toolCall.function.name === 'update_plan') {
+              // PlanObs: ghi nhận update_plan ở cycle đầu (cycle 1 = sau increment đầu)
+              if (toolCallCycles === 1) updatePlanCalledInCycle1 = true;
               try {
                 const planArgs = JSON.parse(toolCall.function.arguments || '{}');
                 if (planArgs.action === 'create') {
@@ -1237,6 +1247,8 @@ export class Agent extends EventEmitter {
     // ── Max cycles exceeded → Report back so Engine can decide pause/continue ──
     R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'max_cycles' });
     R.state({ event: 'RETURN_MAX_CYCLES', requestId, cycle: toolCallCycles });
+    // ── PlanObs: case loop dài — bỏ qua plan có dẫn tới loop không kiểm soát? ──
+    log.info(`[PlanObs] session=${request.sessionId} finish=max_cycles cycles=${toolCallCycles} cycle1_update_plan=${updatePlanCalledInCycle1} user_msg_len=${String(request.task || messages[0]?.content || '').length}`);
 
     return {
       content: '',

@@ -242,6 +242,23 @@ src/
 
 ### Security notes
 
+- **Plan creation là model-discretionary (2026-08-04):** prompt nói "BẮT BUỘC tạo plan, không exception"
+  (prompt-builder 5c/5d, engine.ts planning-phase) nhưng **không có code-level enforcement** — model tự
+  quyết bỏ qua cho request đơn giản (planState=none không phải lúc nào cũng là bug). Đang thu thập dữ liệu
+  `[PlanObs]` log (agent.ts:781/1250: session, finish, cycles, cycle1_update_plan, user_msg_len) trước khi
+  quyết định xây complexity gate. Chi tiết: ADR-000 mục 5.
+
+- **PrivilegeGuard zero-trust allow list (2026-08-04):** `createDefaultAllowRules()` only covers
+  ~11 patterns (`filesystem:read/list`, `knowledge:search/read`, `document:read`, `skills:list`,
+  `sandbox:execute`, `report:generate`, `memory:read/write`, `process:list`, `plan:*`). **42/57 tools
+  remain DENY by default** — `write_file`, `patch_file`, `web_search`, browser suite, `cron_*`,
+  `todo_*`, `delegate_task`, `process_start/kill`, `send_message`, ... Đây là quyết định bảo mật
+  đang chờ user quyết định (P0 fix 2026-08-04 chỉ thêm `plan:*` — orchestration nội bộ, không blast
+  radius). Gợi ý kiến trúc dài hạn: tách 2 category — orchestration (luôn ALLOW) vs capability
+  (zero-trust per-tool), khớp cách Hermes phân lớp gateway/command-approval/sandbox.
+  Guard log có tên: `Guard "PrivilegeGuard" blocked event "tool:call"` (trước 2026-08-04 log ra
+  `Guard "undefined"` do `attachToHooks` không set name).
+
 - **Rate-limit bypass fixed (2026-07-29):** `Engine.process()` used `request.sessionId`
   as per-user rate-limit key. After session/identity fix, sessionId became a UUID (changes
   on `/new`), making `/new` a free rate-limit reset. Fixed by adding `userId` field to
