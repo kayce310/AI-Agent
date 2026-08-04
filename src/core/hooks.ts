@@ -109,8 +109,8 @@ export class HookRegistry {
    * no further guards or hooks run, and emit() returns false.
    * Returns an unsubscribe function.
    */
-  before(event: EventType, handler: GuardHandler, priority = 0): () => void {
-    const guard: AgentGuard = { event, handler, priority };
+  before(event: EventType, handler: GuardHandler, priority = 0, name?: string): () => void {
+    const guard: AgentGuard = { event, handler, priority, name };
     const existing = this.guards.get(event) || [];
     existing.push(guard);
     existing.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));

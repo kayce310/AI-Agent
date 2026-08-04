@@ -78,6 +78,9 @@ const TOOL_CATEGORY_MAP: Record<string, string[]> = {
   report: ['generate_report'],
   memory: ['memory_search', 'memory_list', 'memory_add', 'session_search'],
   process: ['process_list'],
+  // orchestration: nội bộ agent tự ghi sổ, không có blast radius ra ngoài hệ thống
+  // (P0 fix 2026-08-04: 8e0482c0 bật zero-trust nhưng quên update_plan → plan chết im lặng)
+  plan: ['update_plan'],
 };
 
 const TOOL_ALIAS_MAP: Record<string, string[]> = {
@@ -296,7 +299,7 @@ export class PrivilegeGuard {
    * Register as a HookRegistry guard handler.
    */
   attachToHooks(hooks: {
-    before: (event: any, handler: (ctx: { event: string; timestamp: string; data: Record<string, unknown> }) => any) => () => void;
+    before: (event: any, handler: (ctx: { event: string; timestamp: string; data: Record<string, unknown> }) => any, priority?: number, name?: string) => () => void;
   }): () => void {
     return hooks.before('tool:call', (ctx) => {
       const payload = ctx.data;
@@ -322,7 +325,7 @@ export class PrivilegeGuard {
       }
 
       return { allowed: true };
-    });
+    }, 0, 'PrivilegeGuard');
   }
 }
 
@@ -346,6 +349,8 @@ export function createDefaultAllowRules(): PrivilegeRule[] {
     { toolPattern: 'memory:read', effect: 'allow', reason: 'Explicitly allowed: memory read' },
     { toolPattern: 'memory:write', effect: 'allow', reason: 'Explicitly allowed: memory write' },
     { toolPattern: 'process:list', effect: 'allow', reason: 'Explicitly allowed: process list' },
+    // orchestration: agent tự ghi sổ plan cho chính nó — không blast radius (P0 fix 2026-08-04)
+    { toolPattern: 'plan:*', effect: 'allow', reason: 'Orchestration: internal plan state (no blast radius)' },
   ];
 }
 

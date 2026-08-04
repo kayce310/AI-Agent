@@ -123,6 +123,6 @@ describe('Engine Guardrails Integration', () => {
     };
     const detach = guard.attachToHooks(hooks as any);
     expect(typeof detach).toBe('function');
-    expect(hooks.before).toHaveBeenCalledWith('tool:call', expect.any(Function));
+    expect(hooks.before).toHaveBeenCalledWith('tool:call', expect.any(Function), 0, 'PrivilegeGuard');
   });
 });
