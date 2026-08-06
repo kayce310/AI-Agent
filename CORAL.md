@@ -99,6 +99,27 @@ Agent loop iteration:
 - `canCompleteItem()` kiem tra: neu evidenceLog rong -> tu choi.
 - Khong tin `result_summary` model tu viet.
 
+### Delegate task semantics (checkpoint) — quyết định có chủ đích (2026-08-06)
+
+- `delegate_task` là **1 tool-call nguyên tử** từ góc nhìn parent. Subagent crash giữa chừng
+  = mất toàn bộ công của subagent đó (loss-on-crash) — parent không lấy lại được nội bộ
+  subagent sau crash.
+- Đây là quyết định có chủ đích, **KHÔNG phải thiếu sót**: checkpoint của parent
+  (CheckpointStore + toolStatus) đã bảo vệ khỏi duplicate side-effect ở cấp tool-call khi
+  retry — retry `delegate_task` chạy LẠI subagent từ đầu, không resume nửa chừng.
+- **CẤM thêm sub-checkpoint namespace** (checkpoint riêng cho từng cycle của subagent) —
+  vi phạm ADR-000 nguyên tắc 1 (một state một nguồn sự thật), thêm độ phức tạp không cần
+  thiết. Task quá lớn cần resume → tách thành nhiều `delegate_task` nhỏ hơn (parent
+  orchestrate), không checkpoint nội bộ subagent.
+- Guard chain subagent (2026-08-06): tool call của subagent đi qua 2 lớp —
+  (1) policy gate: `agent.allowedTools` hard-enforce ở tầng thực thi (`registry.execute`),
+  (2) guard chain hooks `tool:call`/`tool:result` trên globalHooks (PrivilegeGuard/risk-gate/
+  HITL/tracer) — giống parent loop, không bypass. Trước 2026-08-06 subagent gọi
+  `registry.execute` trực tiếp → BY-PASS toàn bộ guard chain (vụ subagent rogue sửa agent.ts).
+- Cancel propagation (2026-08-06): `EngineRequest.abortSignal` → `RequestContext.signal` →
+  subagent loop checkAbort + `route(..., { signal })` — parent cancel dừng model call subagent
+  (promise-level với mọi adapter, socket-level với Ollama).
+
 ### 5 nguyen tac chung ve state -> `docs/adr/ADR-000-state-principles.md`
 
 1. Mot state, mot nguon su that
@@ -291,7 +312,7 @@ src/
 | Van de | Chi tiet | Muc do |
 |--------|----------|--------|
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
-| **classifyResponse NEED_TOOL dead** | Format instruction da thay the, code cu van ton tai | P3 |
+| **classifyResponse đã tinh gọn** | Chỉ còn UNPARSEABLE/FINAL_ANSWER — NEED_TOOL không còn tồn tại trong code (doc drift fix 2026-08-06) | — |
 | **errorCategory retry logic** | **Da implement (2026-07-31):** transient khong cong vao `consecutiveFailedAttempts` (co counter rieng `consecutiveTransientAttempts`, limit `MAX_TRANSIENT_RETRY=3`, vuot -> coi nhu permanent); permanent -> tool result tra ve model co note "[ERROR_CATEGORY=permanent]" khuyen khong retry cung tham so; security -> abort plan (giu nguyen). Xem `agent.ts` stagnation block + `plan/types.ts` | ✅ done |
 | **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), gateway da fail-loud, con cho fail-loud sessionId hoan tat** |
 
