@@ -671,7 +671,14 @@ export class Engine extends EventEmitter {
     const { startTime, userMessage, taskId, sessionId, requestId } = meta;
 
     // ── CHECKPOINT: Start tracking this request ──
-    this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
+    // Fix C (ADR-000 §1): single source of truth — session already has an active
+    // task (rebuilt from disk on boot) → do NOT create a duplicate checkpoint.
+    const existingTaskId = this.checkpointStore.getActiveTaskForSession(sessionId);
+    if (existingTaskId) {
+      log.warn(`[Engine] Session ${sessionId} already has active task ${existingTaskId} — reusing, skipping duplicate creation`);
+    } else {
+      this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
+    }
     
     // Publish task_started event
     this.eventLogger.taskStarted(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task');

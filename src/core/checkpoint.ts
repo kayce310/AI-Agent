@@ -96,6 +96,8 @@ export class CheckpointStore {
   private dirty = false;
   // ponytail: plan storage decoupled from request snapshot lifecycle (ADR-001)
   private plans: Map<string, TaskPlan> = new Map();
+  // Fix C: single source of truth — active requestId per session
+  private activeTaskBySession: Map<string, string> = new Map();
 
   constructor(config?: CheckpointConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -136,6 +138,8 @@ export class CheckpointStore {
       startedAt: new Date().toISOString(),
       cycles: [],
     });
+    // Fix C: this requestId is now the active task for the session
+    this.activeTaskBySession.set(sessionId, requestId);
     this.dirty = true;
     log.info(`[CP] start: ${requestId} — "${currentGoal.slice(0, 60)}"`);
   }
@@ -209,6 +213,10 @@ export class CheckpointStore {
     if (!snapshot) return;
     snapshot.status = 'completed';
     snapshot.result = result;
+    // Fix C: task done — clear active mapping for this session
+    if (this.activeTaskBySession.get(snapshot.sessionId) === requestId) {
+      this.activeTaskBySession.delete(snapshot.sessionId);
+    }
     this.dirty = true;
     log.info(`[CP] complete: ${requestId} — ${result.modelUsed}`);
   }
@@ -221,6 +229,10 @@ export class CheckpointStore {
     if (!snapshot) return;
     snapshot.status = 'failed';
     snapshot.error = error;
+    // Fix C: task done — clear active mapping for this session
+    if (this.activeTaskBySession.get(snapshot.sessionId) === requestId) {
+      this.activeTaskBySession.delete(snapshot.sessionId);
+    }
     this.dirty = true;
     log.info(`[CP] failed: ${requestId} — ${error.message.slice(0, 100)}`);
   }
@@ -260,6 +272,13 @@ export class CheckpointStore {
   }
 
   // ── Read / Restore ──
+
+  /**
+   * Fix C: get the active requestId for a session, if any.
+   */
+  getActiveTaskForSession(sessionId: string): string | null {
+    return this.activeTaskBySession.get(sessionId) ?? null;
+  }
 
   /**
    * Get the latest checkpoint for a session.
@@ -328,12 +347,36 @@ export class CheckpointStore {
 
       log.info(`Loaded ${this.snapshots.size} checkpoint(s) from disk`);
 
-      // Log in-progress tasks found
+      // Fix B: dedup in-progress per session BEFORE building activeTaskBySession.
+      // >1 in_progress for same session (restart race) → keep newest by startedAt,
+      // mark the rest failed:duplicate_on_resume so the active map stays unambiguous.
+      const dupBySession = new Map<string, CheckpointSnapshot[]>();
+      for (const snap of this.snapshots.values()) {
+        if (snap.status !== 'in_progress' && snap.status !== 'started') continue;
+        const list = dupBySession.get(snap.sessionId) ?? [];
+        list.push(snap);
+        dupBySession.set(snap.sessionId, list);
+      }
+      for (const [sessId, list] of dupBySession) {
+        if (list.length <= 1) continue;
+        list.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+        log.error(`[CP] Fix B: session ${sessId} has ${list.length} in_progress snapshots — keeping ${list[0].requestId}`);
+        for (const stale of list.slice(1)) {
+          stale.status = 'failed';
+          stale.error = { message: 'duplicate_on_resume: superseded by newer task in same session' };
+          this.dirty = true;
+          log.warn(`[CP] Fix B: ${stale.requestId} → failed:duplicate_on_resume`);
+        }
+      }
+
+      // Fix C: build activeTaskBySession from clean (post-dedup) state.
+      this.activeTaskBySession.clear();
       const inProgress = this.getAllInProgress();
       if (inProgress.length > 0) {
         log.warn(`⚠️ Found ${inProgress.length} in-progress task(s) from previous run:`);
         for (const cp of inProgress) {
           log.warn(`   ${cp.requestId} (${cp.sessionId}) — ${cp.cycles.length} cycle(s) recorded`);
+          this.activeTaskBySession.set(cp.sessionId, cp.requestId);
         }
       }
     } catch (err: any) {
