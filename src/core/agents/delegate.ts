@@ -20,6 +20,7 @@ export { AgentRegistry }; // re-export cho DelegationOrchestrator
 import type { Tool, ToolPlugin } from '../tools/tool-registry.js';
 import { Logger } from '../logger.js';
 import { getRequestContext } from '../request-context.js';
+import { globalHooks } from '../hooks.js';
 
 const log = new Logger({ module: 'Delegate' });
 
@@ -162,10 +163,48 @@ export async function runSpecialistAgent(
       for (const toolCall of modelResult.toolCalls) {
         if (toolCall.type !== 'function') continue;
 
-        const toolResult = await registry.getToolRegistry().execute(
-          toolCall.function.name,
-          JSON.parse(toolCall.function.arguments || '{}'),
-        );
+        const toolName = toolCall.function.name;
+        let parsedArgs: Record<string, any> = {};
+        try {
+          parsedArgs = JSON.parse(toolCall.function.arguments || '{}');
+        } catch { /* keep {} */ }
+
+        // Hard-enforce allowedTools — defense-in-depth (registry.execute cũng check ở tầng thực thi)
+        if (!agent.allowedTools.includes(toolName)) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({ error: `TOOL_BLOCKED_BY_POLICY: ${toolName} không nằm trong allowedTools của ${agent.name}` }),
+          });
+          continue;
+        }
+
+        // Guard chain như parent loop (agent.ts:918) — PrivilegeGuard/risk-gate/HITL áp cho subagent
+        const hooksAllowed = await globalHooks.emit('tool:call', {
+          sessionId: getRequestContext()?.sessionId,
+          toolName,
+          toolArgs: toolCall.function.arguments,
+          cycle: toolCycles,
+          reasoningContent: null,
+        });
+        if (!hooksAllowed) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({ error: `TOOL_BLOCKED: ${toolName} was blocked by security guard` }),
+          });
+          continue;
+        }
+
+        const toolResult = await registry.getToolRegistry().execute(toolName, parsedArgs, agent.allowedTools);
+
+        await globalHooks.emit('tool:result', {
+          sessionId: getRequestContext()?.sessionId,
+          toolName,
+          args: toolCall.function.arguments,
+          result: toolResult,
+          cycle: toolCycles,
+        });
 
         messages.push({
           role: 'tool',

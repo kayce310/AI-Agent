@@ -152,8 +152,13 @@ export class ToolRegistry {
   /**
    * Execute a tool by name with given args.
    * Returns the tool result (any serializable value).
+   * Optional allowedTools: hard-enforce defense-in-depth — chặn tool ngoài danh sách
+   * ở tầng thực thi, không chỉ giấu khỏi tầm nhìn LLM. Fail-loud, không âm thầm bỏ qua.
    */
-  async execute(name: string, args: Record<string, any>): Promise<any> {
+  async execute(name: string, args: Record<string, any>, allowedTools?: string[]): Promise<any> {
+    if (allowedTools && !allowedTools.includes(name)) {
+      return { error: `Tool "${name}" is not in this agent's allowedTools — blocked (hard-enforce)` };
+    }
     const tool = this.toolsMap.get(name);
     if (!tool) {
       return { error: `Tool "${name}" not found in registry` };
