@@ -313,6 +313,7 @@ src/
 |--------|----------|--------|
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse đã tinh gọn** | Chỉ còn UNPARSEABLE/FINAL_ANSWER — NEED_TOOL không còn tồn tại trong code (doc drift fix 2026-08-06) | — |
+| **Gateway chưa có cancel source (open item 2026-08-06)** | AbortSignal plumbing đã đủ end-to-end (EngineRequest.abortSignal → RequestContext.signal → agent loop → subagent → route → Ollama socket-level) nhưng **KHÔNG nơi nào trong production gọi abort()** — TODO gateway passthrough còn nguyên (engine.ts:656,679). Test pass (delegate-abort.test.ts) KHÔNG = cancel hoạt động thật từ gateway. Việc còn lại: wire nguồn cancel (vd /cancel, disconnect, shutdown) ở gateway rồi truyền xuống engine.process | **P1 — open, chưa fix** |
 | **errorCategory retry logic** | **Da implement (2026-07-31):** transient khong cong vao `consecutiveFailedAttempts` (co counter rieng `consecutiveTransientAttempts`, limit `MAX_TRANSIENT_RETRY=3`, vuot -> coi nhu permanent); permanent -> tool result tra ve model co note "[ERROR_CATEGORY=permanent]" khuyen khong retry cung tham so; security -> abort plan (giu nguyen). Xem `agent.ts` stagnation block + `plan/types.ts` | ✅ done |
 | **Session identity confusion** | gateway/index.ts dung `msg.channelId` lam `sessionId`, `/new` khong clear engine state. Engine dung `request.sessionId` lam `userId` | **P1 — da fix rate-limit (`request.userId`), gateway da fail-loud, con cho fail-loud sessionId hoan tat** |
 
