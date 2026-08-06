@@ -652,6 +652,7 @@ export class Engine extends EventEmitter {
       onPlanCreated: (_itemCount: number) => {
         this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       },
+      signal: request.abortSignal,
     };
     return requestContext.run(rctx, () => this.processInnerScoped(request, cacheKey, {
       startTime, userMessage, taskId, sessionId, requestId,
@@ -913,7 +914,7 @@ LƯU Ý:
 
     try {
       R.waitBegin({ requestId, label: 'agent.run', callerFile: 'engine.ts', callerLine: 700 });
-      const result = await this.agent.run(agentRequest);
+      const result = await this.agent.run(agentRequest, request.abortSignal);
 
       // ── Handle cycle limit hit mid-plan → paused_limit (B4: shared handler) ──
       const pausedResponse = handleCycleLimit(result);

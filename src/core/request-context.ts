@@ -19,6 +19,8 @@ export interface RequestContext {
   taskId: string;
   evidenceLog: EvidenceLog;
   onPlanCreated: (itemCount: number) => void;
+  /** AbortSignal của request — cancel lan truyền từ parent xuống subagent (delegate_task) */
+  signal?: AbortSignal;
 }
 
 export const requestContext = new AsyncLocalStorage<RequestContext>();

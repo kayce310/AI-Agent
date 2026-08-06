@@ -19,6 +19,7 @@ import { AgentRegistry, SpecialistAgent, DelegationResult } from './agent-regist
 export { AgentRegistry }; // re-export cho DelegationOrchestrator
 import type { Tool, ToolPlugin } from '../tools/tool-registry.js';
 import { Logger } from '../logger.js';
+import { getRequestContext } from '../request-context.js';
 
 const log = new Logger({ module: 'Delegate' });
 
@@ -93,6 +94,8 @@ export async function runSpecialistAgent(
   const modelRouter = registry.getModelRouter();
   const agentTools = registry.getToolsForAgent(agent.name);
   const maxCycles = agent.maxCycles || 8;
+  // Cancel propagation: signal từ parent request (EngineRequest.abortSignal → RequestContext.signal)
+  const signal = getRequestContext()?.signal;
 
   // Build system prompt for specialist
   const systemPrompt = [
@@ -120,10 +123,16 @@ export async function runSpecialistAgent(
   let finalContent = '';
 
   while (toolCycles < maxCycles) {
+    // Cancel propagation — parent abort dừng subagent loop (mirror agent.ts checkAbort)
+    if (signal?.aborted) {
+      throw new Error('Operation cancelled');
+    }
+
     const modelResult = await modelRouter.route(messages, {
       model: agent.modelId,
       tools: agentTools,
       maxTokens: 4096,
+      signal,
     });
 
     // Direct response (no tool calls)

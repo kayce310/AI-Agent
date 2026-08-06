@@ -73,6 +73,8 @@ export interface EngineRequest {
   systemPrompt?: string;
   /** Fast mode flag — bypass Orchestrator for simple queries */
   fastMode?: boolean;
+  /** Abort signal từ platform/gateway — cancel lan truyền xuống agent loop + subagent (delegate_task) */
+  abortSignal?: AbortSignal;
   /** Platform metadata — max message length, PII safety, formatting hints */
   platformMeta?: {
     maxMessageLength?: number;

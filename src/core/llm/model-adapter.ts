@@ -18,6 +18,26 @@ import OpenAI from 'openai';
 import { ProviderRegistry, IProviderClient, ProviderInvokeParams } from './provider-registry.js';
 import { Logger } from '../logger.js';
 import { withTimeout, createTimeoutController, TimeoutError } from '../util/with-timeout.js';
+
+/**
+ * Reject khi signal aborts (promise-level cancellation).
+ * Dùng làm lớp chặn chung cho mọi adapter — adapter nào tự wire signal vào fetch
+ * (vd Ollama) thì còn được abort ở tầng socket; adapter delegate (9router/SDK)
+ * chỉ dừng ở tầng promise (network call phía remote không hủy được, nhưng
+ * Coral coi call đó là cancelled — không chờ, không retry).
+ */
+function withSignal<T>(p: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return p;
+  if (signal.aborted) return Promise.reject(new Error('Operation cancelled'));
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error('Operation cancelled'));
+    signal.addEventListener('abort', onAbort, { once: true });
+    p.then(
+      (v) => { signal.removeEventListener('abort', onAbort); resolve(v); },
+      (e) => { signal.removeEventListener('abort', onAbort); reject(e); },
+    );
+  });
+}
 const log = new Logger({ module: 'ModelRouter' });
 import { LLMProviderConfig, ModelSpec, ChatMessage } from '../types.js';
 import { evolutionEngine } from '../evolution.js';
@@ -75,6 +95,8 @@ export interface ModelOptions {
   temperature?: number;
   /** tool_choice: 'auto' (default, model decides), 'required' (force tool call), 'none' (text only) */
   toolChoice?: 'auto' | 'required' | 'none';
+  /** AbortSignal — cancel lan truyền từ parent (engine/delegate) xuống model call */
+  signal?: AbortSignal;
 }
 
 export interface ModelResponse {
@@ -416,14 +438,12 @@ export class OllamaAdapter implements ModelAdapter {
   readonly label = 'Ollama (Local LLMs)';
   private baseUrl: string;
   private defaultModel: string;
-  private controller: AbortController;
   private callTimeoutMs: number;
 
   constructor(config?: OllamaConfig) {
     this.baseUrl = config?.baseUrl || 'http://127.0.0.1:11434';
     this.defaultModel = config?.model || 'llama3.1:8b';
     this.callTimeoutMs = config?.timeout ?? 60000;
-    this.controller = new AbortController();
   }
 
   static fromEnv(): OllamaAdapter | null {
@@ -457,9 +477,14 @@ export class OllamaAdapter implements ModelAdapter {
     // Create per-call timeout controller so each call has its own deadline
     const { controller: callController, clear: clearTimer } = createTimeoutController(this.callTimeoutMs);
 
-    // If parent controller aborts, abort the call too
+    // If the request's AbortSignal aborts, abort the call too (cancel propagation)
+    const parentSignal = options?.signal;
     const onParentAbort = () => callController.abort();
-    this.controller.signal.addEventListener('abort', onParentAbort);
+    if (parentSignal?.aborted) {
+      callController.abort();
+    } else {
+      parentSignal?.addEventListener('abort', onParentAbort);
+    }
 
     let res: Response;
     try {
@@ -485,7 +510,7 @@ export class OllamaAdapter implements ModelAdapter {
       throw err;
     } finally {
       clearTimer();
-      this.controller.signal.removeEventListener('abort', onParentAbort);
+      parentSignal?.removeEventListener('abort', onParentAbort);
     }
 
     if (!res.ok) {
@@ -544,6 +569,10 @@ export class ModelRouter {
     if (candidates.length === 0) {
       throw new Error('No adapters registered in ModelRouter');
     }
+    // Cancel trước khi gọi model — không tốn 1 call nào nếu đã bị abort
+    if (options?.signal?.aborted) {
+      throw new Error('Operation cancelled');
+    }
 
     let lastError: Error | null = null;
     const perAdapterTimeout = 120_000; // 2 minutes max per adapter
@@ -558,9 +587,12 @@ export class ModelRouter {
         const toolNames = options?.tools?.map((t: any) => t.function?.name).join(', ') || 'none';
 
         // Wrap adapter call with timeout — prevents hanging on slow/dead adapters
-        const response = withTimeout(
-          adapter.invoke(messages, options),
-          perAdapterTimeout,
+        const response = withSignal(
+          withTimeout(
+            adapter.invoke(messages, options),
+            perAdapterTimeout,
+          ),
+          options?.signal,
         ).catch((err: any) => {
           // If timeout or error, throw to trigger fallback
           if (err instanceof TimeoutError) {
