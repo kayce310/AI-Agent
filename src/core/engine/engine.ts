@@ -48,6 +48,9 @@ import { withTimeout } from '../util/with-timeout.js';
 import { CheckpointStore, getCheckpoint } from '../checkpoint.js';
 import { getContextManager } from '../context-window.js';
 import { TaskQueue, getTaskQueue } from '../task-queue.js';
+import { registerConsequenceWritePath, recordPlanTerminal, recordGateReject } from '../memory/consequence-write-path.js';
+import { ConsequenceStore, getConsequenceStore } from '../memory/consequence-store.js';
+import { registerConsequenceReadPath } from '../memory/consequence-read-path.js';
 import { worldModel } from '../world/model.js';
 import { R } from '../runtime-instrumentation.js';
 import { requestContext, getRequestContext } from '../request-context.js';
@@ -411,6 +414,15 @@ export class Engine extends EventEmitter {
               plan.status = 'aborted';
               plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
               log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
+              // ADR-003 Phase 1: consequence cho plan abort do security error
+              recordPlanTerminal({
+                planId: plan.id,
+                planStatus: 'aborted',
+                stopReason: plan.stopReason,
+                goalSummary: plan.goal,
+                sessionId,
+                taskId,
+              });
             }
             this.checkpointStore.setPlan(sessionId, plan);
             log.info(`[Engine A1] Tool ${toolName} error classified as "${category}": ${errorMsg.slice(0, 100)}`);
@@ -477,6 +489,18 @@ export class Engine extends EventEmitter {
     }
     const adapters = this.modelRouter.listAdapters();
     /* Engine initialized */
+
+    // ═══ CONSEQUENCE MEMORY (ADR-003 Phase 1 — write path only) ═══
+    // Đăng ký MỘT LẦN trên globalHooks → áp cho cả parent loop (agent.ts)
+    // lẫn subagent loop (delegate.ts). Ghi record khi tool fail.
+    registerConsequenceWritePath();
+    log.info('[Consequence] write path registered (ADR-003 Phase 1)');
+
+    // ═══ CONSEQUENCE MEMORY (ADR-003 Phase 2 — read path + HITL) ═══
+    // Guard trên tool:call → lookup + suggest + require_hitl.
+    // block KHÔNG enforce mặc định (enforceBlock = false).
+    registerConsequenceReadPath();
+    log.info('[Consequence] read path registered (ADR-003 Phase 2)');
   }
 
   private async warmup(): Promise<void> {
@@ -503,6 +527,8 @@ export class Engine extends EventEmitter {
   getPrivilegeGuard(): PrivilegeGuard { return this.privilegeGuard; }
   getTemporalMemory(): MemoryTemporal { return this.temporalMemory; }
   getMemoryFacade(): MemoryFacade { return this.memory; }
+  /** Consequence Memory store (ADR-003 Phase 1) — single writer là consequence-store */
+  getConsequenceStore(): ConsequenceStore { return getConsequenceStore(); }
 
   // ═══════════════════════════════════════════════════════════════
   // PHASE 3: Smart Fallback + DAG Cycle Detection + Hybrid Routing
@@ -648,6 +674,9 @@ export class Engine extends EventEmitter {
     const rctx: import('../request-context.js').RequestContext = {
       sessionId,
       taskId,
+      // userId permanent (không đổi theo /new) — cùng convention với rate-limit
+      // (engine.ts:549 actualUserId = request.userId || 'anonymous')
+      userId: request.userId || 'anonymous',
       evidenceLog: new Map() as import('../plan/types.js').EvidenceLog,
       onPlanCreated: (_itemCount: number) => {
         this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
