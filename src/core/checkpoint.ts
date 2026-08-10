@@ -207,6 +207,8 @@ export class CheckpointStore {
 
   /**
    * Mark request as completed successfully.
+   * P0: persist terminal state IMMEDIATELY (not waiting for periodic flush) —
+   * otherwise disk keeps the last in_progress file and restart resurrects the task.
    */
   complete(requestId: string, result: { content: string; modelUsed: string; providerUsed: string }): void {
     const snapshot = this.snapshots.get(requestId);
@@ -218,11 +220,13 @@ export class CheckpointStore {
       this.activeTaskBySession.delete(snapshot.sessionId);
     }
     this.dirty = true;
+    this.persistTerminal(requestId);
     log.info(`[CP] complete: ${requestId} — ${result.modelUsed}`);
   }
 
   /**
    * Mark request as failed.
+   * P0: same immediate-persist guarantee as complete().
    */
   failed(requestId: string, error: { message: string; stack?: string }): void {
     const snapshot = this.snapshots.get(requestId);
@@ -234,7 +238,28 @@ export class CheckpointStore {
       this.activeTaskBySession.delete(snapshot.sessionId);
     }
     this.dirty = true;
+    this.persistTerminal(requestId);
     log.info(`[CP] failed: ${requestId} — ${error.message.slice(0, 100)}`);
+  }
+
+  // ── P0/P1: terminal-state durable write ──
+  // Ghi snapshot terminal (completed/failed) xuống disk NGAY, rồi xóa toàn bộ
+  // chain cp-{requestId}-*.json cũ — disk giữ đúng 1 file terminal mới nhất.
+  // Thứ tự ghi-trước-xóa-sau: crash giữa chừng không làm mất terminal state.
+  private persistTerminal(requestId: string): void {
+    const snapshot = this.snapshots.get(requestId);
+    if (!snapshot) return;
+    const now = Date.now();
+    const filePath = path.join(this.config.checkpointDir, `cp-${requestId}-${now}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2), 'utf-8');
+    const prefix = `cp-${requestId}-`;
+    const basename = path.basename(filePath);
+    for (const f of fs.readdirSync(this.config.checkpointDir)) {
+      if (f.startsWith(prefix) && f !== basename) {
+        try { fs.unlinkSync(path.join(this.config.checkpointDir, f)); } catch { /* locked/in-use */ }
+      }
+    }
+    log.info(`[CP] terminal persist: ${requestId} → ${basename} (${snapshot.status}), cleaned ${prefix}* chain`);
   }
 
   // ── Plan Management (State-Driven Task Plan) ──
