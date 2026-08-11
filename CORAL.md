@@ -245,8 +245,10 @@ src/
 | `core/tools/report.ts` | BUG | Returns "TODO" placeholder |
 | ~~`Engine.sanitizeResponse()` (engine.ts:209)~~ | ~~DEAD~~ | **DA XOA KHOI SOURCE** — khong con ton tai trong engine.ts, 0 hits trong src/ (2026-08-11) |
 | ~~`SAFETY_CEILING` import (agent.ts:36)~~ | ~~DEAD~~ | **DA XOA KHOI IMPORT** — agent.ts chi import ABSOLUTE_SAFETY_CEILING (line 38) |
-| `computePlanBudget()` (plan/types.ts) | DEAD | Exported nhung khong goi |
-| `BASE_PLANNING_BUDGET`, `PLAN_CYCLES_PER_ITEM` | DEAD | Deprecated constants |
+| `computePlanBudget()` + `SAFETY_CEILING`/`BASE_PLANNING_BUDGET`/`PLAN_CYCLES_PER_ITEM` (plan/types.ts) | **GIU LAI (2026-08-11)** | Dead trong production (0 importer src/) nhung la **test-facing compatibility surface** — 5 test D3 active import + test truc tiep (state-driven-plan.test.ts:94-169). Xoa se giam baseline 1088→1083. Ticket: "Remove deprecated planning exports and associated D3 compatibility tests" (backlog) |
+| `core/behavior/behavior-engine.ts` + `core/self-evolution/task-tracker.ts` | **GIU LAI (2026-08-11)** | Test-only (production 0 importer) nhung test files import truc tiep (behavior-engine.test.ts, emotion.test.ts, self-evolution.test.ts); chua co quyet dinh chien luoc loai bo khoi kien truc. "Chi test dung" != dead code khi test dang bao ve API duoc giu |
+| ~~`core/behavior/types.ts`~~ | ~~DEAD~~ | **AUDIT FALSE POSITIVE (2026-08-11)** — `events/factory.ts:29` import `BehaviorPlan` (production path). KHONG xoa |
+| ~~`core/commands/*`~~ | ~~DEAD~~ | **AUDIT FALSE POSITIVE (2026-08-11)** — chain production: start-telegram.ts → modules/telegram/index.ts → commands.ts → `CoreRegistry.getInstance().execute()` (commands.ts:142,148). KHONG xoa |
 
 ---
 
@@ -320,6 +322,7 @@ src/
 
 | Van de | Chi tiet | Muc do |
 |--------|----------|--------|
+| **Remove deprecated planning exports + D3 tests (ticket 2026-08-11)** | Xoa `SAFETY_CEILING`/`BASE_PLANNING_BUDGET`/`PLAN_CYCLES_PER_ITEM`/`computePlanBudget` khoi plan/types.ts + 5 test D3 (state-driven-plan.test.ts:94-169) trong CUNG 1 commit (xoa 1 trong 2 → build/test vo). Quyet dinh 2026-08-11: GIU NGUYEN pass nay | **backlog** |
 | **goal-drift chi check tool result** | `checkGoalDrift()` o agent.ts:896 chi check tool result, khong check text | P2 |
 | **classifyResponse đã tinh gọn** | Chỉ còn UNPARSEABLE/FINAL_ANSWER — NEED_TOOL không còn tồn tại trong code (doc drift fix 2026-08-06) | — |
 | **Gateway chưa có cancel source (open item 2026-08-06)** | AbortSignal plumbing đã đủ end-to-end (EngineRequest.abortSignal → RequestContext.signal → agent loop → subagent → route → Ollama socket-level) nhưng **KHÔNG nơi nào trong production gọi abort()** — TODO gateway passthrough còn nguyên (engine.ts:656,679). Test pass (delegate-abort.test.ts) KHÔNG = cancel hoạt động thật từ gateway. Việc còn lại: wire nguồn cancel (vd /cancel, disconnect, shutdown) ở gateway rồi truyền xuống engine.process | **P1 — open, chưa fix** |
