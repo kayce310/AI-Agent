@@ -24,6 +24,7 @@ import { EngineRequest, EngineResponse, ChatMessage } from '../types.js';
 import { evolutionEngine } from '../evolution.js';
 import { ModelRouter, buildDefaultRouter } from '../llm/model-adapter.js';
 import { Agent, AgentConfig } from './agent.js';
+import { setEngineInstance } from './instance.js';
 import { AgentRegistry } from '../agents/agent-registry.js';
 import { createDelegatePlugin } from '../agents/delegate.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
@@ -178,6 +179,9 @@ export class Engine extends EventEmitter {
 
   /** In-flight promise dedup — same key = same promise */
   private pendingRequests: Map<string, Promise<EngineResponse>> = new Map();
+  /** ponytail (gateway-cancel-source P1): AbortController per-session để /cancel
+   *  abort request đang chạy. Chỉ tạo khi gateway chưa cung cấp abortSignal. */
+  private requestControllers: Map<string, AbortController> = new Map();
   private consolidation!: MemoryConsolidation;
 
   constructor(registry?: ProviderRegistry) {
@@ -215,6 +219,7 @@ export class Engine extends EventEmitter {
   }
 
   async init(): Promise<void> {
+    setEngineInstance(this);
     this.registry.loadFromConfig();
     await evolutionEngine.init();
     // Note: loadDefaultRules() removed — rule system simplified out
@@ -612,8 +617,25 @@ export class Engine extends EventEmitter {
     const requestId = request.sessionId || `req-${Date.now()}`;
     R.pendingReq({ event: 'CREATE', cacheKey });
     R.waitBegin({ requestId, label: 'processInner', callerFile: 'engine.ts', callerLine: 533 });
+    // ponytail (gateway-cancel-source P1): gateway chưa cung cấp abortSignal →
+    // engine tạo AbortController per-session để /cancel abort được request đang chạy.
+    // Ghi đè controller cũ nếu session đã có request chạy — cancel nhắm request mới nhất.
+    if (!request.abortSignal) {
+      const controller = new AbortController();
+      request.abortSignal = controller.signal;
+      this.requestControllers.set(request.sessionId, controller);
+    }
     const resultPromise = this.processInner(request, cacheKey).catch((err: any) => {
       // If timeout from inner layer, return friendly error instead of propagating
+      if (err.message?.includes('Operation cancelled')) {
+        // Abort bởi /cancel — trả response thân thiện, KHÔNG lan reject lên
+        // platform adapter (tránh unhandled rejection / crash message handler).
+        return {
+          content: '🛑 Đã hủy yêu cầu.',
+          modelUsed: 'none',
+          providerUsed: 'cancelled',
+        };
+      }
       if (err.message?.includes('timed out')) {
         this.emit('alert:timeout', { sessionId: request.sessionId, message: err.message });
         return {
@@ -649,7 +671,25 @@ export class Engine extends EventEmitter {
       this.pendingRequests.delete(cacheKey);
       R.pendingReq({ event: 'DELETE', cacheKey });
       clearTimeout(cleanupTimer);
+      // Cleanup controller của request này (chỉ khi vẫn là controller hiện tại —
+      // request mới cùng session có thể đã ghi đè map).
+      const ctrl = this.requestControllers.get(request.sessionId);
+      if (ctrl && request.abortSignal && ctrl.signal === request.abortSignal) {
+        this.requestControllers.delete(request.sessionId);
+      }
     }
+  }
+
+  /**
+   * Hủy request đang chạy của session (gateway-cancel-source P1).
+   * Wire từ /cancel (telegram commands.ts). Trả true nếu có request để abort,
+   * false nếu session không có request đang chạy (hoặc đã dùng signal ngoài).
+   */
+  cancelRequest(sessionId: string): boolean {
+    const controller = this.requestControllers.get(sessionId);
+    if (!controller) return false;
+    controller.abort();
+    return true;
   }
 
   /**
@@ -1009,6 +1049,12 @@ LƯU Ý:
       
       // ── CHECKPOINT: Mark failure ──
       this.checkpointStore.failed(taskId, { message: agentErr.message, stack: agentErr.stack });
+
+      // ponytail (gateway-cancel-source): abort không phải lỗi — rethrow để catch
+      // chung (engine.ts:632) trả '🛑 Đã hủy yêu cầu.' thay vì thông báo lỗi.
+      if (agentErr.message?.includes('Operation cancelled')) {
+        throw agentErr;
+      }
 
       return {
         content: `❌ Lỗi khi xử lý: ${agentErr.message}`,

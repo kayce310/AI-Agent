@@ -527,8 +527,23 @@ export class CommandRegistry {
     const { userManager } = await import('./user-manager.js');
     if (!userManager.isAllowed(userId)) return;
 
+    // ponytail (gateway-cancel-source P1): /cancel không args → hủy request
+    // interactive đang chạy của user (engine.cancelRequest theo session).
     if (args.length < 1) {
-      await ctx.reply('📝 Cách dùng: /cancel <taskId>');
+      const { getEngineInstance } = await import('../../core/engine/instance.js');
+      const engine = getEngineInstance();
+      if (!engine) {
+        await ctx.reply('❌ Engine chưa sẵn sàng.');
+        return;
+      }
+      const { active } = this.sessionManager.listSessions(userId);
+      const sessionId = active?.sessionId;
+      if (!sessionId) {
+        await ctx.reply('❌ Không tìm thấy session đang chạy.');
+        return;
+      }
+      const ok = engine.cancelRequest(sessionId);
+      await ctx.reply(ok ? '🛑 Đã hủy yêu cầu đang xử lý.' : '❌ Không có request nào đang chạy để hủy.');
       return;
     }
 
@@ -538,9 +553,16 @@ export class CommandRegistry {
 
     if (success) {
       await ctx.reply(`🚫 Đã hủy tác vụ \`${taskId}\``);
-    } else {
-      await ctx.reply(`❌ Không thể hủy tác vụ \`${taskId}\` — không tồn tại hoặc đã hoàn thành.`);
+      return;
     }
+    // Fallback: interactive request — thử engine theo sessionId trực tiếp
+    const { getEngineInstance } = await import('../../core/engine/instance.js');
+    const engine = getEngineInstance();
+    if (engine && engine.cancelRequest(taskId)) {
+      await ctx.reply(`🛑 Đã hủy yêu cầu \`${taskId}\``);
+      return;
+    }
+    await ctx.reply(`❌ Không thể hủy tác vụ \`${taskId}\` — không tồn tại hoặc đã hoàn thành.`);
   }
 
   private async handleRestart(ctx: Context, _args: string[]): Promise<void> {
