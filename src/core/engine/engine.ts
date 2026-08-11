@@ -71,6 +71,18 @@ const log = new Logger({ module: 'Engine' });
 /** Maximum total time for a single request (120s = 2 minutes) */
 const REQUEST_TIMEOUT_MS = 120_000;
 
+// ── P2: structured task outcome (E1/E2/E3) ──
+// Agent đánh dấu outcome lỗi bằng prefix [E1] (empty response sau redirects),
+// [E2] (model error + empty content), [E3] (stalled sau khi tạo plan).
+// Task kết thúc bằng các marker này = KHÔNG hoàn thành → engine phải ghi
+// metric success=false + checkpoint.failed (không ghi 'completed' — nếu không
+// stalled task bị tính là thành công, làm sai số liệu và trạng thái resume).
+const FAILURE_OUTCOME_RE = /^\[E[123]\]/;
+
+export function isFailureOutcome(content: string): boolean {
+  return FAILURE_OUTCOME_RE.test((content || '').trim());
+}
+
 /**
  * Summarize LLM reasoning into a short reason string.
  * Strategy: extract first sentence if ≤160 chars, else truncate to 157 chars + '...'.
@@ -1014,10 +1026,20 @@ LƯU Ý:
 
       // Publish task_finished event
       const duration = Date.now() - startTime;
-      this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', true, duration, result.content.substring(0, 500));
+      // ── P2: structured task outcome — E1/E2/E3 = failure, ghi metric thật ──
+      // Agent trả [E1]/[E2]/[E3] = task KHÔNG hoàn thành (empty/stalled).
+      // success=false + checkpoint.failed → stalled không bị tính là thành công,
+      // và trên restart task không bị resurrect (terminal state đã durable).
+      const outcomeIsFailure = isFailureOutcome(result.content);
+      this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', !outcomeIsFailure, duration, result.content.substring(0, 500));
 
-      // ── CHECKPOINT: Mark success ──
-      this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
+      // ── CHECKPOINT: terminal state theo outcome thật ──
+      if (outcomeIsFailure) {
+        log.warn(`[P2] Outcome failure (${result.content.slice(0, 60)}…) — checkpoint.failed thay vì complete`);
+        this.checkpointStore.failed(taskId, { message: result.content.substring(0, 500) });
+      } else {
+        this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
+      }
 
       return {
         content: result.content,
