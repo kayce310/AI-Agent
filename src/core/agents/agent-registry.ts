@@ -38,6 +38,12 @@ export interface DelegationResult {
   modelUsed: string;
   success: boolean;
   error?: string;
+  /**
+   * PA-2 resume-policy (2026-08-11): 'crashed' = subagent loop bị gián đoạn bởi abort
+   * (crash-restart cấp subagent) — KHÔNG phải lỗi nghiệp vụ. Parent KHÔNG auto-retry,
+   * user tự yêu cầu lại. Không dùng cho lỗi bình thường (model/tool fail).
+   */
+  status?: 'crashed';
 }
 
 // ── Specialist Agent Definitions ──

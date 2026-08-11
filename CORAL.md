@@ -83,6 +83,7 @@ Agent loop iteration:
 - Ly do tach: tranh loi cu (Audit 2026-07-27) — `gateway/index.ts` dung `msg.channelId` lam sessionId, lam `/new` mat tac dung o Engine level. **Da fix (e8d17ff4):** gateway doc `msg.metadata.sessionId` (UUID tu SessionManager), telegram adapter gui `session.sessionId` qua metadata; gateway fail-loud neu thieu.
 - **MemoryFacade scope** (`memory-facade.ts`): `addMessage(sessionId, ...)` va `getChannelHistory(sessionId)` nhan **ConversationSessionId** (UUID) lam key — KHONG phai channelId. Day la bo nho hoi thoai **ngan han, scope theo session** (reset khi `/new`), tuong duong checkpointer/thread-scoped trong LangGraph. Lua y: ten ham `getChannelHistory` la di san tu cu (MemoryCore) — thuc chat nhan sessionId, khong phai channelId.
 - **Memory dai han** (`globalMemoryStore`): van dung `sessionId` lam scope khi ghi tu gateway (`human`/`persona` tags). Neu can hoc xuyen session ve user (long-term), can dung `userId` rieng — chua implement.
+- **Consequence Memory (Phase 3 shipped)** -> `docs/adr/ADR-003-consequence-memory.md`: lop dieu khien hanh vi (control plane) — ghi context → action → outcome → lesson, neo vao evidence, co the suggest / require_hitl / block o runtime. **Phase 1 (write) + Phase 2 (read + HITL) + Phase 3 (cross-session + narrow block) da ship 2026-08-06**: `consequence-store.ts` (single-writer SQLite + lookup window cross-session), `consequence-write-path.ts`, `consequence-read-path.ts` (guard tool:call → lookup + suggest + require_hitl + narrow block qua `BLOCK_ALLOWLIST` rong mac dinh). block CHUA enforce rong (chi allowlist hep + nguong cao). Khong thay the memory hien tai, dung canh checkpoint va risk gate.
 - **BUG da biet (chua fix):** `daily-digest.ts:17` (cron 24h) goi `getChannelHistory(channelId)` voi channelId tu env `KNOWLEDGE_CHANNEL_ID` — nhung ham nay tra ve blocks theo `sessionId` (UUID). Digest se khong tim thay messages. Can chinh lai: hoac digest doc theo sessionId, hoac them method rieng scope theo channelId. (Ghi nhan 2026-07-31 — ngoai pham vi task hien tai.)
 
 ### Per-request state isolation -> `request-context.ts`
@@ -111,6 +112,14 @@ Agent loop iteration:
   vi phạm ADR-000 nguyên tắc 1 (một state một nguồn sự thật), thêm độ phức tạp không cần
   thiết. Task quá lớn cần resume → tách thành nhiều `delegate_task` nhỏ hơn (parent
   orchestrate), không checkpoint nội bộ subagent.
+- **Resume-policy sau crash (PA-2, 2026-08-11)**: crash-restart cấp subagent (abort giữa
+  chừng) → `delegate_task` trả `status: 'crashed'` + message user-friendly ("Task bị gián
+  đoạn do hệ thống khởi động lại giữa chừng. Vui lòng yêu cầu lại nếu cần.") + `content`
+  kèm partial (2 tool result cuối subagent kịp hoàn thành, ≤300 chars mỗi cái). **Parent
+  KHÔNG auto-retry** — user tự yêu cầu lại. Chỉ cover cấp subagent loop fail/abort
+  (`Operation cancelled`); toàn process chết = hiện trạng (không code nào chạy được để
+  đánh dấu). Lỗi nghiệp vụ bình thường (model/tool fail) vẫn trả `success: false` + error
+  như cũ, KHÔNG đánh dấu crashed. Vẫn giữ CẤM sub-checkpoint namespace (f3479a8d).
 - Guard chain subagent (2026-08-06): tool call của subagent đi qua 2 lớp —
   (1) policy gate: `agent.allowedTools` hard-enforce ở tầng thực thi (`registry.execute`),
   (2) guard chain hooks `tool:call`/`tool:result` trên globalHooks (PrivilegeGuard/risk-gate/

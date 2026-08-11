@@ -29,7 +29,7 @@ const log = new Logger({ module: 'Delegate' });
 /**
  * Create the delegate_task tool.
  */
-function createDelegateTool(registry: AgentRegistry): Tool {
+export function createDelegateTool(registry: AgentRegistry): Tool {
   return {
     name: 'delegate_task',
     description: 'Giao phó task cho specialist agent. Specialist sẽ chạy với tools riêng và trả kết quả về. Dùng khi cần chuyên gia xử lý phần việc cụ thể.',
@@ -70,6 +70,24 @@ function createDelegateTool(registry: AgentRegistry): Tool {
         log.info(`📥 [DELEGATE] ${agentName} completed: ${result.toolCycles} cycles, ${result.content.length} chars`);
         return result;
       } catch (err: any) {
+        // PA-2 resume-policy (2026-08-11): abort giữa chừng = crash-restart cấp subagent
+        // (signal từ parent — 'Operation cancelled' chỉ được throw ở 1 nơi: checkAbort
+        // đầu loop). KHÔNG phải lỗi nghiệp vụ → status 'crashed', parent không auto-retry,
+        // user tự yêu cầu lại. Giữ CẤM sub-checkpoint namespace (f3479a8d).
+        if (err.message === 'Operation cancelled') {
+          const partial = String(err.crashPartial || '');
+          const base = '⚠️ Task bị gián đoạn do hệ thống khởi động lại giữa chừng. Vui lòng yêu cầu lại nếu cần.';
+          log.warn(`⚠️ [DELEGATE] ${agentName} interrupted by restart — crashed (partial: ${partial.slice(0, 80)}...)`);
+          return {
+            agentName,
+            content: partial ? `${base}\n\nPhần đã hoàn thành:\n${partial}` : base,
+            toolCycles: Number(err.crashToolCycles) || 0,
+            modelUsed: 'none',
+            success: false,
+            error: 'Task interrupted by system restart',
+            status: 'crashed',
+          };
+        }
         log.error(`❌ [DELEGATE] ${agentName} failed: ${err.message}`);
         return {
           agentName,
@@ -125,8 +143,12 @@ export async function runSpecialistAgent(
 
   while (toolCycles < maxCycles) {
     // Cancel propagation — parent abort dừng subagent loop (mirror agent.ts checkAbort)
+    // PA-2 resume-policy: gắn partial (phần đã hoàn thành) để execute() trả về user.
     if (signal?.aborted) {
-      throw new Error('Operation cancelled');
+      const err: any = new Error('Operation cancelled');
+      err.crashPartial = buildPartialSummary(messages);
+      err.crashToolCycles = toolCycles;
+      throw err;
     }
 
     const modelResult = await modelRouter.route(messages, {
@@ -236,6 +258,29 @@ export async function runSpecialistAgent(
 }
 
 // ── Tool Plugin Export ──
+
+/**
+ * PA-2 resume-policy: tổng hợp phần việc subagent kịp hoàn thành trước khi bị gián
+ * đoạn — 2 tool result cuối (mỗi cái ≤ 300 chars) để user biết đã làm gì rồi.
+ */
+function buildPartialSummary(messages: any[]): string {
+  const toolResults: string[] = [];
+  for (let i = messages.length - 1; i >= 0 && toolResults.length < 2; i--) {
+    const m = messages[i];
+    if (m.role !== 'tool') continue;
+    let text = '';
+    try {
+      const parsed = JSON.parse(m.content);
+      text = parsed !== null && typeof parsed === 'object'
+        ? String(parsed.content ?? JSON.stringify(parsed))
+        : String(parsed);
+    } catch {
+      text = String(m.content);
+    }
+    toolResults.push(text.slice(0, 300));
+  }
+  return toolResults.reverse().join(' | ');
+}
 
 export function createDelegatePlugin(registry: AgentRegistry): ToolPlugin {
   return {
