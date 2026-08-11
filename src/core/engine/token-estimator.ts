@@ -108,19 +108,7 @@ export function shouldCompress(
   return total > maxContext * thresholdPct;
 }
 
-/**
- * Get token budget remaining after messages.
- */
-export function getTokenBudgetRemaining(
-  messages: Message[],
-  maxContext = 128_000,
-): number {
-  const { total } = estimateTokens(messages);
-  return Math.max(0, maxContext - total);
-}
-
 export default {
   estimateTokens,
   shouldCompress,
-  getTokenBudgetRemaining,
 };

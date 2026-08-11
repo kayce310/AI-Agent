@@ -243,8 +243,8 @@ src/
 | ~~`core/orchestrator/delegation-orchestrator.ts`~~ | ~~ORPHAN~~ | **DA XOA (2026-07-31)** — intentionally unhooked, zero imports |
 | ~~`core/knowledge/entity-approval-queue.ts`~~ | ~~ORPHAN~~ | ~~HITL dependency da xoa~~ **DA XOA (2026-07-29)** |
 | `core/tools/report.ts` | BUG | Returns "TODO" placeholder |
-| `Engine.sanitizeResponse()` (engine.ts:209) | DEAD | Private, zero callers |
-| `SAFETY_CEILING` import (agent.ts:36) | DEAD | Khong dung, chi dung ABSOLUTE_SAFETY_CEILING |
+| ~~`Engine.sanitizeResponse()` (engine.ts:209)~~ | ~~DEAD~~ | **DA XOA KHOI SOURCE** — khong con ton tai trong engine.ts, 0 hits trong src/ (2026-08-11) |
+| ~~`SAFETY_CEILING` import (agent.ts:36)~~ | ~~DEAD~~ | **DA XOA KHOI IMPORT** — agent.ts chi import ABSOLUTE_SAFETY_CEILING (line 38) |
 | `computePlanBudget()` (plan/types.ts) | DEAD | Exported nhung khong goi |
 | `BASE_PLANNING_BUDGET`, `PLAN_CYCLES_PER_ITEM` | DEAD | Deprecated constants |
 
@@ -313,7 +313,7 @@ src/
 | Van de | File | Muc do |
 |--------|------|--------|
 | **3 token estimators** | `engine.ts: estimateTokenCount()`, `token-estimator.ts: estimateTokens()`, `context-window.ts: estimateTokens()` | P3 |
-| **2 sanitize functions** | `engine.ts: sanitizeResponse()` (dead), `agent.ts: sanitizeFinalResponse()` (dung) | P3 |
+| **2 sanitize functions** | `engine.ts: sanitizeResponse()` (da xoa khoi source), `agent.ts: sanitizeFinalResponse()` (dung) | P3 |
 | **MAX_READ_CALLS shadowing** | module-level const (line 110) vs method-level const (line 467) | P2 |
 
 ### Flow / dead code
