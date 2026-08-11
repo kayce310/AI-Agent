@@ -64,7 +64,31 @@ function readPending(): PendingApproval[] {
 function writePending(items: PendingApproval[]): void {
   const dir = path.dirname(pendingPath());
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(pendingPath(), JSON.stringify(items, null, 2), 'utf-8');
+  // ponytail: temp + rename = atomic at OS level; readers never see half-written JSON.
+  // Tên tmp unique per-writer (pid+ts) — nếu cố định, 2 process ghi đè tmp của nhau
+  // rồi rename → ENOENT (race). renameSync trên Windows có thể EPERM khi AV/Defender
+  // đang scan file vừa ghi — retry ngắn, KHÔNG fallback non-atomic.
+  const tmp = `${pendingPath()}.${process.pid}.${Date.now()}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(items, null, 2), 'utf-8');
+  const sleep = new Int32Array(new SharedArrayBuffer(4));
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.renameSync(tmp, pendingPath());
+      return;
+    } catch (err: any) {
+      // EPERM trên Windows = target đang bị lock ngắn (AV scan / process khác
+      // đang đọc) — retry. Đo lường: 1/200 rename fail lần đầu (idle), nhưng dưới
+      // full-suite (I/O cao, AV queue dài) lock kéo dài hơn — budget 20×25ms=500ms.
+      // ENOENT = tmp không còn (edge hiếm, tên unique) — retry rename; nếu vẫn
+      // mất, fail loud.
+      if (err.code === 'EPERM' || err.code === 'ENOENT') {
+        if (attempt >= 20) throw err;
+        Atomics.wait(sleep, 0, 0, 25);
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 /**
