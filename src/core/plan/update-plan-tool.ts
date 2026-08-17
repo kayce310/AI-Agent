@@ -58,10 +58,10 @@ function makePlanItem(description: string, index: number): PlanItem {
  export function createUpdatePlanPlugin(checkpointStore: CheckpointStore): ToolPlugin {
    const tool: Tool = {
     name: 'update_plan',
-    description: `QUẢN LÝ KẾ HOẠCH (State-Driven Task Plan) — BẮT BUỘC dùng cho MỌI request.
+    description: `QUẢN LÝ KẾ HOẠCH (State-Driven Task Plan) — dùng cho task nhiều bước hoặc có side-effect.
 
 ACTIONS:
-- action='create', items=[...]: Tạo plan mới. Đây là bước ĐẦU TIÊN của mọi request — kể cả plan 1 bước.
+- action='create', items=[...]: Tạo plan mới. Chỉ dùng khi task cần ≥2 bước hoặc có side-effect — KHÔNG dùng cho câu trả lời trực tiếp (chào hỏi, hỏi đáp đơn giản).
 - action='complete_item', item_index=N, result_summary=...: Đánh dấu item N hoàn thành.
 - action='skip_item', item_index=N, reason=...: Bỏ qua item N (lỗi vĩnh viễn hoặc user yêu cầu).
 - action='abort', reason=...: Hủy toàn bộ plan.

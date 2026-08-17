@@ -885,28 +885,27 @@ ${itemLines}
       this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       log.info(`[Engine] Plan ${activePlan.id}: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING} (stagnation tracking is primary)`);
     } else {
-      // No active plan → Planning Phase: instruct LLM to create one
+      // No active plan: direct answers can finish immediately; plan only work that needs coordination.
       // maxToolCycles cũng là ABSOLUTE_SAFETY_CEILING — stagnation tracking là tín hiệu dừng chính
       this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
       log.info(`[Engine] No active plan: maxToolCycles set to ${ABSOLUTE_SAFETY_CEILING}`);
 
-      planContext = `## 📋 LẬP KẾ HOẠCH (Planning Phase) — BẮT BUỘC
+      planContext = `## 📋 QUYẾT ĐỊNH LẬP KẾ HOẠCH
 
-⚠️ Đây là request MỚI. Bạn PHẢI gọi \`update_plan\` NGAY để tạo kế hoạch trước khi làm bất kỳ việc gì khác.
+Nếu có thể trả lời đầy đủ ngay từ thông tin hiện có (chào hỏi, hỏi đáp đơn giản), hãy trả lời trực tiếp và KHÔNG gọi \`update_plan\`.
 
-QUY TRÌNH BẮT BUỘC:
-1. Cycle đầu tiên: gọi \`update_plan(action='create', items=[...])\` với danh sách các bước cần làm.
-2. SAU KHI tạo plan, KHÔNG mô tả lại plan bằng văn bản. Gọi NGAY tool thực thi item đầu tiên.
-3. Dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước.
-4. Khi hết items → plan tự động completed.
+Nếu task cần từ hai bước trở lên, cần dùng tool, hoặc có side-effect, hãy gọi \`update_plan(action='create', items=[...])\` trước khi thực thi.
 
-VÍ DỤ SAI: gọi update_plan(create) → viết text dài "Kế hoạch của tôi là 1. ... 2. ... 3. ..." và dừng.
+Sau khi tạo plan:
+1. KHÔNG mô tả lại plan bằng văn bản. Gọi NGAY tool thực thi item đầu tiên.
+2. Dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước có evidence hợp lệ.
+3. Khi hết items → plan tự động completed.
+
 VÍ DỤ ĐÚNG: gọi update_plan(create) → gọi ngay tool để thực thi item 0 → complete_item(0) → item 1 → ... → hết items thì plan tự completed.
 
 LƯU Ý:
-- Kể cả request chỉ có 1 bước (VD: trả lời câu hỏi đơn giản) cũng PHẢI gọi update_plan(action='create', items=['Trả lời câu hỏi: ...']).
 - items là mảng các string mô tả bước công việc.
-- KHÔNG có exception. KHÔNG có fast path.
+- Không tạo plan sau khi đã có câu trả lời cuối cùng cho request này.
 `;
     }
 

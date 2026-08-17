@@ -478,6 +478,8 @@ export class Agent extends EventEmitter {
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
+    let unplannedToolCallCount = 0;
+    let planNudgeInjected = false;
     // ── PlanObs: observational logging (HARD-RULE compliance data, NO branching) ──
     // ponytail: chỉ ghi sự kiện thô — update_plan có được gọi ở cycle đầu không.
     // Phân tích sau (tần suất bỏ qua plan theo độ phức tạp) dựa trên log này,
@@ -684,7 +686,7 @@ export class Agent extends EventEmitter {
           const planState = derivePlanState(this.checkpointStore, request.sessionId);
           const planIsActive = isGuardActive(planState);
 
-          if (!turnHasAction) {
+          if (!turnHasAction && planIsActive) {
             stallCount++;
             log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (planState=${planState.kind})`);
           } else {
@@ -710,16 +712,12 @@ export class Agent extends EventEmitter {
             };
           }
 
-          if (stallCount === 1) {
-            // Lần stall đầu: inject system message, ép tool_choice='required' nếu đã có plan
-            const msg = planIsActive
-              ? '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.'
-              : '[GUARD] Bạn vừa tuyên bố ý định nhưng chưa thực hiện hành động nào. Gọi NGAY update_plan(action=\'create\', items=[...]) hoặc gọi tool trực tiếp.';
+          if (stallCount === 1 && planIsActive) {
+            // A plan still has pending work, so a text-only turn cannot finish it.
+            const msg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
             messages.push({ role: 'system', content: msg });
-            if (planIsActive) {
-              // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
-              (modelOptions as any).toolChoice = 'required';
-            }
+            // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
+            (modelOptions as any).toolChoice = 'required';
             log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
             toolCallCycles++;
             continue;
@@ -1064,6 +1062,23 @@ export class Agent extends EventEmitter {
               }
             } catch (_) { /* non-critical */ }
 
+            // This is request-local coordination only, not plan lifecycle state.
+            // After real work has begun without a plan, nudge the model once to
+            // establish one before the next model turn.
+            const planStateAfterTool = derivePlanState(this.checkpointStore, request.sessionId);
+            if (toolCall.function.name !== 'update_plan' && !isGuardActive(planStateAfterTool)) {
+              unplannedToolCallCount++;
+            }
+
+          }
+          const planStateAfterCycle = derivePlanState(this.checkpointStore, request.sessionId);
+          if (!planNudgeInjected && unplannedToolCallCount >= 2 && !isGuardActive(planStateAfterCycle)) {
+            messages.push({
+              role: 'system',
+              content: '[PLAN] Bạn đã thực thi từ hai tool calls cho request này nhưng chưa có plan. Nếu công việc còn nhiều bước, hãy gọi update_plan(action=\'create\', items=[...]) trước khi tiếp tục; nếu đã đủ kết quả, hãy trả lời trực tiếp.',
+            });
+            planNudgeInjected = true;
+            log.info(`[Plan] Injected execution-derived plan nudge after ${unplannedToolCallCount} unplanned tool calls`);
           }
           // ── Read-loop detection ──
           // Count read-heavy tool calls. If they exceed MAX_READ_CALLS,

@@ -140,7 +140,7 @@ const DEFAULT_RULES = `## ⚠️ QUY TẮC VẬN HÀNH (Operational Rules)
 
 ### 5d. STATE-DRIVEN TASK PLAN — QUY TẮC VẬN HÀNH (HARD RULE)
 - **NẾU có active plan** (phần 📋 PLAN ở trên có nội dung): Bạn ĐANG thực thi plan đó. Chỉ gọi update_plan(action='complete_item', ...) để đánh dấu item hoàn thành, hoặc update_plan(action='skip_item', ...) để bỏ qua item bị lỗi. KHÔNG tạo plan mới khi đang có plan active.
-- **NẾU KHÔNG có active plan**: Bạn PHẢI gọi update_plan(action='create', items=[...]) NGAY — đây là cycle đầu tiên của MỌI request. Không có exception. Kể cả plan chỉ có 1 item cũng phải tạo.
+- **NẾU KHÔNG có active plan**: Với chào hỏi hoặc hỏi đáp có thể trả lời ngay, trả lời trực tiếp và KHÔNG tạo plan. Với task nhiều bước, cần tool, hoặc có side-effect, gọi update_plan(action='create', items=[...]) trước khi thực thi.
 - Khi tạo plan: items là mảng các string, mỗi string = 1 bước. Các bước phải cụ thể, có thể thực thi được.
 - Khi 1 item hoàn thành: gọi update_plan(action='complete_item', item_index=N, result_summary="...").
 - Khi cần dừng plan giữa chừng: update_plan(action='pause', reason="...").
