@@ -4,6 +4,7 @@ import {
   createProgressObservation,
   fingerprintProgressEvidence,
   NoProgressWindow,
+  ProgressTracker,
   ProgressMonitor,
   type ProgressObservation,
 } from '../src/core/progress/progress-monitor.js';
@@ -166,5 +167,89 @@ describe('Progress boundary', () => {
       counter: 0,
       thresholdReached: false,
     });
+  });
+
+  it('tracker treats duplicate evidence as NO_PROGRESS', () => {
+    const tracker = new ProgressTracker('run-a', 3);
+
+    const first = tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 1,
+      evidence: [
+        {
+          kind: 'tool_call',
+          toolName: 'read_file',
+          args: { path: 'a.txt' },
+          cycleId: 1,
+        },
+      ],
+    });
+    expect(first.signal.type).toBe('PROGRESS');
+    expect(first.window.counter).toBe(0);
+
+    const second = tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 2,
+      evidence: [
+        {
+          kind: 'tool_call',
+          toolName: 'read_file',
+          args: { path: 'a.txt' },
+          cycleId: 2,
+        },
+      ],
+    });
+    expect(second.signal.type).toBe('NO_PROGRESS');
+    expect(second.window.counter).toBe(1);
+  });
+
+  it('tracker resets on new run boundary', () => {
+    const tracker = new ProgressTracker('run-a', 3);
+
+    tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 1,
+      evidence: [
+        { kind: 'tool_call', toolName: 'read_file', args: { path: 'a.txt' }, cycleId: 1 },
+      ],
+    });
+    tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 2,
+      evidence: [
+        { kind: 'tool_call', toolName: 'read_file', args: { path: 'a.txt' }, cycleId: 2 },
+      ],
+    });
+
+    tracker.startRun('run-b');
+    const afterRestart = tracker.evaluate({
+      runId: 'run-b',
+      cycleId: 1,
+      evidence: [
+        { kind: 'tool_call', toolName: 'read_file', args: { path: 'a.txt' }, cycleId: 1 },
+      ],
+    });
+
+    expect(afterRestart.window.counter).toBe(0);
+    expect(afterRestart.signal.type).toBe('PROGRESS');
+  });
+
+  it('threshold reached only changes signal, not lifecycle state', () => {
+    const tracker = new ProgressTracker('run-a', 2);
+    const first = tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 1,
+      evidence: [],
+    });
+    const second = tracker.evaluate({
+      runId: 'run-a',
+      cycleId: 2,
+      evidence: [],
+    });
+
+    expect(first.signal.type).toBe('NO_PROGRESS');
+    expect(second.signal.type).toBe('NO_PROGRESS');
+    expect(second.window.thresholdReached).toBe(true);
+    expect(second.observation).toMatchObject({ observedNovelEvidence: false, observedPlanTransition: false });
   });
 });

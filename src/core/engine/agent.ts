@@ -38,8 +38,12 @@ import { missionLock } from '../security/mission-lock.js';
 import { STAGNATION_THRESHOLD, MAX_TRANSIENT_RETRY, ABSOLUTE_SAFETY_CEILING, validateTransition } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
+import { recordGateReject } from '../memory/consequence-write-path.js';
+import { renderConsequenceHint } from '../memory/consequence-read-path.js';
 import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser.js';
 import { getRequestContext } from '../request-context.js';
+import type { ConsequenceHint } from '../request-context.js';
+import { ProgressTracker, type ProgressEvidenceInput } from '../progress/progress-monitor.js';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -107,6 +111,28 @@ function classifyResponse(content: string): ResponseType {
 
   // Everything else is FINAL_ANSWER — No NLP, no regex, no content-length threshold.
   return 'FINAL_ANSWER';
+}
+
+/**
+ * Phase 7 — Consequence hint consumer (ADR-003 Phase 3b).
+ *
+ * Gắn consequenceHint của request (set bởi read-path guard khi suggest /
+ * HITL-approve) vào messages của lượt gọi model HIỆN TẠI dưới dạng system
+ * message transient. Dùng renderConsequenceHint() có sẵn — KHÔNG đổi logic
+ * quyết định của read-path.
+ *
+ * Hint absent → trả về messages gốc (prompt KHÔNG đổi — requirement 9).
+ */
+export function buildCycleMessagesWithHint(
+  messages: any[],
+  hint?: ConsequenceHint | null,
+): any[] {
+  if (!hint) return messages;
+  const hintText = renderConsequenceHint(hint);
+  if (!hintText) return messages;
+  // Transient: KHÔNG push vào messages gốc — hint chỉ áp cho lượt gọi này,
+  // không nhiễm vào history/compression của các cycle sau.
+  return [...messages, { role: 'system', content: `[Consequence]\n${hintText}` }];
 }
 
 // ── Constants ──
@@ -431,6 +457,7 @@ export class Agent extends EventEmitter {
   // ── Private: ReAct Loop ──
   private async executeReActLoop(request: EngineRequest, historyMessages: any[], abortSignal?: AbortSignal): Promise<AgentResult> {
     const requestId = request.sessionId || `req-${Date.now()}`;
+    const progressTracker = new ProgressTracker(request.checkpointRequestId || request.sessionId || requestId, 3);
     R.startRequest(requestId);
     R.state({ event: 'RECEIVED', requestId, cycle: 0 });
     // Track session start time for duration logging
@@ -556,6 +583,18 @@ export class Agent extends EventEmitter {
         // Try streaming first, fallback to regular invoke on error
         // Wrapped in circuit breaker — consecutive failures will open the circuit
         R.state({ event: 'CALL_MODEL', requestId, cycle: toolCallCycles, finishReason: selectedTools.length > 0 ? `tools:${selectedTools.length}` : 'no_tools' });
+        // ── Phase 7: Consequence hint → model (ADR-003 3b consumer) ──
+        // Read-path guard set rctx.consequenceHint khi suggest/HITL-approve.
+        // Render + gắn vào messages của lượt gọi model HIỆN TẠI (transient).
+        // Consume-once: clear sau khi inject — hint cũ không lặp lại ở cycle
+        // sau; guard sẽ set lại khi có suggest mới cho cùng tool.
+        // Hint absent → cycleMessages === messages (prompt không đổi).
+        const hintRctx = getRequestContext();
+        const cycleMessages = buildCycleMessagesWithHint(messages, hintRctx?.consequenceHint);
+        if (hintRctx?.consequenceHint) {
+          hintRctx.consequenceHint = undefined;
+        }
+
         R.waitBegin({ requestId, label: `modelRouter.invoke.cycle${toolCallCycles}`, callerFile: 'agent.ts', callerLine: 476 });
         modelResult = await this.circuitBreaker.execute(async () => {
           try {
@@ -564,7 +603,7 @@ export class Agent extends EventEmitter {
               const taskId = request.sessionId;
               
               return await adapter.invokeStreaming(
-                messages,
+                cycleMessages,
                 taskId,
                 (chunk: string, isFinal: boolean) => {
                   // Emit reasoning_updated via hooks so listeners can forward to EventBus
@@ -588,7 +627,7 @@ export class Agent extends EventEmitter {
               );
             } else {
               // Fallback: regular invoke
-              return await this.modelRouter.route(messages, modelOptions);
+              return await this.modelRouter.route(cycleMessages, modelOptions);
             }
           } catch (err: any) {
             // Streaming path failed — fall back to plain invoke.
@@ -597,7 +636,7 @@ export class Agent extends EventEmitter {
             // (no silent swallow). If route() succeeds, the provider is healthy and the
             // circuit stays closed — correct behavior.
             log.warn(`[STREAMING] Failed, falling back to invoke(): ${err.message}`);
-            return await this.modelRouter.route(messages, modelOptions);
+            return await this.modelRouter.route(cycleMessages, modelOptions);
           }
         });
 
@@ -930,6 +969,13 @@ export class Agent extends EventEmitter {
                   error: `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`,
                 }),
               });
+              // ADR-003 Phase 2: ghi denial vào Consequence Memory (outcome 'rejected_by_gate')
+              recordGateReject({
+                sessionId: request.sessionId,
+                toolName: toolCall.function.name,
+                reason: `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`,
+                cycle: toolCallCycles,
+              });
               continue;
             }
 
@@ -943,6 +989,13 @@ export class Agent extends EventEmitter {
                   content: JSON.stringify({
                     error: `TOOL_BLOCKED_BY_POLICY: ${toolCall.function.name} is not permitted — ${pgCheck.reason}`,
                   }),
+                });
+                // ADR-003 Phase 2: ghi denial vào Consequence Memory (outcome 'rejected_by_gate')
+                recordGateReject({
+                  sessionId: request.sessionId,
+                  toolName: toolCall.function.name,
+                  reason: `TOOL_BLOCKED_BY_POLICY: ${toolCall.function.name} is not permitted — ${pgCheck.reason}`,
+                  cycle: toolCallCycles,
                 });
                 continue;
               }
@@ -1116,6 +1169,44 @@ export class Agent extends EventEmitter {
               executedToolCalls,
               executedToolResults,
             );
+          }
+
+          // ── Progress observation (signal-only) ──
+          try {
+            const currentPlanState = derivePlanState(this.checkpointStore, request.sessionId);
+            const transitionObserved =
+              planStateAfterCycle.kind !== currentPlanState.kind ||
+              ('planId' in planStateAfterCycle &&
+                'planId' in currentPlanState &&
+                planStateAfterCycle.planId !== currentPlanState.planId);
+
+            const progressEvidence: ProgressEvidenceInput[] = executedToolCalls.map((tc) => ({
+              kind: tc.name === 'update_plan' ? 'plan_transition' : 'tool_call',
+              toolName: tc.name,
+              args: tc.args,
+              cycleId: toolCallCycles,
+            }));
+
+            const progressResult = progressTracker.evaluate({
+              runId: request.checkpointRequestId || request.sessionId || requestId,
+              cycleId: toolCallCycles,
+              transitionObserved,
+              evidence: progressEvidence,
+            });
+
+            await this.hooks.emit('progress:signal', {
+              sessionId: request.sessionId,
+              runId: request.checkpointRequestId || request.sessionId || requestId,
+              cycle: toolCallCycles,
+              signalType: progressResult.signal.type,
+              counter: progressResult.window.counter,
+              thresholdReached: progressResult.window.thresholdReached,
+              observedNovelEvidence: progressResult.observation.observedNovelEvidence,
+              observedPlanTransition: progressResult.observation.observedPlanTransition,
+              evidenceFingerprint: progressResult.observation.evidenceFingerprint,
+            });
+          } catch (_) {
+            // signal-only path; never interfere with agent execution
           }
 
           // ── Stagnation tracking: increment consecutiveFailedAttempts if no progress ──

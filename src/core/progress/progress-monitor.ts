@@ -161,3 +161,67 @@ export class NoProgressWindow {
     };
   }
 }
+
+export interface ProgressTrackerInput {
+  runId: string;
+  cycleId: number;
+  transitionObserved?: boolean;
+  evidence?: ProgressEvidenceInput[];
+}
+
+export interface ProgressTrackerResult {
+  signal: ProgressSignal;
+  observation: ProgressObservation;
+  window: NoProgressWindowState;
+  novelEvidenceCount: number;
+}
+
+/**
+ * Ephemeral progress tracker for a single agent run.
+ * Combines deterministic novelty + no-progress window, but never mutates
+ * lifecycle state or persists anything.
+ */
+export class ProgressTracker {
+  private monitor = new ProgressMonitor();
+  private window: NoProgressWindow;
+  private seenFingerprints = new Set<string>();
+
+  constructor(runId: string, threshold = 3) {
+    this.window = new NoProgressWindow(runId, threshold);
+  }
+
+  startRun(runId: string): void {
+    this.window.startRun(runId);
+    this.seenFingerprints.clear();
+  }
+
+  evaluate(input: ProgressTrackerInput): ProgressTrackerResult {
+    const novelEvidence = this.collectNovelEvidence(input.evidence ?? []);
+    const observation = createProgressObservation({
+      transitionObserved: input.transitionObserved ?? false,
+      evidence: input.evidence?.[0] ?? null,
+      novelEvidence,
+      cycleId: input.cycleId,
+    });
+    const signal = this.monitor.observe(observation);
+    const window = this.window.apply(signal);
+    return {
+      signal,
+      observation,
+      window,
+      novelEvidenceCount: this.seenFingerprints.size,
+    };
+  }
+
+  private collectNovelEvidence(evidence: ProgressEvidenceInput[]): boolean {
+    let foundNovel = false;
+    for (const item of evidence) {
+      if (item.kind !== 'tool_call' && item.kind !== 'plan_transition') continue;
+      const fingerprint = fingerprintProgressEvidence(item);
+      if (this.seenFingerprints.has(fingerprint)) continue;
+      this.seenFingerprints.add(fingerprint);
+      foundNovel = true;
+    }
+    return foundNovel;
+  }
+}

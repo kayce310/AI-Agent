@@ -39,6 +39,7 @@ export type EventType =
   | 'skill:unload'
   | 'context:compressed'
   | 'context:evicted'
+  | 'progress:signal'
   // Phase 5.2 â€” Orchestrator events
   | 'orchestrator:decompose-start'
   | 'orchestrator:decompose-end'
