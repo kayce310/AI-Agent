@@ -13,6 +13,7 @@
  * Bảng `consequences` + index (tool_name, created_at), (session_id), (task_id).
  */
 
+import { createHash } from 'crypto';
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -66,6 +67,12 @@ const POLICY_ORDER: Record<ReusePolicy, number> = {
 
 /** Cửa sổ aggregation mặc định (7 ngày) — constant có tên, không magic number. */
 export const DEFAULT_AGGREGATION_WINDOW_MS = 7 * 24 * 3600 * 1000;
+
+/**
+ * Ngưỡng success lặp cùng pattern (user+toolName+argsDigest) → reusePolicy 'suggest'.
+ * Mirror SUGGEST_FAIL_THRESHOLD (write-path): proven = quan sát ≥ 2 lần.
+ */
+export const SUCCESS_SUGGEST_THRESHOLD = 2;
 
 /**
  * Resolve policy mạnh nhất từ danh sách record.
@@ -199,6 +206,79 @@ export class ConsequenceStore {
       | undefined;
     if (!row) return null;
     return JSON.parse(row.payload_json) as ConsequenceRecord;
+  }
+
+  /**
+   * Phase 5: ghi/đếm pattern success — KHÔNG ghi mọi success thành nhiều row.
+   * Key: userId + toolName + argsDigest → 1 row per pattern.
+   * First occurrence: INSERT (outcome success, record_only, occurrence_count=1).
+   * Repeat: UPDATE occurrence_count+1, last_seen_at; count >= SUCCESS_SUGGEST_THRESHOLD
+   * → reusePolicy 'suggest' (monotonic). Giữ nguyên evidenceRef gốc (audit anchor).
+   * Single-writer giữ nguyên — mọi ghi qua store này; userId stamp như append().
+   */
+  recordSuccessOccurrence(opts: {
+    userId?: string;
+    toolName: string;
+    argsDigest: string;
+    sessionId?: string;
+    taskId?: string;
+    cycle?: number;
+  }): ConsequenceRecord {
+    const rctx = getRequestContext();
+    const userId = opts.userId ?? rctx?.userId;
+    if (!userId) {
+      throw new Error(
+        '[Consequence] recordSuccessOccurrence requires userId: opts.userId hoặc request context (rctx.userId) — không backfill',
+      );
+    }
+
+    // Id deterministic theo pattern — cùng user+tool+digest luôn ra cùng id.
+    const id = createHash('sha256')
+      .update(`${userId}|${opts.toolName}|${opts.argsDigest}`)
+      .digest('hex');
+    const now = Date.now();
+
+    const existing = this.getById(id);
+    if (!existing) {
+      const evidenceRef: ConsequenceRecord['evidenceRef'] = {};
+      if (opts.cycle !== undefined) evidenceRef.cycle = opts.cycle;
+      const taskId = opts.taskId ?? rctx?.taskId;
+      if (taskId) evidenceRef.checkpointId = taskId;
+
+      return this.append({
+        id,
+        createdAt: now,
+        userId,
+        sessionId: opts.sessionId ?? rctx?.sessionId,
+        taskId,
+        context: { tags: ['tool_result', 'success'] },
+        action: { toolName: opts.toolName, argsDigest: opts.argsDigest },
+        outcome: 'success',
+        evidenceRef,
+        reusePolicy: 'record_only',
+        occurrenceCount: 1,
+        lastSeenAt: now,
+      });
+    }
+
+    // Repeat: bump count + last_seen_at, giữ evidenceRef gốc; policy escalate tại ngưỡng.
+    const occurrenceCount = (existing.occurrenceCount ?? 0) + 1;
+    const reusePolicy = occurrenceCount >= SUCCESS_SUGGEST_THRESHOLD
+      ? 'suggest'
+      : existing.reusePolicy;
+    const updated: ConsequenceRecord = {
+      ...existing,
+      occurrenceCount,
+      lastSeenAt: now,
+      reusePolicy,
+    };
+    // payload_json phải cập nhật cùng — getById/listRecent đọc từ payload_json.
+    this.db
+      .prepare(
+        'UPDATE consequences SET occurrence_count = ?, last_seen_at = ?, reuse_policy = ?, payload_json = ? WHERE id = ?',
+      )
+      .run(occurrenceCount, now, reusePolicy, JSON.stringify(updated), id);
+    return updated;
   }
 
   /**

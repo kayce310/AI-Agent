@@ -24,6 +24,8 @@ export interface ConsequenceHint {
   policy: 'suggest' | 'require_hitl' | 'block' | 'record_only';
   failCountSession: number;
   failCountWindow: number;
+  /** Phase 5: số lần success của pattern (chỉ set khi suggest đến từ success proven). */
+  successCount?: number;
   evidenceRef?: { checkpointId?: string; cycle?: number };
   /** Optional, ngắn (≤120 chars), đã redact, chỉ "tham khảo" — không phải proof. */
   lesson?: string;

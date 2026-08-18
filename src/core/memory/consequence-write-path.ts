@@ -171,7 +171,26 @@ export function registerConsequenceWritePath(opts: { store?: ConsequenceStore } 
     try {
       const toolData = data as ToolResultHookData;
       const outcome = outcomeFromToolResult(toolData.result);
-      if (outcome === 'success') return; // Phase 1: chỉ ghi fail (tránh spam)
+
+      // Phase 5: success → ghi PATTERN (1 row per user+tool+argsDigest), không ghi
+      // mọi success. Cần argsDigest làm pattern identity; success không args → skip.
+      if (outcome === 'success') {
+        if (!toolData.toolName || toolData.toolName === PLAN_TERMINAL_TOOL) return;
+        const rawArgs = toolData.args;
+        const argsDigest = buildArgsDigest(
+          typeof rawArgs === 'object' && rawArgs !== null
+            ? (rawArgs as Record<string, unknown>)
+            : undefined,
+        );
+        if (!argsDigest) return;
+        store.recordSuccessOccurrence({
+          toolName: toolData.toolName,
+          argsDigest,
+          sessionId: toolData.sessionId,
+          cycle: toolData.cycle,
+        });
+        return;
+      }
 
       const record = buildToolRecord(toolData, outcome, { store });
       if (!record) return;

@@ -26,7 +26,7 @@ import { Logger } from '../logger.js';
 import { globalHooks } from '../hooks.js';
 import { getRequestContext, ConsequenceHint } from '../request-context.js';
 import { getHITLManager } from '../security/hitl-manager.js';
-import { ConsequenceStore, getConsequenceStore } from './consequence-store.js';
+import { ConsequenceStore, getConsequenceStore, SUCCESS_SUGGEST_THRESHOLD } from './consequence-store.js';
 import { ReusePolicy } from './consequence-types.js';
 import { buildArgsDigest } from './consequence-redact.js';
 import { loadConsequenceConfig } from './consequence-config.js';
@@ -190,6 +190,14 @@ export function buildSuggestHint(
 }
 
 /**
+ * Hint success-aware cho suggest (Phase 5) — pattern success proven.
+ * Chỉ mô tả số lần quan sát — không phải điều kiện; lesson không bao giờ là proof.
+ */
+export function buildSuccessSuggestHint(toolName: string, occurrenceCount: number): string {
+  return `[consequence] Tool "${toolName}" đã thành công ${occurrenceCount} lần (cùng pattern). Pattern proven — ưu tiên tái sử dụng cách gọi đã hoạt động.`;
+}
+
+/**
  * Đặt consequenceHint có cấu trúc vào request context (Phase 3b).
  * Model-path đọc hint này để biết tín hiệu — nhưng quyết định vẫn ở read-path.
  * Fail-open: lỗi set hint không làm chết request.
@@ -199,8 +207,10 @@ export function setConsequenceHint(opts: {
   toolName: string;
   sessionId?: string;
   rctx?: { consequenceHint?: ConsequenceHint } | null;
+  /** Phase 5: số lần success của pattern (khi suggest đến từ success proven). */
+  successCount?: number;
 }): void {
-  const { decision, toolName, sessionId, rctx } = opts;
+  const { decision, toolName, sessionId, rctx, successCount } = opts;
   try {
     const ctx = rctx ?? getRequestContext();
     if (!ctx) return;
@@ -209,6 +219,7 @@ export function setConsequenceHint(opts: {
       policy: decision.policy,
       failCountSession: decision.failCountSession,
       failCountWindow: decision.failCountWindow,
+      successCount,
       evidenceRef: decision.evidenceIds.length > 0
         ? { checkpointId: decision.evidenceIds[0] }
         : undefined,
@@ -226,13 +237,15 @@ export function setConsequenceHint(opts: {
  * KHÔNG ra lệnh model "bạn phải block" nếu policy chỉ là suggest.
  */
 export function renderConsequenceHint(hint: ConsequenceHint): string {
-  const parts = [
-    `[Consequence] ${hint.toolName}: ${hint.failCountSession} fail (session) / ${hint.failCountWindow} fail (7 ngày)`,
-  ];
+  const parts = hint.successCount !== undefined
+    ? [`[Consequence] ${hint.toolName}: pattern thành công ${hint.successCount} lần (cùng user+tool+args) — đã proven, có thể tái sử dụng`]
+    : [`[Consequence] ${hint.toolName}: ${hint.failCountSession} fail (session) / ${hint.failCountWindow} fail (7 ngày)`];
   if (hint.reasonCode) parts.push(`reason=${hint.reasonCode}`);
   if (hint.evidenceRef?.checkpointId) parts.push(`evidence=${hint.evidenceRef.checkpointId}`);
   if (hint.policy === 'suggest') {
-    parts.push('Lưu ý vận hành: hãy kiểm tra điều kiện trước khi thử lại tool này.');
+    parts.push(hint.successCount !== undefined
+      ? 'Lưu ý vận hành: pattern đã proven — ưu tiên tái sử dụng cách gọi này.'
+      : 'Lưu ý vận hành: hãy kiểm tra điều kiện trước khi thử lại tool này.');
   }
   return parts.join(' | ').slice(0, 500);
 }
@@ -345,8 +358,19 @@ export function registerConsequenceReadPath(opts: {
 
       // 6. suggest → không block; đặt hint có cấu trúc cho model (Phase 3b).
       if (decision.action === 'suggest') {
-        log.info(`[Consequence] suggest tool=${toolName} hint="${buildSuggestHint(toolName, decision.failCountSession, decision.failCountWindow)}"`);
-        setConsequenceHint({ decision, toolName, sessionId, rctx });
+        // Phase 5: hint success-aware khi suggest đến từ pattern success proven
+        // (outcome success + occurrenceCount >= ngưỡng). Fail path giữ nguyên.
+        const successRec = lookup.matched.find(
+          (r) => r.outcome === 'success' && (r.occurrenceCount ?? 0) >= SUCCESS_SUGGEST_THRESHOLD,
+        );
+        const successCount = successRec?.occurrenceCount;
+        if (successCount !== undefined) {
+          log.info(`[Consequence] suggest tool=${toolName} hint="${buildSuccessSuggestHint(toolName, successCount)}"`);
+          setConsequenceHint({ decision, toolName, sessionId, rctx, successCount });
+        } else {
+          log.info(`[Consequence] suggest tool=${toolName} hint="${buildSuggestHint(toolName, decision.failCountSession, decision.failCountWindow)}"`);
+          setConsequenceHint({ decision, toolName, sessionId, rctx });
+        }
         return { allowed: true };
       }
 

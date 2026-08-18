@@ -65,12 +65,28 @@ describe('Consequence Write Path — tool:result hook', () => {
     expect(rec.evidenceRef.cycle).toBe(2);
   });
 
-  it('should NOT create a record for success (tránh spam)', async () => {
+  it('success có args (digest) → tạo pattern row count=1 (Phase 5)', async () => {
     await emitToolResult({
       sessionId: 's1',
       toolName: 'read_file',
       args: { path: '/tmp/x' },
       result: { content: 'ok' },
+      cycle: 1,
+    });
+    const recs = store.listRecent();
+    expect(recs).toHaveLength(1);
+    const rec = recs[0];
+    expect(rec.outcome).toBe('success');
+    expect(rec.occurrenceCount).toBe(1);
+    expect(rec.reusePolicy).toBe('record_only');
+    expect(rec.action.argsDigest).toBe('path'); // buildArgsDigest({path}) = 'path'
+  });
+
+  it('success không args → KHÔNG tạo record (không ghi mọi success)', async () => {
+    await emitToolResult({
+      sessionId: 's1',
+      toolName: 'noop_tool',
+      result: { ok: true },
       cycle: 1,
     });
     expect(store.listRecent()).toHaveLength(0);
