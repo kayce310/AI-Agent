@@ -13,6 +13,12 @@ export type ProgressSignal =
   | { type: 'PROGRESS'; reason?: string }
   | { type: 'NO_PROGRESS'; reason?: string };
 
+export interface NoProgressWindowState {
+  runId: string;
+  counter: number;
+  thresholdReached: boolean;
+}
+
 export interface ProgressObservation {
   /** True when a lifecycle transition was observed this cycle. */
   observedPlanTransition: boolean;
@@ -111,5 +117,47 @@ export function classifyProgress(observation: ProgressObservation): ProgressSign
 export class ProgressMonitor {
   observe(observation: ProgressObservation): ProgressSignal {
     return classifyProgress(observation);
+  }
+}
+
+/**
+ * Ephemeral no-progress window for a single agent run.
+ * In-memory only. Reset on run boundary or positive progress.
+ */
+export class NoProgressWindow {
+  private runId: string;
+  private counter = 0;
+  private threshold: number;
+
+  constructor(runId: string, threshold = 3) {
+    this.runId = runId;
+    this.threshold = threshold;
+  }
+
+  startRun(runId: string): void {
+    this.runId = runId;
+    this.counter = 0;
+  }
+
+  reset(): void {
+    this.counter = 0;
+  }
+
+  apply(signal: ProgressSignal): NoProgressWindowState {
+    if (signal.type === 'PROGRESS') {
+      this.reset();
+      return this.snapshot(false);
+    }
+
+    this.counter += 1;
+    return this.snapshot(this.counter >= this.threshold);
+  }
+
+  snapshot(thresholdReached = this.counter >= this.threshold): NoProgressWindowState {
+    return {
+      runId: this.runId,
+      counter: this.counter,
+      thresholdReached,
+    };
   }
 }

@@ -3,6 +3,7 @@ import {
   classifyProgress,
   createProgressObservation,
   fingerprintProgressEvidence,
+  NoProgressWindow,
   ProgressMonitor,
   type ProgressObservation,
 } from '../src/core/progress/progress-monitor.js';
@@ -114,5 +115,56 @@ describe('Progress boundary', () => {
     expect(observation.evidenceFingerprint).toContain('"kind":"plan_transition"');
     expect(observation.cycleId).toBe(11);
     expect(observation.timestamp).toBe(123456);
+  });
+
+  it('increments on NO_PROGRESS and resets on PROGRESS', () => {
+    const window = new NoProgressWindow('run-a', 3);
+
+    expect(window.apply({ type: 'NO_PROGRESS' }).counter).toBe(1);
+    expect(window.apply({ type: 'NO_PROGRESS' }).counter).toBe(2);
+
+    const resetState = window.apply({ type: 'PROGRESS' });
+    expect(resetState.counter).toBe(0);
+    expect(resetState.thresholdReached).toBe(false);
+
+    expect(window.apply({ type: 'NO_PROGRESS' }).counter).toBe(1);
+  });
+
+  it('reaches threshold at N consecutive NO_PROGRESS signals', () => {
+    const window = new NoProgressWindow('run-b', 3);
+
+    expect(window.apply({ type: 'NO_PROGRESS' })).toMatchObject({ counter: 1, thresholdReached: false });
+    expect(window.apply({ type: 'NO_PROGRESS' })).toMatchObject({ counter: 2, thresholdReached: false });
+    expect(window.apply({ type: 'NO_PROGRESS' })).toMatchObject({ counter: 3, thresholdReached: true });
+  });
+
+  it('restart boundary resets counter to zero for a new run', () => {
+    const window = new NoProgressWindow('run-a', 3);
+
+    window.apply({ type: 'NO_PROGRESS' });
+    window.apply({ type: 'NO_PROGRESS' });
+    expect(window.snapshot().counter).toBe(2);
+
+    window.startRun('run-b');
+    expect(window.snapshot()).toEqual({
+      runId: 'run-b',
+      counter: 0,
+      thresholdReached: false,
+    });
+
+    expect(window.apply({ type: 'NO_PROGRESS' }).counter).toBe(1);
+  });
+
+  it('does not persist across objects', () => {
+    const runA = new NoProgressWindow('run-a', 3);
+    runA.apply({ type: 'NO_PROGRESS' });
+    runA.apply({ type: 'NO_PROGRESS' });
+
+    const runB = new NoProgressWindow('run-b', 3);
+    expect(runB.snapshot()).toEqual({
+      runId: 'run-b',
+      counter: 0,
+      thresholdReached: false,
+    });
   });
 });
