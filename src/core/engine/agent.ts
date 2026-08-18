@@ -507,6 +507,7 @@ export class Agent extends EventEmitter {
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
     let unplannedToolCallCount = 0;
     let planNudgeInjected = false;
+    let latestProgressResult: ReturnType<ProgressTracker['evaluate']> | null = null;
     // ── PlanObs: observational logging (HARD-RULE compliance data, NO branching) ──
     // ponytail: chỉ ghi sự kiện thô — update_plan có được gọi ở cycle đầu không.
     // Phân tích sau (tần suất bỏ qua plan theo độ phức tạp) dựa trên log này,
@@ -1193,6 +1194,7 @@ export class Agent extends EventEmitter {
               transitionObserved,
               evidence: progressEvidence,
             });
+            latestProgressResult = progressResult;
 
             await this.hooks.emit('progress:signal', {
               sessionId: request.sessionId,
@@ -1232,9 +1234,15 @@ export class Agent extends EventEmitter {
                     log.info(`[Stagnation] Item ${prevItemIndex} completed → counter reset`);
                   }
                 } else {
+                  const progressSignal = latestProgressResult?.signal;
+                  const thresholdReached = latestProgressResult?.window.thresholdReached ?? false;
                   // No progress — decide which counter to increment based on error category
                   if (currentItem && currentItem.status !== 'completed' && currentItem.status !== 'skipped') {
-                    if (cycleErrorCategory === 'transient' && (currentItem.consecutiveTransientAttempts || 0) < MAX_TRANSIENT_RETRY) {
+                    if (progressSignal?.type === 'PROGRESS') {
+                      currentItem.consecutiveFailedAttempts = 0;
+                      currentItem.consecutiveTransientAttempts = 0;
+                      log.info(`[Stagnation] Progress signal observed → counter reset`);
+                    } else if (cycleErrorCategory === 'transient' && (currentItem.consecutiveTransientAttempts || 0) < MAX_TRANSIENT_RETRY) {
                       // Transient: count separately, do NOT trigger stuck
                       currentItem.consecutiveTransientAttempts = (currentItem.consecutiveTransientAttempts || 0) + 1;
                       log.info(`[Stagnation] Item ${currentIdx} transient attempt ${currentItem.consecutiveTransientAttempts}/${MAX_TRANSIENT_RETRY} (not counted as stuck)`);
@@ -1245,7 +1253,7 @@ export class Agent extends EventEmitter {
                       // Permanent OR security OR transient-exceeded-limit: count toward stuck
                       currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
                       log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
-                      if (currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
+                      if (thresholdReached || currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
                         // ponytail: route qua validateTransition — pending/running→stuck
                         // hợp lệ (types.ts); fail-loud nếu state machine đổi
                         const transErr = validateTransition(sp.status, 'stuck');
