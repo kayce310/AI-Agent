@@ -1,0 +1,64 @@
+<svg viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f14"/>
+      <stop offset="100%" stop-color="#141b24"/>
+    </linearGradient>
+    <linearGradient id="bodyFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#faf6ef"/>
+      <stop offset="100%" stop-color="#eee7d9"/>
+    </linearGradient>
+    <linearGradient id="coralAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6b5c"/>
+      <stop offset="100%" stop-color="#ffb45c"/>
+    </linearGradient>
+    <radialGradient id="softShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="400" height="460" rx="24" fill="url(#cardBg)"/>
+
+  <!-- ground shadow -->
+  <ellipse cx="200" cy="400" rx="95" ry="16" fill="url(#softShadow)"/>
+
+  <!-- antenna -->
+  <line x1="200" y1="70" x2="200" y2="44" stroke="#ffb45c" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="200" cy="36" r="9" fill="url(#coralAccent)"/>
+
+  <!-- head -->
+  <ellipse cx="200" cy="150" rx="88" ry="80" fill="url(#bodyFill)"/>
+
+  <!-- eyes -->
+  <circle cx="168" cy="148" r="9" fill="#1a1f26"/>
+  <circle cx="232" cy="148" r="9" fill="#1a1f26"/>
+
+  <!-- smile -->
+  <path d="M 172 178 Q 200 198 228 178" stroke="#1a1f26" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+  <!-- body -->
+  <path d="M 108 236
+           C 108 205, 146 214, 200 214
+           C 254 214, 292 205, 292 236
+           L 300 372
+           C 300 400, 260 414, 200 414
+           C 140 414, 100 400, 100 372
+           Z" fill="url(#bodyFill)"/>
+
+  <!-- chest panel -->
+  <rect x="164" y="256" width="72" height="72" rx="16" fill="none" stroke="url(#coralAccent)" stroke-width="3"/>
+  <circle cx="200" cy="292" r="14" fill="url(#coralAccent)" opacity="0.9"/>
+  <path d="M 178 292 L 190 292 L 195 280 L 205 304 L 210 292 L 222 292"
+        stroke="#faf6ef" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- arms -->
+  <ellipse cx="92" cy="290" rx="20" ry="46" fill="url(#bodyFill)" transform="rotate(-8 92 290)"/>
+  <ellipse cx="308" cy="290" rx="20" ry="46" fill="url(#bodyFill)" transform="rotate(8 308 290)"/>
+
+  <!-- status ring -->
+  <circle cx="200" cy="150" r="106" fill="none" stroke="url(#coralAccent)" stroke-width="2" stroke-dasharray="4 8" opacity="0.5"/>
+
+  <!-- label -->
+  <text x="200" y="446" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="600" fill="#9aa5b1" letter-spacing="2">CORAL COMPANION</text>
+</svg>
