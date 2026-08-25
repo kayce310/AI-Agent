@@ -1,0 +1,62 @@
+<svg viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f14"/>
+      <stop offset="100%" stop-color="#121821"/>
+    </linearGradient>
+    <linearGradient id="coral" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff6b5c"/>
+      <stop offset="100%" stop-color="#ffb45c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff6b5c" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff6b5c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bg)"/>
+
+  <!-- ambient glow -->
+  <circle cx="980" cy="90" r="220" fill="url(#glow)"/>
+  <circle cx="120" cy="240" r="160" fill="url(#glow)" opacity="0.5"/>
+
+  <!-- branching coral / network structure, right side -->
+  <g stroke="url(#coral)" stroke-width="2" fill="none" opacity="0.85" filter="url(#soft)">
+    <path d="M 830 260 C 860 220, 850 180, 890 150"/>
+    <path d="M 890 150 C 910 130, 905 100, 930 75"/>
+    <path d="M 890 150 C 870 130, 850 120, 830 95"/>
+    <path d="M 930 75 C 945 55, 940 35, 965 20"/>
+    <path d="M 930 75 C 950 70, 965 55, 985 45"/>
+    <path d="M 830 260 C 800 230, 810 190, 780 160"/>
+    <path d="M 780 160 C 760 140, 762 110, 740 90"/>
+    <path d="M 780 160 C 800 150, 815 130, 815 105"/>
+    <path d="M 830 260 C 870 250, 900 235, 940 220"/>
+    <path d="M 940 220 C 965 210, 985 190, 1010 180"/>
+    <path d="M 940 220 C 955 240, 980 250, 1005 255"/>
+  </g>
+
+  <!-- nodes -->
+  <g fill="#ffb45c">
+    <circle cx="830" cy="260" r="5"/>
+    <circle cx="890" cy="150" r="4"/>
+    <circle cx="930" cy="75" r="4"/>
+    <circle cx="965" cy="20" r="3.5"/>
+    <circle cx="985" cy="45" r="3"/>
+    <circle cx="780" cy="160" r="4"/>
+    <circle cx="740" cy="90" r="3.5"/>
+    <circle cx="815" cy="105" r="3"/>
+    <circle cx="940" cy="220" r="4"/>
+    <circle cx="1010" cy="180" r="3.5"/>
+    <circle cx="1005" cy="255" r="3"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="90" y="150" font-family="Helvetica Neue, Arial, sans-serif" font-size="72" font-weight="700" fill="#f4f1ea" letter-spacing="2">CORAL</text>
+  <text x="93" y="188" font-family="Helvetica Neue, Arial, sans-serif" font-size="19" font-weight="400" fill="#9aa5b1" letter-spacing="3">AUTONOMOUS AGENT SYSTEM</text>
+
+  <!-- thin accent rule under wordmark -->
+  <rect x="93" y="205" width="120" height="3" rx="1.5" fill="url(#coral)"/>
+</svg>
