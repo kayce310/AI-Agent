@@ -159,7 +159,7 @@ export class TaskQueue {
   listActiveTasks(): BackgroundTask[] {
     const result: BackgroundTask[] = [];
     for (const task of this.tasks.values()) {
-      if (task.status === 'queued' || task.status === 'running') {
+      if (task.status === 'queued' || task.status === 'running' || task.status === 'interrupted') {
         result.push(task);
       }
     }

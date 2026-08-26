@@ -1,0 +1,8 @@
+[36m02:32:47.322 📋 [Checkpoint] Loaded 1 checkpoint(s) from disk[0m
+[33m02:32:47.324 ⚠️ [Checkpoint] ⚠️ Found 1 in-progress task(s) from previous run:[0m
+[33m02:32:47.324 ⚠️ [Checkpoint]    req-s4 (sess-s4) — 1 cycle(s) recorded[0m
+[36m02:32:47.324 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s4\knowledge\checkpoints[0m
+[33m02:32:47.326 ⚠️ [TaskQueue] [TQ] R2 §C: bg-1787711567081-2cxfe8 was running at crash with 1 proven-completed tool(s) in checkpoint → status 'interrupted' (no auto-rerun)[0m
+[36m02:32:47.326 📋 [TaskQueue] [TQ] Loaded 1 active task(s) from disk[0m
+[36m02:32:47.326 📋 [TaskQueue] TaskQueue initialized (1 task(s) loaded)[0m
+CHILD_RESULT={"total":1,"interrupted":1,"requeued":0,"progress":"Interrupted by unexpected shutdown — prior partial completion detected (1 tool(s) already executed). NOT auto-requeued; re-enqueue explicitly to rerun the whole task.","provenCompleted":1}

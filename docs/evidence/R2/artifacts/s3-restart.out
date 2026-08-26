@@ -1,0 +1,7 @@
+[36m02:32:46.329 📋 [Checkpoint] Loaded 1 checkpoint(s) from disk[0m
+[33m02:32:46.331 ⚠️ [Checkpoint] ⚠️ Found 1 in-progress task(s) from previous run:[0m
+[33m02:32:46.331 ⚠️ [Checkpoint]    req-s1 (sess-s1) — 1 cycle(s) recorded[0m
+[36m02:32:46.331 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s1\knowledge\checkpoints[0m
+[33m02:32:46.331 ⚠️ [Checkpoint] [CP] R2 recovery: req-s1 marked recovered — 1 proven-completed tool(s), running/pending tools have NO completion proof and may re-execute if the task resumes[0m
+[36m02:32:46.332 📋 [Checkpoint] [CP] flush: 1 checkpoint(s) written, 0 old file(s) cleaned[0m
+CHILD_RESULT={"existing":"req-s1","recovered":1}

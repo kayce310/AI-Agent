@@ -1,0 +1,5 @@
+[36m02:32:48.296 📋 [Checkpoint] Loaded 0 checkpoint(s) from disk[0m
+[36m02:32:48.297 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s5\knowledge\checkpoints[0m
+[36m02:32:48.299 📋 [TaskQueue] [TQ] Loaded 1 active task(s) from disk[0m
+[36m02:32:48.299 📋 [TaskQueue] TaskQueue initialized (1 task(s) loaded)[0m
+CHILD_RESULT={"total":1,"interrupted":0,"requeued":1,"progress":null,"provenCompleted":-1}

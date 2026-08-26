@@ -1,0 +1,3 @@
+[36m02:32:47.079 📋 [TaskQueue] TaskQueue initialized (0 task(s) loaded)[0m
+[36m02:32:47.082 📋 [TaskQueue] [TQ] enqueue: bg-1787711567081-2cxfe8 — "long background job"[0m
+CHILD_RESULT={"taskId":"bg-1787711567081-2cxfe8"}

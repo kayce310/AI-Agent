@@ -1,0 +1,26 @@
+{
+  "requestId": "req-s1",
+  "sessionId": "sess-s1",
+  "status": "in_progress",
+  "startedAt": "2026-08-26T02:32:45.548Z",
+  "cycles": [
+    {
+      "cycle": 1,
+      "currentGoal": "s1 goal",
+      "pendingActions": [],
+      "completedActions": [
+        {
+          "id": "tool-A",
+          "name": "echo",
+          "args": {},
+          "status": "completed"
+        }
+      ],
+      "toolResultsSummary": "done",
+      "toolStatus": {
+        "tool-A": "completed",
+        "tool-B": "running"
+      }
+    }
+  ]
+}

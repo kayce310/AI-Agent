@@ -340,6 +340,8 @@ export class Engine extends EventEmitter {
           `${cp.cycles.length} cycle(s) — surfaced for resume, not dropped`,
       );
     }
+    // R2 §B: flush recovery annotations to persistent storage
+    if (recovered.length > 0) await this.checkpointStore.flush();
     if (recovered.length > 0) {
       this.checkpointStore.flushSync(); // persist recovery annotations immediately
     }

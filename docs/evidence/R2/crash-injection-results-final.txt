@@ -1,0 +1,60 @@
+=== R2 CRASH-INJECTION RESULTS ===
+date: 2026-08-26T09:32:44+07:00
+node: v24.15.0
+git HEAD: 66f532bfa2a5f7ac5eee1bd009e1e8148a06a351
+branch: r1-execution-safety
+
+--- S1: crash handler best-effort flush (§A) ---
+[36m02:32:45.547 📋 [Checkpoint] Loaded 0 checkpoint(s) from disk[0m
+[36m02:32:45.548 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s1\knowledge\checkpoints[0m
+[36m02:32:45.548 📋 [Checkpoint] [CP] start: req-s1 — "s1 goal"[0m
+[36m02:32:45.583 📋 [Checkpoint] [CP] flushSync (crash path): 1 checkpoint(s) written[0m
+[31m02:32:45.583 ❌ [CrashHandler] [R2] uncaughtException: flush done (best-effort), exiting {"error":"Error: R2-INJECTED-CRASH"}[0m
+child exit code: 1
+PASS: s1.exit-code-1 
+PASS: s1.checkpoint-flushed-before-exit file=cp-req-s1-1787711565581.json
+PASS: s1.flushed-json-valid(atomic) 
+PASS: s1.toolStatus-completed+running-preserved 
+
+--- S3: restart loads persisted state + recovery annotations (§B/§D) ---
+[36m02:32:46.329 📋 [Checkpoint] Loaded 1 checkpoint(s) from disk[0m
+[33m02:32:46.331 ⚠️ [Checkpoint] ⚠️ Found 1 in-progress task(s) from previous run:[0m
+[33m02:32:46.331 ⚠️ [Checkpoint]    req-s1 (sess-s1) — 1 cycle(s) recorded[0m
+[36m02:32:46.331 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s1\knowledge\checkpoints[0m
+[33m02:32:46.331 ⚠️ [Checkpoint] [CP] R2 recovery: req-s1 marked recovered — 1 proven-completed tool(s), running/pending tools have NO completion proof and may re-execute if the task resumes[0m
+[36m02:32:46.332 📋 [Checkpoint] [CP] flush: 1 checkpoint(s) written, 0 old file(s) cleaned[0m
+CHILD_RESULT={"existing":"req-s1","recovered":1}
+child exit code: 0 result: {"existing":"req-s1","recovered":1}
+PASS: s3.restart-loads-checkpoint-no-crash 
+PASS: s3.active-task-reused-not-duplicated(Fix-C) active=req-s1
+PASS: s3.recovery-annotation-applied 
+PASS: s3.recovery-persisted-in-memory-state 
+
+--- S4: background task recovery semantics (§C) ---
+[36m02:32:47.079 📋 [TaskQueue] TaskQueue initialized (0 task(s) loaded)[0m
+[36m02:32:47.082 📋 [TaskQueue] [TQ] enqueue: bg-1787711567081-2cxfe8 — "long background job"[0m
+CHILD_RESULT={"taskId":"bg-1787711567081-2cxfe8"}
+[36m02:32:47.218 📋 [Checkpoint] Loaded 0 checkpoint(s) from disk[0m
+[36m02:32:47.220 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s4\knowledge\checkpoints[0m
+[36m02:32:47.220 📋 [Checkpoint] [CP] start: req-s4 — "bg goal"[0m
+[36m02:32:47.221 📋 [Checkpoint] [CP] flush: 1 checkpoint(s) written, 0 old file(s) cleaned[0m
+[36m02:32:47.221 📋 [Checkpoint] CheckpointStore shut down[0m
+CHILD_RESULT={"seeded":true}
+[36m02:32:47.322 📋 [Checkpoint] Loaded 1 checkpoint(s) from disk[0m
+[33m02:32:47.324 ⚠️ [Checkpoint] ⚠️ Found 1 in-progress task(s) from previous run:[0m
+[33m02:32:47.324 ⚠️ [Checkpoint]    req-s4 (sess-s4) — 1 cycle(s) recorded[0m
+[36m02:32:47.324 📋 [Checkpoint] CheckpointStore initialized: D:\AI-Agent\.r2-fixtures\s4\knowledge\checkpoints[0m
+[33m02:32:47.326 ⚠️ [TaskQueue] [TQ] R2 §C: bg-1787711567081-2cxfe8 was running at crash with 1 proven-completed tool(s) in checkpoint → status 'interrupted' (no auto-rerun)[0m
+[36m02:32:47.326 📋 [TaskQueue] [TQ] Loaded 1 active task(s) from disk[0m
+[36m02:32:47.326 📋 [TaskQueue] TaskQueue initialized (1 task(s) loaded)[0m
+CHILD_RESULT={"total":1,"interrupted":1,"requeued":0,"progress":"Interrupted by unexpected shutdown — prior partial completion detected (1 tool(s) already executed). NOT auto-requeued; re-enqueue explicitly to rerun the whole task.","provenCompleted":1}
+loader exit code: 0 result: {"total":1,"interrupted":1,"requeued":0,"progress":"Interrupted by unexpected shutdown — prior partial completion detected (1 tool(s) already executed). NOT auto-requeued; re-enqueue explicitly to rerun the whole task.","provenCompleted":1}
+PASS: s4.partial-completion→interrupted(NOT auto-requeued) provenCompleted=1
+PASS: s4.no-silent-full-rerun 
+PASS: s4.progress-message-explicit 
+
+--- S4-control: no-proven-completion → legacy requeue ---
+control result: {"total":1,"interrupted":0,"requeued":1,"progress":null,"provenCompleted":-1}
+PASS: s4ctrl.no-proof→legacy-requeued 
+
+=== SUMMARY: 12 PASS / 0 FAIL ===
