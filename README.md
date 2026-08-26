@@ -15,6 +15,7 @@
 
 <p align="center">
   <a href="#status">Status</a> ·
+  <a href="#what-is-coral">What is Coral</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#core-design-principles">Design Principles</a> ·
   <a href="#meet-the-companion">Meet the Companion</a> ·
@@ -28,21 +29,9 @@
 
 > 🚧 **Active development — not production-ready.**
 >
-> Coral has completed its baseline audit and the first three hardening stages are **verified**. R0, R1, R2, and R3 are closed with reproducible evidence. R4 has completed its initial audit and scope debate and is currently **SPEC-READY**, with implementation not yet started.
+> Coral has completed the current R0–R3 hardening stages with verification evidence. R4 has completed its initial audit, scope debate, and v1 specification, and is currently **SPEC-READY / awaiting implementation**.
 >
-> Current hardening is focused on proving the runtime's planning lifecycle under a real engine loop, rather than adding new planning features.
-
-### Current verification state
-
-| Stage  | Status            | Summary                                                         |
-| ------ | ----------------- | --------------------------------------------------------------- |
-| **R0** | ✅ **VERIFIED**    | Baseline / forensic audit                                       |
-| **R1** | ✅ **VERIFIED**    | Execution safety, cancellation, subprocess lifecycle            |
-| **R2** | ✅ **VERIFIED**    | Crash / interruption recovery                                   |
-| **R3** | ✅ **VERIFIED**    | Global foreground concurrency admission                         |
-| **R4** | 📋 **SPEC-READY** | Minimal planning-loop reliability scope; implementation pending |
-
-**Important:** R3's concurrency limit of **N=4 is a test value, not a production capacity claim**. Production capacity has not yet been benchmarked.
+> The project is intentionally proceeding phase-by-phase: each stage is audited, scoped, implemented, and verified before the next stage is opened.
 
 <br>
 
@@ -54,10 +43,10 @@ Coral is an agent runtime that wraps a large language model (Claude, via a local
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🗺️ **Plan lifecycle**              | An explicit, validated state machine — "what is the agent doing right now" is always a well-defined, auditable answer.                                              |
 | 📈 **Progress monitor**             | Distinguishes *activity* from *progress* — detects when the agent is running tools without advancing the task, without letting the model grade its own performance. |
-| 💾 **Checkpoint & restart safety**  | Interrupted execution is protected by durable checkpoints and recovery invariants verified through crash/restart testing.                                           |
+| 💾 **Checkpoint & restart safety**  | Crash and interruption recovery are guarded by durable checkpoints and verified recovery paths.                                                                     |
 | 🧠 **Consequence memory**           | Recalls what an action led to before, and avoids repeating known failure patterns.                                                                                  |
 | 📊 **Dashboard & Telegram control** | Live observability and a conversational control surface.                                                                                                            |
-| 🛡️ **Execution governance**        | Hard safety ceilings, cancellation propagation, subprocess lifecycle control, and global foreground concurrency admission.                                          |
+| 🛡️ **Execution governance**        | Hard safety ceilings, cancellation propagation, and global foreground concurrency admission prevent uncontrolled execution.                                         |
 
 <br>
 
@@ -72,13 +61,12 @@ Tool layer            — read/write files, execute commands, HTTP, subprocess m
    ↓
 Agent loop (harness)  — ReAct cycle: reason → act → observe, with hard safety ceilings
    ↓
-Engine / Orchestrator — multi-session coordination, plan state authority, checkpoint restore,
-                        foreground admission control
+Engine / Orchestrator — multi-session coordination, plan state authority, checkpoint restore
    ↓
-Interface              — Telegram bot, dashboard
+Interface             — Telegram bot, dashboard
 ```
 
-Cutting across all of these is a **persistence layer** — plan state, checkpoints, and memory — the only thing that survives a restart. Getting the boundary between *logical execution* and *durable state* right is the majority of the hard engineering in this project.
+Cutting across all of these is a **persistence layer** — plan state, checkpoints, and memory — the only thing that survives a restart. Getting the boundary between *logical execution* and *durable state* right is a major part of the engineering in this project.
 
 <details>
 <summary><strong>Plan state machine</strong></summary>
@@ -86,9 +74,7 @@ Cutting across all of these is a **persistence layer** — plan state, checkpoin
 
 Every unit of work Coral does is tracked as a `Plan` with an explicit, validated state machine (`pending → running → completed`, with `stuck`, `paused_limit`, `waiting_user`, `aborted`, and `failed` as recoverable or terminal states).
 
-All transitions go through a single validation gate — nothing is allowed to mutate plan state ad hoc.
-
-The planning infrastructure is already production-active and covered by extensive deterministic unit tests. R4 is deliberately narrower: it does not redesign the planning state machine. Its v1 scope is to verify planning-loop coherence through the real engine loop and preserve the single-active-plan invariant.
+All transitions go through a single validation gate — nothing is allowed to mutate plan state ad hoc. A single source of truth for "where is this task" is what makes crash recovery, cancellation, and progress monitoring possible without the system contradicting itself.
 
 </details>
 
@@ -100,19 +86,15 @@ A lightweight, deterministic signal — not an LLM self-assessment — that answ
 
 It combines authoritative plan-item transitions and novelty of recent tool/evidence actions. When neither signal moves for a bounded window, the agent is nudged, then guided to switch strategy, before the plan is surfaced as stuck — never silently looping.
 
-The underlying stagnation machinery is already covered by deterministic tests; R4 consumes it rather than redesigning it.
-
 </details>
 
 <details>
 <summary><strong>Execution safety</strong></summary>
 <br>
 
-Coral enforces hard ceilings on tool-call cycles, propagates cancellation (`AbortSignal`) through the execution stack including spawned subprocesses, and protects durable state across interruption.
+Coral enforces hard ceilings on tool-call cycles, propagates cancellation (`AbortSignal`) through the execution stack including spawned subprocesses, and uses durable recovery checkpoints.
 
-R1 and R2 have been verified. R3 adds a separate **global foreground concurrency admission gate**: at most a configured number of foreground `engine.process()` calls may be active simultaneously; requests beyond the ceiling are rejected immediately.
-
-The R3 gate does not modify the existing per-session single-active-task invariant, the security rate limiter, or the sequential background queue.
+The R3 admission layer additionally enforces a **global foreground concurrency ceiling** with immediate rejection at capacity. The current implementation uses `N=4` as the verified test value; this is **not a benchmarked production-capacity value**.
 
 </details>
 
@@ -126,8 +108,58 @@ These are enforced, not aspirational:
 * **No LLM self-grading of safety-critical signals.** Progress, stagnation, and termination are computed deterministically. The model proposes; the system decides.
 * **Identity ≠ Lifecycle ≠ Intent.** Knowing *which* plan/session something is (identity) is different from knowing *what state* it's in (lifecycle), which is different from knowing whether it's still what the user actually wants (intent). Conflating these is a recurring source of bugs this project actively guards against.
 * **Evidence over narrative.** Every claim of "this works" is expected to carry reproducible evidence — real output, real commit hashes, real OS-level checks — not a summary asserting success.
-* **Scope before implementation.** Each hardening stage begins with an audit and explicit scope boundary. Undefined behavior is not silently converted into implementation.
-* **Verified does not mean benchmarked.** Passing deterministic acceptance tests proves the specified invariant; it does not automatically establish production capacity, performance, or model-level capability.
+* **Scope before implementation.** A phase does not begin implementation until its scope, semantics, acceptance criteria, and verification protocol are explicit.
+* **No silent policy changes.** Existing behavior is not treated as product policy merely because it happens to be present in code. Design decisions are explicitly recorded before changing semantics.
+
+<br>
+
+## Verified Hardening Status
+
+| Stage  | Focus                                           | Status                              |
+| ------ | ----------------------------------------------- | ----------------------------------- |
+| **R0** | Baseline / forensic audit                       | ✅ **VERIFIED**                      |
+| **R1** | Execution safety & cancellation lifecycle       | ✅ **VERIFIED**                      |
+| **R2** | Crash / interruption recovery                   | ✅ **VERIFIED**                      |
+| **R3** | Global foreground concurrency admission         | ✅ **VERIFIED**                      |
+| **R4** | Planning loop coherence & single-plan invariant | 🟡 **SPEC-READY — NOT IMPLEMENTED** |
+
+### R3 note
+
+R3 establishes a global foreground admission gate:
+
+* Maximum concurrent foreground requests: configurable.
+* Current verified test value: `N=4`.
+* Admission at capacity: **immediate REJECT**.
+* Rejection is machine-distinguishable through `providerUsed: 'r3-admission'`.
+* Counter release is guaranteed through the `finally` lifecycle.
+* Background `TaskQueue` remains outside R3 v1.
+* Per-user fairness, CPU/RAM-aware admission, and background queue limits are outside scope.
+
+**Important:** `N=4` is a **test value**, not a production capacity claim. Production tuning requires separate benchmarking and product decisions.
+
+### R4 current scope
+
+R4 v1 is intentionally minimal:
+
+* **R4-F.1 — Planning loop coherence**
+
+  * Verified through a controlled/scripted model driving the real engine loop.
+  * Focuses on observable lifecycle end states and evidence integrity.
+* **R4-F.2 — Single active-plan invariant**
+
+  * Model-independent.
+  * Ensures a session cannot create a second active plan.
+  * Includes crash/recovery coverage through the existing checkpoint architecture.
+
+Explicitly excluded from R4 v1:
+
+* Model-based planning-quality evaluation.
+* Decomposition-quality scoring.
+* Automatic enforcement of when a model must create a plan.
+* Stuck-recovery interaction behavior.
+* Expressive/emotional `BehaviorEngine` integration.
+* Per-user concurrency policy.
+* Background queue governance.
 
 <br>
 
@@ -140,9 +172,13 @@ These are enforced, not aspirational:
 </td>
 <td valign="top">
 
-Coral's dashboard has a companion avatar the team affectionately calls **Baymax** — inspired by the "big, round, gentle robot" archetype rather than any specific reproduction. It exists to make agent status feel like checking in with a companion, not reading a stack trace: idle, thinking, executing, stuck, done.
+Coral's dashboard has a companion avatar the team affectionately calls **Baymax** — inspired by the "big, round, gentle robot" archetype rather than any specific reproduction.
 
-The name also became the internal codename for one of the project's hardest bugs — the *"Baymax problem"*: making sure a long-running task survives a restart correctly, without confusing a plan that's merely persisted with a plan that's still actually current. If you see "Baymax" referenced in ADRs or commit history, that's what it's about.
+It exists to make agent status feel like checking in with a companion, not reading a stack trace: idle, thinking, executing, stuck, done.
+
+The name also became the internal codename for one of the project's hardest bugs — the *"Baymax problem"*: making sure a long-running task survives a restart correctly, without confusing a plan that's merely persisted with a plan that's still actually current.
+
+If you see "Baymax" referenced in ADRs or commit history, that's what it's about.
 
 </td>
 </tr>
@@ -158,63 +194,31 @@ The name also became the internal codename for one of the project's hardest bugs
 
 ## Roadmap
 
-Coral's hardening work is tracked in stages. **Completed stages are not reopened unless new evidence requires it.**
+Coral currently tracks its hardening work through **R0–R4**. Future stages are intentionally not enumerated here until their scope and requirements have been formally audited.
 
-| Stage  | Focus                                                   | Status                                            |
-| ------ | ------------------------------------------------------- | ------------------------------------------------- |
-| **R0** | Baseline / forensic audit                               | ✅ **VERIFIED**                                    |
-| **R1** | Execution safety & cancellation lifecycle               | ✅ **VERIFIED**                                    |
-| **R2** | Crash / interruption recovery                           | ✅ **VERIFIED**                                    |
-| **R3** | Global foreground concurrency admission                 | ✅ **VERIFIED**                                    |
-| **R4** | Planning-loop reliability — minimal scope (B3 + B4-inv) | 📋 **SPEC-READY**                                 |
-| **R5** | Memory architecture                                     | ⏳ Planned                                         |
-| **R6** | Observability                                           | 🔄 Partial — dashboard exists; coverage improving |
-| **R7** | Production hardening                                    | ⏳ Planned                                         |
+| Stage      | Focus                                           | Status           |
+| ---------- | ----------------------------------------------- | ---------------- |
+| **R0**     | Baseline / forensic audit                       | ✅ Verified       |
+| **R1**     | Execution safety & cancellation lifecycle       | ✅ Verified       |
+| **R2**     | Crash / interruption recovery                   | ✅ Verified       |
+| **R3**     | Global foreground concurrency admission         | ✅ Verified       |
+| **R4**     | Planning loop coherence & single-plan invariant | 🟡 Spec-ready    |
+| **Future** | Additional hardening stages                     | ⏳ Not yet scoped |
 
-### R4 v1 — Current scope
-
-R4 v1 intentionally has a **minimal scope**:
-
-* **R4-F.1 — Planning loop coherence**
-
-  * Verify the planning lifecycle through the actual `engine.process()` loop.
-  * Use a controlled/scripted model rather than subjective real-model evaluation.
-  * Verify observable end-state, evidence integrity, and valid lifecycle transitions.
-
-* **R4-F.2 — Single active-plan invariant**
-
-  * Preserve the invariant that a session cannot have multiple active plans.
-  * Verification is model-independent and based on durable store state.
-  * Crash/recovery behavior is included in the acceptance criteria.
-
-Explicitly **out of scope for R4 v1**:
-
-* Model quality of plan/no-plan decisions.
-* Subjective decomposition quality.
-* Mandatory planning enforcement as a new mechanism.
-* Stuck-recovery interaction behavior.
-* BehaviorEngine / expressive behavior.
-* Per-user planning policy.
-* Resume/reuse semantics for `create_plan`.
-
-For the last item, R4 v1 explicitly adopts **hard-reject** when a session already has an active plan. Resume/reuse remains a possible future workstream and is not silently reintroduced through legacy tests.
+This roadmap deliberately avoids presenting unscoped future phases as committed requirements.
 
 <br>
 
-## Evidence & engineering discipline
+## Evidence & Engineering Process
 
-Coral's hardening process intentionally separates **implementation facts**, **product decisions**, and **verification evidence**.
-
-Each stage follows the same pattern:
+Coral's hardening process follows a strict lifecycle:
 
 ```text
 INITIAL AUDIT
      ↓
-SCOPE / ADVERSARIAL REVIEW
+SCOPE / SEMANTICS DEBATE
      ↓
-PRODUCT / SEMANTICS DECISIONS
-     ↓
-SPEC
+SPECIFICATION
      ↓
 IMPLEMENTATION
      ↓
@@ -222,10 +226,21 @@ NARROW VERIFICATION
      ↓
 EVIDENCE
      ↓
-VERIFIED / REOPENED
+VERIFIED
+     ↓
+Next phase
 ```
 
-A stage is not considered verified merely because code exists or a majority of tests pass. Verification requires the acceptance criteria to be exercised by deterministic evidence, with harness failures distinguished from implementation failures.
+A phase is not considered verified merely because its implementation exists or most tests pass.
+
+The project distinguishes between:
+
+* **Implementation complete** — code exists.
+* **Test passing** — specified tests pass.
+* **Verified** — acceptance criteria have reproducible evidence.
+* **Production-ready** — capacity, operational behavior, and deployment requirements have additionally been established.
+
+This distinction is intentional.
 
 <br>
 
@@ -235,4 +250,6 @@ A stage is not considered verified merely because code exists or a majority of t
 
 ---
 
-<p align="center"><sub>Built with Claude · governed by internal architecture decision records (ADRs)</sub></p>
+<p align="center">
+  <sub>Built with Claude · governed by internal architecture decision records (ADRs)</sub>
+</p>
