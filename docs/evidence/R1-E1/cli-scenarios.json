@@ -1,0 +1,196 @@
+{
+  "usage-no-args": {
+    "args": [],
+    "exitCode": 2,
+    "stdoutTail": "",
+    "stderr": "process-cli — access process tools via production Tool Registry\n\nUsage:\n  node dist/scripts/process-cli.js start --command \"<cmd>\" [--workdir dir] [--timeout ms] [--json]\n  node dist/scripts/process-cli.js start -- \"<raw command with flags>\" [--json]\n  node dist/scripts/process-cli.js poll  <session",
+    "json": null,
+    "passed": true
+  },
+  "unknown-command": {
+    "args": [
+      "bogus"
+    ],
+    "exitCode": 2,
+    "stdoutTail": "",
+    "stderr": "process-cli — access process tools via production Tool Registry\n\nUsage:\n  node dist/scripts/process-cli.js start --command \"<cmd>\" [--workdir dir] [--timeout ms] [--json]\n  node dist/scripts/process-cli.js start -- \"<raw command with flags>\" [--json]\n  node dist/scripts/process-cli.js poll  <session",
+    "json": null,
+    "passed": true
+  },
+  "start-missing-command": {
+    "args": [
+      "start"
+    ],
+    "exitCode": 2,
+    "stdoutTail": "",
+    "stderr": "process-cli — access process tools via production Tool Registry\n\nUsage:\n  node dist/scripts/process-cli.js start --command \"<cmd>\" [--workdir dir] [--timeout ms] [--json]\n  node dist/scripts/process-cli.js start -- \"<raw command with flags>\" [--json]\n  node dist/scripts/process-cli.js poll  <session",
+    "json": null,
+    "passed": true
+  },
+  "poll-missing-session": {
+    "args": [
+      "poll"
+    ],
+    "exitCode": 2,
+    "stdoutTail": "",
+    "stderr": "process-cli — access process tools via production Tool Registry\n\nUsage:\n  node dist/scripts/process-cli.js start --command \"<cmd>\" [--workdir dir] [--timeout ms] [--json]\n  node dist/scripts/process-cli.js start -- \"<raw command with flags>\" [--json]\n  node dist/scripts/process-cli.js poll  <session",
+    "json": null,
+    "passed": true
+  },
+  "list-human": {
+    "args": [
+      "list"
+    ],
+    "exitCode": 0,
+    "stdoutTail": "no tracked processes",
+    "stderr": "",
+    "json": null,
+    "passed": true
+  },
+  "list-json": {
+    "args": [
+      "list",
+      "--json"
+    ],
+    "exitCode": 0,
+    "stdoutTail": "{\n  \"processes\": [],\n  \"total\": 0\n}",
+    "stderr": "",
+    "json": {
+      "processes": [],
+      "total": 0
+    },
+    "passed": true
+  },
+  "start-echo": {
+    "args": [
+      "start",
+      "--json",
+      "--command",
+      "echo r1e1-fixture-1787641723708"
+    ],
+    "exitCode": 0,
+    "stdoutTail": "{\n  \"session_id\": \"proc-1\",\n  \"pid\": 2176,\n  \"command\": \"echo r1e1-fixture-1787641723708\"\n}",
+    "stderr": "",
+    "json": {
+      "session_id": "proc-1",
+      "pid": 2176,
+      "command": "echo r1e1-fixture-1787641723708"
+    },
+    "passed": true
+  },
+  "poll-cross-invocation-not-found": {
+    "args": [
+      "poll",
+      "proc-1",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-1 not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-1 not found"
+    },
+    "passed": true
+  },
+  "poll-after-exit": {
+    "args": [
+      "poll",
+      "proc-1",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-1 not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-1 not found"
+    },
+    "passed": true
+  },
+  "log-after-exit": {
+    "args": [
+      "log",
+      "proc-1",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-1 not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-1 not found"
+    },
+    "passed": true
+  },
+  "log-nonexistent": {
+    "args": [
+      "log",
+      "proc-does-not-exist",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-does-not-exist not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-does-not-exist not found"
+    },
+    "passed": true
+  },
+  "start-long": {
+    "args": [
+      "start",
+      "--json",
+      "--command",
+      "ping -n 15 127.0.0.1"
+    ],
+    "exitCode": 0,
+    "stdoutTail": "{\n  \"session_id\": \"proc-1\",\n  \"pid\": 10496,\n  \"command\": \"ping -n 15 127.0.0.1\"\n}",
+    "stderr": "",
+    "json": {
+      "session_id": "proc-1",
+      "pid": 10496,
+      "command": "ping -n 15 127.0.0.1"
+    },
+    "passed": "proc-1"
+  },
+  "kill-cross-invocation-not-found": {
+    "args": [
+      "kill",
+      "proc-1",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-1 not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-1 not found"
+    },
+    "passed": true
+  },
+  "kill-nonexistent": {
+    "args": [
+      "kill",
+      "proc-does-not-exist",
+      "--json"
+    ],
+    "exitCode": 1,
+    "stdoutTail": "{\"error\":\"Process proc-does-not-exist not found\"}",
+    "stderr": "",
+    "json": {
+      "error": "Process proc-does-not-exist not found"
+    },
+    "passed": true
+  },
+  "final-list-clean": {
+    "args": [
+      "list",
+      "--json"
+    ],
+    "exitCode": 0,
+    "stdoutTail": "{\n  \"processes\": [],\n  \"total\": 0\n}",
+    "stderr": "",
+    "json": {
+      "processes": [],
+      "total": 0
+    },
+    "passed": true
+  }
+}

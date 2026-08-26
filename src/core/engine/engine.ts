@@ -195,6 +195,10 @@ export class Engine extends EventEmitter {
    *  abort request đang chạy. Chỉ tạo khi gateway chưa cung cấp abortSignal. */
   private requestControllers: Map<string, AbortController> = new Map();
   private consolidation!: MemoryConsolidation;
+  
+  // ── R3: Global Foreground Concurrency Admission ──
+  private activeForegroundCount: number = 0;
+  private globalForegroundConcurrencyLimit: number = 4;  // configurable, test default
 
   constructor(registry?: ProviderRegistry) {
     super();
@@ -604,6 +608,20 @@ export class Engine extends EventEmitter {
       };
     }
 
+    // ── R3: Global Foreground Concurrency Admission ──
+    if (this.activeForegroundCount >= this.globalForegroundConcurrencyLimit) {
+      log.warn(
+        `[R3] Admission rejected: active=${this.activeForegroundCount} ` +
+        `limit=${this.globalForegroundConcurrencyLimit} user=${actualUserId}`
+      );
+      this.emit('alert:r3_admission', { userId: actualUserId, activeCount: this.activeForegroundCount });
+      return {
+        content: '❌ Hệ thống đang xử lý quá nhiều yêu cầu. Vui lòng thử lại sau.',
+        modelUsed: 'none',
+        providerUsed: 'r3-admission',
+      };
+    }
+
     // Reset side-effect tracking for this request
     this.responseCache.beginRequest();
 
@@ -645,6 +663,10 @@ export class Engine extends EventEmitter {
       log.info(`HIT for: "${lastMessage.slice(0, 50)}"`);
       return { content: cachedContent, modelUsed: 'cache', providerUsed: 'cache' };
     }
+
+    // ── R3: Increment active foreground counter (admission passed) ──
+    this.activeForegroundCount++;
+    log.debug(`[R3] Request admitted: active=${this.activeForegroundCount} limit=${this.globalForegroundConcurrencyLimit}`);
 
     // Cache MISS — create in-flight promise for coalescing
     // Wrap with request-level timeout to prevent unbounded hanging
@@ -711,6 +733,9 @@ export class Engine extends EventEmitter {
       if (ctrl && request.abortSignal && ctrl.signal === request.abortSignal) {
         this.requestControllers.delete(request.sessionId);
       }
+      // ── R3: Decrement active foreground counter (guaranteed cleanup) ──
+      this.activeForegroundCount--;
+      log.debug(`[R3] Request completed: active=${this.activeForegroundCount}`);
     }
   }
 

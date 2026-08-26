@@ -1,0 +1,24 @@
+{
+  "assertionsPassed": true,
+  "detail": {
+    "sessionId": "proc-4",
+    "pid": 12028,
+    "before": true,
+    "after": false,
+    "kill": {
+      "success": true,
+      "session_id": "proc-4",
+      "signal": "SIGTERM"
+    },
+    "afterNode": {
+      "error": "Process proc-4 not found"
+    }
+  },
+  "preconditionClean": true,
+  "postList": {
+    "processes": [],
+    "total": 0
+  },
+  "postTrackingEmpty": true,
+  "passed": true
+}

@@ -1,0 +1,17 @@
+
+===== TIER 1: CODE / ARCHITECTURE INSPECTION =====
+Tier 1: PASS (8/8 chain markers found)
+
+===== TIER 3: RUNTIME BOOT (registry-level test entrypoint) =====
+importing production artifact: file:///D:/AI-Agent/dist/core/tools/tool-registry.js
+boot complete: 2026-08-25T04:14:51.264Z -> 2026-08-25T04:14:54.533Z, exceptions=0, definitions=55
+Tier 3: PASS
+
+===== TIER 2: RUNTIME DEFINITION ASSERTION =====
+Tier 2: PASS — {"process_start":true,"process_poll":true,"process_log":true,"process_kill":true,"process_list":true}
+
+===== TIER 4: REAL INVOCATION ROUND-TRIP (no mock, no bypass) =====
+executeToolCall(process_start) -> {"session_id":"proc-1","pid":4016,"command":"echo r1-d1-round-trip"}
+executeToolCall(process_poll) -> {"session_id":"proc-1","pid":4016,"command":"echo r1-d1-round-trip","running":false,"exit_code":0,"uptime_ms":305,"stdout":"r1-d1-round-trip\r\n","stderr_lines":""}
+executeToolCall(process_list) -> total=1
+Tier 4: PASS

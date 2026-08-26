@@ -3,7 +3,6 @@
 **Status:** Đã chốt kiến trúc — Phase 1 (write path) + Phase 2 (read path + HITL) + Phase 3 (cross-session + narrow block) đã ship 2026-08-06. Phase 3b+ chưa triển khai.
 **Date:** 2026-08-06
 **Relates to:** ADR-000 (state principles), ADR-002 (memory temporal retention)
-**Supersedes:** ADR-003 "Tool Plugin Registry with AST Auto-Discovery" (knowledge/wiki/core/architecture-decisions.md:83, Accepted 2026-05-18 — register cũ). docs/adr/ là register chính thức hiện tại (CORAL.md:10 bắt buộc đọc ADR-000 từ docs/adr/, validator R8 check ADR-000; mọi tham chiếu ADR trong CORAL.md đều trỏ docs/adr/). Số 003 được dùng lại cho quyết định mới này; quyết định cũ giữ nguyên trong wiki làm lịch sử.
 
 > Mục đích: đây là tài liệu định hướng kiến trúc cấp nền tảng, không phải báo cáo code.
 > Dev mới đọc 5–10 phút là hiểu Coral là gì, vì sao kiến trúc hiện tại được chọn,

@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "required": [
+    "process_start",
+    "process_poll",
+    "process_log",
+    "process_kill",
+    "process_list"
+  ],
+  "found": {
+    "process_start": true,
+    "process_poll": true,
+    "process_log": true,
+    "process_kill": true,
+    "process_list": true
+  },
+  "definitionCount": 55
+}

@@ -1,0 +1,38 @@
+
+===== TEST abort-signal =====
+pre-condition tracking clean: true (total=0)
+start: {"session_id":"proc-1","pid":3004,"command":"ping -n 15 127.0.0.1"}
+[os] Get-Process -Id 3004 -> "YES"
+PID 3004 before abort: true
+[os] Get-Process -Id 3004 -> "NO"
+post-abort node: {"error":"Process proc-1 not found"}
+PID 3004 after abort: false
+RESULT abort-signal: PASS (preClean=true, assertions=true, postTrackingEmpty=true)
+
+===== TEST timeout =====
+pre-condition tracking clean: true (total=0)
+start: {"session_id":"proc-2","pid":8236,"command":"ping -n 15 127.0.0.1"}
+[os] Get-Process -Id 8236 -> "YES"
+PID 8236 before timeout window: true
+[os] Get-Process -Id 8236 -> "NO"
+post-timeout node: {"error":"Process proc-2 not found"}
+PID 8236 after timeout: false
+RESULT timeout: PASS (preClean=true, assertions=true, postTrackingEmpty=true)
+
+===== TEST cleanup =====
+pre-condition tracking clean: true (total=0)
+start: {"session_id":"proc-3","pid":7976,"command":"echo cleanup-probe"}
+exit poll: {"session_id":"proc-3","pid":7976,"command":"echo cleanup-probe","running":false,"exit_code":0,"uptime_ms":602,"stdout":"cleanup-probe\r\n","stderr_lines":""} -> exitObserved: true
+tracking after natural exit: total=0, stillTracked=false
+RESULT cleanup: PASS (preClean=true, assertions=true, postTrackingEmpty=true)
+
+===== TEST manual-kill =====
+pre-condition tracking clean: true (total=0)
+start: {"session_id":"proc-4","pid":12028,"command":"ping -n 15 127.0.0.1"}
+[os] Get-Process -Id 12028 -> "YES"
+PID 12028 before kill: true
+kill: {"success":true,"session_id":"proc-4","signal":"SIGTERM"}
+[os] Get-Process -Id 12028 -> "NO"
+post-kill node: {"error":"Process proc-4 not found"}
+PID 12028 after kill: false
+RESULT manual-kill: PASS (preClean=true, assertions=true, postTrackingEmpty=true)

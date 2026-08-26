@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "evidence": {
+    "src/core/tools/tool-registry.ts :: export async function getDefaultRegistry": {
+      "line": 268,
+      "text": "export async function getDefaultRegistry(): Promise<ToolRegistry> {"
+    },
+    "src/core/tools/tool-registry.ts :: async function registerBuiltInPlugins": {
+      "line": 276,
+      "text": "async function registerBuiltInPlugins(registry: ToolRegistry): Promise<void> {"
+    },
+    "src/core/tools/tool-registry.ts :: process: './process.js'": {
+      "line": 295,
+      "text": "process: './process.js',"
+    },
+    "src/core/tools/tool-registry.ts :: registry.use(mod.default)": {
+      "line": 303,
+      "text": "registry.use(mod.default);"
+    },
+    "src/core/tools/tool-registry.ts :: async registerAll(scanner?: ASTScanner)": {
+      "line": 218,
+      "text": "async registerAll(scanner?: ASTScanner): Promise<ScannerManifest> {"
+    },
+    "src/core/engine/engine.ts :: this.toolRegistry = await getDefaultRegistry()": {
+      "line": 238,
+      "text": "this.toolRegistry = await getDefaultRegistry();"
+    },
+    "src/core/engine/agent.ts :: selectedTools = this.toolRegistry.getDefinitions()": {
+      "line": 550,
+      "text": "selectedTools = this.toolRegistry.getDefinitions();"
+    },
+    "src/core/engine/agent.ts :: await this.toolRegistry.executeToolCall(toolCall)": {
+      "line": 1035,
+      "text": "const toolResult = await this.toolRegistry.executeToolCall(toolCall);"
+    }
+  },
+  "note": "registerAll/AST scanner exists in source but is not invoked by registerBuiltInPlugins — ORPHANED, excluded from R1-D.1 scope."
+}

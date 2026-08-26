@@ -1,0 +1,35 @@
+{
+  "audit": "R1-D.1",
+  "step": "archaeology-phase-3-1b",
+  "captured_at": "2026-08-25T03:25:48Z",
+  "git": {
+    "branch": "r1-execution-safety",
+    "head": "217d5d1a9d717556142bdb20d47b84a3b8b0daae",
+    "dirty_files": 27,
+    "tool_registry_modified": false,
+    "ast_scanner_modified": false,
+    "process_ts_modified": true
+  },
+  "origin_commit": {
+    "hash": "9d31e81a0dd0ace8b40e0901333fd8758aaa3804",
+    "author": "Kayce",
+    "date": "2026-05-27T16:31:46+07:00",
+    "subject": "feat(core): implemented AST-based auto-discovery for tools with caching",
+    "commits_since": 237,
+    "method": "git log --follow -S \"Phase 3.1b\" -- src/core/tools/tool-registry.ts"
+  },
+  "classification_analysis": {
+    "implementation_exists": true,
+    "files": {
+      "src/core/tools/ast-scanner.ts": "543 lines, full AST scan + checksum cache implementation",
+      "src/core/tools/tool-registry.ts:218": "registerAll(scanner?) — dynamic import of scanner, 2-phase scan+report"
+    },
+    "runtime_callers_of_registerAll": [],
+    "runtime_importers_of_ast_scanner": [],
+    "grep_proof": "grep -rn 'registerAll|ASTScanner|ast-scanner' --include='*.ts' src/ excluding the two files above => 0 results",
+    "actual_startup_path": "getDefaultRegistry() -> registerBuiltInPlugins() -> STATIC plugin list only ('process': './process.js' at line 295); registerAll() never invoked"
+  },
+  "classification": "ORPHANED_IMPLEMENTATION (legacy/WIP): shipped complete 2026-05-27 but never wired into startup; dead code as of HEAD 217d5d1a",
+  "impact_on_r1_d_1": "AST auto-discovery is NOT part of active architecture. Active discovery = static plugin list. R1-D.1 scope resolves to verifying static-list integration; Phase 3.1b is a separate dormant feature requiring its own requirement if ever revived.",
+  "no_code_changes_made": true
+}

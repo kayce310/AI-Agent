@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-08-25T02:26:36.533Z",
+  "head": "217d5d1a9d717556142bdb20d47b84a3b8b0daae",
+  "branch": "r1-execution-safety",
+  "status": "M .test-memory-integration/manifest.json\n M data/coral.db\n M data/coral.db-shm\n M data/coral.db-wal\n M data/memories.json\n M docs/adr/ADR-003-consequence-memory.md\n M knowledge/memory-store-test/manifest.json\n M knowledge/memory-store-test/snapshot.json\n M knowledge/memory-store-test/store.json\n M knowledge/memory-store/manifest.json\n M knowledge/memory-store/snapshot.json\n M knowledge/memory-temporal/manifest.json\n M src/core/tools/process.ts\n M src/platform/telegram/message-handler.ts\n M tests/consequence-phase3.test.ts\n M tests/consequence-read-path.test.ts\nA  tests/continuity-blockers.test.ts\n M tunnel-url.txt\n?? PROGRESS_V1_FINAL.md\n?? R1_F1_EVIDENCE_ANALYSIS.md\n?? R1_F1_FINAL_EVIDENCE_ANALYSIS.md\n?? R1_ROADMAP_STATUS.md\n?? docs/adr/ADR-004-R1-F1-FORENSIC_REPORT.md\n?? docs/evidence/\n?? tests/process-subprocess.test.ts\n?? tests/progress-v1-plan-continuity.test.ts\n?? tests/progress-v1-plan-continuity.test.ts.bak",
+  "log5": "217d5d1a refactor(progress): integrate signal authority with stagnation\n2da242b8 feat(progress): wire observation signals into agent loop\nd3440554 feat(progress): add ephemeral no-progress window\n34d796c2 feat(progress): add deterministic progress observation model\nf902a65e feat(memory): finalize Consequence Memory v1"
+}

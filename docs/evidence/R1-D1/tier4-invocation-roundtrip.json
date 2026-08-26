@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "proofChain": "getDefaultRegistry -> registry.use(static process plugin) -> toolsMap -> executeToolCall -> process_start.execute -> result",
+  "startResult": {
+    "session_id": "proc-1",
+    "pid": 4016,
+    "command": "echo r1-d1-round-trip"
+  },
+  "pollResult": {
+    "session_id": "proc-1",
+    "pid": 4016,
+    "command": "echo r1-d1-round-trip",
+    "running": false,
+    "exit_code": 0,
+    "uptime_ms": 305,
+    "stdout": "r1-d1-round-trip\r\n",
+    "stderr_lines": ""
+  },
+  "listResult": {
+    "processes": [
+      {
+        "id": "proc-1",
+        "command": "echo r1-d1-round-trip",
+        "running": false,
+        "exit_code": 0,
+        "uptime_ms": 306
+      }
+    ],
+    "total": 1
+  },
+  "mockedExecuteToolCall": false,
+  "bypassedRegistry": false
+}

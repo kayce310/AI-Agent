@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-08-25T08:10:00.130Z",
+  "branch": "r1-execution-safety",
+  "head": "217d5d1a9d717556142bdb20d47b84a3b8b0daae",
+  "status_short": [
+    " M src/core/tools/process.ts"
+  ],
+  "log3": "217d5d1a refactor(progress): integrate signal authority with stagnation\n2da242b8 feat(progress): wire observation signals into agent loop\nd3440554 feat(progress): add ephemeral no-progress window"
+}

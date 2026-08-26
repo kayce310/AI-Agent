@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-08-25T08:10:00.121Z",
+  "platform": "win32",
+  "node": "v24.15.0",
+  "moduleUnderTest": "D:\\AI-Agent\\dist\\core\\tools\\process.js",
+  "gracePeriodMs": 5000
+}

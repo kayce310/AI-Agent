@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-08-25T02:26:36.788Z",
+  "features": {
+    "abortSignal": "abortSignal.addEventListener",
+    "timeoutKillTimer": "tracked.killTimer = setTimeout",
+    "delayedTrackingDelete": "setTimeout(() => processes.delete(id)",
+    "manualKillDelete": "processes.delete(args.session_id)"
+  },
+  "sourceFeatures": {
+    "abortSignal": true,
+    "timeoutKillTimer": true,
+    "delayedTrackingDelete": true,
+    "manualKillDelete": true
+  },
+  "distFeatures": {
+    "abortSignal": true,
+    "timeoutKillTimer": true,
+    "delayedTrackingDelete": true,
+    "manualKillDelete": true
+  },
+  "match": true
+}

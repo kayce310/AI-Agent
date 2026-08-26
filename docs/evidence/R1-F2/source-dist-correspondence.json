@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-08-25T08:10:20.841Z",
+  "source": {
+    "path": "src/core/tools/process.ts",
+    "sha256": "875b4adeb44344c2a261c099bdd1e891352fffc36d998e08aca85cddcc3aeb04",
+    "bytes": 15459,
+    "mtime": "2026-08-25T07:54:52.651Z"
+  },
+  "dist": {
+    "path": "dist/core/tools/process.js",
+    "sha256": "292cc43c8a304fee9f663ef45bbff85b6b6b5be0d5f58aff456aeaee552c2a14",
+    "bytes": 16362,
+    "mtime": "2026-08-25T07:55:16.714Z"
+  },
+  "buildCommand": "npm run build (npx tsc)",
+  "note": "dist newer than source; dist contains F.2 markers (taskkill x10, KILL_GRACE_PERIOD_MS=5000, scheduleKillEscalation export verified by require)"
+}

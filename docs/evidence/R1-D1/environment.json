@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-08-25T04:14:51.016Z",
+  "platform": "win32",
+  "node": "v24.15.0",
+  "root": "D:\\AI-Agent",
+  "pid": 8436,
+  "bootPath": "REGISTRY_LEVEL_TEST_ENTRYPOINT",
+  "productionArtifactUsed": "dist/core/tools/tool-registry.js"
+}

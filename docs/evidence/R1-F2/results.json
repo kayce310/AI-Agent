@@ -1,0 +1,116 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "leaked_after_force_cleanup": [],
+    "finishedAt": "2026-08-25T08:10:20.750Z"
+  },
+  "results": {
+    "T1-default-signal-regression": {
+      "passed": true,
+      "response": {
+        "success": true,
+        "session_id": "proc-1",
+        "pid": 2372,
+        "signal": "SIGTERM",
+        "grace_period_ms": 5000,
+        "tree_kill": false
+      },
+      "rootPid": 2372,
+      "workerPid": 5384,
+      "pollAfterKill": "Process proc-1 not found",
+      "rootGoneMs": 101,
+      "note": "pre-kill aliveness enforced by startSleeper; worker survival expected (mechanism 1 = direct child only)"
+    },
+    "T2-explicit-SIGKILL": {
+      "passed": true,
+      "response": {
+        "success": true,
+        "session_id": "proc-2",
+        "pid": 14776,
+        "signal": "SIGKILL",
+        "grace_period_ms": null,
+        "tree_kill": false
+      },
+      "rootGoneMs": 109
+    },
+    "T3-invalid-signal-rejected-no-kill": {
+      "passed": true,
+      "rejectResponse": {
+        "error": "Unsupported signal 'SIGSTOP'. Valid signals: SIGTERM, SIGKILL. Omit for default SIGTERM.",
+        "session_id": "proc-3"
+      },
+      "rootStillAlive": true,
+      "workerStillAlive": true,
+      "cleanupResponse": {
+        "success": true,
+        "session_id": "proc-3",
+        "pid": 7084,
+        "tree_kill": true,
+        "method": "taskkill /F /T",
+        "note": "Windows: /F = TerminateProcess (forceful), /T = entire descendant tree. Signal param not applicable to tree kill."
+      },
+      "rootGoneMs": 475,
+      "workerGoneMs": 103
+    },
+    "T4-tree-kill-parent-and-child-gone": {
+      "passed": true,
+      "response": {
+        "success": true,
+        "session_id": "proc-4",
+        "pid": 15572,
+        "tree_kill": true,
+        "method": "taskkill /F /T",
+        "note": "Windows: /F = TerminateProcess (forceful), /T = entire descendant tree. Signal param not applicable to tree kill."
+      },
+      "rootPid": 15572,
+      "workerPid": 13080,
+      "rootGoneMs": 465,
+      "workerGoneMs": 102
+    },
+    "T5-no-tree-gap-child-survives": {
+      "passed": true,
+      "response": {
+        "success": true,
+        "session_id": "proc-5",
+        "pid": 15904,
+        "signal": "SIGTERM",
+        "grace_period_ms": 5000,
+        "tree_kill": false
+      },
+      "rootGoneMs": 102,
+      "workerPid": 12732,
+      "workerSurvivesAfterParentDeath": true,
+      "note": "documents the Windows orphan gap that tree:true exists to close"
+    },
+    "T6-timeout-full-flow": {
+      "passed": true,
+      "sessionId": "proc-6",
+      "rootPid": 2548,
+      "workerPid": 9312,
+      "aliveWhilePendingConfirmed": true,
+      "rootGoneMsFromStart": 475,
+      "wallElapsedMsFromStart": 847,
+      "stage1Sufficed_beforeGraceExpiry": true,
+      "pollAfterCleanupDelay": "Process proc-6 not found",
+      "note": "on win32 SIGTERM==TerminateProcess so death occurs in stage 1 (~800ms mark); escalation timer is the safety net"
+    },
+    "T7-escalation-branch-real-os": {
+      "passed": true,
+      "victimPid": 1636,
+      "alivePreEscalation": true,
+      "victimGoneMsPostGrace": 113,
+      "stubLastSignal": "SIGKILL",
+      "waitedMs": 6621,
+      "note": "production timer body executed taskkill /F /T against a real live process after the 5s grace"
+    },
+    "T8-win32-signal-mapping-empirical": {
+      "passed": true,
+      "sigterm_death_ms": 104,
+      "sigkill_death_ms": 101,
+      "abs_delta_ms": 3,
+      "conclusion": "On win32 both signals produce immediate TerminateProcess-style death of the direct child; timing indistinguishable. Node maps any signal != 0 to unconditional termination. Source: header comment in src/core/tools/process.ts + https://nodejs.org/api/child_process.html#subprocesskillsignal"
+    }
+  }
+}

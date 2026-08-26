@@ -1,0 +1,19 @@
+{
+  "assertionsPassed": true,
+  "detail": {
+    "sessionId": "proc-2",
+    "pid": 8236,
+    "before": true,
+    "after": false,
+    "afterNode": {
+      "error": "Process proc-2 not found"
+    }
+  },
+  "preconditionClean": true,
+  "postList": {
+    "processes": [],
+    "total": 0
+  },
+  "postTrackingEmpty": true,
+  "passed": true
+}

@@ -11,7 +11,6 @@
  */
 
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { randomUUID } from 'node:crypto';
 import { ConsequenceStore } from '../src/core/memory/consequence-store.js';
 import {
   registerConsequenceReadPath,
@@ -28,16 +27,14 @@ import { globalHooks } from '../src/core/hooks.js';
 
 function makeRecord(overrides: Partial<ConsequenceRecord> = {}): ConsequenceRecord {
   return {
-    id: randomUUID(),
+    id: `rec-${Math.random().toString(36).slice(2)}`,
     createdAt: Date.now(),
-    // Q3: userId bắt buộc — test mặc định gán user-1
-    userId: 'user-1',
     sessionId: 's1',
     taskId: 't1',
-    context: {},
-    action: { toolName: 'default_tool' },
+    context: { tags: ['tool_result'] },
+    action: { toolName: 'some_tool' },
     outcome: 'fail',
-    evidenceRef: { checkpointId: 't1' },
+    evidenceRef: { cycle: 1, checkpointId: 't1' },
     reusePolicy: 'record_only',
     ...overrides,
   };

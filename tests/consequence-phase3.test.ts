@@ -12,7 +12,6 @@
  */
 
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
-import { randomUUID } from 'node:crypto';
 import { ConsequenceStore } from '../src/core/memory/consequence-store.js';
 import {
   registerConsequenceReadPath,
@@ -27,8 +26,6 @@ function makeRecord(overrides: Partial<ConsequenceRecord> = {}): ConsequenceReco
   return {
     id: `rec-${Math.random().toString(36).slice(2)}`,
     createdAt: Date.now(),
-    // Q3: userId bắt buộc — test mặc định gán user-1
-    userId: 'user-1',
     sessionId: 's1',
     taskId: 't1',
     context: { tags: ['tool_result'] },

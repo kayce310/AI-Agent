@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "bootStart": "2026-08-25T04:14:51.264Z",
+  "bootEnd": "2026-08-25T04:14:54.533Z",
+  "uncaughtCount": 0,
+  "uncaught": [],
+  "totalDefinitions": 55,
+  "scopeLabel": "REGISTRY_LEVEL_TEST_ENTRYPOINT — proves registry loads via dist production artifact; does NOT prove full production runtime (engine/agent/platform) boot."
+}

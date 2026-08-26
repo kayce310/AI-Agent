@@ -1,0 +1,109 @@
+
+===== usage-no-args: process-cli  =====
+exit=2
+stderr: process-cli — access process tools via production Tool Registry
+
+Usage:
+  node dist/scripts/process-cli.js start --command "<cmd>" [--workdir dir] [--timeout ms] [--json]
+  node dist/scripts/process-cli.js start -- "<raw command with flags>" [--json]
+  node dist/scripts/process-cli.js poll  <session
+RESULT usage-no-args: PASS
+
+===== unknown-command: process-cli bogus =====
+exit=2
+stderr: process-cli — access process tools via production Tool Registry
+
+Usage:
+  node dist/scripts/process-cli.js start --command "<cmd>" [--workdir dir] [--timeout ms] [--json]
+  node dist/scripts/process-cli.js start -- "<raw command with flags>" [--json]
+  node dist/scripts/process-cli.js poll  <session
+RESULT unknown-command: PASS
+
+===== start-missing-command: process-cli start =====
+exit=2
+stderr: process-cli — access process tools via production Tool Registry
+
+Usage:
+  node dist/scripts/process-cli.js start --command "<cmd>" [--workdir dir] [--timeout ms] [--json]
+  node dist/scripts/process-cli.js start -- "<raw command with flags>" [--json]
+  node dist/scripts/process-cli.js poll  <session
+RESULT start-missing-command: PASS
+
+===== poll-missing-session: process-cli poll =====
+exit=2
+stderr: process-cli — access process tools via production Tool Registry
+
+Usage:
+  node dist/scripts/process-cli.js start --command "<cmd>" [--workdir dir] [--timeout ms] [--json]
+  node dist/scripts/process-cli.js start -- "<raw command with flags>" [--json]
+  node dist/scripts/process-cli.js poll  <session
+RESULT poll-missing-session: PASS
+
+===== list-human: process-cli list =====
+exit=0
+no tracked processes
+RESULT list-human: PASS
+
+===== list-json: process-cli list --json =====
+exit=0
+{
+  "processes": [],
+  "total": 0
+}
+RESULT list-json: PASS
+
+===== start-echo: process-cli start --json --command echo r1e1-fixture-1787641723708 =====
+exit=0
+{
+  "session_id": "proc-1",
+  "pid": 2176,
+  "command": "echo r1e1-fixture-1787641723708"
+}
+RESULT start-echo: PASS
+
+===== poll-cross-invocation-not-found: process-cli poll proc-1 --json =====
+exit=1
+{"error":"Process proc-1 not found"}
+RESULT poll-cross-invocation-not-found: PASS
+
+===== poll-after-exit: process-cli poll proc-1 --json =====
+exit=1
+{"error":"Process proc-1 not found"}
+RESULT poll-after-exit: PASS
+
+===== log-after-exit: process-cli log proc-1 --json =====
+exit=1
+{"error":"Process proc-1 not found"}
+RESULT log-after-exit: PASS
+
+===== log-nonexistent: process-cli log proc-does-not-exist --json =====
+exit=1
+{"error":"Process proc-does-not-exist not found"}
+RESULT log-nonexistent: PASS
+
+===== start-long: process-cli start --json --command ping -n 15 127.0.0.1 =====
+exit=0
+{
+  "session_id": "proc-1",
+  "pid": 10496,
+  "command": "ping -n 15 127.0.0.1"
+}
+RESULT start-long: PASS
+
+===== kill-cross-invocation-not-found: process-cli kill proc-1 --json =====
+exit=1
+{"error":"Process proc-1 not found"}
+RESULT kill-cross-invocation-not-found: PASS
+
+===== kill-nonexistent: process-cli kill proc-does-not-exist --json =====
+exit=1
+{"error":"Process proc-does-not-exist not found"}
+RESULT kill-nonexistent: PASS
+
+===== final-list-clean: process-cli list --json =====
+exit=0
+{
+  "processes": [],
+  "total": 0
+}
+RESULT final-list-clean: PASS

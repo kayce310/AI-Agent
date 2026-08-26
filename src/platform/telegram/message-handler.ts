@@ -3,13 +3,14 @@ import { Logger } from '../../core/logger.js';
 import { AgentConfig } from '../../core/engine/agent.js';
 import { ToolRegistry } from '../../core/tools/tool-registry.js';
 import { AgentRegistry } from '../../core/agents/delegate.js';
+import { getChannelIdFromChatId } from './utils.js';
 
 const logger = new Logger({ module: 'TelegramHandler' });
 
 export interface TelegramMessage {
   userId: string;
   text: string;
-  chatId?: string;
+  chatId: string; // Make chatId required
   messageId?: string;
 }
 
@@ -59,12 +60,13 @@ export class TelegramMessageHandler {
    */
   async handleMessage(message: TelegramMessage & { modelId?: string }): Promise<TelegramResponse> {
     const { userId, text, chatId, modelId } = message;
+    const channelId = getChannelIdFromChatId(chatId);
 
     // Get or create session
-    let session = this.sessionManager.getSession(userId);
+    let session = this.sessionManager.getSession(userId, channelId);
 
     if (!session) {
-      session = this.sessionManager.createSession(userId);
+      session = this.sessionManager.createSession(userId, channelId);
     }
 
     let agentResponse: string;
@@ -86,7 +88,7 @@ export class TelegramMessageHandler {
       agentResponse = `❌ Lỗi khi xử lý: ${err.message}`;
     }
 
-    this.sessionManager.updateLastActivity(userId);
+    this.sessionManager.updateLastActivity(userId, channelId);
 
     return {
       text: agentResponse,
@@ -120,15 +122,21 @@ export class TelegramMessageHandler {
 
   /**
    * Get session info for a user
-   */
-  getSessionInfo(userId: string): { userId: string; introSent: boolean; sessionId: string } | undefined {
-    const session = this.sessionManager.getSession(userId);
-    if (!session) return undefined;
-    return {
-      userId: session.userId,
-      introSent: session.introSent,
-      sessionId: session.sessionId,
-    };
+   const { userManager } = await import('./user-manager.js');
+   if (!userManager.isAllowed(userId)) return;
+
+   const sessionKey = `${userId}:${channelId}`;
+   const session = this.sessions.get(sessionKey);
+   if (!session) {
+     // This should ideally not happen if getOrCreateSession is called first
+     console.warn(`[MESSAGE HANDLER] Session not found for key: ${sessionKey}`);
+     return undefined; // Or throw an error
+   }
+   return {
+     userId: session.userId,
+     introSent: session.introSent,
+     sessionId: session.sessionId,
+   };
   }
 
   /**
