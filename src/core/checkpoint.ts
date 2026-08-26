@@ -31,6 +31,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from './logger.js';
 import type { TaskPlan } from './plan/types.js';
+import { atomicWriteFileSync } from './atomic-write.js';
 
 const log = new Logger({ module: 'Checkpoint' });
 
@@ -60,6 +61,12 @@ export interface CheckpointSnapshot {
   status: 'started' | 'in_progress' | 'completed' | 'failed';
   startedAt: string;
   cycles: CycleData[];
+  /** R2 §B: set once by engine boot recovery — this task survived a crash */
+  recovery?: {
+    recoveredAtBoot: string;
+    provenCompletedTools: number;
+    note: string;
+  };
   /** MỚI — State-Driven Task Plan, replaces old heuristic intent detection */
   plan?: TaskPlan;
   error?: {
@@ -251,8 +258,9 @@ export class CheckpointStore {
     if (!snapshot) return;
     const now = Date.now();
     const filePath = path.join(this.config.checkpointDir, `cp-${requestId}-${now}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2), 'utf-8');
     const prefix = `cp-${requestId}-`;
+    // R2 §3: tmp+rename — bare writeFileSync can tear on crash mid-write
+    atomicWriteFileSync(filePath, JSON.stringify(snapshot, null, 2));
     const basename = path.basename(filePath);
     for (const f of fs.readdirSync(this.config.checkpointDir)) {
       if (f.startsWith(prefix) && f !== basename) {
@@ -419,7 +427,8 @@ export class CheckpointStore {
       for (const [requestId, snapshot] of this.snapshots) {
         if (snapshot.status === 'completed') continue; // no need to persist completed
         const filePath = path.join(this.config.checkpointDir, `cp-${requestId}-${now}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2), 'utf-8');
+        // R2 §3: tmp+rename (atomic) — crash mid-write must not tear the file
+        atomicWriteFileSync(filePath, JSON.stringify(snapshot, null, 2));
         count++;
       }
 
@@ -486,6 +495,64 @@ export class CheckpointStore {
   clear(requestId: string): void {
     this.snapshots.delete(requestId);
     this.dirty = true;
+  }
+
+  // ── R2 Recovery (§A/§B/§C) ──
+
+  /**
+   * R2 §6 — proven-completed tool call IDs for an in-progress snapshot.
+   * A tool is PROVEN done only if a finished cycle recorded it completed.
+   */
+  getProvenCompletedToolIds(requestId: string): Set<string> {
+    const snapshot = this.snapshots.get(requestId);
+    if (!snapshot) return new Set();
+    const done = new Set<string>();
+    for (const cycle of snapshot.cycles) {
+      for (const [toolCallId, st] of Object.entries(cycle.toolStatus)) {
+        if (st === 'completed') done.add(toolCallId);
+      }
+      for (const a of cycle.completedActions) done.add(a.id);
+    }
+    return done;
+  }
+
+  /** R2 §B: annotate a snapshot as recovered-at-boot (once, idempotent). */
+  markRecovered(requestId: string, note: string): void {
+    const snapshot = this.snapshots.get(requestId);
+    if (!snapshot || snapshot.recovery) return;
+    const proven = this.getProvenCompletedToolIds(requestId).size;
+    snapshot.recovery = {
+      recoveredAtBoot: new Date().toISOString(),
+      provenCompletedTools: proven,
+      note,
+    };
+    this.dirty = true;
+    log.warn(
+      `[CP] R2 recovery: ${requestId} marked recovered — ${proven} proven-completed tool(s), ` +
+      `running/pending tools have NO completion proof and may re-execute if the task resumes`,
+    );
+  }
+
+  /**
+   * R2 §A: synchronous best-effort flush for the crash handler.
+   * Uses fs.writeFileSync directly (no async) so it can run before process.exit().
+   * Best-effort only — cannot help with SIGKILL/power loss or if this throws.
+   */
+  flushSync(): void {
+    try {
+      const now = Date.now();
+      let count = 0;
+      for (const [requestId, snapshot] of Array.from(this.snapshots.entries())) {
+        if (snapshot.status === 'completed') continue; // terminal state already on disk
+        const filePath = path.join(this.config.checkpointDir, `cp-${requestId}-${now}.json`);
+        atomicWriteFileSync(filePath, JSON.stringify(snapshot, null, 2));
+        count++;
+      }
+      log.info(`[CP] flushSync (crash path): ${count} checkpoint(s) written`);
+    } catch (err: any) {
+      // Never let the crash handler throw — exit code comes from the handler
+      log.error(`[CP] flushSync failed: ${err.message}`);
+    }
   }
 }
 

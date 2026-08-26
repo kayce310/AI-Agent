@@ -23,6 +23,7 @@ import { CronScheduler, SystemMonitor } from '../core/cron/index.js';
 import type { AlertCallback } from '../core/cron/index.js';
 import { proactiveEngine } from '../core/proactive/proactive-engine.js';
 import { worldModel } from '../core/world/model.js';
+import { installCrashHandler } from '../core/crash-handler.js'; // R2 §A: best-effort checkpoint flush on crash
 
 // ── Timestamp Helper ──
 const ts = () => {
@@ -350,6 +351,7 @@ async function start() {
 
   console.log(`${ts()} 🚀 Starting Coral Telegram Bot...`);
   const engine = new Engine();
+  installCrashHandler(); // R2 §A: best-effort checkpoint flush BEFORE exit on uncaughtException/unhandledRejection
   await engine.init();
   engineInstance = engine;
 

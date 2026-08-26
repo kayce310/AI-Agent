@@ -316,12 +316,32 @@ export class Engine extends EventEmitter {
 
     // ── CHECKPOINTSTORE: Initialize and restore in-progress tasks ──
     await this.checkpointStore.init();
-    const inProgressCheckpoints = this.checkpointStore.getAllInProgress();
-    if (inProgressCheckpoints.length > 0) {
-      log.warn(`Found ${inProgressCheckpoints.length} in-progress checkpoint(s) from previous run:`);
-      for (const cp of inProgressCheckpoints) {
-        log.warn(`  ${cp.requestId} — ${cp.sessionId}, ${cp.cycles.length} cycle(s)`);
-      }
+
+    // ── R2 §B: RECOVER in-progress tasks from previous run (was log-only before R2) ──
+    // Semantics per §6:
+    //  - tools recorded 'completed' in a finished cycle = PROVEN done → MUST NOT re-execute;
+    //  - tools 'running'/'pending' at crash = interrupted mid-flight, no completion proof
+    //    → allowed to re-execute IF the task resumes;
+    //  - Fix C respected: activeTaskBySession already maps session→existing requestId,
+    //    so a resumed task REUSES the old checkpoint (no duplicate creation);
+    //  - foreground continuation needs original runtime context we cannot rebuild here
+    //    → deterministic minimal handling: annotate + surface via logs/state, never drop.
+    const recovered = this.checkpointStore.getAllInProgress();
+    for (const cp of recovered) {
+      this.checkpointStore.markRecovered(
+        cp.requestId,
+        'Recovered after unexpected shutdown; proven-completed tools will not re-execute; ' +
+          'running/pending tools have no completion proof and may re-execute only if the task resumes. ' +
+          'subprocesses existing before an unexpected Coral crash may become orphaned because process tracking is in-memory; full orphan reconciliation is outside R2.',
+      );
+      log.warn(
+        `[R2] Recovered in-progress task ${cp.requestId} (session ${cp.sessionId}), ` +
+          `${this.checkpointStore.getProvenCompletedToolIds(cp.requestId).size} proven-completed tool(s), ` +
+          `${cp.cycles.length} cycle(s) — surfaced for resume, not dropped`,
+      );
+    }
+    if (recovered.length > 0) {
+      this.checkpointStore.flushSync(); // persist recovery annotations immediately
     }
 
     // ── TASK QUEUE: Initialize and start background worker ──

@@ -26,13 +26,16 @@ import * as path from 'path';
 import { Logger } from './logger.js';
 import { EngineRequest } from './types.js';
 import { getCheckpoint } from './checkpoint.js';
+import { atomicWriteFileSync } from './atomic-write.js';
 
 const log = new Logger({ module: 'TaskQueue' });
 
 // ── Types ──
 
 export type TaskType = 'interactive' | 'background';
-export type TaskStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+// R2 §C: 'interrupted' = was running at an unexpected crash AND checkpoint data
+// shows proven partial completion → NOT auto-requeued; requires explicit re-enqueue.
+export type TaskStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'interrupted';
 
 export interface BackgroundTask {
   id: string;
@@ -260,7 +263,8 @@ export class TaskQueue {
     if (!task) return;
     try {
       const filePath = path.join(this.config.dataDir, `task-${taskId}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(task, null, 2), 'utf-8');
+      // R2 §3: tmp+rename — same torn-write class as checkpoints
+      atomicWriteFileSync(filePath, JSON.stringify(task, null, 2));
     } catch (err: any) {
       log.warn(`[TQ] save failed for ${taskId}: ${err.message}`);
     }
@@ -278,10 +282,35 @@ export class TaskQueue {
           const task = JSON.parse(content) as BackgroundTask;
           // Only load non-terminal tasks into active memory
           if (task.status === 'queued' || task.status === 'running') {
-            // Reset queued tasks; mark running as queued (previous run crashed)
             if (task.status === 'running') {
-              task.status = 'queued';
-              task.progress = 'Re-queued after restart (was running)';
+              // R2 §C: was running at an unexpected crash. Consult checkpoint data
+              // for this task's sessionId — if it shows proven-completed tools, the
+              // task had partial real work done; a blind full-rerun would redo that
+              // work and claim completed side effects were re-executed safely.
+              // → mark 'interrupted', require explicit re-enqueue instead.
+              // (No live-PID assumptions: any process/session state from before the
+              //  restart is treated as dead; in-memory Maps did not survive.)
+              let provenCompleted = 0;
+              try {
+                const cp = getCheckpoint().getLatestForSession(task.sessionId);
+                provenCompleted = cp
+                  ? getCheckpoint().getProvenCompletedToolIds(cp.requestId).size
+                  : 0;
+              } catch { /* checkpoint store not initialized yet → treat as no proof */ }
+              if (provenCompleted > 0) {
+                task.status = 'interrupted';
+                task.progress =
+                  `Interrupted by unexpected shutdown — prior partial completion detected ` +
+                  `(${provenCompleted} tool(s) already executed). NOT auto-requeued; ` +
+                  `re-enqueue explicitly to rerun the whole task.`;
+                log.warn(
+                  `[TQ] R2 §C: ${task.id} was running at crash with ${provenCompleted} proven-completed ` +
+                  `tool(s) in checkpoint → status 'interrupted' (no auto-rerun)`,
+                );
+              } else {
+                task.status = 'queued';
+                task.progress = 'Re-queued after restart (was running)';
+              }
             }
             this.tasks.set(task.id, task);
           }

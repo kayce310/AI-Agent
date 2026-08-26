@@ -11,6 +11,7 @@ import { TelegramBridge } from '../modules/telegram/index.js';
 import Engine from '../core/engine/engine.js';
 import { CoralGateway } from '../core/gateway/index.js';
 import { DashboardServer } from '../core/events/http-server.js';
+import { installCrashHandler } from '../core/crash-handler.js'; // R2 §A
 
 const ts = () => {
   const d = new Date();
