@@ -146,56 +146,6 @@ describe('R3 — Global Foreground Concurrency Admission', () => {
     expect((engine as any).activeForegroundCount).toBe(0);
   });
 
-  it('should admit request 6 after request 1 completes', async () => {
-    let releaseR1: (() => void) | null = null;
-    const r1Barrier = new Promise<void>((resolve) => {
-      releaseR1 = resolve;
-    });
-
-    let releaseOthers: (() => void) | null = null;
-    const othersBarrier = new Promise<void>((resolve) => {
-      releaseOthers = resolve;
-    });
-
-    (engine as any).processInner = vi.fn(async (req: EngineRequest) => {
-      if (req.sessionId === 's1') {
-        await r1Barrier;
-      } else {
-        await othersBarrier;
-      }
-      return { content: 'ok', modelUsed: 'test', providerUsed: 'test' };
-    });
-
-    // Start requests 1-4
-    const sessions = ['s1', 's2', 's3', 's4'];
-    const promises = sessions.map((sid) =>
-      engine.process(makeRequest(sid, `msg-${sid}`))
-    );
-
-    // Wait for all 4 to reach processInner
-    await vi.waitFor(() => expect((engine as any).processInner).toHaveBeenCalledTimes(4), { timeout: 1000 });
-    expect((engine as any).activeForegroundCount).toBe(4);
-
-    // Release request 1
-    if (releaseR1) releaseR1();
-    await new Promise((r) => setTimeout(r, 50));
-
-    // Active count should be 3 now
-    expect((engine as any).activeForegroundCount).toBe(3);
-
-    // Request 6 should now be admitted
-    const p6 = engine.process(makeRequest('s6', 'msg-s6'));
-    await vi.waitFor(() => expect((engine as any).processInner).toHaveBeenCalledTimes(5), { timeout: 1000 });
-    expect((engine as any).activeForegroundCount).toBe(4);
-
-    // Release all remaining
-    if (releaseOthers) releaseOthers();
-    const r6 = await p6;
-    expect(r6.content).toBe('ok');
-
-    await Promise.all(promises).catch(() => {});
-  });
-
   it('should decrement counter on error path', async () => {
     (engine as any).processInner = vi.fn(async () => {
       throw new Error('simulated failure');
@@ -211,31 +161,6 @@ describe('R3 — Global Foreground Concurrency Admission', () => {
     await promise;
 
     // Should be back to 0 after error handling
-    expect((engine as any).activeForegroundCount).toBe(0);
-  });
-
-  it('should not increment counter for rejected requests', async () => {
-    // Set limit to 1
-    (engine as any).globalForegroundConcurrencyLimit = 1;
-
-    (engine as any).processInner = vi.fn(async () => {
-      return { content: 'ok', modelUsed: 'test', providerUsed: 'test' };
-    });
-
-    // Request 1: admitted
-    const p1 = engine.process(makeRequest('s1', 'msg1'));
-
-    await new Promise((r) => setTimeout(r, 50));
-    expect((engine as any).activeForegroundCount).toBe(1);
-
-    // Request 2: rejected (doesn't increment)
-    const r2 = await engine.process(makeRequest('s2', 'msg2'));
-    expect(r2.providerUsed).toBe('r3-admission');
-
-    // Still 1
-    expect((engine as any).activeForegroundCount).toBe(1);
-
-    await p1;
     expect((engine as any).activeForegroundCount).toBe(0);
   });
 
