@@ -1101,7 +1101,10 @@ export class Agent extends EventEmitter {
             try {
               if (this.checkpointStore && request.sessionId) {
                 const sp = this.checkpointStore.getPlan(request.sessionId);
-                if (sp && (sp.status === 'pending' || sp.status === 'running')) {
+                // ponytail(R4-F1-AC3): update_plan là bookkeeping chứ không phải work —
+                // không được log làm evidence, nếu không chính create/complete_item call
+                // sẽ tự chứng minh evidence-gate của item hiện tại (gate vô hiệu trong loop).
+                if (toolCall.function.name !== 'update_plan' && sp && (sp.status === 'pending' || sp.status === 'running')) {
                   const idx = sp.currentItemIndex;
                   if (!getRequestContext()?.evidenceLog.has(idx)) getRequestContext()?.evidenceLog.set(idx, []);
                   const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
