@@ -26,6 +26,7 @@ function makeRecord(overrides: Partial<ConsequenceRecord> = {}): ConsequenceReco
   return {
     id: `rec-${Math.random().toString(36).slice(2)}`,
     createdAt: Date.now(),
+    userId: 'test-user',
     sessionId: 's1',
     taskId: 't1',
     context: { tags: ['tool_result'] },
