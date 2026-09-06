@@ -1,0 +1,11 @@
+R6 Initial Audit command evidence
+Date: 2026-09-04
+
+Command: npm run build
+Result: exit code 1; 4 TypeScript errors in src/platform/telegram/message-handler.ts.
+Errors: missing ./utils.js; getSession(userId, channelId); createSession(userId, channelId); updateLastActivity(userId, channelId).
+
+Command: npx vitest run tests/consequence-phase3.test.ts tests/consequence-read-path.test.ts
+Result: consequence-phase3.test.ts 10 tests, 7 failed; consequence-read-path.test.ts 18 tests, 8 failed.
+Failure: [Consequence] append requires userId: record.userId or request context (rctx.userId).
+Additional observed warning: [Consequence] lookup failed (fail-open): TypeError: The database connection is not open.
