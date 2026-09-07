@@ -365,11 +365,20 @@ export class CheckpointStore {
   // ── Read / Restore ──
 
   /**
-   * Fix C: get the active requestId for a session, if any.
-   */
-  getActiveTaskForSession(sessionId: string): string | null {
-    return this.activeTaskBySession.get(sessionId) ?? null;
-  }
+     * Fix C: get the active requestId for a session, if any.
+     */
+    getActiveTaskForSession(sessionId: string): string | null {
+      return this.activeTaskBySession.get(sessionId) ?? null;
+    }
+
+    /**
+     * Fix A: update the active task mapping for a session.
+     * Used to refresh identity freshness when a task resumes after restart.
+     */
+    setActiveTaskForSession(sessionId: string, requestId: string): void {
+      this.activeTaskBySession.set(sessionId, requestId);
+      this.dirty = true;
+    }
 
   /**
    * Get the latest checkpoint for a session.

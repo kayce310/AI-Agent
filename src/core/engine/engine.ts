@@ -824,9 +824,14 @@ export class Engine extends EventEmitter {
     // ── CHECKPOINT: Start tracking this request ──
     // Fix C (ADR-000 §1): single source of truth — session already has an active
     // task (rebuilt from disk on boot) → do NOT create a duplicate checkpoint.
+    // Fix A — identity freshness: on resume, activeTaskBySession may hold the
+    // dead requestId from a previous run. Update the map to the CURRENT requestId
+    // so admission/control references the live identity.
     const existingTaskId = this.checkpointStore.getActiveTaskForSession(sessionId);
     if (existingTaskId) {
       log.warn(`[Engine] Session ${sessionId} already has active task ${existingTaskId} — reusing, skipping duplicate creation`);
+      // Refresh activeTaskBySession to current requestId (identity freshness)
+      this.checkpointStore.setActiveTaskForSession(sessionId, requestId);
     } else {
       this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
     }
