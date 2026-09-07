@@ -67,6 +67,10 @@ export interface CheckpointSnapshot {
     provenCompletedTools: number;
     note: string;
   };
+  /** Phase 4: tools marked 'running' at crash — UNCERTAIN classification */
+  uncertainTools?: string[];
+  /** Phase 4: classification timestamp (when snapshot was classified) */
+  classifiedAt?: string;
   /** MỚI — State-Driven Task Plan, replaces old heuristic intent detection */
   plan?: TaskPlan;
   error?: {
@@ -211,9 +215,63 @@ export class CheckpointStore {
     lastCycle.toolStatus[toolCallId] = 'running';
     this.dirty = true;
   }
+  /**
+   * Phase 4A: Classify an in-progress snapshot after restart.
+   * Identifies tools with status 'pending' or 'running' → UNCERTAIN classification.
+   * Does NOT re-execute or resume anything. Annotates snapshot in place.
+   *
+   * Both 'pending' and 'running' are UNCERTAIN after restart:
+   * - pending: tool was requested but markToolRunning() may or may not have been called
+   * - running: markToolRunning() was called, execution status unknown
+   * Neither has completion proof via checkpoint.cycle().
+   */
+  classifySnapshot(requestId: string): void {
+    const snapshot = this.snapshots.get(requestId);
+    if (!snapshot || (snapshot.status !== 'in_progress' && snapshot.status !== 'started')) return;
+    const uncertain: string[] = [];
+    for (const cycle of snapshot.cycles) {
+      for (const [toolCallId, status] of Object.entries(cycle.toolStatus)) {
+        if (status === 'pending' || status === 'running') {
+          uncertain.push(toolCallId);
+        }
+      }
+    }
+    if (uncertain.length > 0) {
+      snapshot.uncertainTools = uncertain;
+      snapshot.classifiedAt = new Date().toISOString();
+      this.dirty = true;
+      log.warn(`[CP] classifySnapshot: ${requestId} — ${uncertain.length} UNCERTAIN tool(s): ${uncertain.join(', ')}`);
+    } else {
+      // No uncertain tools, but snapshot is non-terminal — mark as classified (clean)
+      snapshot.classifiedAt = new Date().toISOString();
+      this.dirty = true;
+    }
+  }
 
   /**
-   * Mark request as completed successfully.
+   * Phase 4A: Get all UNCERTAIN tools (status 'pending' or 'running') for a session
+   * across all checkpoints. Used for recovery classification after restart.
+   * Returns Map<requestId, toolCallId[]> for all snapshots in the session.
+   */
+  getRunningToolsForSession(sessionId: string): Map<string, string[]> {
+    const result = new Map<string, string[]>();
+    for (const snapshot of this.snapshots.values()) {
+      if (snapshot.sessionId !== sessionId) continue;
+      const uncertain: string[] = [];
+      for (const cycle of snapshot.cycles) {
+        for (const [toolCallId, status] of Object.entries(cycle.toolStatus)) {
+          if (status === 'pending' || status === 'running') uncertain.push(toolCallId);
+        }
+      }
+      if (uncertain.length > 0) {
+        result.set(snapshot.requestId, uncertain);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * R2 §6 — proven-completed tool call IDs for an in-progress snapshot.
    * P0: persist terminal state IMMEDIATELY (not waiting for periodic flush) —
    * otherwise disk keeps the last in_progress file and restart resurrects the task.
    */

@@ -350,6 +350,28 @@ export class Engine extends EventEmitter {
       this.checkpointStore.flushSync(); // persist recovery annotations immediately
     }
 
+    // ── PHASE 4A: Classify old snapshots for UNCERTAIN tools ──
+    // Tools with status='running' at crash = UNCERTAIN (may or may not have executed).
+    // Does NOT auto-resume. Only classifies and logs warnings.
+    let uncertainCount = 0;
+    const allInProgress = this.checkpointStore.getAllInProgress();
+    for (const cp of allInProgress) {
+      this.checkpointStore.classifySnapshot(cp.requestId);
+      if (cp.uncertainTools && cp.uncertainTools.length > 0) {
+        uncertainCount += cp.uncertainTools.length;
+        for (const toolId of cp.uncertainTools) {
+          log.warn(
+            `[PHASE4A] UNCERTAIN: ${cp.requestId} (${cp.sessionId}) — tool ${toolId} was running at crash. ` +
+            `External side effect status unknown. Manual verification recommended.`,
+          );
+        }
+      }
+    }
+    if (uncertainCount > 0) {
+      log.warn(`[PHASE4A] ${uncertainCount} UNCERTAIN tool(s) classified across ${allInProgress.length} in-progress snapshot(s)`);
+      await this.checkpointStore.flush();
+    }
+
     // ── TASK QUEUE: Initialize and start background worker ──
     await this.taskQueue.init();
     // Wire engine's processInner as the executor for background tasks
@@ -954,6 +976,20 @@ LƯU Ý:
 - items là mảng các string mô tả bước công việc.
 - Không tạo plan sau khi đã có câu trả lời cuối cùng cho request này.
 `;
+    }
+
+    // ── PHASE 4A: Inject UNCERTAIN tool warnings into planContext ──
+    // classifySnapshot() marks tools with status 'pending' or 'running' as UNCERTAIN
+    // after restart. The LLM must see this to avoid blindly retrying potentially
+    // dangerous side effects. Retrieved via existing getRunningToolsForSession().
+    const uncertainToolsForSession = this.checkpointStore.getRunningToolsForSession(sessionId);
+    if (uncertainToolsForSession.size > 0) {
+      const uncertainLines: string[] = [];
+      for (const [requestId, tools] of uncertainToolsForSession) {
+        uncertainLines.push(`- ${requestId}: ${tools.join(', ')}`);
+      }
+      const uncertainSection = `\n⚠️ UNCERTAIN TOOLS (post-restart):\n${uncertainLines.join('\n')}\nThese tools were pending/running at crash. Their external side-effect status is UNKNOWN. Do NOT assume they succeeded. Do NOT blindly retry. Consciously verify or decide recovery action.\n`;
+      planContext = planContext ? `${planContext}${uncertainSection}` : uncertainSection;
     }
 
     // Build system prompt WITHOUT planContext first (B1: protect from truncation)
