@@ -27,7 +27,7 @@ export interface ConsequenceHint {
   /** Phase 5: số lần success của pattern (chỉ set khi suggest đến từ success proven). */
   successCount?: number;
   evidenceRef?: { checkpointId?: string; cycle?: number };
-  /** Optional, ngắn (≤120 chars), đã redact, chỉ "tham khảo" — không phải proof. */
+  /** Optional, ngắn (≤120 chars), đã redact, chỉ \"tham khảo\" — không phải proof. */
   lesson?: string;
   reasonCode?: string;
 }
@@ -35,6 +35,7 @@ export interface ConsequenceHint {
 export interface RequestContext {
   sessionId: string;
   taskId: string;
+  checkpointRequestId?: string;
   evidenceLog: EvidenceLog;
   onPlanCreated: (itemCount: number) => void;
   /**

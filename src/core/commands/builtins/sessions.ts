@@ -35,7 +35,7 @@ export const sessionsCommand: Command = {
       lines.push(`🟢 **Đang active:**`);
       lines.push(`  🆔 \`${plan.id.slice(0, 8)}\`...`);
       lines.push(`  🎯 ${plan.goal.slice(0, 50)}`);
-      lines.push(`  📊 ${plan.status} — ${plan.items.filter(i => i.status === 'completed').length}/${plan.items.length} items`);
+      lines.push(`  📊 ${plan.status} — ${plan.items.filter((i: any) => i.status === 'completed').length}/${plan.items.length} items`);
       lines.push(`  ⏱️ ${age}`);
       lines.push('');
     }

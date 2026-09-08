@@ -782,8 +782,19 @@ export class Engine extends EventEmitter {
     const userMessage = request.messages[request.messages.length - 1]?.content || '';
     const taskId = `task-${Date.now()}`;
     const sessionId = request.sessionId || 'default';
-    const requestId = request.sessionId || `req-${Date.now()}`;
-    R.state({ event: 'RECEIVED', requestId, taskId });
+    const requestId = request.sessionId || `req-${Date.now()}`; // Keep original requestId semantic
+
+    let checkpointRequestId: string;
+    const existingActiveCheckpointId = this.checkpointStore.getActiveTaskForSession(sessionId);
+    if (existingActiveCheckpointId) {
+      checkpointRequestId = existingActiveCheckpointId;
+      log.info(`[Engine] Resuming session ${sessionId} with existing checkpoint ${existingActiveCheckpointId}`);
+    } else {
+      checkpointRequestId = taskId; // New execution, new checkpoint
+      log.info(`[Engine] Starting new execution for session ${sessionId} with new checkpoint ${checkpointRequestId}`);
+    }
+
+    R.state({ event: 'RECEIVED', requestId, taskId }); // Use original requestId for R.state
 
     // ── Per-request context via AsyncLocalStorage (eliminates concurrent-request races) ──
     // ADR-000 §2P3: per-request state must live in AsyncLocalStorage with a scoped
@@ -795,6 +806,7 @@ export class Engine extends EventEmitter {
     const rctx: import('../request-context.js').RequestContext = {
       sessionId,
       taskId,
+      checkpointRequestId, // Pass checkpointRequestId to RequestContext
       // userId permanent (không đổi theo /new) — cùng convention với rate-limit
       // (engine.ts:549 actualUserId = request.userId || 'anonymous')
       userId: request.userId || 'anonymous',
@@ -805,7 +817,7 @@ export class Engine extends EventEmitter {
       signal: request.abortSignal,
     };
     return requestContext.run(rctx, () => this.processInnerScoped(request, cacheKey, {
-      startTime, userMessage, taskId, sessionId, requestId,
+      startTime, userMessage, taskId, sessionId, requestId, checkpointRequestId, // Pass all identities
     }));
   }
 
@@ -817,27 +829,32 @@ export class Engine extends EventEmitter {
   private async processInnerScoped(
     request: EngineRequest,
     cacheKey: string,
-    meta: { startTime: number; userMessage: string; taskId: string; sessionId: string; requestId: string },
+    meta: { startTime: number; userMessage: string; taskId: string; sessionId: string; requestId: string; checkpointRequestId: string }, // Add checkpointRequestId to meta
   ): Promise<EngineResponse> {
-    const { startTime, userMessage, taskId, sessionId, requestId } = meta;
+    const { startTime, userMessage, taskId, sessionId, requestId, checkpointRequestId } = meta; // Destructure checkpointRequestId
 
     // ── CHECKPOINT: Start tracking this request ──
-    // Fix C (ADR-000 §1): single source of truth — session already has an active
-    // task (rebuilt from disk on boot) → do NOT create a duplicate checkpoint.
-    // Fix A — identity freshness: on resume, activeTaskBySession may hold the
-    // dead requestId from a previous run. Update the map to the CURRENT requestId
-    // so admission/control references the live identity.
-    const existingTaskId = this.checkpointStore.getActiveTaskForSession(sessionId);
-    if (existingTaskId) {
-      log.warn(`[Engine] Session ${sessionId} already has active task ${existingTaskId} — reusing, skipping duplicate creation`);
-      // Refresh activeTaskBySession to current requestId (identity freshness)
-      this.checkpointStore.setActiveTaskForSession(sessionId, requestId);
+    const existingActiveCheckpointId = this.checkpointStore.getActiveTaskForSession(sessionId);
+
+    // Logic: If there is an existing active checkpoint that is NOT the same as the current checkpointRequestId
+    // (meaning, we are trying to start a NEW checkpoint when an old one exists, or something is out of sync)
+    // OR if there is NO existing checkpoint (meaning this is definitely a new start)
+    // then call checkpointStore.start.
+    // Otherwise, the existing checkpoint is already the one we want to resume,
+    // so just ensure activeTaskBySession points to it.
+    if (!existingActiveCheckpointId || existingActiveCheckpointId !== checkpointRequestId) {
+        // This is either a completely new execution (no existing checkpoint)
+        // or an attempt to start a new checkpoint while an old one is still active.
+        // In the latter case, we explicitly overwrite the old active task mapping.
+        this.checkpointStore.start(taskId, sessionId, userMessage.slice(0, 200), checkpointRequestId);
     } else {
-      this.checkpointStore.start(taskId, sessionId, typeof userMessage === 'string' ? userMessage.slice(0, 200) : 'Non-text task');
+        // We are resuming an existing checkpoint and activeTaskBySession is already correct.
+        log.debug(`[Engine] Reusing existing checkpoint ${checkpointRequestId} for session ${sessionId}`);
     }
-    
+
     // Publish task_started event
-    this.eventLogger.taskStarted(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task');
+    // Use taskId for the event, as it represents the current execution identity.
+    this.eventLogger.taskStarted(taskId, userMessage.substring(0, 200));
 
     // ── MEMORY RECALL (Phase 1) ──
     // Query memory store for relevant context before building prompt
@@ -899,9 +916,9 @@ export class Engine extends EventEmitter {
       // Nếu plan bị stuck → inject thông điệp khác hẳn (output contract)
       if (activePlan.status === 'stuck') {
         const stuckItem = activePlan.items[activePlan.currentItemIndex];
-        const completedItems = activePlan.items.filter(i => i.status === 'completed');
+        const completedItems = activePlan.items.filter((i: any) => i.status === 'completed');
         const completedStr = completedItems.length > 0
-          ? completedItems.map(i => `- ✅ Item ${i.index}: ${i.description}`).join('\n')
+          ? completedItems.map((i: any) => `- ✅ Item ${i.index}: ${i.description}`).join('\n')
           : '(chưa có)';
         const stuckLines = stuckItem
           ? `⚠️ Đang bị kẹt ở bước: ${stuckItem.description}
@@ -926,7 +943,7 @@ ${stuckLines}
         log.info(`[Engine] Plan ${activePlan.id} is stuck at item ${activePlan.currentItemIndex}`);
       } else {
         // Build normal active plan context
-        const itemLines = activePlan.items.map(item => {
+        const itemLines = activePlan.items.map((item: any) => {
           const check = item.status === 'completed' ? '[✅]' :
                         item.status === 'in_progress' ? '[🔄]' :
                         item.status === 'failed' ? '[❌]' :
@@ -935,7 +952,7 @@ ${stuckLines}
           const result = item.resultSummary ? ` — ${item.resultSummary}` : '';
           const err = item.error ? ` ⚠️ ${item.error}` : '';
           return `${check} Item ${item.index}: ${item.description}${result}${err}`;
-        }).join('\n');
+        }).join('\\n');
 
         planContext = `## 📋 KẾ HOẠCH HIỆN TẠI (Active Task Plan)
 ID: ${activePlan.id}
@@ -1056,7 +1073,7 @@ LƯU Ý:
       let contract = `⏸️ **Plan paused** — đã dùng ${result.toolCycles} tool cycles (giới hạn ${this.agent.getMaxToolCycles()}).\n\n`;
       if (plan) {
         const stats = { completed: 0, skipped: 0, failed: 0, inProgress: 0, pending: 0 };
-        for (const i of plan.items) {
+        for (const i of plan.items as any[]) {
           if (i.status === 'completed') stats.completed++;
           else if (i.status === 'skipped') stats.skipped++;
           else if (i.status === 'failed') stats.failed++;
@@ -1078,7 +1095,7 @@ LƯU Ý:
       return { content: contract, modelUsed: 'paused_limit', providerUsed: 'paused_limit' };
     };
 
-    const agentRequest: EngineRequest = { ...request, systemPrompt, checkpointRequestId: taskId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
+    const agentRequest: EngineRequest = { ...request, systemPrompt, checkpointRequestId, currentGoal: typeof userMessage === 'string' ? userMessage.slice(0, 200) : undefined };
 
     try {
       R.waitBegin({ requestId, label: 'agent.run', callerFile: 'engine.ts', callerLine: 700 });
@@ -1123,9 +1140,9 @@ LƯU Ý:
       // ── CHECKPOINT: terminal state theo outcome thật ──
       if (outcomeIsFailure) {
         log.warn(`[P2] Outcome failure (${result.content.slice(0, 60)}…) — checkpoint.failed thay vì complete`);
-        this.checkpointStore.failed(taskId, { message: result.content.substring(0, 500) });
+        this.checkpointStore.failed(checkpointRequestId, { message: result.content.substring(0, 500) });
       } else {
-        this.checkpointStore.complete(taskId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
+        this.checkpointStore.complete(checkpointRequestId, { content: result.content, modelUsed: result.modelUsed, providerUsed: result.providerUsed });
       }
 
       return {
@@ -1157,7 +1174,7 @@ LƯU Ý:
       this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', false, duration, agentErr.message);
       
       // ── CHECKPOINT: Mark failure ──
-      this.checkpointStore.failed(taskId, { message: agentErr.message, stack: agentErr.stack });
+      this.checkpointStore.failed(checkpointRequestId, { message: agentErr.message, stack: agentErr.stack });
 
       // ponytail (gateway-cancel-source): abort không phải lỗi — rethrow để catch
       // chung (engine.ts:632) trả '🛑 Đã hủy yêu cầu.' thay vì thông báo lỗi.

@@ -48,13 +48,13 @@ export function derivePlanState(
     if (plan.status === 'aborted') return { kind: 'aborted', planId: plan.id };
 
     // Non-terminal: find active item
-    const activeIndex = plan.items.findIndex(i => i.status !== 'completed');
+    const activeIndex = plan.items.findIndex((i: any) => i.status !== 'completed');
     if (activeIndex === -1) return { kind: 'completed', planId: plan.id }; // fallback — all done
-
+1
     // Determine planning vs executing: have any tool calls happened?
     // If plan has any item that was ever touched (in_progress, failed, skipped), we're executing.
     const hasExecutionEvidence = plan.items.some(
-      i => i.status === 'in_progress' || i.status === 'failed' || i.status === 'skipped',
+      (i: any) => i.status === 'in_progress' || i.status === 'failed' || i.status === 'skipped',
     );
 
     return hasExecutionEvidence

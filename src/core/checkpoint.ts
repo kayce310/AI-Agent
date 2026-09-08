@@ -30,7 +30,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from './logger.js';
-import type { TaskPlan } from './plan/types.js';
+import { getRequestContext } from './request-context.js';
+import { TaskPlan } from './plan/types.js';
 import { atomicWriteFileSync } from './atomic-write.js';
 
 const log = new Logger({ module: 'Checkpoint' });
@@ -57,6 +58,7 @@ export interface ToolCallSnapshot {
 
 export interface CheckpointSnapshot {
   requestId: string;
+  checkpointRequestId?: string;
   sessionId: string;
   status: 'started' | 'in_progress' | 'completed' | 'failed';
   startedAt: string;
@@ -141,18 +143,20 @@ export class CheckpointStore {
    * Start a new request checkpoint.
    * Called when Engine.processInner() begins.
    */
-  start(requestId: string, sessionId: string, currentGoal: string): void {
-    this.snapshots.set(requestId, {
-      requestId,
+  start(requestId: string, sessionId: string, currentGoal: string, checkpointRequestId?: string): void {
+    const cpRequestId = checkpointRequestId ?? requestId; // Use provided checkpointRequestId or the current requestId
+    this.snapshots.set(cpRequestId, { // Use cpRequestId as the key
+      requestId, // Store the actual execution requestId
+      checkpointRequestId: cpRequestId, // Persist the checkpoint identity
       sessionId,
       status: 'started',
       startedAt: new Date().toISOString(),
       cycles: [],
     });
     // Fix C: this requestId is now the active task for the session
-    this.activeTaskBySession.set(sessionId, requestId);
+    this.activeTaskBySession.set(sessionId, cpRequestId); // activeTaskBySession should point to checkpoint
     this.dirty = true;
-    log.info(`[CP] start: ${requestId} — "${currentGoal.slice(0, 60)}"`);
+    log.info(`[CP] start: ${requestId} (CP: ${cpRequestId}) — "${currentGoal.slice(0, 60)}"`);
   }
 
   /**
@@ -160,14 +164,19 @@ export class CheckpointStore {
    * Called after tool execution finishes in Agent.executeReActLoop().
    */
   cycle(
-    requestId: string,
+    requestId: string, // This is the execution taskId
     cycle: number,
     currentGoal: string,
     toolCalls: { id: string; name: string; args: Record<string, unknown> }[],
     toolResults: { id: string; result: unknown }[],
   ): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId; // Use checkpointRequestId from context or execution taskId
+
+    const snapshot = this.snapshots.get(cpRequestId); // Lookup with checkpointRequestId
     if (!snapshot) return;
+
+    snapshot.requestId = requestId; // Update with current execution ID
 
     const pending: ToolCallSnapshot[] = [];
     const completed: ToolCallSnapshot[] = [];
@@ -208,7 +217,10 @@ export class CheckpointStore {
    * If crash happens mid-tool, restore will see 'running' → skip re-execution.
    */
   markToolRunning(requestId: string, toolCallId: string): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot) return;
     const lastCycle = snapshot.cycles[snapshot.cycles.length - 1];
     if (!lastCycle) return;
@@ -226,7 +238,10 @@ export class CheckpointStore {
    * Neither has completion proof via checkpoint.cycle().
    */
   classifySnapshot(requestId: string): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot || (snapshot.status !== 'in_progress' && snapshot.status !== 'started')) return;
     const uncertain: string[] = [];
     for (const cycle of snapshot.cycles) {
@@ -276,17 +291,21 @@ export class CheckpointStore {
    * otherwise disk keeps the last in_progress file and restart resurrects the task.
    */
   complete(requestId: string, result: { content: string; modelUsed: string; providerUsed: string }): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot) return;
     snapshot.status = 'completed';
     snapshot.result = result;
+    snapshot.requestId = requestId; // Update with current execution ID
     // Fix C: task done — clear active mapping for this session
-    if (this.activeTaskBySession.get(snapshot.sessionId) === requestId) {
+    if (this.activeTaskBySession.get(snapshot.sessionId) === cpRequestId) { // Check against cpRequestId
       this.activeTaskBySession.delete(snapshot.sessionId);
     }
     this.dirty = true;
-    this.persistTerminal(requestId);
-    log.info(`[CP] complete: ${requestId} — ${result.modelUsed}`);
+    this.persistTerminal(cpRequestId); // Persist with cpRequestId
+    log.info(`[CP] complete: ${requestId} (CP: ${cpRequestId}) — ${result.modelUsed}`);
   }
 
   /**
@@ -294,29 +313,33 @@ export class CheckpointStore {
    * P0: same immediate-persist guarantee as complete().
    */
   failed(requestId: string, error: { message: string; stack?: string }): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot) return;
     snapshot.status = 'failed';
     snapshot.error = error;
+    snapshot.requestId = requestId; // Update with current execution ID
     // Fix C: task done — clear active mapping for this session
-    if (this.activeTaskBySession.get(snapshot.sessionId) === requestId) {
+    if (this.activeTaskBySession.get(snapshot.sessionId) === cpRequestId) { // Check against cpRequestId
       this.activeTaskBySession.delete(snapshot.sessionId);
     }
     this.dirty = true;
-    this.persistTerminal(requestId);
-    log.info(`[CP] failed: ${requestId} — ${error.message.slice(0, 100)}`);
+    this.persistTerminal(cpRequestId); // Persist with cpRequestId
+    log.info(`[CP] failed: ${requestId} (CP: ${cpRequestId}) — ${error.message.slice(0, 100)}`);
   }
 
   // ── P0/P1: terminal-state durable write ──
   // Ghi snapshot terminal (completed/failed) xuống disk NGAY, rồi xóa toàn bộ
   // chain cp-{requestId}-*.json cũ — disk giữ đúng 1 file terminal mới nhất.
   // Thứ tự ghi-trước-xóa-sau: crash giữa chừng không làm mất terminal state.
-  private persistTerminal(requestId: string): void {
-    const snapshot = this.snapshots.get(requestId);
+  private persistTerminal(cpRequestId: string): void {
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot) return;
     const now = Date.now();
-    const filePath = path.join(this.config.checkpointDir, `cp-${requestId}-${now}.json`);
-    const prefix = `cp-${requestId}-`;
+    const filePath = path.join(this.config.checkpointDir, `cp-${cpRequestId}-${now}.json`);
+    const prefix = `cp-${cpRequestId}-`;
     // R2 §3: tmp+rename — bare writeFileSync can tear on crash mid-write
     atomicWriteFileSync(filePath, JSON.stringify(snapshot, null, 2));
     const basename = path.basename(filePath);
@@ -325,7 +348,7 @@ export class CheckpointStore {
         try { fs.unlinkSync(path.join(this.config.checkpointDir, f)); } catch { /* locked/in-use */ }
       }
     }
-    log.info(`[CP] terminal persist: ${requestId} → ${basename} (${snapshot.status}), cleaned ${prefix}* chain`);
+    log.info(`[CP] terminal persist: ${cpRequestId} → ${basename} (${snapshot.status}), cleaned ${prefix}* chain`);
   }
 
   // ── Plan Management (State-Driven Task Plan) ──
@@ -336,8 +359,13 @@ export class CheckpointStore {
   setPlan(sessionId: string, plan: TaskPlan): void {
     this.plans.set(sessionId, plan);
     // also mirror onto active snapshot for persistence/restore
-    const snapshot = this.getLatestForSession(sessionId);
-    if (snapshot) snapshot.plan = plan;
+    const cpRequestId = this.getActiveTaskForSession(sessionId); // Get the active checkpoint ID
+    if (cpRequestId) {
+      const snapshot = this.snapshots.get(cpRequestId); // Get snapshot using cpRequestId
+      if (snapshot) {
+        snapshot.plan = plan;
+      }
+    }
     this.dirty = true;
     log.info(`[CP] setPlan: session=${sessionId} plan=${plan.id} status=${plan.status} items=${plan.items.length}`);
   }
@@ -375,8 +403,8 @@ export class CheckpointStore {
      * Fix A: update the active task mapping for a session.
      * Used to refresh identity freshness when a task resumes after restart.
      */
-    setActiveTaskForSession(sessionId: string, requestId: string): void {
-      this.activeTaskBySession.set(sessionId, requestId);
+    setActiveTaskForSession(sessionId: string, cpRequestId: string): void {
+      this.activeTaskBySession.set(sessionId, cpRequestId);
       this.dirty = true;
     }
 
@@ -425,7 +453,8 @@ export class CheckpointStore {
           const content = fs.readFileSync(path.join(this.config.checkpointDir, file), 'utf-8');
           const data = JSON.parse(content);
           if (data.requestId && data.sessionId) {
-            this.snapshots.set(data.requestId, data as CheckpointSnapshot);
+            const cpRequestId = data.checkpointRequestId ?? data.requestId;
+            this.snapshots.set(cpRequestId, data as CheckpointSnapshot);
           }
         } catch { /* skip corrupt files */ }
       }
@@ -476,7 +505,8 @@ export class CheckpointStore {
         log.warn(`⚠️ Found ${inProgress.length} in-progress task(s) from previous run:`);
         for (const cp of inProgress) {
           log.warn(`   ${cp.requestId} (${cp.sessionId}) — ${cp.cycles.length} cycle(s) recorded`);
-          this.activeTaskBySession.set(cp.sessionId, cp.requestId);
+          const cpId = cp.checkpointRequestId ?? cp.requestId;
+          this.activeTaskBySession.set(cp.sessionId, cpId);
         }
       }
     } catch (err: any) {
@@ -571,7 +601,10 @@ export class CheckpointStore {
    * A tool is PROVEN done only if a finished cycle recorded it completed.
    */
   getProvenCompletedToolIds(requestId: string): Set<string> {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot) return new Set();
     const done = new Set<string>();
     for (const cycle of snapshot.cycles) {
@@ -585,7 +618,10 @@ export class CheckpointStore {
 
   /** R2 §B: annotate a snapshot as recovered-at-boot (once, idempotent). */
   markRecovered(requestId: string, note: string): void {
-    const snapshot = this.snapshots.get(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
     if (!snapshot || snapshot.recovery) return;
     const proven = this.getProvenCompletedToolIds(requestId).size;
     snapshot.recovery = {
