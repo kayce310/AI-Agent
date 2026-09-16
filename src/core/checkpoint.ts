@@ -45,6 +45,7 @@ export interface CycleData {
   completedActions: ToolCallSnapshot[];
   toolResultsSummary: string;
   toolStatus: Record<string, ToolStatus>;
+  conflicts?: ConflictRecord[]; // ponytail: track conflicts detected in this cycle
 }
 
 export type ToolStatus = 'pending' | 'running' | 'completed';
@@ -54,6 +55,19 @@ export interface ToolCallSnapshot {
   name: string;
   args: Record<string, unknown>;
   status: ToolStatus;
+  result?: unknown; // ponytail: added to track result for conflict detection
+}
+
+/**
+ * Conflict detection record — immutable fact that two facts contradict.
+ * Does NOT resolve conflict; just marks it for later policy decision.
+ */
+export interface ConflictRecord {
+  conflict_id: string;
+  fact_ids: [string, string]; // ponytail: [toolCallId_A, toolCallId_B]
+  type: 'contradictory_result' | 'duplicate';
+  detected_at: string;
+  detected_by: string; // e.g., 'checkpointstore'
 }
 
 export interface CheckpointSnapshot {
@@ -200,14 +214,57 @@ export class CheckpointStore {
       })
       .join(' | ');
 
-    snapshot.cycles.push({
+    // ponytail: Detect conflicts in this cycle
+    // Conflict = same tool name with contradictory results
+    const conflicts: ConflictRecord[] = [];
+    const toolsByName = new Map<string, ToolCallSnapshot[]>();
+    for (const tc of completed) {
+      const name = tc.name;
+      if (!toolsByName.has(name)) toolsByName.set(name, []);
+      toolsByName.get(name)!.push(tc);
+    }
+    
+    // Check for contradictory results on same tool
+    for (const [toolName, calls] of toolsByName) {
+      if (calls.length < 2) continue; // No conflict if only one call
+      
+      // ponytail: Check if results differ on same tool in same cycle
+      for (let i = 0; i < calls.length; i++) {
+        for (let j = i + 1; j < calls.length; j++) {
+          const callA = calls[i];
+          const callB = calls[j];
+          const resultA = toolResults.find(r => r.id === callA.id)?.result;
+          const resultB = toolResults.find(r => r.id === callB.id)?.result;
+          
+          // Detect contradiction: different success/failure on same tool
+          if (resultA !== resultB && resultA !== undefined && resultB !== undefined) {
+            conflicts.push({
+              conflict_id: `conflict-${cpRequestId}-${cycle}-${callA.id}-${callB.id}`,
+              fact_ids: [callA.id, callB.id],
+              type: 'contradictory_result',
+              detected_at: new Date().toISOString(),
+              detected_by: 'checkpointstore',
+            });
+            log.warn(`[CP] Conflict detected: ${toolName} — ${callA.id} vs ${callB.id}`);
+          }
+        }
+      }
+    }
+
+    const cycleData: CycleData = {
       cycle,
       currentGoal,
       pendingActions: pending,
       completedActions: completed,
       toolResultsSummary: toolResultsSummary.slice(0, 500),
       toolStatus,
-    });
+    };
+    
+    if (conflicts.length > 0) {
+      cycleData.conflicts = conflicts;
+    }
+    
+    snapshot.cycles.push(cycleData);
     snapshot.status = 'in_progress';
     this.dirty = true;
   }

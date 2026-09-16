@@ -26,7 +26,30 @@
  *   All other transitions are INVALID.
  */
 
-export type PlanItemStatus = 'pending' | 'in_progress' | 'completed' | 'skipped' | 'failed';
+export type PlanItemStatus = 'pending' | 'in_progress' | 'awaiting_verification' | 'completed' | 'skipped' | 'failed' | 'escalated';
+
+export interface AcceptanceCriterion {
+  id: string;
+  description: string;
+  tracesTo: string; // id of goal clause or planner intent
+  mechanism: 'runtime' | 'llm';
+  independence: 'same_context' | 'independent';
+  required: boolean;
+  provenance: 'planner' | 'executor';
+  planVersion: string;
+  createdAt: number;
+  evaluatorId?: string; // for mechanism="runtime"
+}
+
+export type EvaluationOutcome = 'pending' | 'pass' | 'fail' | 'inconclusive';
+
+export interface CriterionEvaluation {
+  criterionId: string;
+  outcome: EvaluationOutcome;
+  evidence?: string;
+  evaluatedAt: number;
+  reasoning?: string;
+}
 
 export interface PlanItem {
   index: number;
@@ -42,20 +65,23 @@ export interface PlanItem {
    *  Không cộng vào consecutiveFailedAttempts — transient có thể tự khỏi.
    *  Khi vượt MAX_TRANSIENT_RETRY thì chuyển xử lý như permanent. */
   consecutiveTransientAttempts?: number;  // default 0
-  /** Nhóm tool được coi là "đủ bằng chứng" cho item này.
-   *  Nếu undefined hoặc rỗng, fallback: chỉ cần evidence log không rỗng. */
+  /** @deprecated dùng AcceptanceCriterion thay thế. */
   requiredToolGroups?: string[];
+  /** Acceptance criteria for this item. */
+  criteria?: AcceptanceCriterion[];
 }
 
 export type PlanStatus =
   | 'pending'          // vừa tạo, chưa chạy bước nào
   | 'running'          // đang thực thi
+  | 'awaiting_verification' // evidence đủ nhưng cần verifier
   | 'waiting_user'     // cần user quyết định (VD: xác nhận hành động rủi ro)
   | 'paused_limit'     // dừng vì chạm resource limit (maxToolCycles) — KHÁC waiting_user
   | 'completed'
   | 'failed'
   | 'aborted'          // user chủ động hủy qua update_plan(action: 'abort')
-  | 'stuck';           // bị kẹt lặp lại cùng vấn đề, cần user quyết định hướng đi khác
+  | 'stuck'           // bị kẹt lặp lại cùng vấn đề, cần user quyết định hướng đi khác
+  | 'escalated';       // runtime không thể tiếp tục an toàn trong budget
 
 export interface TaskPlan {
   id: string;
@@ -183,10 +209,12 @@ const VALID_TRANSITIONS: Record<PlanStatus, PlanStatus[]> = {
   // pending → stuck cũng thật: runaway với empty content (E1/E2) làm stagnation đếm
   // failure khi plan chưa bao giờ promote — fuse phải park được plan (agent.ts:1133).
   pending:       ['running', 'aborted', 'paused_limit', 'stuck'],
-  running:       ['running', 'completed', 'paused_limit', 'waiting_user', 'failed', 'aborted', 'stuck'],
+  running:       ['running', 'completed', 'paused_limit', 'waiting_user', 'failed', 'aborted', 'stuck', 'awaiting_verification', 'escalated'],
+  awaiting_verification: ['completed', 'running', 'failed', 'aborted'],
   paused_limit:  ['running', 'aborted'],
   waiting_user:  ['running', 'aborted'],
   stuck:         ['running', 'aborted'],
+  escalated:     [],
   completed:     [],
   failed:        [],
   aborted:       [],

@@ -29,7 +29,7 @@ describe('P2: isFailureOutcome — nhận diện structured outcome (E1/E2/E3)',
     const { isFailureOutcome } = await import('../src/core/engine/engine.js');
     expect(isFailureOutcome('[E1] ❌ Coral chưa hoàn tất yêu cầu. Model trả về nội dung rỗng.')).toBe(true);
     expect(isFailureOutcome('[E2] ❌ Coral gặp sự cố khi xử lý yêu cầu. Model trả về phản hồi rỗng.')).toBe(true);
-    expect(isFailureOutcome('[E3] ❌ Agent stalled after plan creation: 3 consecutive turns without tool execution.')).toBe(true);
+    expect(isFailureOutcome('[E3] ❌ Agent stalled after plan creation: 6 consecutive turns without tool execution.')).toBe(true);
   });
 
   it('content thường / rỗng → false', async () => {
@@ -56,7 +56,7 @@ describe('P2: engine ghi outcome thật — E3 stalled → success=false + check
       circuitBreakerState: { isHealthy: () => true },
       setMaxToolCycles: vi.fn(),
       run: vi.fn(async () => ({
-        content: '[E3] ❌ Agent stalled after plan creation: 3 consecutive turns without tool execution. Plan may need to be simplified or re-created.',
+        content: '[E3] ❌ Agent stalled after plan creation: 6 consecutive turns without tool execution. Plan may need to be simplified or re-created.',
         modelUsed: 'test',
         providerUsed: 'test',
         toolCycles: 3,

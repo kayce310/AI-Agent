@@ -503,7 +503,7 @@ export class Agent extends EventEmitter {
     // ── Plan state derived from checkpointStore each iteration (ADR-001) ──
     // Không dùng hasCreatedPlan/executionPhase boolean — derive từ getPlan() mỗi vòng lặp.
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
-    const MAX_STALL = 3;           // stall >= 3 → dừng với lỗi rõ ràng
+    const MAX_STALL = 6;           // stall >= 6 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
     let unplannedToolCallCount = 0;
     let planNudgeInjected = false;
@@ -597,6 +597,9 @@ export class Agent extends EventEmitter {
         }
 
         R.waitBegin({ requestId, label: `modelRouter.invoke.cycle${toolCallCycles}`, callerFile: 'agent.ts', callerLine: 476 });
+        // PONYTAIL: Log message context
+        log.info(`[PONYTAIL_DEBUG] sessionId=${request.sessionId} cycle=${toolCallCycles} msgCount=${cycleMessages.length} msgs=${JSON.stringify(cycleMessages, null, 2)}`);
+
         modelResult = await this.circuitBreaker.execute(async () => {
           try {
             if ((this.modelRouter as any).getAdapter('9router')?.invokeStreaming) {
@@ -670,6 +673,9 @@ export class Agent extends EventEmitter {
           R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
           let rawContent = modelResult.content || '';
 
+          // PONYTAIL: debug response
+          log.info(`[PONYTAIL_DEBUG] responseStop sessionId=${request.sessionId} cycle=${toolCallCycles} content=${rawContent.slice(0, 500)}`);
+
           // Phase 3: Extract emotion_tag BEFORE sanitization
           const parsedEmotion = parseEmotionTag(rawContent);
           if (parsedEmotion.valid) {
@@ -721,19 +727,26 @@ export class Agent extends EventEmitter {
           // Duy nhất nguồn sự thật: cấu trúc response có tool call hay không.
           // Không dùng finish_reason, không regex text.
           const turnHasAction = (modelResult.toolCalls?.length > 0) || false;
+          
+          // PONYTAIL: Debug StallCount Data Flow
+          log.info(`[PONYTAIL_DEBUG] Cycle ${toolCallCycles} PRE-RESET: turnHasAction=${turnHasAction}, stallCount=${stallCount}`);
 
           // ── Derive plan state từ checkpointStore (ADR-001: single source of truth) ──
           const planState = derivePlanState(this.checkpointStore, request.sessionId);
           const planIsActive = isGuardActive(planState);
+
+          // PONTAIL: debug stall
+          log.info(`[PONYTAIL_DEBUG] sessionId=${request.sessionId} cycle=${toolCallCycles} turnHasAction=${turnHasAction} planIsActive=${planIsActive} stallCount=${stallCount} modelResult=${JSON.stringify(modelResult).slice(0, 500)}`);
 
           if (!turnHasAction && planIsActive) {
             stallCount++;
             log.warn(`[Stall] Cycle ${toolCallCycles} — stallCount=${stallCount}/${MAX_STALL} (planState=${planState.kind})`);
           } else {
             if (stallCount > 0) {
-              log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter`);
+              log.info(`[Stall] Cycle ${toolCallCycles} — tool call detected, resetting stall counter. Old stallCount=${stallCount}`);
             }
             stallCount = 0;
+            log.info(`[PONYTAIL_DEBUG] Cycle ${toolCallCycles} POST-RESET: stallCount=${stallCount}`);
           }
 
           // Xử lý leo thang theo stallCount

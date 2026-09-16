@@ -899,12 +899,28 @@ export class Engine extends EventEmitter {
     // ponytail: inject cached world state (no re-probe)
     const worldState = worldModel.getState();
 
+    // ── EXPLICIT TASK ADMISSION GATE (BUG A prevention) ──
+    // ponytail: Every new task must be explicitly admitted before inheriting a Plan.
+    // This prevents implicit Plan authority from old execution to new task.
+    let assignedPlanId: string | null = null;
+    const planState = derivePlanState(this.checkpointStore, sessionId);
+    const existingPlan = isGuardActive(planState) ? this.checkpointStore.getPlan(sessionId) : null;
+    
+    if (existingPlan) {
+      // ponytail: MINIMAL scope matching — just check if plan exists
+      // Full semantic matching deferred to later phase.
+      // For now: if Plan exists and is active, admit task to it (conservative).
+      assignedPlanId = existingPlan.id;
+      log.info(`[Engine] Task admitted to existing plan ${assignedPlanId} (scope check deferred)`);
+    } else {
+      log.info(`[Engine] No existing active plan — task will create new plan if needed`);
+    }
+
     // ── STATE-DRIVEN TASK PLAN: Check for active plan ──
     // ADR-001: Use derivePlanState + isGuardActive instead of truthy-check on getPlan().
     // A completed/failed/aborted plan is NOT active — only planning/executing states are.
     let planContext: string | undefined;
-    const planState = derivePlanState(this.checkpointStore, sessionId);
-    const activePlan = isGuardActive(planState) ? this.checkpointStore.getPlan(sessionId) : null;
+    const activePlan = assignedPlanId ? this.checkpointStore.getPlan(sessionId) : null;
     if (activePlan) {
       // Resume paused_limit automatically (no user input needed)
       if (activePlan.status === 'paused_limit') {
