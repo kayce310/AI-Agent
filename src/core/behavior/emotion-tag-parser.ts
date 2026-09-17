@@ -2,7 +2,7 @@
  * @file Emotion Tag Parser — Extract [EMOTION: ...] from LLM response content
  * @layer core/behavior
  * @created 2026-07-23
- * @phase Phase 3 — LLM self-annotation
+ * @phase Phase 3 — LLM self-annotation (DEFERRED PA-3)
  *
  * Parses the [EMOTION: <tag>] marker from LLM output.
  * The marker is injected via PromptBuilder instruction and stripped before
@@ -67,12 +67,20 @@ export function stripEmotionTag(content: string): string {
 
 /**
  * Build the emotion instruction section to inject into the system prompt.
- * This tells the LLM to output [EMOTION: <tag>] at the end of every response.
+ *
+ * PA-0 Decision: Emotion tags (EM-1-6) deferred to PA-3+.
+ * Returns empty string during PA-1 (ASSISTANT baseline).
+ *
+ * TODO PA-3: Uncomment and re-enable emotion tag injection when Phase 3 approved.
  */
 export function buildEmotionInstruction(
   recentEmotions?: string[],
   consistencyWindow?: number,
 ): string {
+  // ponytail: defer EM-1-6 (emotion tags) to PA-3; return empty for PA-1
+  return '';
+
+  /* PA-3 IMPLEMENTATION — currently deferred
   let instruction =
     '\n\n# Emotion Self-Annotation (Behavioral Rendering)\n' +
     'At the END of every response, append exactly ONE emotion tag on its own line:\n' +
@@ -104,4 +112,5 @@ export function buildEmotionInstruction(
   }
 
   return instruction;
+  */
 }
