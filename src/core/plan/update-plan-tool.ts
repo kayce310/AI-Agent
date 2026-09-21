@@ -28,6 +28,7 @@ import { getRequestContext } from '../request-context.js';
 import { canCompleteItem } from './plan-state.js';
 import { DEFAULT_ABANDON_MS, validateTransition, isPlanActive } from './types.js';
 import { Logger } from '../logger.js';
+import { randomUUID } from 'crypto';
 
 const log = new Logger({ module: 'UpdatePlanTool' });
 
@@ -40,9 +41,11 @@ function makePlanId(sessionId: string): string {
 
 /**
  * Create a PlanItem from a description string + index.
+ * Generates a stable id that never changes even if item is reordered.
  */
 function makePlanItem(description: string, index: number): PlanItem {
   return {
+    id: randomUUID(),
     index,
     description,
     status: 'pending',
@@ -200,9 +203,9 @@ ACTIONS:
         }
 
         // ── Evidence-based completion validation ──
-        // Chỉ chấp nhận complete_item nếu có tool call thật đã được thực thi cho item này.
-        // evidenceLog được orchestrator (agent loop) tự động ghi nhận.
-        const evidenceCheck = canCompleteItem(rctx?.evidenceLog, itemIndex);
+        // Validate using item.id as evidenceLog key, not itemIndex.
+        // evidenceLog keys are item.id (stable), itemIndex is just for API contract.
+        const evidenceCheck = canCompleteItem(rctx?.evidenceLog, item.id);
         if (!evidenceCheck.ok) {
           return { error: evidenceCheck.reason!, plan_status: plan.status, plan_id: plan.id };
         }

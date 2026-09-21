@@ -141,7 +141,10 @@ describe('R4-F.1 planning loop coherence (scripted model through real loop)', ()
 
     // F1-AC2 + F1-AC6: every completed item has ≥1 successful REAL work record
     for (let i = 0; i < 3; i++) {
-      const ev = evidenceLog.get(i) ?? [];
+      // Look up evidence by PlanItem.id (stable), not numeric index
+      const plan = store.getPlan(SID)!;
+      const itemId = plan.items[i].id;
+      const ev = evidenceLog.get(itemId) ?? [];
       expect(ev.length, `item ${i} evidence`).toBeGreaterThan(0);
       expect(ev.some(e => e.success && e.toolName === 'r4_work'), `item ${i} has r4_work success`).toBe(true);
       // F1-AC6: no completion claim without evidence — summary present implies work evidence present
@@ -185,7 +188,7 @@ describe('R4-F.1 planning loop coherence (scripted model through real loop)', ()
         if (queue[0]?.toolCalls?.[0]?.id === 'u3') {
           const p = store.getPlan(SID)!;
           prematureItemStillPending = p.items[0].status === 'pending';
-          prematureEvidenceEmpty = (evidenceLog.get(0)?.length ?? 0) === 0;
+          prematureEvidenceEmpty = (evidenceLog.get(p.items[0].id)?.length ?? 0) === 0;
         }
       },
     });
@@ -208,7 +211,7 @@ describe('R4-F.1 planning loop coherence (scripted model through real loop)', ()
     expect(plan.items[1].resultSummary).toBe('did step 1');
 
     // Evidence integrity: item-0 log contains ONLY the real work call (no bookkeeping pollution)
-    const ev0 = evidenceLog.get(0)!;
+    const ev0 = evidenceLog.get(store.getPlan(SID)!.items[0].id)!;
     expect(ev0.map(e => e.toolName)).toEqual(['r4_work']);
     expect(ev0[0].success).toBe(true);
 

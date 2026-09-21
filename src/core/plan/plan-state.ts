@@ -85,22 +85,24 @@ export interface CanCompleteResult {
 /**
  * Validate whether an item can be marked as completed based on evidence.
  * Used by update-plan-tool.ts complete_item action.
+ * @param evidenceLog - Map<itemId, MinimalToolCallRecord[]>
+ * @param itemId - Stable PlanItem.id (NOT itemIndex)
  */
 export function canCompleteItem(
   evidenceLog: EvidenceLog | undefined | null,
-  itemIndex: number,
+  itemId: string,
 ): CanCompleteResult {
-  const evidence = evidenceLog?.get(itemIndex) || [];
+  const evidence = evidenceLog?.get(itemId) || [];
   if (evidence.length === 0) {
     return {
       ok: false,
-      reason: `No evidence of tool execution for item ${itemIndex}. You must actually execute this item (call tools) before calling complete_item. Evidence log is empty.`,
+      reason: `No evidence of tool execution for item ${itemId}. You must actually execute this item (call tools) before calling complete_item. Evidence log is empty.`,
     };
   }
   if (evidence.every(e => !e.success)) {
     return {
       ok: false,
-      reason: `All tool calls for item ${itemIndex} failed. Cannot mark as completed. Consider calling skip_item instead if the task is impossible.`,
+      reason: `All tool calls for item ${itemId} failed. Cannot mark as completed. Consider calling skip_item instead if the task is impossible.`,
     };
   }
   return { ok: true };

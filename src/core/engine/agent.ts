@@ -44,6 +44,9 @@ import { parseEmotionTag, stripEmotionTag } from '../behavior/emotion-tag-parser
 import { getRequestContext } from '../request-context.js';
 import type { ConsequenceHint } from '../request-context.js';
 import { ProgressTracker, type ProgressEvidenceInput } from '../progress/progress-monitor.js';
+import type { ToolCallRecord } from '../plan/types.js';
+import type { MinimalToolCallRecord } from '../plan/types.js';
+import { randomUUID } from 'crypto';
 
 /**
  * Find sentence boundary for clean trimming.
@@ -544,6 +547,8 @@ export class Agent extends EventEmitter {
         const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
         let selectedTools = selectRelevantTools(lastUserMsg);
         log.info(`selectRelevantTools("${lastUserMsg.slice(0,50)}") → ${selectedTools.length} tools: [${selectedTools.map((t:any) => t.function?.name).join(', ')}]`);
+        const hasWebSearch = selectedTools.some((t: any) => t.function?.name === 'web_search');
+        console.log(`[TRACE-AGENT-TOOLS] count=${selectedTools.length}, web_search=${hasWebSearch ? 'YES' : 'NO'}`);
 
         // Fallback: if pruner returned empty (cache miss), use full registry
         if (selectedTools.length === 0) {
@@ -966,16 +971,20 @@ export class Agent extends EventEmitter {
               continue;
             }
 
+            console.log(`[TRACE-AGENT-TOOLCALL] toolName=${toolCall.function.name}, emitted=${modelResult.toolCalls.length > 0 ? 'YES' : 'NO'}`);
+            const rctx = getRequestContext();
             const allowed = await this.hooks.emit('tool:call', {
               sessionId: request.sessionId,
               toolName: toolCall.function.name,
               toolArgs: toolCall.function.arguments,
               cycle: toolCallCycles,
               reasoningContent: modelResult.reasoningContent || null,
+              userRole: rctx?.userRole,
             });
 
             // If guard blocked execution, skip this tool call
             if (!allowed) {
+              console.log(`[TRACE-AGENT-BLOCKED] toolName=${toolCall.function.name}, reason=security_guard`);
               messages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
@@ -995,7 +1004,7 @@ export class Agent extends EventEmitter {
 
             // ── Direct PrivilegeGuard check (defense-in-depth, independent of hook guard) ──
             if (this.enginePrivilegeGuard) {
-              const pgCheck = this.enginePrivilegeGuard.check(toolCall.function.name);
+              const pgCheck = this.enginePrivilegeGuard.check(toolCall.function.name, undefined, toolCall.function.arguments, rctx?.userRole);
               if (!pgCheck.allowed) {
                 messages.push({
                   role: 'tool',
@@ -1045,7 +1054,9 @@ export class Agent extends EventEmitter {
 
             R.state({ event: 'TOOL_RUNNING', requestId, cycle: toolCallCycles, finishReason: toolCall.function.name });
             R.waitBegin({ requestId, label: `tool:${toolCall.function.name}[${toolCall.id.slice(0,8)}]`, callerFile: 'agent.ts', callerLine: 614 });
+            console.log(`[TRACE-TOOL-EXEC-START] toolName=${toolCall.function.name}`);
             const toolResult = await this.toolRegistry.executeToolCall(toolCall);
+            console.log(`[TRACE-TOOL-EXEC-END] toolName=${toolCall.function.name}, hasError=${toolResult && typeof toolResult === 'object' && 'error' in toolResult ? 'YES' : 'NO'}`);
             R.waitEnd({ requestId, label: `tool:${toolCall.function.name}[${toolCall.id.slice(0,8)}]`, callerFile: 'agent.ts', callerLine: 614 });
 
             const resultStr = JSON.stringify(toolResult);
@@ -1111,6 +1122,8 @@ export class Agent extends EventEmitter {
             }
 
             // ── Evidence logging: ghi tool call vào evidenceLog cho item đang active ──
+            // Key by item.id (stable), NOT by itemIndex (positional).
+            // This ensures evidence survives plan reordering and item identity changes.
             try {
               if (this.checkpointStore && request.sessionId) {
                 const sp = this.checkpointStore.getPlan(request.sessionId);
@@ -1118,16 +1131,18 @@ export class Agent extends EventEmitter {
                 // không được log làm evidence, nếu không chính create/complete_item call
                 // sẽ tự chứng minh evidence-gate của item hiện tại (gate vô hiệu trong loop).
                 if (toolCall.function.name !== 'update_plan' && sp && (sp.status === 'pending' || sp.status === 'running')) {
-                  const idx = sp.currentItemIndex;
-                  if (!getRequestContext()?.evidenceLog.has(idx)) getRequestContext()?.evidenceLog.set(idx, []);
-                  const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
-                  getRequestContext()?.evidenceLog.get(idx)!.push({
-                    toolName: toolCall.function.name,
-                    args: toolCall.function.arguments as Record<string, unknown>,
-                    result: toolResult,
-                    timestamp: Date.now(),
-                    success,
-                  });
+                  const currentItem = sp.items[sp.currentItemIndex];
+                  if (currentItem) {
+                    const itemId = currentItem.id;
+                    if (!getRequestContext()?.evidenceLog.has(itemId)) getRequestContext()?.evidenceLog.set(itemId, []);
+                    const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
+                    const record: MinimalToolCallRecord = {
+                      toolName: toolCall.function.name,
+                      timestamp: Date.now(),
+                      success,
+                    };
+                    getRequestContext()?.evidenceLog.get(itemId)!.push(record);
+                  }
                 }
               }
             } catch (_) { /* non-critical */ }
