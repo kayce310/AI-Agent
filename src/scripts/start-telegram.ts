@@ -374,15 +374,24 @@ async function start() {
   console.log(`${ts()} ✅ Gateway running with ${gateway.adapterCount} adapter(s): ${gateway.registeredPlatforms.join(', ')}`);
 
   // Check for restart marker and notify user
-  try {
-    const { readRestartMarker } = await import('./restart-notify.js');
-    const marker = readRestartMarker();
-    if (marker?.chatId) {
-      await bridge.sendMessage(marker.chatId, '✅ Coral đã khởi động lại thành công!');
+    try {
+      const { readRestartMarker } = await import('./restart-notify.js');
+      const marker = readRestartMarker();
+      if (marker?.chatId) {
+        await bridge.sendMessage(marker.chatId, '✅ Coral đã khởi động lại thành công!');
+      }
+    } catch (e) {
+      // Quiet - marker check is best-effort
     }
-  } catch (e) {
-    // Quiet - marker check is best-effort
-  }
+
+    // Write readiness marker so /restart can wait for full startup
+    try {
+      const { writeReadyMarker } = await import('./restart-notify.js');
+      writeReadyMarker();
+      console.log(`${ts()} 🟢 Coral runtime ready — accepting commands`);
+    } catch (e) {
+      // Quiet - readiness marker is best-effort
+    }
 
   // Start Dashboard HTTP/WS server
   try {

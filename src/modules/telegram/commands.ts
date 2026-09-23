@@ -638,32 +638,42 @@ export class CommandRegistry {
 
         // 3) Watchdog: exit only once the child is confirmed alive. If the child
         //    dies during boot we keep the current instance running and tell the
-        //    user — otherwise /restart could leave ZERO processes silently.
-        //    (If the child boots fine, its acquireFileLock kills this process —
-        //    that is the success case; the child sends the "restart done" notice.)
-        let settled = false;
-        const abort = async (why: string) => {
-          if (settled) return;
-          settled = true;
-          log.error(`Restart aborted — ${why}`);
-          try { await notify(`❌ Restart aborted — ${why}. Coral vẫn chạy code cũ.`); } catch {}
-        };
-        child.on('error', (e) => { void abort(`spawn lỗi: ${e.message}`); });
-        child.on('exit', (code) => { void abort(`instance mới thoát sớm (code ${code})`); });
-        child.unref();
+                //    user — otherwise /restart could leave ZERO processes silently.
+                //    (If the child boots fine, its acquireFileLock kills this process —
+                //    that is the success case; the child sends the "restart done" notice.)
+                let settled = false;
+                const abort = async (why: string) => {
+                  if (settled) return;
+                  settled = true;
+                  log.error(`Restart aborted — ${why}`);
+                  try { await notify(`❌ Restart aborted — ${why}. Coral vẫn chạy code cũ.`); } catch {}
+                };
+                child.on('error', (e) => { void abort(`spawn lỗi: ${e.message}`); });
+                child.on('exit', (code) => { void abort(`instance mới thoát sớm (code ${code})`); });
+                child.unref();
 
-        const deadline = Date.now() + 20_000;
-        const watch = setInterval(() => {
-          if (settled) { clearInterval(watch); return; }
-          let alive = true;
-          try { process.kill(child.pid ?? -1, 0); } catch { alive = false; }
-          if (!alive) { clearInterval(watch); void abort('instance mới chết trong lúc khởi động'); return; }
-          if (Date.now() >= deadline) {
-            clearInterval(watch);
-            log.info('Restart: new instance confirmed alive — exiting old process');
-            process.exit(0);
-          }
-        }, 1000);
+                const deadline = Date.now() + 30_000; // Extended deadline for full startup
+                                const watch = setInterval(async () => {
+                                  if (settled) { clearInterval(watch); return; }
+                                  let alive = true;
+                                  try { process.kill(child.pid ?? -1, 0); } catch { alive = false; }
+                                  if (!alive) { clearInterval(watch); void abort('instance mới chết trong lúc khởi động'); return; }
+
+                                  // Check for readiness marker (written by new process after full startup)
+                                  try {
+                                    const { readReadyMarker } = await import('../../scripts/restart-notify.js');
+                                    if (readReadyMarker()) {
+                                      clearInterval(watch);
+                                      log.info('Restart: new instance confirmed READY — exiting old process');
+                                      process.exit(0);
+                                    }
+                                  } catch {}
+
+                                  if (Date.now() >= deadline) {
+                                    clearInterval(watch);
+                                    void abort('timeout chờ instance mới ready');
+                                  }
+                                }, 1000);
       } catch (err: any) {
         log.error(`Restart failed: ${err.message}`);
         try { (globalThis as any).__coral_startTunnel?.(); } catch {}
