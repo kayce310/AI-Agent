@@ -216,7 +216,8 @@ export class PrivilegeGuard {
   check(
     toolName: string,
     tags?: string[],
-    args?: Record<string, unknown>
+    args?: Record<string, unknown>,
+    userRole?: string
   ): PrivilegeCheckResult {
     // ── Path Traversal Check ──
     if (args && Object.keys(args).length > 0) {
@@ -228,6 +229,11 @@ export class PrivilegeGuard {
           reason: `BLOCKED: ${pathCheck.reason}`,
         };
       }
+    }
+
+    // ── ADMIN bypass: admin role allows all tools (path check already passed) ──
+    if (userRole === 'admin') {
+      return { allowed: true, matchedRule: null, reason: 'ADMIN: allow all tools' };
     }
 
     // ── Restricted Mode ──
@@ -351,6 +357,9 @@ export function createDefaultAllowRules(): PrivilegeRule[] {
     { toolPattern: 'process:list', effect: 'allow', reason: 'Explicitly allowed: process list' },
     // orchestration: agent tự ghi sổ plan cho chính nó — không blast radius (P0 fix 2026-08-04)
     { toolPattern: 'plan:*', effect: 'allow', reason: 'Orchestration: internal plan state (no blast radius)' },
+    // ponytail: read-only web search + safe content fetch (Jina reader strips HTML)
+    { toolPattern: 'web_search', effect: 'allow', reason: 'Read-only web search (Tavily API)' },
+    { toolPattern: 'fetch_url', effect: 'allow', reason: 'Safe URL fetch via Jina AI Reader' },
   ];
 }
 
