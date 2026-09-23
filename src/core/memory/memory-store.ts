@@ -28,6 +28,8 @@ import * as path from 'path';
 import 'dotenv/config';
 import { MemoryLog, createMemoryLog, MemoryBlock, MemoryBlockType } from './memory-log.js';
 import { Logger } from '../logger.js';
+import { ContextSource, ContextCandidate, RequestContext, SourceProvenance } from '../context-source.js';
+import { estimateTokenCount } from '../engine/engine.js';
 
 const log = new Logger({ module: 'MemoryStore' });
 
@@ -87,7 +89,43 @@ class SimpleMutex {
   }
 }
 
-export class MemoryStore {
+export class MemoryStore implements ContextSource {
+  id = 'memory';
+  provenance: SourceProvenance = { origin: 'memory', identifier: 'memory-store' };
+  budgetClaim = 1000;
+
+  isActive(sessionId: string, _taskId: string): boolean {
+    return true; // Memory is always active if store is loaded
+  }
+
+  async getCandidates(request: RequestContext): Promise<ContextCandidate[]> {
+    await this.ensureLoaded();
+    const queryText = request.task || request.messages?.[request.messages.length - 1]?.content || '';
+    if (!queryText) return [];
+
+    try {
+      const blocks = await this.query(queryText, { topK: 10, sessionId: request.sessionId });
+      return blocks.map(block => ({
+        id: block.id,
+        content: `[${block.type}] ${block.content.substring(0, 200)}`,
+        sourceId: this.id,
+        provenance: block.source ? {
+          origin: block.source.type === 'user' ? 'user' :
+                  block.source.type === 'tool' ? 'tool_call' :
+                  block.source.type === 'web' ? 'file' :
+                  block.source.type === 'cron' ? 'system' : 'file',
+          identifier: block.source.uri,
+          timestamp: block.timestamp,
+        } : undefined,
+        estimatedTokens: estimateTokenCount(block.content),
+        expiresAt: block.expiresAt,
+      }));
+    } catch (err: any) {
+      log.warn(`MemoryStore.getCandidates() failed: ${err.message}`);
+      return [];
+    }
+  }
+
   private storePath: string;
   private blocks: MemoryBlock[] = [];
   private loaded = false;

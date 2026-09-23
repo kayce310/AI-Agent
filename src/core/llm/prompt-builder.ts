@@ -22,6 +22,8 @@
 
 import { EngineRequest, RequestConstraints, RequestReference } from '../types.js';
 import { buildEmotionInstruction } from '../behavior/emotion-tag-parser.js';
+import { ContextSource, ContextCandidate, RequestContext, SourceProvenance } from '../context-source.js';
+import { estimateTokenCount } from '../engine/engine.js';
 
 /**
  * SECURITY: Sanitize untrusted content from external sources
@@ -164,7 +166,33 @@ interface PromptInput {
   };
 }
 
-export class PromptBuilder {
+export class PromptBuilder implements ContextSource {
+  id = 'identity';
+  provenance: SourceProvenance = { origin: 'system', identifier: 'prompt-builder' };
+  budgetClaim = 500;
+
+  isActive(_sessionId: string, _taskId: string): boolean {
+    return true; // Identity is always active
+  }
+
+  async getCandidates(request: RequestContext): Promise<ContextCandidate[]> {
+    // Build system prompt using existing logic, then wrap as candidate
+    const systemPrompt = this.buildSystem({
+      agentName: 'Coral',
+      mentionPrefix: '@Coral',
+      task: request.task,
+      currentRequest: request.messages?.[request.messages.length - 1]?.content || '',
+    });
+
+    return [{
+      id: `identity-${request.sessionId}`,
+      content: systemPrompt,
+      sourceId: this.id,
+      provenance: this.provenance,
+      estimatedTokens: estimateTokenCount(systemPrompt),
+    }];
+  }
+
   /**
    * Xây dựng system prompt hoàn chỉnh theo 8 tầng
    */

@@ -48,6 +48,9 @@ import { SelfEvolutionLearner } from '../self-evolution/learner.js';
 import { withTimeout } from '../util/with-timeout.js';
 import { CheckpointStore, getCheckpoint } from '../checkpoint.js';
 import { getContextManager } from '../context-window.js';
+import { ContextSourceRegistry } from '../context-registry.js';
+import { ContextCompiler } from '../context-compiler.js';
+import { PlanContextSource } from '../plan/plan-context-source.js';
 import { TaskQueue, getTaskQueue } from '../task-queue.js';
 import { registerConsequenceWritePath, recordPlanTerminal, recordGateReject } from '../memory/consequence-write-path.js';
 import { ConsequenceStore, getConsequenceStore } from '../memory/consequence-store.js';
@@ -866,208 +869,58 @@ export class Engine extends EventEmitter {
     // Use taskId for the event, as it represents the current execution identity.
     this.eventLogger.taskStarted(taskId, userMessage.substring(0, 200));
 
-    // ── MEMORY RECALL (Phase 1) ──
-    // Query memory store for relevant context before building prompt
-    let memoryContext: string | undefined;
-    // Waku-inspired retrieval gate: skip memory for trivial messages (greetings, fillers)
-    const msgStr = typeof userMessage === 'string' ? userMessage : '';
-    const gateDecision = shouldRecallMemory(msgStr);
-    if (gateDecision.shouldRetrieve) {
-      try {
-        const memoryBlocks = await globalMemoryStore.query(userMessage, {
-          topK: 10,
-          sessionId,
-          sourceTypes: ['user', 'web', 'cron', 'legacy'], // ponytail: exclude raw tool blocks — noisy + injection risk
-        });
-        if (memoryBlocks.length > 0) {
-          const memoryLines = memoryBlocks.map((block, i) => {
-            const timeStr = block.timestamp ? new Date(block.timestamp).toLocaleString('vi-VN', { timeZone: 'Asia/Bangkok' }) : 'unknown';
-            const tags = block.tags?.length ? ` [${block.tags.join(', ')}]` : '';
-            return `${i + 1}. [${block.type}${tags}] (${timeStr}): ${block.content.substring(0, 200)}`;
-          });
-          memoryContext = memoryLines.join('\n');
-          log.info(`Memory recall: ${memoryBlocks.length} block(s) for "${msgStr.substring(0, 50)}"`);
-        }
-      } catch (err: any) {
-        log.warn(`Memory recall failed: ${err.message}`);
-      }
-    } else {
-      log.debug(`Memory gate: skipped recall (reason: ${gateDecision.reason})`);
+    // ── CONTEXT ARCHITECTURE (PA-1.5): Register sources and compile context ──
+    const registry = new ContextSourceRegistry();
+
+    // Register identity source (PromptBuilder)
+    const identitySource = new PromptBuilder();
+    registry.register(identitySource);
+
+    // Register memory source
+    registry.register(globalMemoryStore);
+
+    // Register learning source (defensive: learner may be uninitialized in tests)
+    if (this.learner) {
+      registry.register(this.learner);
     }
 
-    // ── LEARNING CONTEXT (Phase 6) ──
-    let learningContext: string | null = null;
-    try {
-      const taskStr = request.task || request.messages[request.messages.length - 1]?.content?.substring(0, 200) || '';
-      if (taskStr) {
-        learningContext = await this.learner.getContext(taskStr);
-      }
-    } catch (err: any) {
-      log.warn(`Learning context fetch failed: ${err.message}`);
-    }
+    // Register world source
+    registry.register(worldModel);
 
-    // ponytail: inject cached world state (no re-probe)
-    const worldState = worldModel.getState();
+    // Register plan source (extracted from inline assembly)
+    const planSource = new PlanContextSource(this.checkpointStore);
+    registry.register(planSource);
 
-    // ── EXPLICIT TASK ADMISSION GATE (BUG A prevention) ──
-    // ponytail: Every new task must be explicitly admitted before inheriting a Plan.
-    // This prevents implicit Plan authority from old execution to new task.
-    let assignedPlanId: string | null = null;
-    const planState = derivePlanState(this.checkpointStore, sessionId);
-    const existingPlan = isGuardActive(planState) ? this.checkpointStore.getPlan(sessionId) : null;
-    
-    if (existingPlan) {
-      // ponytail: MINIMAL scope matching — just check if plan exists
-      // Full semantic matching deferred to later phase.
-      // For now: if Plan exists and is active, admit task to it (conservative).
-      assignedPlanId = existingPlan.id;
-      log.info(`[Engine] Task admitted to existing plan ${assignedPlanId} (scope check deferred)`);
-    } else {
-      log.info(`[Engine] No existing active plan — task will create new plan if needed`);
-    }
-
-    // ── STATE-DRIVEN TASK PLAN: Check for active plan ──
-    // ADR-001: Use derivePlanState + isGuardActive instead of truthy-check on getPlan().
-    // A completed/failed/aborted plan is NOT active — only planning/executing states are.
-    let planContext: string | undefined;
-    const activePlan = assignedPlanId ? this.checkpointStore.getPlan(sessionId) : null;
-    if (activePlan) {
-      // Resume paused_limit automatically (no user input needed)
-      if (activePlan.status === 'paused_limit') {
-        activePlan.status = 'running';
-        this.checkpointStore.setPlan(sessionId, activePlan);
-        log.info(`[Engine] Auto-resumed plan ${activePlan.id} from paused_limit → running`);
-      }
-
-      // Nếu plan bị stuck → inject thông điệp khác hẳn (output contract)
-      if (activePlan.status === 'stuck') {
-        const stuckItem = activePlan.items[activePlan.currentItemIndex];
-        const completedItems = activePlan.items.filter((i: any) => i.status === 'completed');
-        const completedStr = completedItems.length > 0
-          ? completedItems.map((i: any) => `- ✅ Item ${i.index}: ${i.description}`).join('\n')
-          : '(chưa có)';
-        const stuckLines = stuckItem
-          ? `⚠️ Đang bị kẹt ở bước: ${stuckItem.description}
-Đã thử ${stuckItem.consecutiveFailedAttempts || 0} lần liên tiếp không thành công.
-Lỗi gần nhất: ${stuckItem.error || 'N/A'}
-
-Để tiếp tục, bạn có thể:
-- (a) Thử cách khác → gọi tool mới
-- (b) Bỏ qua bước này → update_plan(action='skip_item', item_index=${stuckItem.index}, reason="...")
-- (c) Dừng hẳn → update_plan(action='abort', reason="...")`
-          : '';
-
-        planContext = `## 📋 PLAN BỊ KẸT (Stuck Task Plan)
-ID: ${activePlan.id}
-Mục tiêu: ${activePlan.goal}
-Trạng thái: stuck (bị kẹt), cần bạn quyết định hướng đi khác.
-Các bước trước đó đã hoàn thành:
-${completedStr}
-
-${stuckLines}
-`;
-        log.info(`[Engine] Plan ${activePlan.id} is stuck at item ${activePlan.currentItemIndex}`);
-      } else {
-        // Build normal active plan context
-        const itemLines = activePlan.items.map((item: any) => {
-          const check = item.status === 'completed' ? '[✅]' :
-                        item.status === 'in_progress' ? '[🔄]' :
-                        item.status === 'failed' ? '[❌]' :
-                        item.status === 'skipped' ? '[⏭️]' :
-                        item.status === 'pending' ? '[⬜]' : '[⬜]';
-          const result = item.resultSummary ? ` — ${item.resultSummary}` : '';
-          const err = item.error ? ` ⚠️ ${item.error}` : '';
-          return `${check} Item ${item.index}: ${item.description}${result}${err}`;
-        }).join('\\n');
-
-        planContext = `## 📋 KẾ HOẠCH HIỆN TẠI (Active Task Plan)
-ID: ${activePlan.id}
-Mục tiêu: ${activePlan.goal}
-Trạng thái: ${activePlan.status}
-Vị trí hiện tại: item ${activePlan.currentItemIndex}/${activePlan.items.length}
-
-Các item:
-${itemLines}
-
-⚠️ QUY TẮC: Bạn ĐANG thực thi plan này.
-- Item đang làm: ${activePlan.items[activePlan.currentItemIndex]?.description || 'N/A'}
-- Item đã hoàn thành: GIỮ NGUYÊN, không làm lại.
-- Để đánh dấu item hoàn thành: update_plan(action='complete_item', item_index=N, result_summary="...")
-- Để bỏ qua item lỗi: update_plan(action='skip_item', item_index=N, reason="...")
-- KHÔNG tạo plan mới. KHÔNG gọi update_plan(action='create') khi đã có plan active.
-`;
-      }
-
-      // maxToolCycles luôn là ABSOLUTE_SAFETY_CEILING (cầu chì tuyệt đối, không phải budget công việc)
-      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
-      log.info(`[Engine] Plan ${activePlan.id}: maxToolCycles set to absolute ceiling ${ABSOLUTE_SAFETY_CEILING} (stagnation tracking is primary)`);
-    } else {
-      // No active plan: direct answers can finish immediately; plan only work that needs coordination.
-      // maxToolCycles cũng là ABSOLUTE_SAFETY_CEILING — stagnation tracking là tín hiệu dừng chính
-      this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
-      log.info(`[Engine] No active plan: maxToolCycles set to ${ABSOLUTE_SAFETY_CEILING}`);
-
-      planContext = `## 📋 QUYẾT ĐỊNH LẬP KẾ HOẠCH
-
-Nếu có thể trả lời đầy đủ ngay từ thông tin hiện có (chào hỏi, hỏi đáp đơn giản), hãy trả lời trực tiếp và KHÔNG gọi \`update_plan\`.
-
-Nếu task cần từ hai bước trở lên, cần dùng tool, hoặc có side-effect, hãy gọi \`update_plan(action='create', items=[...])\` trước khi thực thi.
-
-Sau khi tạo plan:
-1. KHÔNG mô tả lại plan bằng văn bản. Gọi NGAY tool thực thi item đầu tiên.
-2. Dùng \`update_plan(action='complete_item', item_index=N, result_summary="...")\` sau mỗi bước có evidence hợp lệ.
-3. Khi hết items → plan tự động completed.
-
-VÍ DỤ ĐÚNG: gọi update_plan(create) → gọi ngay tool để thực thi item 0 → complete_item(0) → item 1 → ... → hết items thì plan tự completed.
-
-LƯU Ý:
-- items là mảng các string mô tả bước công việc.
-- Không tạo plan sau khi đã có câu trả lời cuối cùng cho request này.
-`;
-    }
-
-    // ── PHASE 4A: Inject UNCERTAIN tool warnings into planContext ──
-    // classifySnapshot() marks tools with status 'pending' or 'running' as UNCERTAIN
-    // after restart. The LLM must see this to avoid blindly retrying potentially
-    // dangerous side effects. Retrieved via existing getRunningToolsForSession().
-    const uncertainToolsForSession = this.checkpointStore.getRunningToolsForSession(sessionId);
-    if (uncertainToolsForSession.size > 0) {
-      const uncertainLines: string[] = [];
-      for (const [requestId, tools] of uncertainToolsForSession) {
-        uncertainLines.push(`- ${requestId}: ${tools.join(', ')}`);
-      }
-      const uncertainSection = `\n⚠️ UNCERTAIN TOOLS (post-restart):\n${uncertainLines.join('\n')}\nThese tools were pending/running at crash. Their external side-effect status is UNKNOWN. Do NOT assume they succeeded. Do NOT blindly retry. Consciously verify or decide recovery action.\n`;
-      planContext = planContext ? `${planContext}${uncertainSection}` : uncertainSection;
-    }
-
-    // Build system prompt WITHOUT planContext first (B1: protect from truncation)
-    const promptBuilder = new PromptBuilder();
-    const basePrompt = promptBuilder.buildSystem({
-      agentName: request.agentName,
-      mentionPrefix: request.mentionPrefix,
+    // Compile context through the architecture
+    const contextRequest = {
+      sessionId,
+      taskId,
       task: request.task,
-      contextFiles: this.coralIdentityContext || undefined,
-      memoryContext,
-      learningContext: learningContext || undefined,
-      references: request.references,
-      constraints: request.constraints,
-      currentRequest: request.messages[request.messages.length - 1]?.content || '',
-      worldContext: worldState,
-      platformMeta: request.platformMeta,
-      // planContext deliberately omitted — appended AFTER truncation below
+      messages: request.messages,
+    };
+
+    const activeSources = registry.getActive(sessionId, taskId);
+    const compiler = new ContextCompiler(getContextManager());
+    const compiledContext = await compiler.compile({
+      request: contextRequest,
+      sources: activeSources,
     });
 
-    // ── Prompt Length Guard — planContext APPENDED AFTER truncation (B1) ──
-    const MAX_PROMPT_TOKENS = 3000;
-    let promptBody = basePrompt;
-    const estimatedBaseTokens = estimateTokenCount(promptBody);
-    if (estimatedBaseTokens > MAX_PROMPT_TOKENS) {
-      log.warn(`Prompt too long: ~${estimatedBaseTokens} tokens (max ${MAX_PROMPT_TOKENS}). Truncating context.`);
-      this.emit('alert:prompt_truncated', { originalTokens: estimatedBaseTokens, maxTokens: MAX_PROMPT_TOKENS });
-      promptBody = truncatePrompt(promptBody, MAX_PROMPT_TOKENS);
+    // ONE final budget boundary — system context passes through evictToBudget
+    const MAX_SYSTEM_CONTEXT_TOKENS = 3000;
+    let systemContextString = compiler.compileToString(compiledContext);
+    const systemTokens = estimateTokenCount(systemContextString);
+    if (systemTokens > MAX_SYSTEM_CONTEXT_TOKENS) {
+      log.warn(`System context too long: ~${systemTokens} tokens (max ${MAX_SYSTEM_CONTEXT_TOKENS}). Evicting.`);
+      this.emit('alert:prompt_truncated', { originalTokens: systemTokens, maxTokens: MAX_SYSTEM_CONTEXT_TOKENS });
+      const evicted = getContextManager().evictToBudget(
+        [{ role: 'system', content: systemContextString }],
+        sessionId,
+      );
+      systemContextString = evicted.messages[0].content;
     }
-    // B1: Append planContext AFTER truncation — guaranteed not to be cut
-    const systemPrompt = planContext ? `${promptBody}\n\n${planContext}` : promptBody;
+
+    const systemPrompt = systemContextString;
 
     // B2: context for update_plan tool is set via requestContext.enterWith() at processInner top.
     // onPlanCreated callback was also set there. updatePlanCtx on Engine singleton is removed.
@@ -1075,7 +928,7 @@ LƯU Ý:
     // ── B4: Shared handler for cycle-limit-hit (cầu chì tuyệt đối chống runaway) ──
     const handleCycleLimit = (result: any): EngineResponse | null => {
       if (!result.cycleLimitReached) return null;
-      const plan = activePlan ? this.checkpointStore.getPlan(sessionId) : null;
+      const plan = this.checkpointStore.getPlan(sessionId);
       if (plan && (plan.status === 'running' || plan.status === 'pending')) {
         // ponytail: pending → paused_limit hợp lệ sau khi thêm transition vào
         // VALID_TRANSITIONS (types.ts) — pending chạm limit là case thật (A3 chưa

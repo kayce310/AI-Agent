@@ -9,6 +9,8 @@
 
 import { Logger } from '../logger.js';
 import { ExperienceStore, ExperienceBlock } from './experience-store.js';
+import { ContextSource, ContextCandidate, RequestContext, SourceProvenance } from '../context-source.js';
+import { estimateTokenCount } from '../engine/engine.js';
 
 const log = new Logger({ module: 'Learner' });
 
@@ -20,7 +22,11 @@ const log = new Logger({ module: 'Learner' });
  *   const context = await learner.getContext("install pnpm", 5);
  *   // Returns: "Previously: \n✅ Used [pnpm] — installed successfully\n❌ Tried [npm] — version conflict..."
  */
-export class SelfEvolutionLearner {
+export class SelfEvolutionLearner implements ContextSource {
+  id = 'learning';
+  provenance: SourceProvenance = { origin: 'system', identifier: 'self-evolution-learner' };
+  budgetClaim = 500;
+
   private store: ExperienceStore;
   private enabled = true;
   private maxExperiences = 5;
@@ -29,6 +35,31 @@ export class SelfEvolutionLearner {
     this.store = store;
     if (options?.enabled !== undefined) this.enabled = options.enabled;
     if (options?.maxExperiences !== undefined) this.maxExperiences = options.maxExperiences;
+  }
+
+  isActive(_sessionId: string, _taskId: string): boolean {
+    return this.enabled;
+  }
+
+  async getCandidates(request: RequestContext): Promise<ContextCandidate[]> {
+    const task = request.task || request.messages?.[request.messages.length - 1]?.content || '';
+    if (!task) return [];
+
+    try {
+      const context = await this.getContext(task);
+      if (!context) return [];
+
+      return [{
+        id: `learning-${request.sessionId}`,
+        content: context,
+        sourceId: this.id,
+        provenance: this.provenance,
+        estimatedTokens: estimateTokenCount(context),
+      }];
+    } catch (err: any) {
+      log.warn(`SelfEvolutionLearner.getCandidates() failed: ${err.message}`);
+      return [];
+    }
   }
 
   /**

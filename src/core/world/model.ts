@@ -14,6 +14,8 @@ import * as http from 'http';
 import { EventBus } from '../events/bus.js';
 import { WorldDeltaSchema } from '../events/types.js';
 import { randomUUID } from 'crypto';
+import { ContextSource, ContextCandidate, RequestContext, SourceProvenance } from '../context-source.js';
+import { estimateTokenCount } from '../engine/engine.js';
 
 export interface SystemSnapshot {
   cpus: number;
@@ -47,11 +49,30 @@ export interface WorldReport {
   delta?: FileDelta;
 }
 
-export class WorldModel {
+export class WorldModel implements ContextSource {
+  id = 'world';
+  provenance: SourceProvenance = { origin: 'system', identifier: 'world-model' };
+  budgetClaim = 200;
+
   private lastSnapshot: string[] = [];
   private eventBus: EventBus | null = null;
 
   setEventBus(bus: EventBus): void { this.eventBus = bus; }
+
+  isActive(_sessionId: string, _taskId: string): boolean {
+    return true; // World state is always active
+  }
+
+  async getCandidates(request: RequestContext): Promise<ContextCandidate[]> {
+    const state = this.getState();
+    return [{
+      id: `world-${request.sessionId}`,
+      content: state,
+      sourceId: this.id,
+      provenance: this.provenance,
+      estimatedTokens: estimateTokenCount(state),
+    }];
+  }
 
   systemProbe(): SystemSnapshot {
     return {
