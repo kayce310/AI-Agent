@@ -384,15 +384,6 @@ async function start() {
       // Quiet - marker check is best-effort
     }
 
-    // Write readiness marker so /restart can wait for full startup
-    try {
-      const { writeReadyMarker } = await import('./restart-notify.js');
-      writeReadyMarker();
-      console.log(`${ts()} 🟢 Coral runtime ready — accepting commands`);
-    } catch (e) {
-      // Quiet - readiness marker is best-effort
-    }
-
   // Start Dashboard HTTP/WS server
   try {
     const eventBus = engine.getEventBus();
@@ -591,6 +582,15 @@ async function start() {
     }
   } catch (e) {
     console.error(`${ts()} ⚠️ HITL system failed to initialize: ${e}`);
+  }
+
+  // All critical initialization complete — signal readiness to /restart watchdog
+  try {
+    const { writeReadyMarker } = await import('./restart-notify.js');
+    writeReadyMarker();
+    console.log(`${ts()} 🟢 Coral fully initialized — accepting commands`);
+  } catch (e) {
+    // Quiet - readiness marker is best-effort
   }
 }
 

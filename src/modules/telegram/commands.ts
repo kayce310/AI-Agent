@@ -664,7 +664,9 @@ export class CommandRegistry {
                                     const { readReadyMarker } = await import('../../scripts/restart-notify.js');
                                     if (readReadyMarker()) {
                                       clearInterval(watch);
-                                      log.info('Restart: new instance confirmed READY — exiting old process');
+                                      log.info('Restart: new instance confirmed READY — stopping old process');
+                                      // Stop tunnel to free resources before exit
+                                      try { (globalThis as any).__coral_stopTunnel?.(); } catch {}
                                       process.exit(0);
                                     }
                                   } catch {}
