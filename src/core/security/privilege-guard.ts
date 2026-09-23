@@ -360,6 +360,21 @@ export function createDefaultAllowRules(): PrivilegeRule[] {
     // ponytail: read-only web search + safe content fetch (Jina reader strips HTML)
     { toolPattern: 'web_search', effect: 'allow', reason: 'Read-only web search (Tavily API)' },
     { toolPattern: 'fetch_url', effect: 'allow', reason: 'Safe URL fetch via Jina AI Reader' },
+    // ponytail: read-only tools — zero write/modify blast radius
+    { toolPattern: 'search_files', effect: 'allow', reason: 'Read-only file search (grep-like)' },
+    { toolPattern: 'browser_navigate', effect: 'allow', reason: 'Read-only: navigate webpage' },
+    { toolPattern: 'browser_snapshot', effect: 'allow', reason: 'Read-only: capture page text' },
+    { toolPattern: 'vision_analyze', effect: 'allow', reason: 'Read-only: image analysis' },
+    { toolPattern: 'load_skill', effect: 'allow', reason: 'Read-only: load skill definition' },
+    { toolPattern: 'skill_view', effect: 'allow', reason: 'Read-only: view skill content' },
+    { toolPattern: 'todo_read', effect: 'allow', reason: 'Read-only: list todos' },
+    { toolPattern: 'extract_formulas', effect: 'allow', reason: 'Read-only: extract LaTeX from md' },
+    { toolPattern: 'cron_list', effect: 'allow', reason: 'Read-only: list cron jobs' },
+    { toolPattern: 'cron_status', effect: 'allow', reason: 'Read-only: check cron status' },
+    { toolPattern: 'load_architecture_rules', effect: 'allow', reason: 'Read-only: load arch rules' },
+    { toolPattern: 'search_archived_md', effect: 'allow', reason: 'Read-only: search archived docs' },
+    { toolPattern: 'quote_from_source', effect: 'allow', reason: 'Read-only: quote from source' },
+    { toolPattern: 'architecture', effect: 'allow', reason: 'Read-only: query architecture info' },
   ];
 }
 
