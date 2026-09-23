@@ -1161,6 +1161,19 @@ LƯU Ý:
       // success=false + checkpoint.failed → stalled không bị tính là thành công,
       // và trên restart task không bị resurrect (terminal state đã durable).
       const outcomeIsFailure = isFailureOutcome(result.content);
+
+      // E1 Diagnostics: log when outcome is failure for analysis
+      const failurePattern = isFailureOutcome(result.content) ? 'E1/E2/E3' : 'UNKNOWN';
+      log.warn(`[P2] Outcome failure (${result.content.slice(0, 60)}…) — checkpoint.failed thay vì complete`, {
+        taskId,
+        content_length: result.content?.length || 0,
+        model: result.modelUsed,
+        provider: result.providerUsed,
+        outcome_pattern: failurePattern,
+        tool_cycles: result.toolCycles,
+        finished: result.finished,
+      });
+
       this.eventLogger.taskFinished(taskId, typeof userMessage === 'string' ? userMessage.substring(0, 200) : 'Unknown task', !outcomeIsFailure, duration, result.content.substring(0, 500));
 
       // ── CHECKPOINT: terminal state theo outcome thật ──

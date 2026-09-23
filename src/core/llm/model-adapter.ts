@@ -194,6 +194,17 @@ export class RouterAdapter implements ModelAdapter {
     const rawData = (response as any).data ? (response as any).data : response;
 
     if (!rawData?.choices?.[0]) {
+      // E1 Diagnostics: log why response is empty/invalid
+      log.error('[E1] PROVIDER_EMPTY — no choices in response', {
+        model: modelId,
+        provider: resolved.providerName,
+        stream: false,
+        choice_count: rawData?.choices?.length ?? 0,
+        finish_reason: undefined,
+        content_length: 0,
+        tool_call_count: 0,
+        reason: 'Provider returned response with no choices array or empty choices',
+      });
       throw new Error('9router returned empty response');
     }
 
@@ -209,13 +220,39 @@ export class RouterAdapter implements ModelAdapter {
     }
 
     // Strip model prefix headers
-    content = content.replace(/^[\w\/\.-]+:\s*/m, '');
+    content = content.replace(/^[\w\/\.-]+\s*/m, '');
 
     // Strip thinking content
     content = stripThinkingContent(content);
 
     // Check for tool calls
     const toolCalls: any[] | undefined = choice.message?.tool_calls || undefined;
+
+    // E1 Diagnostics: log if content is empty after normalization
+    if (!content && (!toolCalls || toolCalls.length === 0)) {
+      log.warn('[E1] NORMALIZATION_EMPTY — content empty after strip', {
+        model: modelId,
+        provider: resolved.providerName,
+        stream: false,
+        finish_reason: finishReason,
+        content_length: 0,
+        has_tool_calls: false,
+        tool_call_count: 0,
+        raw_content_length: (choice.message?.content || '').length,
+        has_reasoning_content: !!choice.message?.reasoning_content,
+        reasoning_content_length: (choice.message?.reasoning_content || '').length,
+      });
+    } else if (!content) {
+      log.info('[E1] PARSER_EMPTY — content parsed as tool_calls only', {
+        model: modelId,
+        provider: resolved.providerName,
+        stream: false,
+        finish_reason: finishReason,
+        content_length: 0,
+        has_tool_calls: true,
+        tool_call_count: toolCalls?.length ?? 0,
+      });
+    }
 
     return {
       content,
@@ -313,13 +350,39 @@ export class RouterAdapter implements ModelAdapter {
     }
 
     // Final streaming event
-    onStreamChunk(accumulated, true);
-    console.log(`[STREAM_COMPLETE] task ${taskId}: ${accumulated.length} chars in final reasoning`);
+        onStreamChunk(accumulated, true);
+        console.log(`[STREAM_COMPLETE] task ${taskId}: ${accumulated.length} chars in final reasoning`);
 
-    let content = accumulated.replace(/^[\w\/\.-]+:\s*/m, '');
-    content = stripThinkingContent(content);
+        let content = accumulated.replace(/^[\w\/\.-]+\s*/m, '');
+        content = stripThinkingContent(content);
 
-    return {
+        // E1 Diagnostics: log if streaming content is empty after normalization
+        const finalToolCalls = toolCallMap.size > 0 ? Array.from(toolCallMap.values()) : undefined;
+        if (!content && (!finalToolCalls || finalToolCalls.length === 0)) {
+          log.warn('[E1] STREAM_EMPTY — accumulated content empty after strip', {
+            model: modelId,
+            provider: resolved.providerName,
+            stream: true,
+            finish_reason: finishReason,
+            content_length: 0,
+            has_tool_calls: false,
+            tool_call_count: 0,
+            accumulated_raw_length: accumulated.length,
+            chunks_received: true,
+          });
+        } else if (!content) {
+          log.info('[E1] PARSER_EMPTY — streaming content parsed as tool_calls only', {
+            model: modelId,
+            provider: resolved.providerName,
+            stream: true,
+            finish_reason: finishReason,
+            content_length: 0,
+            has_tool_calls: true,
+            tool_call_count: finalToolCalls?.length ?? 0,
+          });
+        }
+
+        return {
       content,
       modelUsed: modelId,
       providerUsed: resolved.providerName,
