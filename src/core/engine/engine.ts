@@ -816,6 +816,16 @@ export class Engine extends EventEmitter {
       },
       signal: request.abortSignal,
     };
+
+    // Rehydrate evidence from restored checkpoint if present (FIX: evidence persistence across restart)
+    const restoredCheckpoint = this.checkpointStore.getLatestForSession(sessionId);
+    if (restoredCheckpoint?.evidenceLog) {
+      for (const [itemId, records] of Object.entries(restoredCheckpoint.evidenceLog)) {
+        rctx.evidenceLog.set(itemId, records as any);
+      }
+      log.info(`[Engine] Rehydrated ${Object.keys(restoredCheckpoint.evidenceLog).length} evidence item(s) for session ${sessionId}`);
+    }
+
     return requestContext.run(rctx, () => this.processInnerScoped(request, cacheKey, {
       startTime, userMessage, taskId, sessionId, requestId, checkpointRequestId, // Pass all identities
     }));
