@@ -53,6 +53,7 @@ export interface CriterionEvaluation {
 
 export interface PlanItem {
   index: number;
+  id: string;
   description: string;
   status: PlanItemStatus;
   completedByTool?: string;
@@ -174,11 +175,17 @@ export interface ToolCallRecord {
   success: boolean;
 }
 
+export interface MinimalToolCallRecord {
+  toolName: string;
+  timestamp: number;
+  success: boolean;
+}
+
 /**
- * Map<itemIndex, ToolCallRecord[]> — evidence log for plan items.
+ * Map<itemId, MinimalToolCallRecord[]> — evidence log for plan items.
  * Automatically populated by the agent loop; read by update_plan handler.
  */
-export type EvidenceLog = Map<number, ToolCallRecord[]>;
+export type EvidenceLog = Map<string, MinimalToolCallRecord[]>;
 
 /**
  * UpdatePlan tool argument schema.

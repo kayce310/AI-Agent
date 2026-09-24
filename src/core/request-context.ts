@@ -45,6 +45,12 @@ export interface RequestContext {
    * AsyncLocalStorage giống taskId (engine.ts requestContext.run).
    */
   userId: string;
+  /**
+   * userRole: phân loại vai trò người dùng (VD: "admin", "user", "moderator") để
+   * policy enforcement (VD: role-based bypass cho RestrictionGuard).
+   * Optional: mặc định là "user" khi không có vai trò rõ ràng.
+   */
+  userRole?: string;
   /** AbortSignal của request — cancel lan truyền từ parent xuống subagent (delegate_task) */
   signal?: AbortSignal;
   /** Consequence hint cho model (Phase 3b) — set bởi read-path guard khi suggest. */

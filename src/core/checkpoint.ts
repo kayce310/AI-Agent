@@ -31,7 +31,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from './logger.js';
 import { getRequestContext } from './request-context.js';
-import { TaskPlan } from './plan/types.js';
+import { TaskPlan, MinimalToolCallRecord } from './plan/types.js';
 import { atomicWriteFileSync } from './atomic-write.js';
 
 const log = new Logger({ module: 'Checkpoint' });
@@ -98,6 +98,8 @@ export interface CheckpointSnapshot {
     modelUsed: string;
     providerUsed: string;
   };
+  /** Evidence log — persisted across restart. Map<itemId, MinimalToolCallRecord[]> */
+  evidenceLog?: { [itemId: string]: MinimalToolCallRecord[] };
 }
 
 // ── Config ──
