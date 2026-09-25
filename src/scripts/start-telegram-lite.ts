@@ -48,7 +48,7 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-function acquireFileLock(): boolean {
+async function acquireFileLock(): Promise<boolean> {
   try {
     if (fs.existsSync(LOCK_FILE)) {
       const pidStr = fs.readFileSync(LOCK_FILE, 'utf8').trim();
@@ -58,16 +58,38 @@ function acquireFileLock(): boolean {
         if (isProcessAlive(oldPid)) {
           console.log(`${ts()} 🔴 Found old Coral instance (PID ${oldPid}). Killing...`);
           const killed = killProcess(oldPid);
-          if (killed) {
-            console.log(`${ts()} ✅ Killed old instance (PID ${oldPid})`);
+          if (!killed) {
+            console.error(`${ts()} ❌ Failed to kill PID ${oldPid} — aborting startup`);
+            return false;
           }
-          try { execSync('sleep 1', { timeout: 2000 }); } catch {}
+          console.log(`${ts()} ✅ Kill signal sent to PID ${oldPid}`);
         }
       }
 
       try { fs.unlinkSync(LOCK_FILE); } catch {}
     }
   } catch { }
+
+  // Wait for old process to fully exit (max 10s) — prevents WAL lock race
+  let waited = 0;
+  const maxWaitMs = 10_000;
+  const checkIntervalMs = 200;
+  while (waited < maxWaitMs) {
+    if (fs.existsSync(LOCK_FILE)) {
+      const pidStr = fs.readFileSync(LOCK_FILE, 'utf8').trim();
+      const oldPid = parseInt(pidStr, 10);
+      if (!isNaN(oldPid) && oldPid > 0 && oldPid !== process.pid && isProcessAlive(oldPid)) {
+        await new Promise(r => setTimeout(r, checkIntervalMs));
+        waited += checkIntervalMs;
+        continue;
+      }
+    }
+    break;
+  }
+  if (waited >= maxWaitMs) {
+    console.error(`${ts()} ❌ Timeout waiting for old process to exit — aborting startup`);
+    return false;
+  }
 
   try {
     fs.writeFileSync(LOCK_FILE, String(process.pid), { flag: 'wx' });
@@ -134,7 +156,7 @@ async function gracefulShutdown(signal: string) {
 }
 
 async function start() {
-  if (!acquireFileLock()) {
+  if (!await acquireFileLock()) {
     console.error(`${ts()} ❌ Another Coral instance is still running.`);
     process.exit(1);
   }

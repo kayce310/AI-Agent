@@ -12,6 +12,7 @@
  */
 
 import { Logger } from '../logger.js';
+import { getStorage } from '../memory/sqlite-storage.js';
 
 const log = new Logger({ module: 'Consent' });
 
@@ -58,15 +59,8 @@ export class ConsentManager {
     if (this.initialized) return;
 
     if (!this.db) {
-      // Dynamic import to avoid hard dependency
-      try {
-        const { CoralStorage } = await import('../memory/sqlite-storage.js');
-        this.db = new CoralStorage(dbPath);
-      } catch {
-        // Fallback: use a simple in-memory store
-        this.db = new Map();
-        log.warn('SQLite unavailable, using in-memory consent storage');
-      }
+      // Use singleton CoralStorage via getStorage() — prevents multiple handles to coral.db
+      this.db = getStorage();
     }
 
     // Ensure consent table exists
@@ -239,6 +233,15 @@ export class ConsentManager {
     const stmt = this.db.prepare('SELECT * FROM consent_records WHERE userId = ? ORDER BY id DESC');
     const rows = stmt.all ? stmt.all(userId) : [];
     return rows.map((r: any) => ({ ...r, purposes: JSON.parse(r.purposes || '[]') }));
+  }
+
+  /**
+   * Close the database connection (no-op for singleton, provided for lifecycle symmetry)
+   */
+  close(): void {
+    // Singleton is closed by Engine/crash-handler/start-telegram — no action needed here
+    this.initialized = false;
+    log.info('ConsentManager closed (singleton DB managed externally)');
   }
 }
 
