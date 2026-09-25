@@ -696,7 +696,57 @@ export class CheckpointStore {
   }
 
   /**
-   * R2 §A: synchronous best-effort flush for the crash handler.
+     * OD-5: Record evidence for a PlanItem in the current in-progress snapshot.
+     * Writes directly to the snapshot so evidence survives flush and restart.
+     */
+    setEvidence(itemId: string, record: MinimalToolCallRecord): void {
+      const context = getRequestContext();
+      const cpRequestId = context?.checkpointRequestId;
+      let snapshot = cpRequestId ? this.snapshots.get(cpRequestId) : undefined;
+      // Fallback: find in-progress snapshot for current session (for test/helper usage)
+      if (!snapshot && this.activeTaskBySession.size > 0) {
+        for (const cpId of this.activeTaskBySession.values()) {
+          const s = this.snapshots.get(cpId);
+          if (s && (s.status === 'started' || s.status === 'in_progress')) {
+            snapshot = s;
+            break;
+          }
+        }
+      }
+      if (!snapshot) return;
+      if (!snapshot.evidenceLog) snapshot.evidenceLog = {};
+      if (!snapshot.evidenceLog[itemId]) snapshot.evidenceLog[itemId] = [];
+      snapshot.evidenceLog[itemId].push(record);
+      this.dirty = true;
+    }
+
+    /**
+     * OD-5: Merge evidence from ALL snapshots for a session into a single EvidenceLog.
+     * Returns Map<itemId, MinimalToolCallRecord[]> with deduplication (latest timestamp wins).
+     */
+    mergeEvidenceForSession(sessionId: string): Map<string, MinimalToolCallRecord[]> {
+      const merged = new Map<string, MinimalToolCallRecord[]>();
+      for (const snapshot of this.snapshots.values()) {
+        if (snapshot.sessionId !== sessionId) continue;
+        if (!snapshot.evidenceLog) continue;
+        for (const [itemId, records] of Object.entries(snapshot.evidenceLog)) {
+          const existing = merged.get(itemId);
+          if (!existing) {
+            merged.set(itemId, records as MinimalToolCallRecord[]);
+          } else {
+            // Dedup by timestamp — keep latest
+            for (const rec of records as MinimalToolCallRecord[]) {
+              const idx = existing.findIndex(e => e.timestamp === rec.timestamp);
+              if (idx === -1) existing.push(rec);
+            }
+          }
+        }
+      }
+      return merged;
+    }
+
+    /**
+     * R2 §A: synchronous best-effort flush for the crash handler.
    * Uses fs.writeFileSync directly (no async) so it can run before process.exit().
    * Best-effort only — cannot help with SIGKILL/power loss or if this throws.
    */
