@@ -64,6 +64,101 @@ const THINKING_LINE_PATTERNS = [
   /^Invoking tool:/i,
 ];
 
+/** Classification for model response types */
+export type ResponseClassification = 
+  | 'FINAL_CONTENT'       // Normal text response
+  | 'THINKING_ONLY'       // Only reasoning/thinking blocks, no final answer
+  | 'TOOL_CALL'           // Tool calls present (with or without text)
+  | 'EMPTY';              // Truly empty (no content, no reasoning, no tools)
+
+/**
+ * Classify response without mutating content.
+ * Returns classification AND extracted components.
+ */
+export interface ClassifiedResponse {
+  classification: ResponseClassification;
+  content: string;          // Final user-facing content (thinking stripped)
+  reasoningContent: string; // Raw reasoning/thinking (preserved)
+  toolCalls: any[] | undefined;
+  finishReason: string | undefined;
+}
+
+/**
+ * Classify and extract response components without destroying data.
+ * Preserves reasoning separately from final content.
+ */
+export function classifyResponse(rawContent: string, reasoningContent: string | undefined, toolCalls: any[] | undefined, finishReason: string | undefined): ClassifiedResponse {
+  const hasTools = (toolCalls?.length ?? 0) > 0;
+  const hasRawContent = rawContent && rawContent.trim().length > 0;
+  const hasReasoning = reasoningContent && reasoningContent.trim().length > 0;
+
+  // Tool calls take priority — even if content is empty
+  if (hasTools) {
+    const strippedContent = hasRawContent ? stripThinkingContent(rawContent) : '';
+    return {
+      classification: 'TOOL_CALL',
+      content: strippedContent,
+      reasoningContent: reasoningContent || '',
+      toolCalls,
+      finishReason,
+    };
+  }
+
+  // No tool calls — check content
+  if (hasRawContent) {
+    const strippedContent = stripThinkingContent(rawContent);
+    if (strippedContent.length >= 3) {
+      return {
+        classification: 'FINAL_CONTENT',
+        content: strippedContent,
+        reasoningContent: reasoningContent || '',
+        toolCalls: undefined,
+        finishReason,
+      };
+    }
+    // Content exists but stripped to < 3 chars
+    if (hasReasoning) {
+      return {
+        classification: 'THINKING_ONLY',
+        content: '',
+        reasoningContent,
+        toolCalls: undefined,
+        finishReason,
+      };
+    }
+    return {
+      classification: 'EMPTY',
+      content: '',
+      reasoningContent: reasoningContent || '',
+      toolCalls: undefined,
+      finishReason,
+    };
+  }
+
+  // No raw content
+  if (hasReasoning) {
+    return {
+      classification: 'THINKING_ONLY',
+      content: '',
+      reasoningContent,
+      toolCalls: undefined,
+      finishReason,
+    };
+  }
+
+  return {
+    classification: 'EMPTY',
+    content: '',
+    reasoningContent: '',
+    toolCalls: undefined,
+    finishReason,
+  };
+}
+
+/**
+ * Strip thinking content from user-facing output.
+ * Pure function — does not mutate input.
+ */
 export function stripThinkingContent(content: string): string {
   if (!content) return content;
   let cleaned = content;

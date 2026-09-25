@@ -673,33 +673,48 @@ export class Agent extends EventEmitter {
 
         /* router used */
 
-        // ── Handle finish_reason: stop ──
-        if (modelResult.finishReason === 'stop') {
-          R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
-          let rawContent = modelResult.content || '';
+                // ── Handle finish_reason: stop ──
+                if (modelResult.finishReason === 'stop') {
+                  R.state({ event: 'FINISHED', requestId, cycle: toolCallCycles, finishReason: 'stop' });
+                  let rawContent = modelResult.content || '';
 
-          // PONYTAIL: debug response
-          log.info(`[PONYTAIL_DEBUG] responseStop sessionId=${request.sessionId} cycle=${toolCallCycles} content=${rawContent.slice(0, 500)}`);
+                  // PONYTAIL: debug response
+                  log.info(`[PONYTAIL_DEBUG] responseStop sessionId=${request.sessionId} cycle=${toolCallCycles} content=${rawContent.slice(0, 500)}`);
 
-          // Phase 3: Extract emotion_tag BEFORE sanitization
-          const parsedEmotion = parseEmotionTag(rawContent);
-          if (parsedEmotion.valid) {
-            log.info(`[EMOTION] Parsed emotion_tag: ${parsedEmotion.tag}`);
-          }
+                  // Phase 3: Extract emotion_tag BEFORE sanitization
+                  const parsedEmotion = parseEmotionTag(rawContent);
+                  if (parsedEmotion.valid) {
+                    log.info(`[EMOTION] Parsed emotion_tag: ${parsedEmotion.tag}`);
+                  }
 
-          rawContent = rawContent.replace(/^[\w\/\.-]+:\s*/m, '');
-          finalContent = this.sanitizeFinalResponse(rawContent);
+                  rawContent = rawContent.replace(/^[\w\/\.-]+:\s*/m, '');
+                  finalContent = this.sanitizeFinalResponse(rawContent);
 
-          // Phase 3: Publish emotion annotation via hooks (→ EventBus)
-          if (parsedEmotion.valid && parsedEmotion.tag) {
-            this.hooks.emit('emotion:annotated' as any, {
-              sessionId: request.sessionId,
-              emotionTag: parsedEmotion.tag,
-              sourceEventId: requestId,
-            }).catch(() => {});
-          }
+                  // Phase 3: Publish emotion annotation via hooks (→ EventBus)
+                  if (parsedEmotion.valid && parsedEmotion.tag) {
+                    this.hooks.emit('emotion:annotated' as any, {
+                      sessionId: request.sessionId,
+                      emotionTag: parsedEmotion.tag,
+                      sourceEventId: requestId,
+                    }).catch(() => {});
+                  }
 
-          const responseType = classifyResponse(finalContent);
+                  // Check for THINKING_ONLY: empty final content but reasoning present
+                  // This is NOT unparseable — the model produced reasoning but no final answer
+                  const hasReasoning = modelResult.reasoningContent && modelResult.reasoningContent.trim().length > 0;
+                  if (!finalContent && hasReasoning) {
+                    log.warn(`[THINKING_ONLY] Cycle ${toolCallCycles}: model returned reasoning but no final answer — redirecting with format reminder`);
+                    R.meta({ event: 'THINKING_ONLY_RESPONSE', requestId, cycle: toolCallCycles, reasoning_length: modelResult.reasoningContent.length });
+                    messages.push({
+                      role: 'system',
+                      content: '[SYSTEM] Phản hồi trước chỉ chứa quá trình suy nghĩ mà không có câu trả lời cuối cùng. Hãy viết câu trả lời trực tiếp bằng văn bản, KHÔNG viết quá trình suy nghĩ.',
+                    });
+                    toolCallCycles++;
+                    R.state({ event: 'THINKING_ONLY_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'thinking_only_redirect' });
+                    continue;
+                  }
+
+                  const responseType = classifyResponse(finalContent);
 
           if (responseType === 'UNPARSEABLE') {
             if (toolCallCycles < 2) {

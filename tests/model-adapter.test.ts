@@ -7,7 +7,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { stripThinkingContent, buildDefaultRouter } from '../src/core/llm/model-adapter.js';
+import { 
+  stripThinkingContent, 
+  classifyResponse,
+  buildDefaultRouter 
+} from '../src/core/llm/model-adapter.js';
 
 describe('Model Adapter: stripThinkingContent', () => {
   it('should strip <thinking> blocks', () => {
@@ -183,5 +187,90 @@ describe('Model Adapter: Tool Calling', () => {
     const router = await buildDefaultRouter();
     // Should respect tool_choice: 'auto' | 'none'
     expect(router).toBeDefined();
+  });
+});
+
+describe('Model Adapter: classifyResponse (E1 regression)', () => {
+  it('should classify FINAL_CONTENT for normal response', () => {
+    const result = classifyResponse('This is a normal answer', undefined, undefined, 'stop');
+    expect(result.classification).toBe('FINAL_CONTENT');
+    expect(result.content).toBe('This is a normal answer');
+    expect(result.reasoningContent).toBe('');
+  });
+
+  it('should classify FINAL_CONTENT with reasoning preserved separately', () => {
+    const result = classifyResponse('Final answer', 'Internal reasoning here', undefined, 'stop');
+    expect(result.classification).toBe('FINAL_CONTENT');
+    expect(result.content).toBe('Final answer');
+    expect(result.reasoningContent).toBe('Internal reasoning here');
+  });
+
+  it('should classify TOOL_CALL when tool_calls present', () => {
+    const toolCalls = [{ id: 'call_1', function: { name: 'web_search', arguments: '{}' } }];
+    const result = classifyResponse('Using tool', undefined, toolCalls, 'tool_calls');
+    expect(result.classification).toBe('TOOL_CALL');
+    expect(result.toolCalls).toEqual(toolCalls);
+    expect(result.content).toBe('Using tool');
+  });
+
+  it('should classify TOOL_CALL even with empty content', () => {
+    const toolCalls = [{ id: 'call_1', function: { name: 'read_file', arguments: '{}' } }];
+    const result = classifyResponse('', undefined, toolCalls, 'tool_calls');
+    expect(result.classification).toBe('TOOL_CALL');
+    expect(result.toolCalls).toEqual(toolCalls);
+    expect(result.content).toBe('');
+  });
+
+  it('should classify THINKING_ONLY for reasoning-only response', () => {
+    const result = classifyResponse('<thinking>Analysis</thinking>', 'Internal reasoning', undefined, 'stop');
+    expect(result.classification).toBe('THINKING_ONLY');
+    expect(result.content).toBe('');
+    expect(result.reasoningContent).toBe('Internal reasoning');
+  });
+
+  it('should classify THINKING_ONLY when content stripped to empty but reasoning exists', () => {
+    const result = classifyResponse('<thinking>Full reasoning here</thinking>', 'Full reasoning here', undefined, 'stop');
+    expect(result.classification).toBe('THINKING_ONLY');
+    expect(result.content).toBe('');
+    expect(result.reasoningContent).toBe('Full reasoning here');
+  });
+
+  it('should classify EMPTY for truly empty response', () => {
+    const result = classifyResponse('', undefined, undefined, 'stop');
+    expect(result.classification).toBe('EMPTY');
+    expect(result.content).toBe('');
+    expect(result.reasoningContent).toBe('');
+  });
+
+  it('should classify EMPTY for whitespace-only response', () => {
+    const result = classifyResponse('   \n\t  ', undefined, undefined, 'stop');
+    expect(result.classification).toBe('EMPTY');
+    expect(result.content).toBe('');
+  });
+
+  it('should NOT treat reasoning as final content', () => {
+    // Critical: reasoning-only should NOT become FINAL_CONTENT
+    const result = classifyResponse('<thinking>Thinking only</thinking>', 'Thinking only', undefined, 'stop');
+    expect(result.classification).not.toBe('FINAL_CONTENT');
+    expect(result.classification).toBe('THINKING_ONLY');
+    expect(result.content).toBe('');
+  });
+
+  it('should preserve tool_calls with content (mixed response)', () => {
+    const toolCalls = [{ id: 'call_1', function: { name: 'web_search', arguments: '{}' } }];
+    const result = classifyResponse('I will search', 'Reasoning', toolCalls, 'tool_calls');
+    expect(result.classification).toBe('TOOL_CALL');
+    expect(result.toolCalls).toEqual(toolCalls);
+    expect(result.content).toBe('I will search');
+    expect(result.reasoningContent).toBe('Reasoning');
+  });
+
+  it('should strip thinking from content but preserve in reasoning', () => {
+    const rawContent = '<thinking>Internal</thinking>Final answer';
+    const reasoning = 'Internal';
+    const result = classifyResponse(rawContent, reasoning, undefined, 'stop');
+    expect(result.classification).toBe('FINAL_CONTENT');
+    expect(result.content).toBe('Final answer');
+    expect(result.reasoningContent).toBe('Internal');
   });
 });
