@@ -139,7 +139,7 @@ export function buildCycleMessagesWithHint(
 }
 
 // ── Constants ──
-const MAX_TOOL_CALL_CYCLES = 15;
+const MAX_TOOL_CALL_CYCLES = 100;
 const MAX_READ_CALLS = parseInt(process.env.CORAL_MAX_READ_CALLS || '12');
 
 
@@ -170,6 +170,9 @@ export interface AgentResult {
   finished: boolean;
   /** MỚI — true when the ReAct loop exited because maxToolCycles was hit (not a normal finish) */
   cycleLimitReached?: boolean;
+  /** MỚI: false = terminal execution failure (model/provider/transport/circuit).
+    Undefined = legacy behavior (rely on content prefix). */
+  success?: boolean;
 }
 
 // ── Agent Class ──
@@ -524,11 +527,22 @@ export class Agent extends EventEmitter {
     // NOT a local const — the config value respects env var overrides.
 
     while (toolCallCycles < this.maxToolCycles) {
-      checkAbort(abortSignal);
-      R.startCycle(requestId, toolCallCycles);
-      if (toolCallCycles > 0) R.state({ event: 'NEXT_CYCLE', requestId, cycle: toolCallCycles });
-      // ── Circuit breaker: stop if service is degraded ──
-      if (!this.circuitBreaker.isHealthy()) {
+          checkAbort(abortSignal);
+          R.startCycle(requestId, toolCallCycles);
+          if (toolCallCycles > 0) R.state({ event: 'NEXT_CYCLE', requestId, cycle: toolCallCycles });
+
+          // ── Pre-cycle limit warnings (injected into LLM context) ──
+          if (this.maxToolCycles >= 90) {
+            const remaining = this.maxToolCycles - toolCallCycles;
+            if (remaining === 10 || remaining === 5 || remaining === 1) {
+              const warningMsg = `⚠️ [SYSTEM] Cảnh báo: còn ${remaining} tool cycles trước khi chạm giới hạn (${this.maxToolCycles}). Hãy chuẩn bị tổng kết/kết luận cho người dùng.`;
+              messages.push({ role: 'system', content: warningMsg });
+              log.info(`[CycleWarning] Injected warning at cycle ${toolCallCycles}: remaining=${remaining}`);
+            }
+          }
+
+          // ── Circuit breaker: stop if service is degraded ──
+          if (!this.circuitBreaker.isHealthy()) {
         log.warn(`Circuit breaker OPEN — stopping after ${toolCallCycles} cycles`);
         R.state({ event: 'FAILED', requestId, cycle: toolCallCycles, error: 'circuit_breaker_open' });
         R.state({ event: 'RETURN_ERROR', requestId, cycle: toolCallCycles, error: 'circuit_breaker_open' });
@@ -538,6 +552,7 @@ export class Agent extends EventEmitter {
           providerUsed: 'circuit-breaker',
           toolCycles: toolCallCycles,
           finished: true,
+          success: false,
         };
       }
 
@@ -836,6 +851,7 @@ export class Agent extends EventEmitter {
               providerUsed: modelResult.providerUsed,
               toolCycles: toolCallCycles,
               finished: true,
+              success: false,
             };
           }
 
@@ -1300,17 +1316,24 @@ export class Agent extends EventEmitter {
                       currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
                       log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
                       if (thresholdReached || currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
-                        // ponytail: route qua validateTransition — pending/running→stuck
-                        // hợp lệ (types.ts); fail-loud nếu state machine đổi
-                        const transErr = validateTransition(sp.status, 'stuck');
-                        if (transErr) {
-                          log.warn(`⚠️ [Stagnation] REFUSED illegal transition ${sp.status} → stuck: ${transErr}`);
-                        } else {
-                          sp.status = 'stuck';
-                          sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
-                          log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
-                        }
-                      }
+                                              // ponytail: route qua validateTransition — pending/running→stuck
+                                              // hợp lệ (types.ts); fail-loud nếu state machine đổi
+                                              const transErr = validateTransition(sp.status, 'stuck');
+                                              if (transErr) {
+                                                log.warn(`⚠️ [Stagnation] REFUSED illegal transition ${sp.status} → stuck: ${transErr}`);
+                                              } else {
+                                                const previousStatus = sp.status;
+                                                sp.status = 'stuck';
+                                                sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
+                                                sp.sequenceNumber += 1;
+                                                this.checkpointStore.setPlan(request.sessionId, sp);
+                                                const engine = this as any; // Access Engine's emitPlanUpdated
+                                                if (engine.emitPlanUpdated) {
+                                                  engine.emitPlanUpdated(sp, previousStatus, 'system_transition', currentIdx);
+                                                }
+                                                log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                                              }
+                                            }
                     }
                   }
                 }
@@ -1400,6 +1423,7 @@ export class Agent extends EventEmitter {
           providerUsed: 'none',
           toolCycles: toolCallCycles,
           finished: true,
+          success: false,
         };
       }
     }

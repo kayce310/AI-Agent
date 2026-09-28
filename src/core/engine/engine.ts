@@ -28,6 +28,8 @@ import { setEngineInstance } from './instance.js';
 import { AgentRegistry } from '../agents/agent-registry.js';
 import { createDelegatePlugin } from '../agents/delegate.js';
 import { HookRegistry, globalHooks } from '../hooks.js';
+import { TaskPlan } from '../plan/types.js';
+import { EventFactory } from '../events/factory.js';
 import { PrivilegeGuard, createDefaultAllowRules, createRestrictedAllowList } from '../security/privilege-guard.js';
 import { ResponseCache, isRealTimeQuery } from '../security/response-cache.js';
 import { auditLogger } from '../audit-logger.js';
@@ -285,11 +287,11 @@ export class Engine extends EventEmitter {
     };
 
     const agentConfig: AgentConfig = {
-      modelRouter: this.modelRouter,
-      toolRegistry: this.toolRegistry,
-      hooks: this.hooks,
-      maxToolCycles: 10,
-      debug: false,
+          modelRouter: this.modelRouter,
+          toolRegistry: this.toolRegistry,
+          hooks: this.hooks,
+          maxToolCycles: 100,
+          debug: false,
       auxiliaryLlmCall,            // ← Context compression now works!
       checkpointStore: this.checkpointStore, // ← Cycle-level persistence
       contextManager: getContextManager(),  // ← Token budget management
@@ -473,29 +475,27 @@ export class Engine extends EventEmitter {
         // Store errorCategory in the current plan item if there's an active plan
         const plan = this.checkpointStore.getPlan(sessionId);
         if (plan && (plan.status === 'running' || plan.status === 'pending')) {
-          const currentItem = plan.items[plan.currentItemIndex];
-          if (currentItem && currentItem.status !== 'completed') {
-            currentItem.errorCategory = category;
-            currentItem.error = errorMsg.slice(0, 300);
-            if (category === 'security') {
-              // Security error → abort entire plan
-              plan.status = 'aborted';
-              plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
-              log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
-              // ADR-003 Phase 1: consequence cho plan abort do security error
-              recordPlanTerminal({
-                planId: plan.id,
-                planStatus: 'aborted',
-                stopReason: plan.stopReason,
-                goalSummary: plan.goal,
-                sessionId,
-                taskId,
-              });
-            }
-            this.checkpointStore.setPlan(sessionId, plan);
-            log.info(`[Engine A1] Tool ${toolName} error classified as "${category}": ${errorMsg.slice(0, 100)}`);
-          }
-        }
+                  const currentItem = plan.items[plan.currentItemIndex];
+                  if (currentItem && currentItem.status !== 'completed') {
+                    currentItem.errorCategory = category;
+                    currentItem.error = errorMsg.slice(0, 300);
+                    if (category === 'security') {
+                      // Security error → abort entire plan
+                      const previousStatus = plan.status;
+                      plan.status = 'aborted';
+                      plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
+                      log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
+                      const transErr = validateTransition(previousStatus, 'aborted');
+                      if (transErr) {
+                        log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${previousStatus} → aborted: ${transErr}`);
+                      } else {
+                        plan.sequenceNumber += 1;
+                        this.checkpointStore.setPlan(sessionId, plan);
+                        this.emitPlanUpdated(plan, previousStatus, 'abort');
+                      }
+                    }
+                  }
+                }
       }
 
       // Emit file events for file-writing tools
@@ -935,18 +935,21 @@ export class Engine extends EventEmitter {
         // promote vì loop toàn update_plan/empty). Guard dưới đây fail-loud nếu
         // transition bất hợp pháp (đừng silent-write như trước).
         const transErr = validateTransition(plan.status, 'paused_limit');
-        if (transErr) {
-          log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${plan.status} → paused_limit: ${transErr}`);
-          return null;
-        }
-        const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
-        if (hitAbsoluteCeiling) {
-          log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);
-        }
-        plan.status = 'paused_limit';
-        plan.stopReason = hitAbsoluteCeiling ? `absolute_safety_ceiling (${result.toolCycles})` : `maxToolCycles (${result.toolCycles})`;
-        this.checkpointStore.setPlan(sessionId, plan);
-        log.info(`[Engine] Plan ${plan.id} → paused_limit after ${result.toolCycles} cycles`);
+                if (transErr) {
+                  log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${plan.status} → paused_limit: ${transErr}`);
+                  return null;
+                }
+                const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
+                if (hitAbsoluteCeiling) {
+                  log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);
+                }
+                const previousStatus = plan.status;
+                plan.status = 'paused_limit';
+                plan.stopReason = hitAbsoluteCeiling ? `absolute_safety_ceiling (${result.toolCycles})` : `maxToolCycles (${result.toolCycles})`;
+                plan.sequenceNumber += 1;
+                this.checkpointStore.setPlan(sessionId, plan);
+                this.emitPlanUpdated(plan, previousStatus, 'system_transition');
+                log.info(`[Engine] Plan ${plan.id} → paused_limit after ${result.toolCycles} cycles`);
       }
       // B3: Structured output contract
       let contract = `⏸️ **Plan paused** — đã dùng ${result.toolCycles} tool cycles (giới hạn ${this.agent.getMaxToolCycles()}).\n\n`;
@@ -1013,7 +1016,7 @@ export class Engine extends EventEmitter {
       // Agent trả [E1]/[E2]/[E3] = task KHÔNG hoàn thành (empty/stalled).
       // success=false + checkpoint.failed → stalled không bị tính là thành công,
       // và trên restart task không bị resurrect (terminal state đã durable).
-      const outcomeIsFailure = isFailureOutcome(result.content);
+      const outcomeIsFailure = result.success === false || isFailureOutcome(result.content);
 
       // E1 Diagnostics: log when outcome is failure for analysis
       const failurePattern = isFailureOutcome(result.content) ? 'E1/E2/E3' : 'UNKNOWN';
@@ -1103,8 +1106,29 @@ export class Engine extends EventEmitter {
   }
 
   getEventBus(): EventBus {
-      return this.eventBus;
-    }
+        return this.eventBus;
+      }
+
+    // ── Plan Event Emission ──
+      private emitPlanUpdated(plan: TaskPlan, previousStatus: string, triggerAction: 'create' | 'complete_item' | 'skip_item' | 'abort' | 'pause' | 'system_transition', changedItemIndex?: number): void {
+        const event = EventFactory.planUpdated({
+          planId: plan.id,
+          sessionId: plan.sessionId,
+          requestId: plan.requestId,
+          previousStatus,
+          newStatus: plan.status,
+          triggerAction,
+          changedItemIndex,
+          changedItemId: changedItemIndex !== undefined ? plan.items[changedItemIndex]?.id : undefined,
+          changedItemStatus: changedItemIndex !== undefined ? plan.items[changedItemIndex]?.status : undefined,
+          currentItemIndex: plan.currentItemIndex,
+          stopReason: plan.stopReason,
+          updatedAt: Date.now(),
+          sequenceNumber: plan.sequenceNumber,
+          plan,
+        });
+        this.eventBus.publish(event);
+      }
 
     getTaskQueue(): TaskQueue {
       return this.taskQueue;
