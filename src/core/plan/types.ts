@@ -96,6 +96,7 @@ export interface TaskPlan {
   createdAt: number;
   completedAt?: number;
   abandonAfterMs: number;        // default 2 giờ (2 * 60 * 60 * 1000)
+  sequenceNumber: number;        // versioning for optimistic concurrency / plan updates
 }
 
 /**

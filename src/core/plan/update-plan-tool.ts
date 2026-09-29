@@ -142,6 +142,7 @@ ACTIONS:
           currentItemIndex: 0,
           createdAt: Date.now(),
           abandonAfterMs: DEFAULT_ABANDON_MS,
+          sequenceNumber: 0,
         };
 
         checkpointStore.setPlan(sessionId, plan);

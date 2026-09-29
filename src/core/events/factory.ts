@@ -3,6 +3,7 @@
  * @layer core
  * @created 2026-06-20
  * @updated 2026-06-21 — Phase 4A: decisionId linkage, reasoningSnippet, updated tool schemas
+ * @updated 2026-09-28 — Added PlanUpdated event
  */
 
 import { randomUUID } from 'crypto';
@@ -22,6 +23,7 @@ import {
   ErrorEventSchema,
   BaseEventSchema,
   BehaviorPlanGeneratedSchema,
+  PlanUpdatedSchema,
 } from './types.js';
 
 // Reasoning updated schema (not in types.ts yet)
@@ -35,7 +37,6 @@ const ReasoningUpdatedSchema = BaseEventSchema.extend({
     isFinal: z.boolean(),
   }),
 });
-
 
 
 export class EventFactory {
@@ -171,4 +172,41 @@ export class EventFactory {
       },
     });
   }
+
+  static planUpdated(options: {
+      planId: string;
+      sessionId: string;
+      requestId: string;
+      previousStatus: string;
+      newStatus: string;
+      triggerAction: 'create' | 'complete_item' | 'skip_item' | 'abort' | 'pause' | 'system_transition';
+      changedItemIndex?: number;
+      changedItemId?: string;
+      changedItemStatus?: string;
+      currentItemIndex?: number;
+      stopReason?: string;
+      updatedAt?: number;
+      sequenceNumber?: number;
+      plan?: any;
+    }): AgentEvent {
+      return PlanUpdatedSchema.parse({
+        ...this.createBase('plan_updated'),
+        payload: {
+          planId: options.planId,
+          sessionId: options.sessionId,
+          requestId: options.requestId,
+          previousStatus: options.previousStatus,
+          newStatus: options.newStatus,
+          triggerAction: options.triggerAction,
+          changedItemIndex: options.changedItemIndex,
+          changedItemId: options.changedItemId,
+          changedItemStatus: options.changedItemStatus,
+          currentItemIndex: options.currentItemIndex ?? 0,
+          stopReason: options.stopReason,
+          updatedAt: options.updatedAt ?? Date.now(),
+          sequenceNumber: options.sequenceNumber ?? 0,
+          plan: options.plan,
+        },
+      });
+    }
 }
