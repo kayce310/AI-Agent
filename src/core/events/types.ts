@@ -160,7 +160,7 @@ export const WorldDeltaSchema = BaseEventSchema.extend({
 export const BehaviorPlanGeneratedSchema = BaseEventSchema.extend({
   type: z.literal('behavior_plan_generated'),
   payload: z.object({
-    planId: z.string().uuid(),
+    planId: z.string(),
     sourceEventId: z.string().uuid(),
     sourceEventType: z.string(),
     taskId: z.string().optional(),
@@ -184,6 +184,27 @@ export const BehaviorEmotionStatsSchema = BaseEventSchema.extend({
   payload: z.record(z.string(), z.unknown()),
 });
 
+// ═══ PLAN EVENTS ═══
+export const PlanUpdatedSchema = BaseEventSchema.extend({
+  type: z.literal('plan_updated'),
+  payload: z.object({
+    planId: z.string(),
+    sessionId: z.string(),
+    requestId: z.string(),
+    previousStatus: z.string(),
+    newStatus: z.string(),
+    triggerAction: z.enum(['create', 'complete_item', 'skip_item', 'abort', 'pause', 'system_transition']),
+    changedItemIndex: z.number().optional(),
+    changedItemId: z.string().optional(),
+    changedItemStatus: z.string().optional(),
+    currentItemIndex: z.number(),
+    stopReason: z.string().optional(),
+    updatedAt: z.number(),
+    sequenceNumber: z.number(),
+    plan: z.any(), // TaskPlan - avoid circular import
+  }),
+});
+
 // ═══ UNION TYPE ═══
 export const AgentEventSchema = z.discriminatedUnion('type', [
   TaskCreatedSchema,
@@ -201,6 +222,7 @@ export const AgentEventSchema = z.discriminatedUnion('type', [
   BehaviorPlanGeneratedSchema,
   EmotionAnnotatedSchema,
   BehaviorEmotionStatsSchema,
+  PlanUpdatedSchema,
 ]);
 
 export type AgentEvent = z.infer<typeof AgentEventSchema>;
@@ -222,4 +244,5 @@ export enum EventType {
   BEHAVIOR_PLAN_GENERATED = 'behavior_plan_generated',
   EMOTION_ANNOTATED = 'emotion_annotated',
   BEHAVIOR_EMOTION_STATS = 'behavior_emotion_stats',
+  PLAN_UPDATED = 'plan_updated',
 }

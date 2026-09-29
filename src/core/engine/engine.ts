@@ -480,20 +480,20 @@ export class Engine extends EventEmitter {
                     currentItem.errorCategory = category;
                     currentItem.error = errorMsg.slice(0, 300);
                     if (category === 'security') {
-                      // Security error → abort entire plan
-                      const previousStatus = plan.status;
-                      plan.status = 'aborted';
-                      plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
-                      log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
-                      const transErr = validateTransition(previousStatus, 'aborted');
-                      if (transErr) {
-                        log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${previousStatus} → aborted: ${transErr}`);
-                      } else {
-                        plan.sequenceNumber += 1;
-                        this.checkpointStore.setPlan(sessionId, plan);
-                        this.emitPlanUpdated(plan, previousStatus, 'abort');
-                      }
-                    }
+                                          // Security error → abort entire plan
+                                          const previousStatus = plan.status;
+                                          plan.status = 'aborted';
+                                          plan.stopReason = `security_error: ${toolName} — ${errorMsg.slice(0, 200)}`;
+                                          log.warn(`[Engine] Plan ${plan.id} ABORTED due to security error in ${toolName}`);
+                                          const transErr = validateTransition(previousStatus, 'aborted');
+                                          if (transErr) {
+                                            log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${previousStatus} → aborted: ${transErr}`);
+                                          } else {
+                                            plan.sequenceNumber = (plan.sequenceNumber ?? 0) + 1;
+                                            this.checkpointStore.setPlan(sessionId, plan);
+                                            this.emitPlanUpdated(plan, previousStatus, 'abort');
+                                          }
+                                        }
                   }
                 }
       }
@@ -935,21 +935,21 @@ export class Engine extends EventEmitter {
         // promote vì loop toàn update_plan/empty). Guard dưới đây fail-loud nếu
         // transition bất hợp pháp (đừng silent-write như trước).
         const transErr = validateTransition(plan.status, 'paused_limit');
-                if (transErr) {
-                  log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${plan.status} → paused_limit: ${transErr}`);
-                  return null;
-                }
-                const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
-                if (hitAbsoluteCeiling) {
-                  log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);
-                }
-                const previousStatus = plan.status;
-                plan.status = 'paused_limit';
-                plan.stopReason = hitAbsoluteCeiling ? `absolute_safety_ceiling (${result.toolCycles})` : `maxToolCycles (${result.toolCycles})`;
-                plan.sequenceNumber += 1;
-                this.checkpointStore.setPlan(sessionId, plan);
-                this.emitPlanUpdated(plan, previousStatus, 'system_transition');
-                log.info(`[Engine] Plan ${plan.id} → paused_limit after ${result.toolCycles} cycles`);
+                        if (transErr) {
+                          log.warn(`⚠️⚠️⚠️ [Engine] REFUSED illegal transition ${plan.status} → paused_limit: ${transErr}`);
+                          return null;
+                        }
+                        const hitAbsoluteCeiling = result.toolCycles >= ABSOLUTE_SAFETY_CEILING;
+                        if (hitAbsoluteCeiling) {
+                          log.warn(`⚠️⚠️⚠️ [Engine] Plan ${plan.id} hit ABSOLUTE_SAFETY_CEILING (${ABSOLUTE_SAFETY_CEILING}) — possible bug! Counter stagnation logic may be broken.`);
+                        }
+                        const previousStatus = plan.status;
+                        plan.status = 'paused_limit';
+                        plan.stopReason = hitAbsoluteCeiling ? `absolute_safety_ceiling (${result.toolCycles})` : `maxToolCycles (${result.toolCycles})`;
+                        plan.sequenceNumber = (plan.sequenceNumber ?? 0) + 1;
+                        this.checkpointStore.setPlan(sessionId, plan);
+                        this.emitPlanUpdated(plan, previousStatus, 'system_transition');
+                        log.info(`[Engine] Plan ${plan.id} → paused_limit after ${result.toolCycles} cycles`);
       }
       // B3: Structured output contract
       let contract = `⏸️ **Plan paused** — đã dùng ${result.toolCycles} tool cycles (giới hạn ${this.agent.getMaxToolCycles()}).\n\n`;

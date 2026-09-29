@@ -1313,27 +1313,27 @@ export class Agent extends EventEmitter {
                       }
                     } else {
                       // Permanent OR security OR transient-exceeded-limit: count toward stuck
-                      currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
-                      log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
-                      if (thresholdReached || currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
-                                              // ponytail: route qua validateTransition — pending/running→stuck
-                                              // hợp lệ (types.ts); fail-loud nếu state machine đổi
-                                              const transErr = validateTransition(sp.status, 'stuck');
-                                              if (transErr) {
-                                                log.warn(`⚠️ [Stagnation] REFUSED illegal transition ${sp.status} → stuck: ${transErr}`);
-                                              } else {
-                                                const previousStatus = sp.status;
-                                                sp.status = 'stuck';
-                                                sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
-                                                sp.sequenceNumber += 1;
-                                                this.checkpointStore.setPlan(request.sessionId, sp);
-                                                const engine = this as any; // Access Engine's emitPlanUpdated
-                                                if (engine.emitPlanUpdated) {
-                                                  engine.emitPlanUpdated(sp, previousStatus, 'system_transition', currentIdx);
-                                                }
-                                                log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
-                                              }
-                                            }
+                                            currentItem.consecutiveFailedAttempts = (currentItem.consecutiveFailedAttempts || 0) + 1;
+                                            log.info(`[Stagnation] Item ${currentIdx} attempt ${currentItem.consecutiveFailedAttempts}/${STAGNATION_THRESHOLD} (category=${cycleErrorCategory || 'unknown'})`);
+                                            if (thresholdReached || currentItem.consecutiveFailedAttempts >= STAGNATION_THRESHOLD) {
+                                                                    // ponytail: route qua validateTransition — pending/running→stuck
+                                                                    // hợp lệ (types.ts); fail-loud nếu state machine đổi
+                                                                    const transErr = validateTransition(sp.status, 'stuck');
+                                                                    if (transErr) {
+                                                                      log.warn(`⚠️ [Stagnation] REFUSED illegal transition ${sp.status} → stuck: ${transErr}`);
+                                                                    } else {
+                                                                      const previousStatus = sp.status;
+                                                                      sp.status = 'stuck';
+                                                                      sp.stopReason = `stagnation: item ${currentIdx} failed ${currentItem.consecutiveFailedAttempts} consecutive attempts`;
+                                                                      sp.sequenceNumber = (sp.sequenceNumber ?? 0) + 1;
+                                                                      this.checkpointStore.setPlan(request.sessionId, sp);
+                                                                      const engine = this as any; // Access Engine's emitPlanUpdated
+                                                                      if (engine.emitPlanUpdated) {
+                                                                        engine.emitPlanUpdated(sp, previousStatus, 'system_transition', currentIdx);
+                                                                      }
+                                                                      log.warn(`[Stagnation] Plan ${sp.id} → stuck (item ${currentIdx}: ${currentItem.consecutiveFailedAttempts} consecutive failures)`);
+                                                                    }
+                                                                  }
                     }
                   }
                 }
