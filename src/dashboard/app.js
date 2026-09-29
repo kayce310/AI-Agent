@@ -93,20 +93,36 @@
   }
 
   const themeToggle = $('#theme-toggle');
-  const telemetryDebugEl = $('#telemetry-debug');
-  const viewToggleBtn = $('#view-toggle');
-  const inspectorPanel = $('#inspector');
-  const inspectorTitle = $('#inspector-title');
-  const inspectorContent = $('#inspector-content');
-  const inspectorClose = $('#inspector-close');
-  // Tabs
-  const tabMissionBtn = $('#tab-mission');
-  const tabTraceBtn = $('#tab-trace');
-  const missionView = $('#mission-view');
-  const traceView = $('#trace-view');
-  const traceContainer = $('#trace-container');
-  const traceTaskId$ = $('#trace-task-id');
-  const traceTaskStatus = $('#trace-task-status');
+    const telemetryDebugEl = $('#telemetry-debug');
+    const viewToggleBtn = $('#view-toggle');
+    const inspectorPanel = $('#inspector');
+    const inspectorTitle = $('#inspector-title');
+    const inspectorContent = $('#inspector-content');
+    const inspectorClose = $('#inspector-close');
+    // Tabs
+    const tabMissionBtn = $('#tab-mission');
+    const tabTraceBtn = $('#tab-trace');
+    const tabFocusBtn = $('#tab-focus');
+    const tabVerificationBtn = $('#tab-verification');
+    const tabRecoveryBtn = $('#tab-recovery');
+    const tabProviderBtn = $('#tab-provider');
+    const tabRuntimeBtn = $('#tab-runtime');
+    const tabDelegationBtn = $('#tab-delegation');
+    const tabMemoryBtn = $('#tab-memory');
+    const tabBrainBtn = $('#tab-brain');
+    const missionView = $('#mission-view');
+    const traceView = $('#trace-view');
+    const focusView = $('#focus-view');
+    const verificationView = $('#verification-view');
+    const recoveryView = $('#recovery-view');
+    const providerView = $('#provider-view');
+    const runtimeView = $('#runtime-view');
+    const delegationView = $('#delegation-view');
+    const memoryView = $('#memory-view');
+    const brainView = $('#brain-view');
+    const traceContainer = $('#trace-container');
+    const traceTaskId$ = $('#trace-task-id');
+    const traceTaskStatus = $('#trace-task-status');
 
   // ═══ INIT ═══
   function init() {
@@ -123,26 +139,28 @@
   }
 
   // ═══ WEBSOCKET ═══
-  function connectWebSocket() {
-    try {
-      ws = new WebSocket(WS_URL);
-      ws.onopen = () => {
-        console.log('[Dashboard] WebSocket connected');
-        wsIndicator.className = 'ws-connected';
-        wsIndicator.title = 'WebSocket connected';
-      };
-      ws.onclose = (e) => {
-        console.log(`[Dashboard] WebSocket closed: code=${e.code} reason=${e.reason}`);
-        wsIndicator.className = 'ws-disconnected';
-        wsIndicator.title = 'WebSocket disconnected — retrying in 3s';
-        setTimeout(connectWebSocket, 3000);
-      };
-      ws.onerror = (e) => {
-        console.error('[Dashboard] WebSocket error:', e);
-        wsIndicator.className = 'ws-disconnected';
-        wsIndicator.title = 'WebSocket error — check console';
-      };
-      ws.onmessage = (e) => {
+    function connectWebSocket() {
+      wsIndicator.className = 'ws-connecting';
+      wsIndicator.title = 'WebSocket connecting...';
+      try {
+        ws = new WebSocket(WS_URL);
+        ws.onopen = () => {
+          console.log('[Dashboard] WebSocket connected');
+          wsIndicator.className = 'ws-connected';
+          wsIndicator.title = 'WebSocket connected';
+        };
+        ws.onclose = (e) => {
+          console.log(`[Dashboard] WebSocket closed: code=${e.code} reason=${e.reason}`);
+          wsIndicator.className = 'ws-disconnected';
+          wsIndicator.title = 'WebSocket disconnected — retrying in 3s';
+          setTimeout(connectWebSocket, 3000);
+        };
+        ws.onerror = (e) => {
+          console.error('[Dashboard] WebSocket error:', e);
+          wsIndicator.className = 'ws-disconnected';
+          wsIndicator.title = 'WebSocket error — check console';
+        };
+        ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data);
           if (msg.type === 'init' || msg.type === 'event') {
@@ -1156,38 +1174,43 @@
   }
 
   // ═══ TABS ═══
-  function setupTabs() {
-    tabMissionBtn?.addEventListener('click', () => switchTab('mission'));
-    tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
-    document.getElementById('tab-focus')?.addEventListener('click', () => switchTab('focus'));
-    document.getElementById('tab-memory')?.addEventListener('click', () => switchTab('memory'));
-    // Tab graph riêng đã bỏ - graph nằm trong brain tab
-    document.getElementById('tab-brain')?.addEventListener('click', () => switchTab('brain'));
-    
-    // Setup pause button (Priority 5)
-    const pauseBtn = document.getElementById('focus-pause-btn');
-    if (pauseBtn) {
-      pauseBtn.addEventListener('click', togglePauseFocus);
-    }
+    function setupTabs() {
+      tabMissionBtn?.addEventListener('click', () => switchTab('mission'));
+      tabTraceBtn?.addEventListener('click', () => switchTab('trace'));
+      tabFocusBtn?.addEventListener('click', () => switchTab('focus'));
+      tabVerificationBtn?.addEventListener('click', () => switchTab('verification'));
+      tabRecoveryBtn?.addEventListener('click', () => switchTab('recovery'));
+      tabProviderBtn?.addEventListener('click', () => switchTab('provider'));
+      tabRuntimeBtn?.addEventListener('click', () => switchTab('runtime'));
+      tabDelegationBtn?.addEventListener('click', () => switchTab('delegation'));
+      tabMemoryBtn?.addEventListener('click', () => switchTab('memory'));
+      tabBrainBtn?.addEventListener('click', () => switchTab('brain'));
+      // Tab graph riêng đã bỏ - graph nằm trong brain tab
 
-    // Legend toggle cho brain tab
-    const legendToggle = document.getElementById('brain-legend-toggle');
-    const legend = document.getElementById('brain-legend');
-    if (legendToggle && legend) {
-      // Collapse mặc định trên mobile
-      if (window.innerWidth < 768) {
-        legend.classList.add('collapsed');
-        legendToggle.textContent = '▶';
+      // Setup pause button (Priority 5)
+      const pauseBtn = document.getElementById('focus-pause-btn');
+      if (pauseBtn) {
+        pauseBtn.addEventListener('click', togglePauseFocus);
       }
-      legendToggle.addEventListener('click', function () {
-        legend.classList.toggle('collapsed');
-        legendToggle.textContent = legend.classList.contains('collapsed') ? '▶' : '▼';
-      });
-    }
 
-    // View mode buttons for Brain tab (🧠 Brain / ⚡ Combined / 📊 Graph)
-    setupBrainViewModes();
-  }
+      // Legend toggle cho brain tab
+      const legendToggle = document.getElementById('brain-legend-toggle');
+      const legend = document.getElementById('brain-legend');
+      if (legendToggle && legend) {
+        // Collapse mặc định trên mobile
+        if (window.innerWidth < 768) {
+          legend.classList.add('collapsed');
+          legendToggle.textContent = '▶';
+        }
+        legendToggle.addEventListener('click', function () {
+          legend.classList.toggle('collapsed');
+          legendToggle.textContent = legend.classList.contains('collapsed') ? '▶' : '▼';
+        });
+      }
+
+      // View mode buttons for Brain tab (🧠 Brain / ⚡ Combined / 📊 Graph)
+      setupBrainViewModes();
+    }
 
   function setupBrainViewModes() {
     const modes = [
@@ -1214,45 +1237,65 @@
   }
 
   function switchTab(tab) {
-    if (currentTab === tab) return;
-    currentTab = tab;
+      if (currentTab === tab) return;
+      currentTab = tab;
     
-    tabMissionBtn?.classList.toggle('active', tab === 'mission');
-    tabTraceBtn?.classList.toggle('active', tab === 'trace');
-    document.getElementById('tab-focus')?.classList.toggle('active', tab === 'focus');
-    document.getElementById('tab-memory')?.classList.toggle('active', tab === 'memory');
-    document.getElementById('tab-brain')?.classList.toggle('active', tab === 'brain');
-    // Tab graph riêng đã bị bỏ - graph nằm trong brain tab
+      tabMissionBtn?.classList.toggle('active', tab === 'mission');
+      tabTraceBtn?.classList.toggle('active', tab === 'trace');
+      tabFocusBtn?.classList.toggle('active', tab === 'focus');
+      tabVerificationBtn?.classList.toggle('active', tab === 'verification');
+      tabRecoveryBtn?.classList.toggle('active', tab === 'recovery');
+      tabProviderBtn?.classList.toggle('active', tab === 'provider');
+      tabRuntimeBtn?.classList.toggle('active', tab === 'runtime');
+      tabDelegationBtn?.classList.toggle('active', tab === 'delegation');
+      tabMemoryBtn?.classList.toggle('active', tab === 'memory');
+      tabBrainBtn?.classList.toggle('active', tab === 'brain');
+      // Tab graph riêng đã bị bỏ - graph nằm trong brain tab
     
-    missionView?.classList.toggle('hidden', tab !== 'mission');
-    traceView?.classList.toggle('hidden', tab !== 'trace');
-    document.getElementById('focus-view')?.classList.toggle('hidden', tab !== 'focus');
-    document.getElementById('memory-view')?.classList.toggle('hidden', tab !== 'memory');
-    document.getElementById('brain-view')?.classList.toggle('hidden', tab !== 'brain');
-    // Graph view riêng không còn - graph nằm trong brain tab
-    
-    if (tab === 'trace') {
-      renderTrace();
-      renderMcpTrace();
-      renderCost();
-      renderControl();
-    } else if (tab === 'focus') {
-      renderFocus();
-    } else if (tab === 'memory') {
-      // Signal memory tab to load (handled by memory-tab.js)
-      document.dispatchEvent(new CustomEvent('memory-tab-activated'));
-    } else if (tab === 'brain') {
-      // Initialize CodeGraph on FIRST visit only
-      const container = document.getElementById('brain-canvas-container');
-      if (container && window.THREE && window.CodeGraph && !container.querySelector('canvas')) {
-        window.CodeGraph.init(container);
-        // Load graph data automatically
-        window.CodeGraph.loadGraph().catch(err => {
-          console.warn('[Dashboard] Failed to load graph:', err.message);
-        });
+      missionView?.classList.toggle('hidden', tab !== 'mission');
+      traceView?.classList.toggle('hidden', tab !== 'trace');
+      focusView?.classList.toggle('hidden', tab !== 'focus');
+      verificationView?.classList.toggle('hidden', tab !== 'verification');
+      recoveryView?.classList.toggle('hidden', tab !== 'recovery');
+      providerView?.classList.toggle('hidden', tab !== 'provider');
+      runtimeView?.classList.toggle('hidden', tab !== 'runtime');
+      delegationView?.classList.toggle('hidden', tab !== 'delegation');
+      memoryView?.classList.toggle('hidden', tab !== 'memory');
+      brainView?.classList.toggle('hidden', tab !== 'brain');
+      // Graph view riêng không còn - graph nằm trong brain tab
+
+      if (tab === 'trace') {
+        renderTrace();
+        renderMcpTrace();
+        renderCost();
+        renderControl();
+      } else if (tab === 'focus') {
+        renderFocus();
+      } else if (tab === 'verification') {
+        renderVerification();
+      } else if (tab === 'recovery') {
+        renderRecovery();
+      } else if (tab === 'provider') {
+        renderProvider();
+      } else if (tab === 'runtime') {
+        renderRuntime();
+      } else if (tab === 'delegation') {
+        renderDelegation();
+      } else if (tab === 'memory') {
+        // Signal memory tab to load (handled by memory-tab.js)
+        document.dispatchEvent(new CustomEvent('memory-tab-activated'));
+      } else if (tab === 'brain') {
+        // Initialize CodeGraph on FIRST visit only
+        const container = document.getElementById('brain-canvas-container');
+        if (container && window.THREE && window.CodeGraph && !container.querySelector('canvas')) {
+          window.CodeGraph.init(container);
+          // Load graph data automatically
+          window.CodeGraph.loadGraph().catch(err => {
+            console.warn('[Dashboard] Failed to load graph:', err.message);
+          });
+        }
       }
     }
-  }
 
   function renderTrace() {
     const taskId = traceTaskId || lastCompletedTaskId;
@@ -1317,17 +1360,17 @@
         
         traceContainer.innerHTML = html;
         
-        // Attach click handlers
-        traceContainer.find('[data-decision-index]').forEach(el => {
-          el.addEventListener('click', (e) => onTraceDecisionClick(e, trace.decisions));
-        });
-        traceContainer.find('[data-trace-tool-idx]').forEach(el => {
-          el.addEventListener('click', (e) => onTraceToolClick(e, trace.decisions));
-        });
-        traceContainer.find('[data-trace-artifact-idx]').forEach(el => {
-          el.addEventListener('click', (e) => onTraceArtifactClick(e, trace.decisions));
-        });
-      })
+                // Attach click handlers
+                traceContainer.querySelectorAll('[data-decision-index]').forEach(el => {
+                  el.addEventListener('click', (e) => onTraceDecisionClick(e, trace.decisions));
+                });
+                traceContainer.querySelectorAll('[data-trace-tool-idx]').forEach(el => {
+                  el.addEventListener('click', (e) => onTraceToolClick(e, trace.decisions));
+                });
+                traceContainer.querySelectorAll('[data-trace-artifact-idx]').forEach(el => {
+                  el.addEventListener('click', (e) => onTraceArtifactClick(e, trace.decisions));
+                });
+              })
       .catch(err => {
         traceContainer.innerHTML = `<div class="empty-state">Error loading trace: ${escapeHtml(err.message)}</div>`;
       });
@@ -1849,7 +1892,529 @@
     document.getElementById('focus-context-status').textContent = status;
   }
 
-  // ═══ FILTERS ═══
+  // ═══ PHASE 6: VERIFICATION RENDER ═══
+  async function renderVerification() {
+        const gateEl = document.getElementById('verification-gate');
+        const evidenceEl = document.getElementById('evidence-list');
+        const planInfoEl = document.getElementById('verification-plan-info');
+        if (!gateEl || !evidenceEl || !planInfoEl) return;
+
+        const sessionId = agentState.currentTaskId;
+        if (!sessionId) {
+          planInfoEl.innerHTML = '<span class="verification-plan-id">No active plan</span>';
+          gateEl.innerHTML = '<div class="empty-state">No verification data available</div>';
+          evidenceEl.innerHTML = '<div class="empty-state">No evidence records</div>';
+          return;
+        }
+
+        try {
+          const [gateRes, evidenceRes] = await Promise.all([
+            fetch(`/api/plan/${sessionId}/gate`),
+            fetch(`/api/evidence/${sessionId}`)
+          ]);
+
+          if (!gateRes.ok) throw new Error('Gate fetch failed');
+          if (!evidenceRes.ok) throw new Error('Evidence fetch failed');
+
+          const gateData = await gateRes.json();
+          const evidenceData = await evidenceRes.json();
+
+          if (!gateData.success || !gateData.data) throw new Error('Invalid gate response');
+          if (!evidenceData.success || !evidenceData.data) throw new Error('Invalid evidence response');
+
+          const gate = gateData.data;
+          const evidence = evidenceData.data;
+
+          planInfoEl.innerHTML = `
+            <span class="verification-plan-id">Plan: ${escapeHtml(gate.planId || 'unknown')}</span>
+            <span class="verification-plan-status">Status: ${escapeHtml(gate.planStatus || 'unknown')}</span>
+            <span class="verification-eval-time">Last evaluated: ${new Date(gate.evaluatedAt).toLocaleString()}</span>
+          `;
+
+          if (!gate.items || gate.items.length === 0) {
+            gateEl.innerHTML = '<div class="empty-state">No plan items</div>';
+          } else {
+            gateEl.innerHTML = gate.items.map(item => renderGateItem(item)).join('');
+          }
+
+          if (!evidence.evidence || Object.keys(evidence.evidence).length === 0) {
+            evidenceEl.innerHTML = '<div class="empty-state">No evidence records</div>';
+          } else {
+            evidenceEl.innerHTML = Object.entries(evidence.evidence).map(([itemId, records]) =>
+              renderEvidenceGroup(itemId, records)
+            ).join('');
+          }
+        } catch (err) {
+          console.error('[Verification] Render error:', err);
+          gateEl.innerHTML = `<div class="empty-state error">Error loading verification: ${escapeHtml(err.message)}</div>`;
+          evidenceEl.innerHTML = `<div class="empty-state error">Error loading evidence: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      function renderGateItem(item) {
+        const statusClass = `gate-item-status ${item.status}`;
+        const canCompleteText = item.canComplete ? 'Yes' : 'No';
+        const canCompleteClass = item.canComplete ? 'yes' : 'no';
+
+        let eligibilityHtml = '';
+        if (item.eligibility) {
+          const evalData = item.eligibility;
+          const sourceBadge = evalData.source === 'on_demand'
+            ? `<span class="gate-eval-source">${I18N.t('verification.on_demand')}</span>`
+            : '';
+
+          eligibilityHtml = `
+            <div class="gate-item-eligibility">
+              <div class="gate-eligibility-header">
+                <span>${I18N.t('verification.evaluation')}</span>
+                ${sourceBadge}
+                <span class="gate-eval-timestamp">${new Date(evalData.evaluatedAt).toLocaleString()}</span>
+              </div>
+              <div class="gate-eval-meta">
+                <div class="gate-eval-field">
+                  <span class="gate-meta-label">${I18N.t('verification.eligible')}</span>
+                  <span class="gate-meta-value ${evalData.eligible ? 'yes' : 'no'}">${evalData.eligible ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="gate-eval-field">
+                  <span class="gate-meta-label">${I18N.t('verification.can_auto_complete')}</span>
+                  <span class="gate-meta-value ${evalData.canAutoComplete ? 'yes' : 'no'}">${evalData.canAutoComplete ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="gate-eval-field">
+                  <span class="gate-meta-label">${I18N.t('verification.has_semantic')}</span>
+                  <span class="gate-meta-value ${evalData.hasSemanticCriteria ? 'yes' : 'no'}">${evalData.hasSemanticCriteria ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="gate-eval-field">
+                  <span class="gate-meta-label">${I18N.t('verification.blocked_required')}</span>
+                  <span class="gate-meta-value ${evalData.blockedByRequired ? 'yes' : 'no'}">${evalData.blockedByRequired ? 'Yes' : 'No'}</span>
+                </div>
+              </div>
+              ${evalData.evaluations && evalData.evaluations.length > 0 ? `
+                <div class="gate-eval-criteria">
+                  <span class="gate-eval-criteria-title">${I18N.t('verification.criteria')}</span>
+                  ${evalData.evaluations.map(e => `
+                    <div class="gate-criterion">
+                      <div class="gate-criterion-info">
+                        <span class="gate-criterion-id">${escapeHtml(e.criterionId)}</span>
+                        ${e.reasoning ? `<span class="gate-criterion-reasoning">${escapeHtml(e.reasoning)}</span>` : ''}
+                      </div>
+                      <span class="gate-criterion-outcome ${e.outcome}">${e.outcome}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        return `
+          <div class="gate-item" data-item-id="${escapeHtml(item.id)}">
+            <div class="gate-item-header">
+              <div>
+                <span class="gate-item-title">${escapeHtml(item.description)}</span>
+                <span class="gate-item-index">#${item.index + 1} | ${escapeHtml(item.id.substring(0, 8))}...</span>
+              </div>
+              <span class="${statusClass}">${item.status}</span>
+            </div>
+            <div class="gate-item-meta">
+              <div class="gate-meta-field">
+                <span class="gate-meta-label">${I18N.t('verification.item_status')}</span>
+                <span class="gate-meta-value">${item.status}</span>
+              </div>
+              <div class="gate-meta-field">
+                <span class="gate-meta-label">${I18N.t('verification.can_complete')}</span>
+                <span class="gate-meta-value ${canCompleteClass}">${canCompleteText}</span>
+              </div>
+              ${item.completionReason ? `
+                <div class="gate-meta-field">
+                  <span class="gate-meta-label">${I18N.t('verification.completion_reason')}</span>
+                  <span class="gate-meta-value">${escapeHtml(item.completionReason)}</span>
+                </div>
+              ` : ''}
+            </div>
+            ${eligibilityHtml}
+          </div>
+        `;
+      }
+
+      function renderEvidenceGroup(itemId, records) {
+        if (!records || records.length === 0) return '';
+
+        return `
+          <div class="evidence-item-group" data-item-id="${escapeHtml(itemId)}">
+            <div class="evidence-group-header">
+              <span class="evidence-item-title">Item: ${escapeHtml(itemId.substring(0, 12))}...</span>
+              <span class="evidence-item-count">${records.length} tool call(s)</span>
+            </div>
+            <div class="evidence-records">
+              ${records.map(r => `
+                <div class="evidence-record">
+                  <span class="evidence-record-tool">${escapeHtml(r.toolName)}</span>
+                  <div class="evidence-record-meta">
+                    <span class="evidence-record-time">${new Date(r.timestamp).toLocaleString()}</span>
+                    <span class="evidence-record-success ${r.success}">${r.success ? 'Success' : 'Failed'}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // ═══ PHASE 6: RECOVERY RENDER ═══
+      async function renderRecovery() {
+        const checkpointsEl = document.getElementById('recovery-checkpoints');
+        const sessionEl = document.getElementById('recovery-session');
+        const restartEl = document.getElementById('recovery-restart');
+        if (!checkpointsEl) return;
+
+        try {
+          const [checkpointsRes, sessionRes] = await Promise.all([
+            fetch('/api/recovery/checkpoints'),
+            fetch('/api/runtime/state'),
+          ]);
+
+          if (checkpointsRes.ok) {
+            const cpData = await checkpointsRes.json();
+            if (cpData.success && cpData.data && cpData.data.checkpoints && cpData.data.checkpoints.length > 0) {
+              checkpointsEl.innerHTML = cpData.data.checkpoints.map(cp => `
+                <div class="recovery-checkpoint-item">
+                  <div class="recovery-cp-header">
+                    <span class="recovery-cp-status ${cp.status}">${cp.status}</span>
+                    <span class="recovery-cp-id">${escapeHtml(cp.requestId?.substring(0, 12))}...</span>
+                  </div>
+                  <div class="recovery-cp-meta">
+                    <span>Session: ${escapeHtml(cp.sessionId?.substring(0, 8))}...</span>
+                    <span>Cycles: ${cp.cycleCount || 0}</span>
+                    <span>Started: ${new Date(cp.startedAt).toLocaleString()}</span>
+                  </div>
+                  ${cp.uncertainTools && cp.uncertainTools.length > 0 ? `
+                    <div class="recovery-uncertain">
+                      <strong>Uncertain tools:</strong> ${cp.uncertainTools.length}
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('');
+            } else {
+              checkpointsEl.innerHTML = '<div class="empty-state">No in-progress checkpoints</div>';
+            }
+          }
+
+          if (sessionRes.ok) {
+            const runtimeData = await sessionRes.json();
+            if (runtimeData.success && runtimeData.data) {
+              if (sessionEl) {
+                sessionEl.innerHTML = `
+                  <div class="recovery-session-info">
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">Status:</span>
+                      <span class="recovery-info-value">${runtimeData.data.isRunning ? '🟢 Running' : '⚪ Idle'}</span>
+                    </div>
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">Uptime:</span>
+                      <span class="recovery-info-value">${runtimeData.data.uptimeHuman || '—'}</span>
+                    </div>
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">Active Tasks:</span>
+                      <span class="recovery-info-value">${runtimeData.data.activeExecutions || 0}</span>
+                    </div>
+                  </div>
+                `;
+              }
+              if (restartEl) {
+                restartEl.innerHTML = `
+                  <div class="recovery-restart-info">
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">System Status:</span>
+                      <span class="recovery-info-value">🟢 Operational</span>
+                    </div>
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">Last Checkpoint:</span>
+                      <span class="recovery-info-value">${new Date().toLocaleString()}</span>
+                    </div>
+                    <div class="recovery-info-row">
+                      <span class="recovery-info-label">Restart Count:</span>
+                      <span class="recovery-info-value">—</span>
+                    </div>
+                  </div>
+                `;
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[Recovery] Render error:', err);
+          if (checkpointsEl) checkpointsEl.innerHTML = `<div class="empty-state error">Error: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      // ═══ PHASE 6: PROVIDER RENDER ═══
+      async function renderProvider() {
+        const activityEl = document.getElementById('provider-activity');
+        const latencyEl = document.getElementById('provider-latency');
+        const circuitEl = document.getElementById('provider-circuit');
+        const summaryEl = document.getElementById('provider-summary');
+        if (!activityEl) return;
+
+        try {
+          const [providerRes, circuitRes] = await Promise.all([
+            fetch('/api/provider/activity'),
+            fetch('/api/circuit-breaker/status'),
+          ]);
+
+          if (providerRes.ok) {
+            const providerData = await providerRes.json();
+            if (providerData.success && providerData.data) {
+              const data = providerData.data;
+
+              if (activityEl && data.recentCalls && data.recentCalls.length > 0) {
+                activityEl.innerHTML = data.recentCalls.slice(0, 20).map(call => `
+                  <div class="provider-call-item">
+                    <span class="provider-call-tool">${escapeHtml(call.toolName)}</span>
+                    ${call.provider ? `<span class="provider-call-provider">${escapeHtml(call.provider)}</span>` : ''}
+                    <span class="provider-call-status ${call.success ? 'success' : 'failed'}">${call.success ? '✓' : '✗'}</span>
+                  </div>
+                `).join('');
+              } else if (activityEl) {
+                activityEl.innerHTML = '<div class="empty-state">No provider activity yet</div>';
+              }
+
+              if (latencyEl && data.recentCalls && data.recentCalls.length > 0) {
+                const withLatency = data.recentCalls.filter(c => typeof c.latencyMs === 'number');
+                if (withLatency.length > 0) {
+                  const latencies = withLatency.map(c => c.latencyMs);
+                  const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+                  const maxLatency = Math.max(...latencies);
+                  latencyEl.innerHTML = `
+                    <div class="provider-latency-stats">
+                      <div class="provider-stat-row">
+                        <span>Average:</span>
+                        <span class="provider-stat-value">${avgLatency.toFixed(0)}ms</span>
+                      </div>
+                      <div class="provider-stat-row">
+                        <span>Max:</span>
+                        <span class="provider-stat-value">${maxLatency}ms</span>
+                      </div>
+                      <div class="provider-stat-row">
+                        <span>Fallbacks:</span>
+                        <span class="provider-stat-value ${data.summary.fallbackCount > 0 ? 'warn' : ''}">${data.summary.fallbackCount}</span>
+                      </div>
+                      <div class="provider-stat-row">
+                        <span>Retries:</span>
+                        <span class="provider-stat-value">${data.summary.retryCount}</span>
+                      </div>
+                    </div>
+                  `;
+                } else {
+                  latencyEl.innerHTML = '<div class="empty-state">No latency data available</div>';
+                }
+              }
+
+              if (summaryEl) {
+                summaryEl.innerHTML = `
+                  <div class="provider-summary-stats">
+                    <div class="provider-stat-row">
+                      <span>Total Calls:</span>
+                      <span class="provider-stat-value">${data.summary.totalCalls}</span>
+                    </div>
+                    <div class="provider-stat-row">
+                      <span>Success Rate:</span>
+                      <span class="provider-stat-value ${(data.summary.successRate * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="provider-stat-row">
+                      <span>Avg Latency:</span>
+                      <span class="provider-stat-value">${data.summary.avgLatencyMs.toFixed(0)}ms</span>
+                    </div>
+                    <div class="provider-stat-row">
+                      <span>Fallbacks:</span>
+                      <span class="provider-stat-value">${data.summary.fallbackCount}</span>
+                    </div>
+                    <div class="provider-stat-row">
+                      <span>Retries:</span>
+                      <span class="provider-stat-value">${data.summary.retryCount}</span>
+                    </div>
+                  </div>
+                `;
+              }
+            }
+          }
+
+          if (circuitRes.ok) {
+            const circuitData = await circuitRes.json();
+            if (circuitData.success && circuitData.data && circuitEl) {
+              const state = circuitData.data.state;
+              const healthy = circuitData.data.healthy;
+              circuitEl.innerHTML = `
+                <div class="provider-circuit-info">
+                  <div class="provider-stat-row">
+                    <span>State:</span>
+                    <span class="provider-stat-value ${healthy ? 'success' : 'failed'}">${state}</span>
+                  </div>
+                  <div class="provider-stat-row">
+                    <span>Healthy:</span>
+                    <span class="provider-stat-value ${healthy ? 'success' : 'failed'}">${healthy ? 'Yes' : 'No'}</span>
+                  </div>
+                  <div class="provider-stat-row">
+                    <span>Failure Count:</span>
+                    <span class="provider-stat-value">${circuitData.data.failureCount}</span>
+                  </div>
+                </div>
+              `;
+            }
+          }
+        } catch (err) {
+          console.error('[Provider] Render error:', err);
+          if (activityEl) activityEl.innerHTML = `<div class="empty-state error">Error: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      // ═══ PHASE 6: RUNTIME RENDER ═══
+      async function renderRuntime() {
+        const uptimeEl = document.getElementById('runtime-uptime');
+        const executionsEl = document.getElementById('runtime-executions');
+        const heartbeatEl = document.getElementById('runtime-heartbeat');
+        const alertsEl = document.getElementById('runtime-alerts');
+        const eventBusEl = document.getElementById('runtime-eventbus');
+        if (!uptimeEl) return;
+
+        try {
+          const res = await fetch('/api/runtime/state');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data) {
+              if (uptimeEl) {
+                uptimeEl.innerHTML = `
+                  <div class="runtime-uptime-display">
+                    <div class="uptime-value">${escapeHtml(data.data.uptimeHuman)}</div>
+                    <div class="uptime-detail">${data.data.uptimeMs.toLocaleString()}ms</div>
+                  </div>
+                `;
+              }
+
+              if (executionsEl) {
+                executionsEl.innerHTML = `
+                  <div class="runtime-executions-display">
+                    <div class="executions-count">${data.data.activeExecutions || 0}</div>
+                    <div class="executions-label">Active Task(s)</div>
+                  </div>
+                `;
+              }
+
+              if (heartbeatEl) {
+                heartbeatEl.innerHTML = `
+                  <div class="runtime-heartbeat-display">
+                    <div class="heartbeat-status ${data.data.isRunning ? 'running' : 'idle'}">
+                      ${data.data.isRunning ? '🟢 System Running' : '⚪ System Idle'}
+                    </div>
+                    <div class="heartbeat-detail">Last heartbeat: ${new Date(data.data.uptimeMs).toLocaleTimeString()}</div>
+                  </div>
+                `;
+              }
+
+              if (alertsEl && data.data.recentAlerts && data.data.recentAlerts.length > 0) {
+                alertsEl.innerHTML = data.data.recentAlerts.slice(0, 15).map(alert => `
+                  <div class="runtime-alert-item ${alert.type}">
+                    <span class="alert-type">${alert.type.toUpperCase()}</span>
+                    <span class="alert-message">${escapeHtml(alert.message)}</span>
+                    <span class="alert-time">${new Date(alert.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                `).join('');
+              } else if (alertsEl) {
+                alertsEl.innerHTML = '<div class="empty-state">No runtime alerts</div>';
+              }
+
+              if (eventBusEl && data.data.eventBusStats) {
+                eventBusEl.innerHTML = `
+                  <div class="runtime-eventbus-display">
+                    <div class="eventbus-stat-row">
+                      <span>Total Events:</span>
+                      <span class="eventbus-stat-value">${data.data.eventBusStats.totalEvents}</span>
+                    </div>
+                    <div class="eventbus-stat-row">
+                      <span>Recent Events:</span>
+                      <span class="eventbus-stat-value">${data.data.eventBusStats.recentEvents}</span>
+                    </div>
+                    <div class="eventbus-stat-row">
+                      <span>Connected Clients:</span>
+                      <span class="eventbus-stat-value">${data.data.eventBusStats.clientsConnected}</span>
+                    </div>
+                  </div>
+                `;
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[Runtime] Render error:', err);
+          if (uptimeEl) uptimeEl.innerHTML = `<div class="empty-state error">Error: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      // ═══ PHASE 6: DELEGATION RENDER ═══
+      async function renderDelegation() {
+        const sessionsEl = document.getElementById('delegation-sessions');
+        const toolsEl = document.getElementById('delegation-tools');
+        if (!sessionsEl) return;
+
+        try {
+          const res = await fetch('/api/delegation/telemetry');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data && data.data.sessions && data.data.sessions.length > 0) {
+              if (sessionsEl) {
+                sessionsEl.innerHTML = data.data.sessions.map(sess => `
+                  <div class="delegation-session-item">
+                    <div class="delegation-session-header">
+                      <span class="delegation-session-status ${sess.status}">${sess.status.toUpperCase()}</span>
+                      <span class="delegation-session-id">${escapeHtml(sess.sessionId?.substring(0, 12))}...</span>
+                    </div>
+                    <div class="delegation-session-meta">
+                      <span>Task: ${escapeHtml(sess.taskId?.substring(0, 12))}...</span>
+                      <span>Started: ${new Date(sess.startedAt).toLocaleString()}</span>
+                      ${sess.completedAt ? `<span>Completed: ${new Date(sess.completedAt).toLocaleString()}</span>` : ''}
+                    </div>
+                    <div class="delegation-session-tools">
+                      ${sess.delegateToolCalls?.slice(0, 5).map(call => `
+                        <div class="delegation-tool-item">
+                          <span class="delegation-tool-name">${escapeHtml(call.toolName)}</span>
+                          <span class="delegation-tool-status ${call.success === false ? 'failed' : call.success === true ? 'success' : ''}">${call.success === true ? '✓' : call.success === false ? '✗' : '⟳'}</span>
+                        </div>
+                      `).join('') || '<span class="empty-state">No tool calls</span>'}
+                    </div>
+                  </div>
+                `).join('');
+              }
+
+              if (toolsEl) {
+                const allCalls = data.data.sessions.flatMap(sess => sess.delegateToolCalls || []);
+                const toolStats = {};
+                for (const call of allCalls) {
+                  if (!toolStats[call.toolName]) {
+                    toolStats[call.toolName] = { count: 0, success: 0, failed: 0 };
+                  }
+                  toolStats[call.toolName].count++;
+                  if (call.success === true) toolStats[call.toolName].success++;
+                  else if (call.success === false) toolStats[call.toolName].failed++;
+                }
+
+                toolsEl.innerHTML = Object.entries(toolStats).map(([tool, stats]) => `
+                  <div class="delegation-tool-stat-item">
+                    <span class="delegation-tool-stat-name">${escapeHtml(tool)}</span>
+                    <span class="delegation-tool-stat-count">${stats.count} calls</span>
+                    <span class="delegation-tool-stat-success">✓ ${stats.success}</span>
+                    <span class="delegation-tool-stat-failed">✗ ${stats.failed}</span>
+                  </div>
+                `).join('');
+              }
+            } else {
+              if (sessionsEl) sessionsEl.innerHTML = '<div class="empty-state">No delegation sessions</div>';
+              if (toolsEl) toolsEl.innerHTML = '<div class="empty-state">No delegation tool activity</div>';
+            }
+          }
+        } catch (err) {
+          console.error('[Delegation] Render error:', err);
+          if (sessionsEl) sessionsEl.innerHTML = `<div class="empty-state error">Error: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      // ═══ FILTERS ═══
   function setupFilterButtons() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {

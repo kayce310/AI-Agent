@@ -14,12 +14,17 @@
       <span class="app-title">CORAL AGENT</span>
     </div>
     <div class="status-center">
-      <button id="tab-mission" class="tab-btn active" data-tab="mission" data-i18n="tab.mission">MISSION</button>
-      <button id="tab-trace" class="tab-btn" data-tab="trace" data-i18n="tab.trace">🧠 TRACE</button>
-      <button id="tab-focus" class="tab-btn" data-tab="focus" data-i18n="tab.focus">⚡ FOCUS</button>
-      <button id="tab-memory" class="tab-btn" data-tab="memory" data-i18n="tab.memory">💾 MEMORY</button>
-      <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain" data-i18n="tab.hologram">🧠 HOLOGRAM</button>
-    </div>
+          <button id="tab-mission" class="tab-btn active" data-tab="mission" data-i18n="tab.mission">MISSION</button>
+          <button id="tab-trace" class="tab-btn" data-tab="trace" data-i18n="tab.trace">🧠 TRACE</button>
+          <button id="tab-focus" class="tab-btn" data-tab="focus" data-i18n="tab.focus">⚡ FOCUS</button>
+          <button id="tab-verification" class="tab-btn" data-tab="verification" data-i18n="tab.verification">🛡️ VERIFICATION</button>
+          <button id="tab-recovery" class="tab-btn" data-tab="recovery" data-i18n="tab.recovery">🔄 RECOVERY</button>
+          <button id="tab-provider" class="tab-btn" data-tab="provider" data-i18n="tab.provider">🔌 PROVIDER</button>
+          <button id="tab-runtime" class="tab-btn" data-tab="runtime" data-i18n="tab.runtime">📊 RUNTIME</button>
+          <button id="tab-delegation" class="tab-btn" data-tab="delegation" data-i18n="tab.delegation">🤖 DELEGATION</button>
+          <button id="tab-memory" class="tab-btn" data-tab="memory" data-i18n="tab.memory">💾 MEMORY</button>
+          <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain" data-i18n="tab.hologram">🧠 HOLOGRAM</button>
+        </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
       <button id="theme-toggle" title="Toggle theme">◐</button>
@@ -386,8 +391,194 @@
       </div>
     </section>
 
-    <!-- ═══ F7: HOLOGRAM BRAIN — JARVIS/Ultron 3D Neural Network ═══ -->
-    <section id="brain-view" class="brain-view hidden">
+        <!-- ═══ PHASE 4D: VERIFICATION MODE ═══ -->
+        <section id="verification-view" class="main-content-view hidden">
+          <div class="card verification-header">
+            <div class="card-header">
+              <span class="card-label" data-i18n="verification.title">VERIFICATION GATE</span>
+              <div class="verification-controls">
+                <button id="verification-refresh" class="verification-btn" data-i18n="verification.refresh">🔄 Refresh</button>
+              </div>
+            </div>
+            <div id="verification-plan-info" class="verification-plan-info">
+              <span class="verification-plan-id" data-i18n="verification.no_plan">No active plan</span>
+            </div>
+          </div>
+
+          <div id="verification-gate" class="verification-gate">
+            <div class="empty-state" data-i18n="verification.no_data">No verification data available</div>
+          </div>
+
+          <div id="verification-evidence" class="verification-evidence">
+            <div class="card-label" data-i18n="verification.evidence_title">EVIDENCE LOG</div>
+            <div id="evidence-list" class="evidence-list">
+              <div class="empty-state" data-i18n="verification.no_evidence">No evidence records</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ PHASE 6: RECOVERY MODE ═══ -->
+        <section id="recovery-view" class="main-content-view hidden">
+          <div class="card recovery-header">
+            <div class="card-header">
+              <span class="card-label" data-i18n="recovery.title">RECOVERY OBSERVABILITY</span>
+              <div class="recovery-controls">
+                <button id="recovery-refresh" class="recovery-btn" data-i18n="recovery.refresh">🔄 Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- In-Progress Checkpoints -->
+          <div class="card">
+            <div class="card-label" data-i18n="recovery.checkpoints">IN-PROGRESS CHECKPOINTS</div>
+            <div id="recovery-checkpoints" class="recovery-checkpoints-list">
+              <div class="empty-state" data-i18n="recovery.no_checkpoints">No in-progress checkpoints</div>
+            </div>
+          </div>
+
+          <!-- Session Recovery State -->
+          <div class="card">
+            <div class="card-label" data-i18n="recovery.session_state">SESSION RECOVERY STATE</div>
+            <div id="recovery-session" class="recovery-session">
+              <div class="empty-state" data-i18n="recovery.no_session">No active session</div>
+            </div>
+          </div>
+
+          <!-- Restart / Rehydration Visibility -->
+          <div class="card">
+            <div class="card-label" data-i18n="recovery.restart">RESTART / REHYDRATION VISIBILITY</div>
+            <div id="recovery-restart" class="recovery-restart">
+              <div class="empty-state" data-i18n="recovery.no_restart">No restart data available</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ PHASE 6: PROVIDER / INFRASTRUCTURE MODE ═══ -->
+        <section id="provider-view" class="main-content-view hidden">
+          <div class="card provider-header">
+            <div class="card-header">
+              <span class="card-label" data-i18n="provider.title">PROVIDER / INFRASTRUCTURE</span>
+              <div class="provider-controls">
+                <button id="provider-refresh" class="provider-btn" data-i18n="provider.refresh">🔄 Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model/Provider Activity -->
+          <div class="card">
+            <div class="card-label" data-i18n="provider.activity">MODEL / PROVIDER ACTIVITY</div>
+            <div id="provider-activity" class="provider-activity-list">
+              <div class="empty-state" data-i18n="provider.no_activity">No provider activity yet</div>
+            </div>
+          </div>
+
+          <!-- Latency & Retry/Fallback -->
+          <div class="card">
+            <div class="card-label" data-i18n="provider.latency">LATENCY & RETRY / FALLBACK</div>
+            <div id="provider-latency" class="provider-latency">
+              <div class="empty-state" data-i18n="provider.no_latency">No latency data yet</div>
+            </div>
+          </div>
+
+          <!-- Circuit State -->
+          <div class="card">
+            <div class="card-label" data-i18n="provider.circuit">CIRCUIT STATE</div>
+            <div id="provider-circuit" class="provider-circuit">
+              <div class="empty-state" data-i18n="provider.no_circuit">Circuit breaker status unavailable</div>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="card">
+            <div class="card-label" data-i18n="provider.summary">SUMMARY STATISTICS</div>
+            <div id="provider-summary" class="provider-summary">
+              <div class="empty-state" data-i18n="provider.no_summary">No summary data</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ PHASE 6: RUNTIME MODE ═══ -->
+        <section id="runtime-view" class="main-content-view hidden">
+          <div class="card runtime-header">
+            <div class="card-header">
+              <span class="card-label" data-i18n="runtime.title">RUNTIME OBSERVABILITY</span>
+              <div class="runtime-controls">
+                <button id="runtime-refresh" class="runtime-btn" data-i18n="runtime.refresh">🔄 Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Uptime -->
+          <div class="card">
+            <div class="card-label" data-i18n="runtime.uptime">UPTIME</div>
+            <div id="runtime-uptime" class="runtime-uptime">
+              <div class="empty-state" data-i18n="runtime.no_uptime">Uptime unavailable</div>
+            </div>
+          </div>
+
+          <!-- Active Executions -->
+          <div class="card">
+            <div class="card-label" data-i18n="runtime.executions">ACTIVE EXECUTIONS</div>
+            <div id="runtime-executions" class="runtime-executions">
+              <div class="empty-state" data-i18n="runtime.no_executions">No active executions</div>
+            </div>
+          </div>
+
+          <!-- Heartbeat / Lifecycle -->
+          <div class="card">
+            <div class="card-label" data-i18n="runtime.heartbeat">HEARTBEAT / LIFECYCLE</div>
+            <div id="runtime-heartbeat" class="runtime-heartbeat">
+              <div class="empty-state" data-i18n="runtime.no_heartbeat">No heartbeat data</div>
+            </div>
+          </div>
+
+          <!-- Runtime Alerts -->
+          <div class="card">
+            <div class="card-label" data-i18n="runtime.alerts">RUNTIME ALERTS</div>
+            <div id="runtime-alerts" class="runtime-alerts">
+              <div class="empty-state" data-i18n="runtime.no_alerts">No runtime alerts</div>
+            </div>
+          </div>
+
+          <!-- Event Bus Stats -->
+          <div class="card">
+            <div class="card-label" data-i18n="runtime.event_bus">EVENT BUS STATISTICS</div>
+            <div id="runtime-eventbus" class="runtime-eventbus">
+              <div class="empty-state" data-i18n="runtime.no_eventbus">Event bus stats unavailable</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ PHASE 6: DELEGATION MODE ═══ -->
+        <section id="delegation-view" class="main-content-view hidden">
+          <div class="card delegation-header">
+            <div class="card-header">
+              <span class="card-label" data-i18n="delegation.title">DELEGATION TELEMETRY</span>
+              <div class="delegation-controls">
+                <button id="delegation-refresh" class="delegation-btn" data-i18n="delegation.refresh">🔄 Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delegation Sessions -->
+          <div class="card">
+            <div class="card-label" data-i18n="delegation.sessions">DELEGATION SESSIONS</div>
+            <div id="delegation-sessions" class="delegation-sessions-list">
+              <div class="empty-state" data-i18n="delegation.no_sessions">No delegation sessions</div>
+            </div>
+          </div>
+
+          <!-- Tool Activity / Attribution -->
+          <div class="card">
+            <div class="card-label" data-i18n="delegation.tool_activity">TOOL ACTIVITY / ATTRIBUTION</div>
+            <div id="delegation-tools" class="delegation-tools-list">
+              <div class="empty-state" data-i18n="delegation.no_tools">No delegation tool activity</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ F7: HOLOGRAM BRAIN — JARVIS/Ultron 3D Neural Network ═══ -->
+        <section id="brain-view" class="brain-view hidden">
       <!-- Brain Header -->
       <div class="brain-header">
         <div class="brain-header-left">
