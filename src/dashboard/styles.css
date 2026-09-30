@@ -165,7 +165,9 @@ body {
 
 #trace-view.hidden, #mission-view.hidden,
 #focus-view.hidden, #graph-view.hidden, #memory-view.hidden,
-#brain-view.hidden {
+#brain-view.hidden, #verification-view.hidden,
+#recovery-view.hidden, #provider-view.hidden,
+#runtime-view.hidden, #delegation-view.hidden {
   display: none;
 }
 
