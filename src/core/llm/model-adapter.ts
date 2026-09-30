@@ -314,8 +314,8 @@ export class RouterAdapter implements ModelAdapter {
       content = choice.message.reasoning_content;
     }
 
-    // Strip model prefix headers
-    content = content.replace(/^[\w\/\.-]+\s*/m, '');
+    // Strip model prefix headers (e.g. "DeepSeek: ", "Assistant: ")
+        content = content.replace(/^[\w\/\.-]+:\s*/m, '');
 
     // Strip thinking content
     content = stripThinkingContent(content);
@@ -448,7 +448,7 @@ export class RouterAdapter implements ModelAdapter {
         onStreamChunk(accumulated, true);
         console.log(`[STREAM_COMPLETE] task ${taskId}: ${accumulated.length} chars in final reasoning`);
 
-        let content = accumulated.replace(/^[\w\/\.-]+\s*/m, '');
+        let content = accumulated.replace(/^[\w\/\.-]+:\s*/m, '');
         content = stripThinkingContent(content);
 
         // E1 Diagnostics: log if streaming content is empty after normalization
