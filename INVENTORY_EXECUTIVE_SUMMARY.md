@@ -111,7 +111,7 @@ Full details in: `D:/AI-Agent/SYSTEM_LEVEL_ISSUE_INVENTORY.md`
 Source documents (all locked):
 - MODEL_B1_IMPLEMENTATION_DESIGN.md (entity contract, checkpoint write contract)
 - MODEL_B1_FINAL_PRE_IMPLEMENTATION_GATE.md (root cause analysis)
-- E3_COMPLETE_SYSTEM_STATE_AUDIT_FINAL.md (E3 design gaps)
+- docs/historical/E3_COMPLETE_SYSTEM_STATE_AUDIT_FINAL.md (E3 design gaps)
 - ARCHITECTURE_DECISION_PLAN_EXECUTION_CHECKPOINT.md (identity mismatch mechanism)
 - R6_FROZEN_SPECIFICATION.md (fixture contract)
 - completion-protocol-phase1/2/3.test.ts (verified contracts)

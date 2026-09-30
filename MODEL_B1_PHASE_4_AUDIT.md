@@ -623,7 +623,7 @@ git status:
     MODEL_B1_FINAL_PRE_IMPLEMENTATION_GATE.md
     MODEL_B1_IMPLEMENTATION_DESIGN.md
     PLAN_RESUME_DATA_REQUIREMENTS.md
-    SESSION_PLAN_LIFECYCLE_PROOF.md
+    docs/historical/SESSION_PLAN_LIFECYCLE_PROOF.md
     tests/model-b1-phase1.test.ts
     tests/model-b1-phase3.test.ts
 
