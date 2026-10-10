@@ -216,4 +216,37 @@
 
 ---
 
-**End of Audit** — No code modified. Ready for backend endpoint implementation round.
+## Classification Update (Post-Fix)
+
+| Category | Pre-Fix | Post-Fix |
+|----------|---------|----------|
+| **FAIL** | 1 | 0 |
+| **BLOCKED** | 5 | 2 (Provider, Delegation — gap documented) |
+| **PASS** | 3 | 7 |
+| **NEW: E2E VERIFIED** | — | PASS: Plan gate + Evidence + Runtime + Recovery |
+
+### E2E Verification Evidence
+- **Plan Gate**: `GET /api/plan/8228e2ca-8f4a-4835-b126-f42056180325/gate` → 200, planStatus="running", 5 items with real status/canComplete
+- **Evidence**: `GET /api/evidence/8228e2ca-...` → 200, 3 itemId groups with real tool calls
+- **Recovery**: `GET /api/recovery/checkpoints` → 200, 2 in-progress checkpoints
+- **Runtime**: `GET /api/runtime/state` → 200, uptimeMs=462s, isRunning=true, activeExecutions=2
+- **Provider**: `GET /api/provider/activity` → 200, empty with gap notice
+- **Delegation**: `GET /api/delegation/telemetry` → 200, empty with gap notice
+- **Live-update**: `renderVerification()` now called from `renderAllFromState()` when tab is active
+
+## Commit
+
+- **Hash**: `17f62f7d`
+- **Message**: fix(dashboard): register 6 missing API projection endpoints + live-update Verification tab
+- **Files changed**: src/core/events/http-server.ts (+197), src/dashboard/app.js (+13), docs/audits/dashboard-runtime-ux-review-2026-10-11.md (new)
+
+## Remaining Issues (P2 — Non-Blocking)
+
+1. **Provider activity** — No canonical provider call tracking exists in model-adapter/cost-tracker. Empty response with gap notice.
+2. **Delegation telemetry** — No session tracking in AgentRegistry/delegate tool. Empty response with gap notice.
+3. **UX: Empty ≡ Error styling** — Not yet fixed (audit finding #7). Requires CSS changes.
+4. **UX: Loading skeletons** — Not yet implemented for Phase 6 tabs.
+5. **UX: Stale data indicator** — Not yet implemented.
+
+---
+**End of Audit** — Dashboard endpoints restored and verified. Ready for next iteration.
