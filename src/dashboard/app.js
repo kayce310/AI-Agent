@@ -472,36 +472,39 @@
   }
 
   function renderAllFromState() {
-    renderMission();
-    renderActiveTools();
-    renderCurrentDecision();
-    renderNextAction();
-    renderTimeline();
-    renderFileChanges();
-    renderTelemetryDebug();
-    renderError();
+      renderMission();
+      renderActiveTools();
+      renderCurrentDecision();
+      renderNextAction();
+      renderTimeline();
+      renderFileChanges();
+      renderTelemetryDebug();
+      renderError();
 
-    // Tab-aware: skip heavy renders if their tab isn't active
-    switch (currentTab) {
-      case 'trace':
-        renderTrace();
-        renderMcpTrace();
-        renderCost();
-        renderControl();
-        break;
-      case 'focus':
-        renderFocus();
-        updateConfidenceBar();
-        break;
-      case 'graph':
-        renderGraph();
-        break;
-      case 'memory':
-        document.dispatchEvent(new CustomEvent('memory-refresh'));
-        break;
-      // 'mission' and 'brain' — no extra heavy rendering needed in the hot path
+      // Tab-aware: skip heavy renders if their tab isn't active
+      switch (currentTab) {
+        case 'trace':
+          renderTrace();
+          renderMcpTrace();
+          renderCost();
+          renderControl();
+          break;
+        case 'focus':
+          renderFocus();
+          updateConfidenceBar();
+          break;
+        case 'graph':
+          renderGraph();
+          break;
+        case 'verification':
+          renderVerification();
+          break;
+        case 'memory':
+          document.dispatchEvent(new CustomEvent('memory-refresh'));
+          break;
+        // 'mission' and 'brain' — no extra heavy rendering needed in the hot path
+      }
     }
-  }
 
   function renderMission() {
     const goal = agentState.currentTaskLabel || agentState.currentGoal;

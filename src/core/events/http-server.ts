@@ -17,6 +17,7 @@ import { CostTracker } from './cost-tracker.js';
 import { MemoryAPI } from '../memory/MemoryAPI.js';
 import { MemoryStore } from '../memory/MemoryStore.js';
 import { getOmniRouteHandlers } from '../omniroute/handlers.js';
+import { getCheckpoint } from '../checkpoint.js';
 
 export interface DashboardServerOptions {
   port?: number;
@@ -39,11 +40,13 @@ export class DashboardServer {
   private memoryApi: MemoryAPI | undefined;
   private port: number;
   private host: string;
+  private serverStartTime: number;
 
   constructor(eventBus: EventBus, options: DashboardServerOptions = {}) {
     this.port = options.port || 8766;
     this.host = options.host || '127.0.0.1';
     this.memoryApi = options.memoryApi;
+    this.serverStartTime = Date.now();
 
     this.eventApi = new EventApi(eventBus);
     this.mcpTrace = new McpTrace(eventBus);
@@ -59,6 +62,20 @@ export class DashboardServer {
     });
 
     this.eventWebSocket = new EventWebSocket(this.server, eventBus);
+  }
+
+  /**
+   * Format uptime in human-readable format
+   */
+  private formatUptime(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+    return `${seconds}s`;
   }
 
   private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -113,35 +130,6 @@ export class DashboardServer {
       return;
     }
 
-    // ═══ API: Stats ═══
-    if (url === '/api/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, data: { status: 'ok', timestamp: Date.now() } }));
-      return;
-    }
-
-    // ═══ API: Agent State ═══
-    if (url === '/api/state') {
-      const state = this.eventWebSocket.getState();
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, data: state }));
-      return;
-    }
-
-    // ═══ MEMORY TAB JS ═══
-    if (pathname === '/memory-tab.js') {
-      this.serveFile(res, 'src/dashboard/memory-tab.js', 'application/javascript; charset=utf-8');
-      return;
-    }
-    if (pathname === '/brain-tab.js') {
-      this.serveFile(res, 'src/dashboard/brain-tab.js', 'application/javascript; charset=utf-8');
-      return;
-    }
-    if (pathname === '/behavior-renderer.js') {
-      this.serveFile(res, 'src/dashboard/behavior-renderer.js', 'application/javascript; charset=utf-8');
-      return;
-    }
-
     // ═══ LOCAL THREE.JS (for headless / CDN-offline mode) ═══
     if (pathname === '/three.r128.min.js') {
       this.serveFile(res, 'src/dashboard/three.r128.min.js', 'application/javascript; charset=utf-8');
@@ -185,6 +173,35 @@ export class DashboardServer {
     }
     if (pathname === '/UnrealBloomPass.js') {
       this.serveFile(res, 'src/dashboard/UnrealBloomPass.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+
+    // ═══ API: Stats ═══
+    if (url === '/api/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: { status: 'ok', timestamp: Date.now() } }));
+      return;
+    }
+
+    // ═══ API: Agent State ═══
+    if (url === '/api/state') {
+      const state = this.eventWebSocket.getState();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: state }));
+      return;
+    }
+
+    // ═══ MEMORY TAB JS ═══
+    if (pathname === '/memory-tab.js') {
+      this.serveFile(res, 'src/dashboard/memory-tab.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/brain-tab.js') {
+      this.serveFile(res, 'src/dashboard/brain-tab.js', 'application/javascript; charset=utf-8');
+      return;
+    }
+    if (pathname === '/behavior-renderer.js') {
+      this.serveFile(res, 'src/dashboard/behavior-renderer.js', 'application/javascript; charset=utf-8');
       return;
     }
 
@@ -396,6 +413,134 @@ export class DashboardServer {
       res.end(JSON.stringify({
         success: true,
         message: 'Circuit breaker reset to CLOSED state',
+      }));
+      return;
+    }
+
+    // ═══ API: Plan Gate (Verification) ═══
+            // GET /api/plan/:sessionId/gate
+            if (url.startsWith('/api/plan/') && url.endsWith('/gate') && req.method === 'GET') {
+              const sessionId = url.replace('/api/plan/', '').replace('/gate', '');
+              if (!sessionId) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Missing sessionId' }));
+                return;
+              }
+              const checkpoint = getCheckpoint();
+              const plan = checkpoint.getPlan(sessionId);
+              if (!plan) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'No active plan for session' }));
+                return;
+              }
+              const gateData = {
+                planId: plan.id,
+                planStatus: plan.status,
+                evaluatedAt: Date.now(),
+                items: plan.items.map((item, index) => ({
+                  id: item.id,
+                  index,
+                  description: item.description,
+                  status: item.status,
+                  canComplete: item.status === 'completed' || item.status === 'failed',
+                  completionReason: item.resultSummary || item.error || undefined,
+                  eligibility: item.criteria || null,
+                })),
+              };
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, data: gateData }));
+              return;
+            }
+
+    // ═══ API: Evidence (Verification) ═══
+    // GET /api/evidence/:sessionId
+    if (url.startsWith('/api/evidence/') && req.method === 'GET') {
+      const sessionId = url.replace('/api/evidence/', '');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Missing sessionId' }));
+        return;
+      }
+      const checkpoint = getCheckpoint();
+      const mergedEvidence = checkpoint.mergeEvidenceForSession(sessionId);
+      const evidenceObj: Record<string, any[]> = {};
+      for (const [itemId, records] of mergedEvidence.entries()) {
+        evidenceObj[itemId] = records;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: { evidence: evidenceObj } }));
+      return;
+    }
+
+    // ═══ API: Recovery Checkpoints ═══
+    // GET /api/recovery/checkpoints
+    if (url === '/api/recovery/checkpoints' && req.method === 'GET') {
+      const checkpoint = getCheckpoint();
+      const checkpoints = checkpoint.getAllInProgress();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, data: { checkpoints } }));
+      return;
+    }
+
+    // ═══ API: Runtime State ═══
+        // GET /api/runtime/state
+        if (url === '/api/runtime/state' && req.method === 'GET') {
+          const checkpoint = getCheckpoint();
+          const state = this.eventWebSocket.getState();
+          const uptimeMs = Date.now() - (this.serverStartTime || Date.now());
+          const inProgress = checkpoint.getAllInProgress();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            data: {
+              uptimeMs,
+              uptimeHuman: this.formatUptime(uptimeMs),
+              isRunning: state.status === 'working',
+              activeExecutions: inProgress.length,
+              recentAlerts: [], // No alert system yet
+              eventBusStats: {
+                totalEvents: state.eventCount || 0,
+                recentEvents: state.timeline?.length || 0,
+                clientsConnected: this.eventWebSocket.getClientCount?.() || 1,
+              },
+            },
+          }));
+          return;
+        }
+
+    // ═══ API: Provider Activity ═══
+    // GET /api/provider/activity
+    if (url === '/api/provider/activity' && req.method === 'GET') {
+      // No canonical provider call tracking exists yet — return empty with gap notice
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        data: {
+          recentCalls: [],
+          summary: {
+            totalCalls: 0,
+            successRate: 0,
+            avgLatencyMs: 0,
+            fallbackCount: 0,
+            retryCount: 0,
+          },
+          gap: 'No provider call tracking implemented in model-adapter/cost-tracker',
+        },
+      }));
+      return;
+    }
+
+    // ═══ API: Delegation Telemetry ═══
+    // GET /api/delegation/telemetry
+    if (url === '/api/delegation/telemetry' && req.method === 'GET') {
+      // No canonical delegation session tracking exists yet — return empty with gap notice
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        data: {
+          sessions: [],
+          gap: 'No delegation session tracking in AgentRegistry/delegate tool',
+        },
       }));
       return;
     }
