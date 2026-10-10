@@ -732,23 +732,23 @@ export class Agent extends EventEmitter {
                   const responseType = classifyResponse(finalContent);
 
           if (responseType === 'UNPARSEABLE') {
-            if (toolCallCycles < 2) {
-              // Reasonable retry: the model returned empty/garbage,
-              // give it one more chance with a clear format reminder
-              log.warn(`[UNPARSEABLE] Cycle ${toolCallCycles}: empty/garbage content — redirecting with format reminder`);
-              R.meta({ event: 'UNPARSEABLE_RESPONSE', requestId, cycle: toolCallCycles, content: (finalContent || '').slice(0, 200) });
-              messages.push({
-                role: 'system',
-                content: '[SYSTEM] Phản hồi trước của bạn không có nội dung hợp lệ (trống hoặc không thể đọc được). Hãy trả lời theo MỘT trong hai dạng sau:\n\n1. Nếu cần gọi tool → dùng API tool_call (có cấu trúc)\n2. Nếu trả lời trực tiếp → viết nội dung rõ ràng bằng văn bản\n\nKHÔNG viết "let me", "I\'ll", "để tôi", "tôi sẽ" hay bất kỳ câu mô tả ý định nào. Nếu cần hành động, hãy gọi tool NGAY. Nếu đã có câu trả lời, hãy viết nó ra NGAY.'
-              });
-              toolCallCycles++;
-              R.state({ event: 'UNPARSEABLE_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'unparseable_redirect' });
-              continue;
-            }
+                      if (toolCallCycles < 4) {
+                        // Reasonable retry: the model returned empty/garbage,
+                        // give it up to 3 chances with a clear format reminder
+                        log.warn(`[UNPARSEABLE] Cycle ${toolCallCycles}: empty/garbage content — redirecting with format reminder`);
+                        R.meta({ event: 'UNPARSEABLE_RESPONSE', requestId, cycle: toolCallCycles, content: (finalContent || '').slice(0, 200) });
+                        messages.push({
+                          role: 'system',
+                          content: '[SYSTEM] Phản hồi trước của bạn không có nội dung hợp lệ (trống hoặc không thể đọc được). Hãy trả lời theo MỘT trong hai dạng sau:\n\n1. Nếu cần gọi tool → dùng API tool_call (có cấu trúc)\n2. Nếu trả lời trực tiếp → viết nội dung rõ ràng bằng văn bản\n\nKHÔNG viết "let me", "I\'ll", "để tôi", "tôi sẽ" hay bất kỳ câu mô tả ý định nào. Nếu cần hành động, hãy gọi tool NGAY. Nếu đã có câu trả lời, hãy viết nó ra NGAY.'
+                        });
+                        toolCallCycles++;
+                        R.state({ event: 'UNPARSEABLE_REDIRECT', requestId, cycle: toolCallCycles, finishReason: 'unparseable_redirect' });
+                        continue;
+                      }
 
-            // Redirects exhausted — return a clean fallback instead of garbage
-            log.warn(`[UNPARSEABLE] Max redirects (2) reached — returning fallback`);
-            R.meta({ event: 'UNPARSEABLE_EXHAUSTED', requestId, cycle: toolCallCycles });
+                      // Redirects exhausted — return a clean fallback instead of garbage
+                      log.warn(`[UNPARSEABLE] Max redirects (3) reached — returning fallback`);
+                      R.meta({ event: 'UNPARSEABLE_EXHAUSTED', requestId, cycle: toolCallCycles });
             return {
               content: '[E1] ❌ Coral chưa hoàn tất yêu cầu. Model trả về nội dung rỗng. Vui lòng thử lại với câu hỏi đơn giản hơn hoặc dùng /new để bắt đầu lại.',
               modelUsed: modelResult.modelUsed || 'unknown',
@@ -1153,30 +1153,69 @@ export class Agent extends EventEmitter {
             }
 
             // ── Evidence logging: ghi tool call vào evidenceLog cho item đang active ──
-            // Key by item.id (stable), NOT by itemIndex (positional).
-            // This ensures evidence survives plan reordering and item identity changes.
-            try {
-              if (this.checkpointStore && request.sessionId) {
-                const sp = this.checkpointStore.getPlan(request.sessionId);
-                // ponytail(R4-F1-AC3): update_plan là bookkeeping chứ không phải work —
-                // không được log làm evidence, nếu không chính create/complete_item call
-                // sẽ tự chứng minh evidence-gate của item hiện tại (gate vô hiệu trong loop).
-                if (toolCall.function.name !== 'update_plan' && sp && (sp.status === 'pending' || sp.status === 'running')) {
-                  const currentItem = sp.items[sp.currentItemIndex];
-                  if (currentItem) {
-                    const itemId = currentItem.id;
-                    if (!getRequestContext()?.evidenceLog.has(itemId)) getRequestContext()?.evidenceLog.set(itemId, []);
-                    const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
-                    const record: MinimalToolCallRecord = {
-                      toolName: toolCall.function.name,
-                      timestamp: Date.now(),
-                      success,
-                    };
-                    getRequestContext()?.evidenceLog.get(itemId)!.push(record);
-                  }
-                }
-              }
-            } catch (_) { /* non-critical */ }
+                                    // Key by item.id (stable), NOT by itemIndex (positional).
+                                    // This ensures evidence survives plan reordering and item identity changes.
+                                    // CRITICAL: also persist to checkpointStore so evidence survives across requests
+                                    // (AsyncLocalStorage context is torn down after each agent.run()).
+                                    try {
+                                      if (this.checkpointStore && request.sessionId) {
+                                        const sp = this.checkpointStore.getPlan(request.sessionId);
+                                        // ponytail(R4-F1-AC3): update_plan là bookkeeping chứ không phải work —
+                                        // không được log làm evidence, nếu không chính create/complete_item call
+                                        // sẽ tự chứng minh evidence-gate của item hiện tại (gate vô hiệu trong loop).
+                                        if (toolCall.function.name !== 'update_plan' && sp && (sp.status === 'pending' || sp.status === 'running')) {
+                                                                                  // FIX: use currentItemIndex as the authoritative active item.
+                                                                                  // currentItemIndex is the contract for "which item the LLM is working on".
+                                                                                  // Validate it points to a non-terminal item; if stale (points to completed/skipped/failed),
+                                                                                  // find the next non-terminal item from currentItemIndex onward.
+                                                                                  // If that fails (index out of bounds), fall back to searching from the start.
+                                                                                  let currentIdx = sp.currentItemIndex;
+                                                                                  if (currentIdx < 0 || currentIdx >= sp.items.length ||
+                                                                                      sp.items[currentIdx].status === 'completed' ||
+                                                                                      sp.items[currentIdx].status === 'skipped' ||
+                                                                                      sp.items[currentIdx].status === 'failed') {
+                                                                                    // currentItemIndex is stale — find next non-terminal from currentIdx onward
+                                                                                    const nextIdx = sp.items.findIndex((i: any, idx: number) =>
+                                                                                      idx >= currentIdx &&
+                                                                                      i.status !== 'completed' &&
+                                                                                      i.status !== 'skipped' &&
+                                                                                      i.status !== 'failed',
+                                                                                    );
+                                                                                    if (nextIdx >= 0) {
+                                                                                      currentIdx = nextIdx;
+                                                                                      log.warn(`[Evidence] currentItemIndex stale (${sp.currentItemIndex}), corrected to ${currentIdx}`);
+                                                                                    } else {
+                                                                                      // Fallback: index out of bounds or no non-terminal from currentIdx onward.
+                                                                                      // Search from the beginning for the first non-terminal item.
+                                                                                      const fallbackIdx = sp.items.findIndex((i: any) =>
+                                                                                        i.status !== 'completed' &&
+                                                                                        i.status !== 'skipped' &&
+                                                                                        i.status !== 'failed',
+                                                                                      );
+                                                                                      if (fallbackIdx >= 0) {
+                                                                                        currentIdx = fallbackIdx;
+                                                                                        log.warn(`[Evidence] currentItemIndex stale (${sp.currentItemIndex}), fallback search from start found ${currentIdx}`);
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                  const currentItem = sp.items[currentIdx];
+                                          if (currentItem) {
+                                            const itemId = currentItem.id;
+                                            // In-memory log for current request (read by update_plan tool handler)
+                                            if (!getRequestContext()?.evidenceLog.has(itemId)) getRequestContext()?.evidenceLog.set(itemId, []);
+                                            const success = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
+                                            const record: MinimalToolCallRecord = {
+                                              toolName: toolCall.function.name,
+                                              timestamp: Date.now(),
+                                              success,
+                                            };
+                                            getRequestContext()?.evidenceLog.get(itemId)!.push(record);
+                                            // Persist to checkpointStore so evidence survives request boundaries
+                                            this.checkpointStore.setEvidence(itemId, record);
+                                          }
+                                        }
+                                      }
+                                    } catch (_) { /* non-critical */ }
 
             // This is request-local coordination only, not plan lifecycle state.
             // After real work has begun without a plan, nudge the model once to
@@ -1346,8 +1385,8 @@ export class Agent extends EventEmitter {
           continue;
         }
 
-        // ponytail: tool_calls reported but not parsed (streaming delta issue) — retry with text-only instruction
-        if (modelResult.finishReason === 'tool_calls' && !modelResult.toolCalls && toolCallCycles < 2) {
+        // ponytail: tool_calls reported but not parsed (streaming delta issue) — retry up to 3 times
+                if (modelResult.finishReason === 'tool_calls' && !modelResult.toolCalls && toolCallCycles < 4) {
           log.warn(`[TOOL_CALLS_NO_PARSED] finishReason=tool_calls but toolCalls empty — retrying`);
           messages.push({ role: 'system', content: '[SYSTEM] Response had tool_calls but arguments were lost. Please respond with a direct text answer.' });
           toolCallCycles++;
@@ -1374,8 +1413,8 @@ export class Agent extends EventEmitter {
           };
         }
 
-        // Empty content + unknown reason → retry once (like UNPARSEABLE for 'stop')
-        if (toolCallCycles < 2) {
+        // Empty content + unknown reason → retry up to 3 times (like UNPARSEABLE for 'stop')
+                if (toolCallCycles < 4) {
           log.warn(`[UNKNOWN_FINISH] Cycle ${toolCallCycles}: empty content with reason="${modelResult.finishReason}" — retrying`);
           messages.push({
             role: 'system',

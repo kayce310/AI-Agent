@@ -60,7 +60,7 @@ import { registerConsequenceReadPath } from '../memory/consequence-read-path.js'
 import { worldModel } from '../world/model.js';
 import { R } from '../runtime-instrumentation.js';
 import { requestContext, getRequestContext } from '../request-context.js';
-import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD, validateTransition } from '../plan/types.js';
+import { ABSOLUTE_SAFETY_CEILING, STAGNATION_THRESHOLD, validateTransition, isPlanActive } from '../plan/types.js';
 import { classifyError } from '../plan/error-classifier.js';
 import { derivePlanState, isGuardActive } from '../plan/plan-state.js';
 const CORAL_IDENTITY_FILES = [
@@ -986,6 +986,30 @@ export class Engine extends EventEmitter {
       // ── Handle cycle limit hit mid-plan → paused_limit (B4: shared handler) ──
       const pausedResponse = handleCycleLimit(result);
       if (pausedResponse) return pausedResponse;
+
+      // ── Silent completion guard: task finished while plan still has unresolved items ──
+            // If the LLM ended the loop with a final answer while the plan is still active
+            // and items remain incomplete, treat this as a failure — not semantic success.
+            // Fixes root cause: LLM may report completion prematurely without marking all
+            // plan items as completed.
+            const postRunPlan = this.checkpointStore.getPlan(sessionId);
+            if (postRunPlan && isPlanActive(postRunPlan.status)) {
+              // Find items that are not in a terminal state.
+              // Use currentItemIndex as the start point, but guard against stale index.
+              let startIdx = postRunPlan.currentItemIndex;
+              if (startIdx < 0 || startIdx >= postRunPlan.items.length) {
+                startIdx = 0;
+              }
+              const pendingItems = postRunPlan.items.slice(startIdx).filter(
+                (i: any) => i.status !== 'completed' && i.status !== 'skipped' && i.status !== 'failed',
+              );
+              if (pendingItems.length > 0) {
+                log.warn(`[Engine] Task finished with ${pendingItems.length} pending plan item(s) from index ${startIdx} — plan NOT complete. Marking outcome as failure.`);
+                result.content = `[E3] ❌ Task ended before plan completed: ${pendingItems.length} item(s) still pending (${postRunPlan.items.length - startIdx} from current position). Items not marked complete.`;
+                result.finished = true;
+                result.success = false;
+              }
+            }
 
       // Smart cache write: ONLY if no tools were called (pure LLM knowledge response)
       if (result.toolCycles === 0) {
