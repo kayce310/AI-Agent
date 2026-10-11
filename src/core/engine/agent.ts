@@ -1257,10 +1257,36 @@ export class Agent extends EventEmitter {
                                       }
                                     } catch (_) { /* non-critical */ }
 
+            // ── Item completion guidance: when tool succeeds and evidence recorded for active plan item,
+            // remind model to evaluate and call complete_item if satisfied.
+            // Non-breaking: guidance is informational only, does not bypass evidence gate.
+            const planStateAfterTool = derivePlanState(this.checkpointStore, request.sessionId);
+            if (toolCall.function.name !== 'update_plan' && isGuardActive(planStateAfterTool)) {
+              try {
+                const sp = this.checkpointStore?.getPlan(request.sessionId);
+                if (sp && (sp.status === 'running' || sp.status === 'pending') && sp.currentItemIndex >= 0 && sp.currentItemIndex < sp.items.length) {
+                  const toolSuccess = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
+                  if (toolSuccess) {
+                    const currentItem = sp.items[sp.currentItemIndex];
+                    const completionGuidance = `[ITEM PROGRESS] Tool \`${toolCall.function.name}\` completed successfully and evidence recorded for Item ${currentItem.index}: "${currentItem.description}".
+
+Consider if you now have sufficient information to complete this item. If yes, call:
+\`update_plan(action='complete_item', item_index=${currentItem.index}, result_summary="...")\`
+
+If you need more work on this item, continue with additional tools. Do not call complete_item until you're satisfied with the results.`;
+                    messages.push({
+                      role: 'system',
+                      content: completionGuidance,
+                    });
+                    log.info(`[Agent] Injected item completion guidance for Item ${currentItem.index} after tool success`);
+                  }
+                }
+              } catch (_) { /* non-critical */ }
+            }
+
             // This is request-local coordination only, not plan lifecycle state.
             // After real work has begun without a plan, nudge the model once to
             // establish one before the next model turn.
-            const planStateAfterTool = derivePlanState(this.checkpointStore, request.sessionId);
             if (toolCall.function.name !== 'update_plan' && !isGuardActive(planStateAfterTool)) {
               unplannedToolCallCount++;
             }
