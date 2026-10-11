@@ -1119,11 +1119,51 @@ export class Agent extends EventEmitter {
               toolMsgContent = cappedResult + '\n\n⚠️ [ERROR_CATEGORY=permanent] Lỗi này là permanent (không phải do mạng/tạm thời) — thử lại với CÙNG tham số sẽ tiếp tục thất bại. Cân nhắc cách tiếp cận khác hoặc báo cáo không thể hoàn thành.';
             }
             messages.push({
-              role: 'tool',
-              tool_call_id: toolCall.id,
-              content: toolMsgContent,
-            });
-            // ── Goal-drift check: inject reminder if agent deviates from task ──
+                          role: 'tool',
+                          tool_call_id: toolCall.id,
+                          content: toolMsgContent,
+                        });
+                        // ── Plan error guidance: if update_plan failed, inject a system hint
+                        // so the model knows how to proceed.
+                        // Two cases:
+                        // 1. create fails due to existing active plan → use next_action_hint field
+                        // 2. complete_item fails due to missing evidence → synthesize guidance
+                        if (toolCall.function.name === 'update_plan' &&
+                            toolResult && typeof toolResult === 'object' && 'error' in toolResult) {
+                          const errMsg = String((toolResult as any).error || '');
+                          let guidanceContent: string | undefined;
+
+                          // Case 1: structured error (create fails due to active plan)
+                          if ('plan_id' in toolResult && 'plan_status' in toolResult &&
+                              'current_item_index' in toolResult && 'items' in toolResult) {
+                            const hint = (toolResult as any).next_action_hint;
+                            if (hint) {
+                              guidanceContent = hint;
+                            }
+                          }
+
+                          // Case 2: evidence-based completion failure
+                          if (!guidanceContent && errMsg.includes('No evidence of tool execution')) {
+                            // Extract item description if available from the error reason
+                            const plan = this.checkpointStore?.getPlan(request.sessionId);
+                            if (plan && plan.currentItemIndex >= 0 && plan.currentItemIndex < plan.items.length) {
+                              const currentItem = plan.items[plan.currentItemIndex];
+                              guidanceContent = `[PLAN ITEM WORK REQUIRED] Item ${currentItem.index} ("${currentItem.description}") requires actual tool execution before completion. Execute a tool (read_file, search_knowledge_graph, run_code, etc.) to work on this item. Once you have actual results, call complete_item again with a result summary. Do NOT call complete_item again without evidence.`;
+                            } else {
+                              guidanceContent = `[PLAN ITEM WORK REQUIRED] This plan item requires actual tool execution (such as read_file, search_knowledge_graph, run_code) to generate evidence before you can mark it complete. Execute a tool now, then retry complete_item with a result summary.`;
+                            }
+                          }
+
+                          // Inject guidance if either case matched
+                          if (guidanceContent) {
+                            messages.push({
+                              role: 'system',
+                              content: `[PLAN GUIDANCE] ${guidanceContent}`,
+                            });
+                            log.info(`[Agent] Injected plan guidance after update_plan error: ${guidanceContent.slice(0, 120)}`);
+                          }
+                        }
+                        // ── Goal-drift check: inject reminder if agent deviates from task ──
             // Only when a plan is active (multi-step task). Plain chat tool
             // calls (search "này Coral") would otherwise false-positive.
             const toolDriftState = derivePlanState(this.checkpointStore, request.sessionId);
