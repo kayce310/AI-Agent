@@ -16,6 +16,8 @@
 
 import OpenAI from 'openai';
 import { ProviderRegistry, IProviderClient, ProviderInvokeParams } from './provider-registry.js';
+import { ProviderConcurrencyLimiter } from './provider-concurrency-limiter.js';
+import { isTransientError, calculateBackoffDelay, sleep } from './retry-backoff.js';
 import { Logger } from '../logger.js';
 import { withTimeout, createTimeoutController, TimeoutError } from '../util/with-timeout.js';
 
@@ -285,80 +287,87 @@ export class RouterAdapter implements ModelAdapter {
       delete payload.tool_choice;
     }
 
-    const response = await resolved.provider.invoke(payload);
-    const rawData = (response as any).data ? (response as any).data : response;
+    // Acquire concurrency slot for this provider before invoking
+    const limiter = ProviderConcurrencyLimiter.getInstance();
+    const release = await limiter.acquire(resolved.providerName);
+    try {
+      const response = await resolved.provider.invoke(payload);
+      const rawData = (response as any).data ? (response as any).data : response;
 
-    if (!rawData?.choices?.[0]) {
-      // E1 Diagnostics: log why response is empty/invalid
-      log.error('[E1] PROVIDER_EMPTY — no choices in response', {
-        model: modelId,
-        provider: resolved.providerName,
-        stream: false,
-        choice_count: rawData?.choices?.length ?? 0,
-        finish_reason: undefined,
-        content_length: 0,
-        tool_call_count: 0,
-        reason: 'Provider returned response with no choices array or empty choices',
-      });
-      throw new Error('9router returned empty response');
+      if (!rawData?.choices?.[0]) {
+        // E1 Diagnostics: log why response is empty/invalid
+        log.error('[E1] PROVIDER_EMPTY — no choices in response', {
+          model: modelId,
+          provider: resolved.providerName,
+          stream: false,
+          choice_count: rawData?.choices?.length ?? 0,
+          finish_reason: undefined,
+          content_length: 0,
+          tool_call_count: 0,
+          reason: 'Provider returned response with no choices array or empty choices',
+        });
+        throw new Error('9router returned empty response');
+      }
+
+      const choice = rawData.choices[0];
+      const finishReason = choice.finish_reason;
+      let content = choice.message?.content || '';
+
+      // ── Reasoning content fallback ──
+      // Some reasoning models (DeepSeek V4 Flash, R1, etc.) return the
+      // response in reasoning_content with empty content. Use it as fallback.
+      if (!content && choice.message?.reasoning_content) {
+        content = choice.message.reasoning_content;
+      }
+
+      // Strip model prefix headers (e.g. "DeepSeek: ", "Assistant: ")
+          content = content.replace(/^[\w\/\.-]+:\s*/m, '');
+
+      // Strip thinking content
+      content = stripThinkingContent(content);
+
+      // Check for tool calls
+      const toolCalls: any[] | undefined = choice.message?.tool_calls || undefined;
+
+      // E1 Diagnostics: log if content is empty after normalization
+      if (!content && (!toolCalls || toolCalls.length === 0)) {
+        log.warn('[E1] NORMALIZATION_EMPTY — content empty after strip', {
+          model: modelId,
+          provider: resolved.providerName,
+          stream: false,
+          finish_reason: finishReason,
+          content_length: 0,
+          has_tool_calls: false,
+          tool_call_count: 0,
+          raw_content_length: (choice.message?.content || '').length,
+          has_reasoning_content: !!choice.message?.reasoning_content,
+          reasoning_content_length: (choice.message?.reasoning_content || '').length,
+        });
+      } else if (!content) {
+        log.info('[E1] PARSER_EMPTY — content parsed as tool_calls only', {
+          model: modelId,
+          provider: resolved.providerName,
+          stream: false,
+          finish_reason: finishReason,
+          content_length: 0,
+          has_tool_calls: true,
+          tool_call_count: toolCalls?.length ?? 0,
+        });
+      }
+
+      return {
+        content,
+        modelUsed: modelId,
+        providerUsed: resolved.providerName,
+        raw: rawData,
+        tokenUsage: rawData.usage ? { input: rawData.usage.prompt_tokens || 0, output: rawData.usage.completion_tokens || 0 } : undefined,
+        toolCalls,
+        finishReason,
+        reasoningContent: choice.message?.reasoning_content || undefined,
+      };
+    } finally {
+      release();
     }
-
-    const choice = rawData.choices[0];
-    const finishReason = choice.finish_reason;
-    let content = choice.message?.content || '';
-
-    // ── Reasoning content fallback ──
-    // Some reasoning models (DeepSeek V4 Flash, R1, etc.) return the
-    // response in reasoning_content with empty content. Use it as fallback.
-    if (!content && choice.message?.reasoning_content) {
-      content = choice.message.reasoning_content;
-    }
-
-    // Strip model prefix headers (e.g. "DeepSeek: ", "Assistant: ")
-        content = content.replace(/^[\w\/\.-]+:\s*/m, '');
-
-    // Strip thinking content
-    content = stripThinkingContent(content);
-
-    // Check for tool calls
-    const toolCalls: any[] | undefined = choice.message?.tool_calls || undefined;
-
-    // E1 Diagnostics: log if content is empty after normalization
-    if (!content && (!toolCalls || toolCalls.length === 0)) {
-      log.warn('[E1] NORMALIZATION_EMPTY — content empty after strip', {
-        model: modelId,
-        provider: resolved.providerName,
-        stream: false,
-        finish_reason: finishReason,
-        content_length: 0,
-        has_tool_calls: false,
-        tool_call_count: 0,
-        raw_content_length: (choice.message?.content || '').length,
-        has_reasoning_content: !!choice.message?.reasoning_content,
-        reasoning_content_length: (choice.message?.reasoning_content || '').length,
-      });
-    } else if (!content) {
-      log.info('[E1] PARSER_EMPTY — content parsed as tool_calls only', {
-        model: modelId,
-        provider: resolved.providerName,
-        stream: false,
-        finish_reason: finishReason,
-        content_length: 0,
-        has_tool_calls: true,
-        tool_call_count: toolCalls?.length ?? 0,
-      });
-    }
-
-    return {
-      content,
-      modelUsed: modelId,
-      providerUsed: resolved.providerName,
-      raw: rawData,
-      tokenUsage: rawData.usage ? { input: rawData.usage.prompt_tokens || 0, output: rawData.usage.completion_tokens || 0 } : undefined,
-      toolCalls,
-      finishReason,
-      reasoningContent: choice.message?.reasoning_content || undefined,
-    };
   }
 
   // Phase 4E-B: Streaming support for reasoning_updated events
@@ -387,13 +396,18 @@ export class RouterAdapter implements ModelAdapter {
       delete payload.tool_choice;
     }
 
-    const response = await resolved.provider.invoke(payload);
-    
-    if (!response || typeof response[Symbol.asyncIterator] !== 'function') {
-      throw new Error('Provider did not return a streaming response');
-    }
+    // Acquire concurrency slot for this provider before invoking
+    // ponytail: hold slot for entire streaming duration, not just request initiation
+    const limiter = ProviderConcurrencyLimiter.getInstance();
+    const release = await limiter.acquire(resolved.providerName);
+    try {
+      const response = await resolved.provider.invoke(payload);
+      
+      if (!response || typeof response[Symbol.asyncIterator] !== 'function') {
+        throw new Error('Provider did not return a streaming response');
+      }
 
-    let accumulated = '';
+      let accumulated = '';
     let finishReason = '';
     let tokenUsage: { input: number; output: number } | undefined;
     // ponytail: accumulate tool_calls from delta chunks (OpenAI streaming format)
@@ -485,6 +499,9 @@ export class RouterAdapter implements ModelAdapter {
       toolCalls: toolCallMap.size > 0 ? Array.from(toolCallMap.values()) : undefined,
       finishReason,
     };
+    } finally {
+      release();
+    }
   }
 }
 
@@ -514,7 +531,7 @@ export class LiteLLMAdapter implements ModelAdapter {
       baseURL: config.baseUrl,
       apiKey: config.apiKey,
       timeout: this.callTimeoutMs,
-      maxRetries: 1,
+      maxRetries: 0,  // ponytail: retry responsibility delegated to ModelRouter.route() with backoff
     });
   }
 
@@ -744,39 +761,71 @@ export class ModelRouter {
         // ─── DEBUG: Log tools being sent to API ───
         const toolNames = options?.tools?.map((t: any) => t.function?.name).join(', ') || 'none';
 
-        // Wrap adapter call with timeout — prevents hanging on slow/dead adapters
-        const response = withSignal(
-          withTimeout(
-            adapter.invoke(messages, options),
-            perAdapterTimeout,
-          ),
-          options?.signal,
-        ).catch((err: any) => {
-          // If timeout or error, throw to trigger fallback
-          if (err instanceof TimeoutError) {
-            throw new Error(`Adapter "${adapter.name}" timed out after ${perAdapterTimeout}ms`);
+        // ponytail: Retry transient errors (429, timeout, 5xx) with exponential backoff + jitter.
+        // Permanent errors (401, 404, bad request) fail immediately without retry.
+        // Max 3 retries per adapter attempt; retry delay: 100ms → 200ms → 400ms (capped at 5s).
+        let retryAttempt = 0;
+        let invokeError: Error | null = null;
+
+        while (true) {
+          try {
+            // Wrap adapter call with timeout — prevents hanging on slow/dead adapters
+            const response = withSignal(
+              withTimeout(
+                adapter.invoke(messages, options),
+                perAdapterTimeout,
+              ),
+              options?.signal,
+            ).catch((err: any) => {
+              // If timeout or error, throw to trigger fallback
+              if (err instanceof TimeoutError) {
+                throw new Error(`Adapter "${adapter.name}" timed out after ${perAdapterTimeout}ms`);
+              }
+              throw err;
+            });
+
+            const result = await response;
+
+            evolutionEngine.recordSuccess(adapter.name, 0).catch(() => {});
+            this.lastError.delete(adapter.name);
+
+            return result;
+          } catch (err: any) {
+            invokeError = err;
+
+            // Check if error is transient and we haven't exhausted retries
+            if (isTransientError(err) && retryAttempt < 3) {
+              const delay = calculateBackoffDelay(retryAttempt);
+              log.info(
+                `[RETRY] Adapter "${adapter.name}" hit transient error, retrying in ${delay}ms (attempt ${retryAttempt + 1}/3): ${err.message}`
+              );
+              await sleep(delay);
+              retryAttempt++;
+              continue; // Retry this adapter
+            }
+
+            // Permanent error or retries exhausted — move to next adapter
+            break;
           }
-          throw err;
-        });
+        }
 
-        const result = await response;
-
-        evolutionEngine.recordSuccess(adapter.name, 0).catch(() => {});
-        this.lastError.delete(adapter.name);
-
-        return result;
-      } catch (err: any) {
-        log.warn(`Adapter "${adapter.name}" failed: ${err.message}`);
-        this.lastError.set(adapter.name, err.message);
+        // Adapter failed (after retries if applicable), log and move to next
+        log.warn(`Adapter "${adapter.name}" failed: ${invokeError?.message}`);
+        this.lastError.set(adapter.name, invokeError?.message || 'Unknown error');
 
         evolutionEngine.recordError({
           modelId: options?.model || adapter.name,
           errorType: 'ADAPTER_FAILED',
-          errorMessage: err.message,
+          errorMessage: invokeError?.message || 'Unknown error',
           sessionId: 'model-router',
           contextSnippet: messages[messages.length - 1]?.content?.substring(0, 200),
         }).catch(() => {});
 
+        lastError = invokeError;
+      } catch (err: any) {
+        // Unexpected error in adapter setup (not adapter.invoke itself)
+        log.warn(`Adapter "${adapter.name}" setup failed: ${err.message}`);
+        this.lastError.set(adapter.name, err.message);
         lastError = err;
       }
     }

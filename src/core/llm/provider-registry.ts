@@ -48,7 +48,7 @@ class OpenAIBackedProvider implements IProviderClient {
       baseURL: config.baseUrl,
       apiKey: config.apiKey,
       timeout: config.timeout ?? 120000,
-      maxRetries: 2,
+      maxRetries: 0,  // ponytail: retry responsibility delegated to ModelRouter.route() with backoff
     });
   }
 
