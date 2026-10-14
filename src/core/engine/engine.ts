@@ -249,6 +249,12 @@ export class Engine extends EventEmitter {
     this.privilegeGuard.attachToHooks(this.hooks);
     this.modelRouter = await buildDefaultRouter(this.registry);
 
+    // ── HITL Recovery: Restore pending requests from SQLite on startup ──
+    try {
+      const { getHITLManager } = await import('../security/hitl-manager.js');
+      getHITLManager().recoverPending();
+    } catch { /* non-critical if hitl disabled */ }
+
     // ── CrewAI Delegation: Register specialist agents + delegate_task tool ──
     this.agentRegistry = new AgentRegistry(this.modelRouter, this.toolRegistry);
     const delegatePlugin = createDelegatePlugin(this.agentRegistry);
@@ -729,25 +735,68 @@ export class Engine extends EventEmitter {
     });
     this.pendingRequests.set(cacheKey, resultPromise);
 
-    // ── PendingRequests TTL Cleanup (Tier 2 Fix) ──
-    // If this entry doesn't settle within REQUEST_TIMEOUT_MS + 10s, force-cleanup
-    // This prevents memory leaks when LLM hangs indefinitely
+    // ── PendingRequests TTL Cleanup (Tier 2 Fix & Hermes Watchdog Pattern) ──
+    // If this entry doesn't settle within REQUEST_TIMEOUT_MS + 10s, check if waiting for HITL approval.
+    // If waiting for user decision, defer timeout instead of killing the task prematurely.
+    // Progress-aware: reset watchdog timer whenever agent successfully executes tool cycles.
     const pendingKey = cacheKey;
-    const cleanupTimer = setTimeout(() => {
-      if (this.pendingRequests.has(pendingKey)) {
-        log.warn(`PendingRequest stale cleanup: "${pendingKey.slice(0, 60)}"`);
-        this.emit('alert:stale_cleanup', { key: pendingKey });
-        this.pendingRequests.delete(pendingKey);
+    let cleanupTimer: any;
+
+    const scheduleCleanupTimer = () => {
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      cleanupTimer = setTimeout(checkTimeout, REQUEST_TIMEOUT_MS + 10_000);
+      if (typeof cleanupTimer === 'object' && 'unref' in cleanupTimer) {
+        (cleanupTimer as NodeJS.Timeout).unref();
       }
-    }, REQUEST_TIMEOUT_MS + 10_000);
-    // Don't keep the event loop alive just for cleanup
-    if (typeof cleanupTimer === 'object' && 'unref' in cleanupTimer) {
-      (cleanupTimer as NodeJS.Timeout).unref();
-    }
+    };
+
+    const checkTimeout = async () => {
+      if (!this.pendingRequests.has(pendingKey)) return;
+      try {
+        const { getHITLManager } = await import('../security/hitl-manager.js');
+        const hitl = getHITLManager();
+        const hasPendingHITL = hitl.getQueue().getPending().some(
+          (r: any) => r.correlation?.sessionId === request.sessionId || r.userId === request.userId
+        );
+        if (hasPendingHITL) {
+          log.info(`[Engine] Stale cleanup deferred: session "${request.sessionId}" is waiting for human approval`);
+          cleanupTimer = setTimeout(checkTimeout, 30_000);
+          if (typeof cleanupTimer === 'object' && 'unref' in cleanupTimer) {
+            (cleanupTimer as NodeJS.Timeout).unref();
+          }
+          return;
+        }
+      } catch {}
+
+      log.warn(`PendingRequest stale cleanup: "${pendingKey.slice(0, 60)}" — aborting execution controller`);
+      this.emit('alert:stale_cleanup', { key: pendingKey });
+      this.pendingRequests.delete(pendingKey);
+
+      // Abort the execution controller to release hanging promises (subagents, tool loops)
+      const ctrl = this.requestControllers.get(request.sessionId);
+      if (ctrl && request.abortSignal && ctrl.signal === request.abortSignal) {
+        try {
+          ctrl.abort(new Error(`Execution timed out after ${REQUEST_TIMEOUT_MS + 10_000}ms`));
+        } catch (e) {
+          log.error(`Error aborting controller on stale cleanup: ${e}`);
+        }
+      }
+    };
+
+    const onToolProgress = (data: any) => {
+      if (data?.sessionId === request.sessionId) {
+        log.info(`[Engine] Watchdog timer reset on tool progress for session "${request.sessionId}" (cycle ${data.cycle})`);
+        scheduleCleanupTimer();
+      }
+    };
+    this.agent.on('progress', onToolProgress);
+
+    scheduleCleanupTimer();
 
     try {
       return await resultPromise;
     } finally {
+      this.agent.off('progress', onToolProgress);
       R.waitEnd({ requestId, label: 'processInner', callerFile: 'engine.ts', callerLine: 564 });
       this.pendingRequests.delete(cacheKey);
       R.pendingReq({ event: 'DELETE', cacheKey });
@@ -813,6 +862,7 @@ export class Engine extends EventEmitter {
       // userId permanent (không đổi theo /new) — cùng convention với rate-limit
       // (engine.ts:549 actualUserId = request.userId || 'anonymous')
       userId: request.userId || 'anonymous',
+      userRole: request.userRole || 'user',
       evidenceLog: new Map() as import('../plan/types.js').EvidenceLog,
       onPlanCreated: (_itemCount: number) => {
         this.agent.setMaxToolCycles(ABSOLUTE_SAFETY_CEILING);
@@ -847,27 +897,12 @@ export class Engine extends EventEmitter {
     const { startTime, userMessage, taskId, sessionId, requestId, checkpointRequestId } = meta; // Destructure checkpointRequestId
 
     // ── CHECKPOINT: Start tracking this request ──
-    const existingActiveCheckpointId = this.checkpointStore.getActiveTaskForSession(sessionId);
-
-    // Logic: If there is an existing active checkpoint that is NOT the same as the current checkpointRequestId
-    // (meaning, we are trying to start a NEW checkpoint when an old one exists, or something is out of sync)
-    // OR if there is NO existing checkpoint (meaning this is definitely a new start)
-    // then call checkpointStore.start.
-    // Otherwise, the existing checkpoint is already the one we want to resume,
-    // so just ensure activeTaskBySession points to it.
-    if (!existingActiveCheckpointId || existingActiveCheckpointId !== checkpointRequestId) {
-        // This is either a completely new execution (no existing checkpoint)
-        // or an attempt to start a new checkpoint while an old one is still active.
-        // In the latter case, we explicitly overwrite the old active task mapping.
+        // Model B1: always create a new checkpoint for each Execution
         this.checkpointStore.start(taskId, sessionId, userMessage.slice(0, 200), checkpointRequestId);
-    } else {
-        // We are resuming an existing checkpoint and activeTaskBySession is already correct.
-        log.debug(`[Engine] Reusing existing checkpoint ${checkpointRequestId} for session ${sessionId}`);
-    }
 
-    // Publish task_started event
-    // Use taskId for the event, as it represents the current execution identity.
-    this.eventLogger.taskStarted(taskId, userMessage.substring(0, 200));
+        // Publish task_started event
+        // Use taskId for the event, as it represents the current execution identity.
+        this.eventLogger.taskStarted(taskId, userMessage.substring(0, 200));
 
     // ── CONTEXT ARCHITECTURE (PA-1.5): Register sources and compile context ──
     const registry = new ContextSourceRegistry();

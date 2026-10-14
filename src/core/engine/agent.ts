@@ -83,7 +83,15 @@ const log = new Logger({ module: 'Agent' });
 
 /** Check if the operation has been cancelled via AbortSignal. */
 function checkAbort(signal?: AbortSignal): void {
-  if (signal?.aborted) throw new Error('Operation cancelled');
+  if (signal?.aborted) {
+    const reasonMsg = signal.reason instanceof Error
+      ? signal.reason.message
+      : (typeof signal.reason === 'string' ? signal.reason : '');
+    if (reasonMsg && reasonMsg.includes('timed out')) {
+      throw new Error(reasonMsg);
+    }
+    throw new Error('Operation cancelled');
+  }
 }
 
 /**
@@ -1391,6 +1399,13 @@ Nếu cần thêm thông tin, gọi tool tiếp. KHÔNG ĐƯỢC trả lời b�
               executedToolResults,
             );
           }
+
+          // ── Progress event: notify Engine watchdog to reset idle timer on active tool progress ──
+          this.emit('progress', {
+            sessionId: request.sessionId,
+            cycle: toolCallCycles,
+            toolCount: executedToolCalls.length,
+          });
 
           // ── Progress observation (signal-only) ──
           try {

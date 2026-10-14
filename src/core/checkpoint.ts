@@ -31,7 +31,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Logger } from './logger.js';
 import { getRequestContext } from './request-context.js';
-import { TaskPlan, MinimalToolCallRecord } from './plan/types.js';
+import { TaskPlan, MinimalToolCallRecord, DEFAULT_ABANDON_MS } from './plan/types.js';
 import { atomicWriteFileSync } from './atomic-write.js';
 
 const log = new Logger({ module: 'Checkpoint' });
@@ -428,10 +428,87 @@ export class CheckpointStore {
     }
 
   /**
+   * Retrieve the most recent interrupted/incomplete TaskPlan for a session.
+   * Per design contract: ONLY extracts plan goal, item count, and item status/summary.
+   * DOES NOT extract or restore execution context, previous tool calls, or cycles history.
+   */
+  getLatestIncompletePlan(sessionId: string): TaskPlan | null {
+    let latestSnap: CheckpointSnapshot | null = null;
+
+    for (const snap of this.snapshots.values()) {
+      if (snap.sessionId !== sessionId) continue;
+      if (!snap.plan || !Array.isArray(snap.plan.items) || snap.plan.items.length === 0) continue;
+
+      const plan = snap.plan;
+      // If plan itself is terminal completed or aborted, it's done
+      if (plan.status === 'completed' || plan.status === 'aborted') continue;
+
+      // Has at least one pending or non-terminal item
+      const hasPendingItems = plan.items.some(
+        (i: any) => i.status !== 'completed' && i.status !== 'skipped' && i.status !== 'failed'
+      );
+      if (!hasPendingItems) continue;
+
+      if (!latestSnap || snap.startedAt > latestSnap.startedAt) {
+        latestSnap = snap;
+      }
+    }
+
+    if (!latestSnap?.plan) return null;
+
+    const src = latestSnap.plan;
+    // Determine active item position: first incomplete item
+    const firstPendingIdx = src.items.findIndex(
+      (i: any) => i.status !== 'completed' && i.status !== 'skipped' && i.status !== 'failed'
+    );
+    const activeItemIndex = firstPendingIdx >= 0 ? firstPendingIdx : (src.currentItemIndex || 0);
+
+    // Minimal representation: strictly goal, items count & status.
+    // Zero context leakage: no cycle history, no old tool inputs/outputs.
+    const rehydratedPlan: TaskPlan = {
+      id: src.id,
+      sessionId: src.sessionId || sessionId,
+      requestId: src.requestId || `recovered-${Date.now()}`,
+      goal: src.goal,
+      status: (src.status === 'running' || src.status === 'pending' || src.status === 'paused_limit')
+        ? src.status
+        : 'running',
+      items: src.items.map((item: any, idx: number) => ({
+        id: item.id || `item-${src.id}-${idx}`,
+        index: typeof item.index === 'number' ? item.index : idx,
+        description: item.description || '',
+        status: item.status || 'pending',
+        resultSummary: item.resultSummary,
+        error: item.error,
+        consecutiveFailedAttempts: item.consecutiveFailedAttempts ?? 0,
+      })),
+      currentItemIndex: activeItemIndex,
+      sequenceNumber: (src.sequenceNumber ?? 0) + 1,
+      createdAt: src.createdAt || Date.now(),
+      abandonAfterMs: src.abandonAfterMs || DEFAULT_ABANDON_MS,
+    };
+
+    return rehydratedPlan;
+  }
+
+  /**
    * Get the active TaskPlan for a session, if any.
    */
   getPlan(sessionId: string): TaskPlan | null {
-    return this.plans.get(sessionId) ?? this.getLatestForSession(sessionId)?.plan ?? null;
+    if (this.plans.has(sessionId)) {
+      return this.plans.get(sessionId)!;
+    }
+    const activePlan = this.getLatestForSession(sessionId)?.plan;
+    if (activePlan) {
+      return activePlan;
+    }
+    const recovered = this.getLatestIncompletePlan(sessionId);
+    if (recovered) {
+      this.plans.set(sessionId, recovered);
+      log.info(`[CP] Rehydrated incomplete plan ${recovered.id} for session ${sessionId} (goal: "${recovered.goal.slice(0, 60)}")`);
+      return recovered;
+    }
+    return null;
   }
 
   /**
@@ -537,6 +614,20 @@ export class CheckpointStore {
           stale.error = { message: 'duplicate_on_resume: superseded by newer task in same session' };
           this.dirty = true;
           log.warn(`[CP] Fix B: ${stale.requestId} → failed:duplicate_on_resume`);
+        }
+      }
+
+      // Rehydrate minimal incomplete plans for sessions (strictly goal, items count & status)
+      const sessionIds = new Set<string>();
+      for (const snap of this.snapshots.values()) {
+        if (snap.sessionId) sessionIds.add(snap.sessionId);
+      }
+      for (const sessId of sessionIds) {
+        if (!this.plans.has(sessId)) {
+          const plan = this.getLatestIncompletePlan(sessId);
+          if (plan) {
+            this.plans.set(sessId, plan);
+          }
         }
       }
     } catch (err: any) {
