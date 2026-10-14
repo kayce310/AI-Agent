@@ -511,6 +511,7 @@ export class Agent extends EventEmitter {
     let stallCount = 0;            // số turn liên tiếp KHÔNG có tool call (reset khi có tool call)
     const MAX_STALL = 6;           // stall >= 6 → dừng với lỗi rõ ràng
     let lengthRetryCount = 0;     // số lần retry vì finishReason='length', độc lập stallCount
+    let preExitRetryCount = 0;    // số lần Trigger C chặn LLM thoát khi plan items chưa complete (max 2)
     let unplannedToolCallCount = 0;
     let planNudgeInjected = false;
     let latestProgressResult: ReturnType<ProgressTracker['evaluate']> | null = null;
@@ -802,11 +803,31 @@ export class Agent extends EventEmitter {
 
           if (stallCount === 1 && planIsActive) {
             // A plan still has pending work, so a text-only turn cannot finish it.
-            const msg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
-            messages.push({ role: 'system', content: msg });
+            // Context-aware: check if items have evidence (tool was executed) but
+            // LLM forgot to call complete_item — vs no tool executed at all.
+            let stallMsg: string;
+            try {
+              const stallPlan = this.checkpointStore?.getPlan(request.sessionId);
+              if (stallPlan && stallPlan.currentItemIndex >= 0 && stallPlan.currentItemIndex < stallPlan.items.length) {
+                const stallItem = stallPlan.items[stallPlan.currentItemIndex];
+                const stallEvidence = this.checkpointStore?.getEvidence(stallItem.id) || [];
+                if (stallEvidence.length > 0 && stallEvidence.some((e: any) => e.success)) {
+                  // Case: tool executed but LLM forgot complete_item
+                  stallMsg = `[GUARD] Item ${stallItem.index} ("${stallItem.description}") đã có evidence từ tool execution. Bạn PHẢI gọi update_plan(action='complete_item', item_index=${stallItem.index}, result_summary="...") NGAY BÂY GIỜ. Không trả lời bằng text.`;
+                } else {
+                  // Case: no tool executed yet
+                  stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+                }
+              } else {
+                stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+              }
+            } catch (_) {
+              stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+            }
+            messages.push({ role: 'system', content: stallMsg });
             // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
             (modelOptions as any).toolChoice = 'required';
-            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected guard message`);
+            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected context-aware guard message`);
             toolCallCycles++;
             continue;
           }
@@ -824,6 +845,39 @@ export class Agent extends EventEmitter {
           }
 
           /* final response — no stall, treat as valid FINAL_ANSWER */
+
+          // ── Trigger C: Pre-exit guard — intercept premature stop when plan items
+          // have evidence but are not yet marked complete. This catches the case
+          // where LLM executed tools, Trigger A fired, but LLM ignored it and
+          // returned text. Unlike stallCount (which resets on tool calls), this
+          // checks the actual plan state before allowing exit. ──
+          const preExitPlanState = derivePlanState(this.checkpointStore, request.sessionId);
+          if (isGuardActive(preExitPlanState)) {
+            try {
+              const preExitPlan = this.checkpointStore?.getPlan(request.sessionId);
+              if (preExitPlan && (preExitPlan.status === 'running' || preExitPlan.status === 'pending')) {
+                // Find items that have evidence but are not completed
+                const itemsWithEvidenceNotComplete = preExitPlan.items.filter((item: any) => {
+                  if (item.status === 'completed' || item.status === 'skipped' || item.status === 'failed') return false;
+                  const evidence = this.checkpointStore?.getEvidence(item.id) || [];
+                  return evidence.length > 0 && evidence.some((e: any) => e.success);
+                });
+                if (itemsWithEvidenceNotComplete.length > 0 && preExitRetryCount < 2) {
+                  preExitRetryCount++;
+                  const itemList = itemsWithEvidenceNotComplete.map((item: any) =>
+                    `- Item ${item.index}: "${item.description}"`
+                  ).join('\n');
+                  const preExitMsg = `[GUARD] DỪNG LẠI. Bạn KHÔNG được kết thúc khi plan còn item chưa complete. Các item sau ĐÃ CÓ evidence từ tool execution nhưng CHƯA được đánh dấu hoàn thành:\n${itemList}\n\nBạn PHẢI gọi update_plan(action='complete_item', item_index=N, result_summary="...") cho từng item trước khi trả lời. Gọi NGAY BÂY GIỜ.`;
+                  messages.push({ role: 'system', content: preExitMsg });
+                  (modelOptions as any).toolChoice = 'required';
+                  log.warn(`[PreExitGuard] Cycle ${toolCallCycles}: ${itemsWithEvidenceNotComplete.length} items with evidence not complete — retry ${preExitRetryCount}/2`);
+                  toolCallCycles++;
+                  continue;
+                }
+              }
+            } catch (_) { /* non-critical */ }
+          }
+
           // ── Goal-drift check for text responses ──
           // Only meaningful for multi-step tasks (active plan). For plain chat
           // ("này Coral" → "Chào bạn!") the keyword overlap is ~0, which would
@@ -1004,32 +1058,43 @@ export class Agent extends EventEmitter {
 
             console.log(`[TRACE-AGENT-TOOLCALL] toolName=${toolCall.function.name}, emitted=${modelResult.toolCalls.length > 0 ? 'YES' : 'NO'}`);
             const rctx = getRequestContext();
-            const allowed = await this.hooks.emit('tool:call', {
+            const toolCallData: Record<string, unknown> = {
               sessionId: request.sessionId,
               toolName: toolCall.function.name,
               toolArgs: toolCall.function.arguments,
               cycle: toolCallCycles,
               reasoningContent: modelResult.reasoningContent || null,
               userRole: rctx?.userRole,
-            });
+            };
+            const allowed = await this.hooks.emit('tool:call', toolCallData);
 
             // If guard blocked execution, skip this tool call
             if (!allowed) {
-              console.log(`[TRACE-AGENT-BLOCKED] toolName=${toolCall.function.name}, reason=security_guard`);
+              const hitlStatus = toolCallData.hitlStatus as string | undefined;
+              const blockReason = (toolCallData.blockReason as string | undefined)
+                || `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`;
+              console.log(`[TRACE-AGENT-BLOCKED] toolName=${toolCall.function.name}, reason=security_guard, hitlStatus=${hitlStatus || 'none'}`);
               messages.push({
                 role: 'tool',
                 tool_call_id: toolCall.id,
                 content: JSON.stringify({
-                  error: `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`,
+                  error: blockReason,
                 }),
               });
               // ADR-003 Phase 2: ghi denial vào Consequence Memory (outcome 'rejected_by_gate')
-              recordGateReject({
-                sessionId: request.sessionId,
-                toolName: toolCall.function.name,
-                reason: `TOOL_BLOCKED: ${toolCall.function.name} was blocked by security guard`,
-                cycle: toolCallCycles,
-              });
+              // Do NOT record expiry or cancellation as an execution failure!
+              // That would cause a feedback loop where an expired HITL increments failCount,
+              // triggering more HITL requests on subsequent cycles.
+              if (hitlStatus !== 'expired' && hitlStatus !== 'cancelled') {
+                recordGateReject({
+                  sessionId: request.sessionId,
+                  toolName: toolCall.function.name,
+                  reason: blockReason,
+                  cycle: toolCallCycles,
+                });
+              } else {
+                log.info(`[Consequence] Skipping recordGateReject for tool=${toolCall.function.name} due to hitlStatus=${hitlStatus}`);
+              }
               continue;
             }
 
@@ -1268,12 +1333,12 @@ export class Agent extends EventEmitter {
                   const toolSuccess = !(toolResult && typeof toolResult === 'object' && 'error' in toolResult);
                   if (toolSuccess) {
                     const currentItem = sp.items[sp.currentItemIndex];
-                    const completionGuidance = `[ITEM PROGRESS] Tool \`${toolCall.function.name}\` completed successfully and evidence recorded for Item ${currentItem.index}: "${currentItem.description}".
+                    const completionGuidance = `[ITEM PROGRESS] Tool \`${toolCall.function.name}\` thành công. Evidence đã ghi cho Item ${currentItem.index}: "${currentItem.description}".
 
-Consider if you now have sufficient information to complete this item. If yes, call:
+Bạn PHẢI đánh giá ngay: nếu đã đủ thông tin, gọi NGAY:
 \`update_plan(action='complete_item', item_index=${currentItem.index}, result_summary="...")\`
 
-If you need more work on this item, continue with additional tools. Do not call complete_item until you're satisfied with the results.`;
+Nếu cần thêm thông tin, gọi tool tiếp. KHÔNG ĐƯỢC trả lời bằng text khi chưa gọi complete_item. Đây là bắt buộc.`;
                     messages.push({
                       role: 'system',
                       content: completionGuidance,

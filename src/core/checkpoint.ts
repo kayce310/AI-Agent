@@ -125,8 +125,6 @@ export class CheckpointStore {
   private dirty = false;
   // ponytail: plan storage decoupled from request snapshot lifecycle (ADR-001)
   private plans: Map<string, TaskPlan> = new Map();
-  // Fix C: single source of truth — active requestId per session
-  private activeTaskBySession: Map<string, string> = new Map();
 
   constructor(config?: CheckpointConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -169,11 +167,9 @@ export class CheckpointStore {
       startedAt: new Date().toISOString(),
       cycles: [],
     });
-    // Fix C: this requestId is now the active task for the session
-    this.activeTaskBySession.set(sessionId, cpRequestId); // activeTaskBySession should point to checkpoint
     this.dirty = true;
-    log.info(`[CP] start: ${requestId} (CP: ${cpRequestId}) — "${currentGoal.slice(0, 60)}"`);
-  }
+        log.info(`[CP] start: ${requestId} (CP: ${cpRequestId}) — "${currentGoal.slice(0, 60)}"`);
+      }
 
   /**
    * Record a completed ReAct cycle.
@@ -190,7 +186,9 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId; // Use checkpointRequestId from context or execution taskId
 
     const snapshot = this.snapshots.get(cpRequestId); // Lookup with checkpointRequestId
-    if (!snapshot) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
 
     snapshot.requestId = requestId; // Update with current execution ID
 
@@ -225,11 +223,11 @@ export class CheckpointStore {
       if (!toolsByName.has(name)) toolsByName.set(name, []);
       toolsByName.get(name)!.push(tc);
     }
-    
+
     // Check for contradictory results on same tool
     for (const [toolName, calls] of toolsByName) {
       if (calls.length < 2) continue; // No conflict if only one call
-      
+
       // ponytail: Check if results differ on same tool in same cycle
       for (let i = 0; i < calls.length; i++) {
         for (let j = i + 1; j < calls.length; j++) {
@@ -237,7 +235,7 @@ export class CheckpointStore {
           const callB = calls[j];
           const resultA = toolResults.find(r => r.id === callA.id)?.result;
           const resultB = toolResults.find(r => r.id === callB.id)?.result;
-          
+
           // Detect contradiction: different success/failure on same tool
           if (resultA !== resultB && resultA !== undefined && resultB !== undefined) {
             conflicts.push({
@@ -261,11 +259,11 @@ export class CheckpointStore {
       toolResultsSummary: toolResultsSummary.slice(0, 500),
       toolStatus,
     };
-    
+
     if (conflicts.length > 0) {
       cycleData.conflicts = conflicts;
     }
-    
+
     snapshot.cycles.push(cycleData);
     snapshot.status = 'in_progress';
     this.dirty = true;
@@ -280,7 +278,9 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
     const lastCycle = snapshot.cycles[snapshot.cycles.length - 1];
     if (!lastCycle) return;
     lastCycle.toolStatus[toolCallId] = 'running';
@@ -301,7 +301,10 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot || (snapshot.status !== 'in_progress' && snapshot.status !== 'started')) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
+    if (snapshot.status !== 'in_progress' && snapshot.status !== 'started') return;
     const uncertain: string[] = [];
     for (const cycle of snapshot.cycles) {
       for (const [toolCallId, status] of Object.entries(cycle.toolStatus)) {
@@ -354,14 +357,12 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
     snapshot.status = 'completed';
     snapshot.result = result;
     snapshot.requestId = requestId; // Update with current execution ID
-    // Fix C: task done — clear active mapping for this session
-    if (this.activeTaskBySession.get(snapshot.sessionId) === cpRequestId) { // Check against cpRequestId
-      this.activeTaskBySession.delete(snapshot.sessionId);
-    }
     this.dirty = true;
     this.persistTerminal(cpRequestId); // Persist with cpRequestId
     log.info(`[CP] complete: ${requestId} (CP: ${cpRequestId}) — ${result.modelUsed}`);
@@ -376,14 +377,12 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
     snapshot.status = 'failed';
     snapshot.error = error;
     snapshot.requestId = requestId; // Update with current execution ID
-    // Fix C: task done — clear active mapping for this session
-    if (this.activeTaskBySession.get(snapshot.sessionId) === cpRequestId) { // Check against cpRequestId
-      this.activeTaskBySession.delete(snapshot.sessionId);
-    }
     this.dirty = true;
     this.persistTerminal(cpRequestId); // Persist with cpRequestId
     log.info(`[CP] failed: ${requestId} (CP: ${cpRequestId}) — ${error.message.slice(0, 100)}`);
@@ -395,7 +394,9 @@ export class CheckpointStore {
   // Thứ tự ghi-trước-xóa-sau: crash giữa chừng không làm mất terminal state.
   private persistTerminal(cpRequestId: string): void {
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
     const now = Date.now();
     const filePath = path.join(this.config.checkpointDir, `cp-${cpRequestId}-${now}.json`);
     const prefix = `cp-${cpRequestId}-`;
@@ -416,18 +417,15 @@ export class CheckpointStore {
    * Save or update a TaskPlan for a session's checkpoint.
    */
   setPlan(sessionId: string, plan: TaskPlan): void {
-    this.plans.set(sessionId, plan);
-    // also mirror onto active snapshot for persistence/restore
-    const cpRequestId = this.getActiveTaskForSession(sessionId); // Get the active checkpoint ID
-    if (cpRequestId) {
-      const snapshot = this.snapshots.get(cpRequestId); // Get snapshot using cpRequestId
-      if (snapshot) {
-        snapshot.plan = plan;
+      this.plans.set(sessionId, plan);
+      // also mirror onto latest snapshot for persistence/restore
+      const activeSnapshot = this.getLatestForSession(sessionId);
+      if (activeSnapshot) {
+        activeSnapshot.plan = plan;
       }
+      this.dirty = true;
+      log.info(`[CP] setPlan: session=${sessionId} plan=${plan.id} status=${plan.status} items=${plan.items.length}`);
     }
-    this.dirty = true;
-    log.info(`[CP] setPlan: session=${sessionId} plan=${plan.id} status=${plan.status} items=${plan.items.length}`);
-  }
 
   /**
    * Get the active TaskPlan for a session, if any.
@@ -452,22 +450,6 @@ export class CheckpointStore {
   // ── Read / Restore ──
 
   /**
-     * Fix C: get the active requestId for a session, if any.
-     */
-    getActiveTaskForSession(sessionId: string): string | null {
-      return this.activeTaskBySession.get(sessionId) ?? null;
-    }
-
-    /**
-     * Fix A: update the active task mapping for a session.
-     * Used to refresh identity freshness when a task resumes after restart.
-     */
-    setActiveTaskForSession(sessionId: string, cpRequestId: string): void {
-      this.activeTaskBySession.set(sessionId, cpRequestId);
-      this.dirty = true;
-    }
-
-  /**
    * Get the latest checkpoint for a session.
    * Used on startup to check for in-progress work.
    */
@@ -475,6 +457,7 @@ export class CheckpointStore {
     let latest: CheckpointSnapshot | null = null;
     for (const snapshot of this.snapshots.values()) {
       if (snapshot.sessionId !== sessionId) continue;
+      // Include all non-terminal snapshots (started, in_progress)
       if (snapshot.status === 'completed' || snapshot.status === 'failed') continue;
       if (!latest || snapshot.startedAt > latest.startedAt) {
         latest = snapshot;
@@ -535,7 +518,7 @@ export class CheckpointStore {
 
       log.info(`Loaded ${this.snapshots.size} checkpoint(s) from disk`);
 
-      // Fix B: dedup in-progress per session BEFORE building activeTaskBySession.
+      // Fix B: dedup in-progress per session.
       // >1 in_progress for same session (restart race) → keep newest by startedAt,
       // mark the rest failed:duplicate_on_resume so the active map stays unambiguous.
       const dupBySession = new Map<string, CheckpointSnapshot[]>();
@@ -554,18 +537,6 @@ export class CheckpointStore {
           stale.error = { message: 'duplicate_on_resume: superseded by newer task in same session' };
           this.dirty = true;
           log.warn(`[CP] Fix B: ${stale.requestId} → failed:duplicate_on_resume`);
-        }
-      }
-
-      // Fix C: build activeTaskBySession from clean (post-dedup) state.
-      this.activeTaskBySession.clear();
-      const inProgress = this.getAllInProgress();
-      if (inProgress.length > 0) {
-        log.warn(`⚠️ Found ${inProgress.length} in-progress task(s) from previous run:`);
-        for (const cp of inProgress) {
-          log.warn(`   ${cp.requestId} (${cp.sessionId}) — ${cp.cycles.length} cycle(s) recorded`);
-          const cpId = cp.checkpointRequestId ?? cp.requestId;
-          this.activeTaskBySession.set(cp.sessionId, cpId);
         }
       }
     } catch (err: any) {
@@ -649,8 +620,32 @@ export class CheckpointStore {
    * Remove a completed/failed checkpoint from active tracking.
    */
   clear(requestId: string): void {
-    this.snapshots.delete(requestId);
+    const context = getRequestContext();
+    const cpRequestId = context?.checkpointRequestId ?? requestId;
+
+    const snapshot = this.snapshots.get(cpRequestId);
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
+    this.snapshots.delete(cpRequestId);
     this.dirty = true;
+  }
+
+  /**
+   * Get the active (in-progress) checkpoint requestId for a session, if any.
+   * Used by setPlan() to mirror the plan onto the live snapshot.
+   * @deprecated — kept for backward compatibility with setPlan().
+   */
+  getActiveTaskForSession(sessionId: string): string | null {
+    let result: string | null = null;
+    for (const [requestId, snapshot] of this.snapshots.entries()) {
+      if (snapshot.sessionId === sessionId &&
+          (snapshot.status === 'in_progress' || snapshot.status === 'started')) {
+        // newest-first; snapshots are inserted in order
+        result = requestId;
+      }
+    }
+    return result;
   }
 
   // ── R2 Recovery (§A/§B/§C) ──
@@ -664,7 +659,9 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot) return new Set();
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
     const done = new Set<string>();
     for (const cycle of snapshot.cycles) {
       for (const [toolCallId, st] of Object.entries(cycle.toolStatus)) {
@@ -681,7 +678,10 @@ export class CheckpointStore {
     const cpRequestId = context?.checkpointRequestId ?? requestId;
 
     const snapshot = this.snapshots.get(cpRequestId);
-    if (!snapshot || snapshot.recovery) return;
+    if (!snapshot) {
+      throw new Error(`Checkpoint identity mismatch: no snapshot for requestId "${cpRequestId}"`);
+    }
+    if (snapshot.recovery) return;
     const proven = this.getProvenCompletedToolIds(requestId).size;
     snapshot.recovery = {
       recoveredAtBoot: new Date().toISOString(),
@@ -696,29 +696,55 @@ export class CheckpointStore {
   }
 
   /**
-     * OD-5: Record evidence for a PlanItem in the current in-progress snapshot.
-     * Writes directly to the snapshot so evidence survives flush and restart.
-     */
-    setEvidence(itemId: string, record: MinimalToolCallRecord): void {
-      const context = getRequestContext();
-      const cpRequestId = context?.checkpointRequestId;
-      let snapshot = cpRequestId ? this.snapshots.get(cpRequestId) : undefined;
-      // Fallback: find in-progress snapshot for current session (for test/helper usage)
-      if (!snapshot && this.activeTaskBySession.size > 0) {
-        for (const cpId of this.activeTaskBySession.values()) {
-          const s = this.snapshots.get(cpId);
-          if (s && (s.status === 'started' || s.status === 'in_progress')) {
-            snapshot = s;
-            break;
+       * OD-5: Record evidence for a PlanItem in the current in-progress snapshot.
+       * Writes directly to the snapshot so evidence survives flush and restart.
+       */
+      setEvidence(itemId: string, record: MinimalToolCallRecord): void {
+        const context = getRequestContext();
+        const cpRequestId = context?.checkpointRequestId;
+        let snapshot: CheckpointSnapshot | undefined | null = cpRequestId ? this.snapshots.get(cpRequestId) : undefined;
+        // Fallback: find in-progress snapshot for current session (for test/helper usage)
+        if (!snapshot && context?.sessionId) {
+          snapshot = this.getLatestForSession(context.sessionId);
+        }
+        // Last resort: find any in-progress snapshot (for helper/test paths without request context)
+        if (!snapshot) {
+          for (const s of this.snapshots.values()) {
+            if (s.status === 'started' || s.status === 'in_progress') {
+              snapshot = s;
+              break;
+            }
           }
         }
+        if (!snapshot) return;
+        if (!snapshot.evidenceLog) snapshot.evidenceLog = {};
+        if (!snapshot.evidenceLog[itemId]) snapshot.evidenceLog[itemId] = [];
+        snapshot.evidenceLog[itemId].push(record);
+        this.dirty = true;
       }
-      if (!snapshot) return;
-      if (!snapshot.evidenceLog) snapshot.evidenceLog = {};
-      if (!snapshot.evidenceLog[itemId]) snapshot.evidenceLog[itemId] = [];
-      snapshot.evidenceLog[itemId].push(record);
-      this.dirty = true;
-    }
+
+      /**
+       * Retrieve evidence records for a specific PlanItem from the current snapshot.
+       * Returns an array of MinimalToolCallRecord, or empty array if none found.
+       */
+      getEvidence(itemId: string): MinimalToolCallRecord[] {
+        const context = getRequestContext();
+        const cpRequestId = context?.checkpointRequestId;
+        let snapshot: CheckpointSnapshot | undefined | null = cpRequestId ? this.snapshots.get(cpRequestId) : undefined;
+        if (!snapshot && context?.sessionId) {
+          snapshot = this.getLatestForSession(context.sessionId);
+        }
+        if (!snapshot) {
+          for (const s of this.snapshots.values()) {
+            if (s.status === 'started' || s.status === 'in_progress') {
+              snapshot = s;
+              break;
+            }
+          }
+        }
+        if (!snapshot?.evidenceLog?.[itemId]) return [];
+        return snapshot.evidenceLog[itemId] as MinimalToolCallRecord[];
+      }
 
     /**
      * OD-5: Merge evidence from ALL snapshots for a session into a single EvidenceLog.
