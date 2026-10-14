@@ -12,6 +12,7 @@
  */
 
 import { HITLManager } from './hitl.js';
+import { resetHITLStore } from './hitl-store.js';
 
 let _hitlInstance: HITLManager | null = null;
 
@@ -31,6 +32,7 @@ export function getHITLManager(): HITLManager {
  */
 export function resetHITLManager(): void {
   _hitlInstance = null;
+  resetHITLStore();
 }
 
 export default getHITLManager;

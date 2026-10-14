@@ -13,6 +13,7 @@
  */
 
 import * as path from 'path';
+import { getRequestContext } from '../request-context.js';
 
 // ── Types ──
 
@@ -69,7 +70,7 @@ function globMatch(pattern: string, name: string): boolean {
 }
 
 const TOOL_CATEGORY_MAP: Record<string, string[]> = {
-  filesystem: ['list_directory', 'read_file'],
+  filesystem: ['list_directory', 'read_file', 'write_file', 'patch_file'],
   knowledge: ['search_knowledge_graph', 'write_wiki_page'],
   document: ['read_pdf', 'read_docx', 'extract_pdf_to_md', 'extract_docx_to_md', 'archive_document'],
   network: ['fetch_url'],
@@ -86,6 +87,7 @@ const TOOL_CATEGORY_MAP: Record<string, string[]> = {
 const TOOL_ALIAS_MAP: Record<string, string[]> = {
   'filesystem:read': ['read_file'],
   'filesystem:list': ['list_directory'],
+  'filesystem:write': ['write_file', 'patch_file'],
   'knowledge:search': ['search_knowledge_graph'],
   'knowledge:read': ['search_knowledge_graph'],
   'document:read': ['read_pdf', 'read_docx'],
@@ -324,7 +326,8 @@ export class PrivilegeGuard {
         args = rawArgs as Record<string, unknown>;
       }
 
-      const result = this.check(toolName, tags, args);
+      const userRole = (typeof payload.userRole === 'string' ? payload.userRole : undefined) || getRequestContext()?.userRole;
+      const result = this.check(toolName, tags, args, userRole);
 
       if (!result.allowed) {
         return { allowed: false, reason: `PrivilegeGuard: ${result.reason}` };

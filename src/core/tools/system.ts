@@ -176,12 +176,10 @@ const plugin: ToolPlugin = {
           // SECURITY: Always use execFileSync with argument array (prevents shell injection)
           // For built-in shell commands, we route through a safe wrapper
           
-          // ── PIPE SUPPORT: if command contains |, route through cmd /c ──
-          // The command already passed isCommandSafe() (whitelist prefixes checked).
-          // execFileSync doesn't support pipes, so we need cmd.exe to interpret them.
-          // This is safe because execFileSync with cmd /c still prevents arbitrary
-          // code execution — the command string has been validated by isCommandSafe().
-          if (cmd.includes('|')) {
+          // ── COMPOUND & PIPE SUPPORT: route through shell wrapper ──
+          // The command already passed isCommandSafe() (all sub-commands whitelist checked).
+          // execFileSync without shell doesn't interpret ;, &&, or |, so we route through cmd/sh.
+          if (cmd.includes('|') || cmd.includes(';') || cmd.includes('&&') || cmd.includes('||')) {
             if (process.platform === 'win32') {
               const output = execFileSync('cmd', ['/c', cmd], {
                 cwd: BASE_PATH,

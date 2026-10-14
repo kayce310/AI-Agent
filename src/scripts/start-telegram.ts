@@ -55,16 +55,26 @@ function killProcess(pid: number): boolean {
 /**
  * Check if a PID is still alive.
  */
+
 function isProcessAlive(pid: number): boolean {
   try {
     if (process.platform === 'win32') {
-      execSync(`tasklist /FI "PID eq ${pid}" /NH`, { stdio: 'pipe', timeout: 3000 });
-      return true;
-    } else {
-      // Unix: kill -0 sends no signal but checks existence
-      execSync(`kill -0 ${pid}`, { stdio: 'pipe', timeout: 3000 });
-      return true;
+      const output = execSync(
+        `tasklist /FI "PID eq ${pid}" /FO CSV /NH`,
+        { encoding: 'utf8', stdio: 'pipe', timeout: 3000 }
+      );
+
+      return output.split(/\r?\n/).some(line => {
+        const match = line.match(/^"[^"]+","(\d+)"/);
+        return match !== null && Number(match[1]) === pid;
+      });
     }
+
+    execSync(`kill -0 ${pid}`, {
+      stdio: 'pipe',
+      timeout: 3000
+    });
+    return true;
   } catch {
     return false;
   }
@@ -583,29 +593,94 @@ async function start() {
 
   // ── Phase 5: HITL Approval System ──
   try {
-    const { HITLManager } = await import('../core/security/hitl.js');
+    const { getHITLManager } = await import('../core/security/hitl-manager.js');
     const { formatApprovalMessage, buildApprovalKeyboard } = await import('../modules/telegram/hitl-handler.js');
-    const hitlManager = new HITLManager();
+    const { userManager } = await import('../modules/telegram/user-manager.js');
+    const hitlManager = getHITLManager();
+    hitlManager.recoverPending();
     bridge.registerHITLManager(hitlManager);
 
-    // Wire HITL pending notification to admin chat
-    const hitlAdminChatId = process.env.TELEGRAM_ALERT_CHAT_ID;
-    if (hitlAdminChatId) {
-      hitlManager.onPending = async (request) => {
-        try {
-          await bridge.sendMessageWithKeyboard(
-            hitlAdminChatId as string,
-            formatApprovalMessage(request),
-            buildApprovalKeyboard(request.id),
-          );
-        } catch (e) {
-          console.error(`${ts()} ❌ HITL notification failed:`, e);
+    // Wire HITL pending notification to admin chat(s)
+    hitlManager.onPending = async (request) => {
+      const targetChatIds = new Set<string>();
+      const addValidChatId = (rawId?: string | null) => {
+        if (!rawId) return;
+        const id = rawId.trim();
+        if (/^-?\d+$/.test(id)) {
+          targetChatIds.add(id);
+        } else if (id.startsWith('@')) {
+          const mapped = userManager.getUser(id);
+          if (mapped && mapped.userId && /^-?\d+$/.test(mapped.userId)) {
+            targetChatIds.add(mapped.userId);
+          } else {
+            targetChatIds.add(id);
+          }
+        } else {
+          const mapped = userManager.getUser(id);
+          if (mapped && mapped.userId && /^-?\d+$/.test(mapped.userId)) {
+            targetChatIds.add(mapped.userId);
+          }
         }
       };
-      console.log(`${ts()} 🛡️ HITL Manager active — admin chat: ${hitlAdminChatId}`);
-    } else {
-      console.warn(`${ts()} ⚠️ TELEGRAM_ALERT_CHAT_ID not set — HITL approvals will not be delivered`);
-    }
+
+      const envAlertChat = process.env.TELEGRAM_ALERT_CHAT_ID;
+      addValidChatId(envAlertChat);
+
+      for (const adminId of userManager.getAdminIds()) {
+        addValidChatId(adminId);
+      }
+
+      // If the requester itself is an authorized admin, notify their chat directly
+      if (request.userId && request.userId !== 'unknown' && request.userId !== 'system') {
+        if (userManager.isAdmin(request.userId, request.userDisplay)) {
+          addValidChatId(request.userId);
+        }
+      }
+
+      const corrShort = request.correlationToken ? request.correlationToken.slice(0, 8) : 'none';
+
+      if (targetChatIds.size === 0) {
+        console.error(`${ts()} ❌ HITL notification failed for req=${request.id} (corr=${corrShort}): No admin destinations configured`);
+        hitlManager.resolve(request.id, 'rejected', 'system', {
+          approverRole: 'system',
+          channel: 'telegram',
+          reason: 'Notification delivery failed: no admin destinations configured',
+        });
+        throw new Error('No admin destinations configured for HITL notification');
+      }
+
+      let deliveredCount = 0;
+      const messageText = formatApprovalMessage(request);
+      const keyboard = buildApprovalKeyboard(request.id, request.correlationToken);
+
+      for (const chatId of targetChatIds) {
+        try {
+          const msgId = await bridge.sendMessageWithKeyboard(chatId, messageText, keyboard);
+          if (msgId) {
+            deliveredCount++;
+          } else {
+            console.warn(`${ts()} ⚠️ Failed to send HITL keyboard to chatId=${chatId} for req=${request.id}`);
+          }
+        } catch (e) {
+          console.error(`${ts()} ❌ Exception sending HITL keyboard to chatId=${chatId}: ${e}`);
+        }
+      }
+
+      if (deliveredCount === 0) {
+        console.error(`${ts()} ❌ HITL notification failed for req=${request.id} (corr=${corrShort}): Delivery failed to all ${targetChatIds.size} destination(s)`);
+        hitlManager.resolve(request.id, 'rejected', 'system', {
+          approverRole: 'system',
+          channel: 'telegram',
+          reason: `Notification delivery failed to all ${targetChatIds.size} destination(s)`,
+        });
+        throw new Error(`HITL notification delivery failed to all ${targetChatIds.size} destination(s)`);
+      }
+
+      console.log(`${ts()} 🛡️ HITL notification delivered to ${deliveredCount} admin(s) for req=${request.id} (${request.action.name})`);
+    };
+
+    const initialAdmins = userManager.getAdminIds();
+    console.log(`${ts()} 🛡️ HITL Manager active — admin destinations: ${initialAdmins.length > 0 ? initialAdmins.join(', ') : '(none registered yet)'}${process.env.TELEGRAM_ALERT_CHAT_ID ? ` + alert_chat=${process.env.TELEGRAM_ALERT_CHAT_ID}` : ''}`);
   } catch (e) {
     console.error(`${ts()} ⚠️ HITL system failed to initialize: ${e}`);
   }

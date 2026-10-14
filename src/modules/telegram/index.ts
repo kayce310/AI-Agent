@@ -147,7 +147,8 @@ function cleanupOldLocks(): void {
 }
 
 import type { HITLManager } from '../../core/security/hitl.js';
-import { registerHITLCallbackHandler } from './hitl-handler.js';
+import { getHITLManager } from '../../core/security/hitl-manager.js';
+import { registerHITLCallbackHandler, handleHITLCallback } from './hitl-handler.js';
 const TG_MAX_MSG_LENGTH = 4096;
 
 export class TelegramBridge implements PlatformAdapter {
@@ -170,6 +171,7 @@ export class TelegramBridge implements PlatformAdapter {
   private userSessions: Map<string, { selectedModel: string }> = new Map();
   private commandRegistry: CommandRegistry;
   private proactiveEngine: ProactiveEngine | null = null;
+  private hitlManager: HITLManager | null = null;
 
   constructor() {
     cleanupOldLocks();
@@ -205,6 +207,7 @@ export class TelegramBridge implements PlatformAdapter {
    * Register HITL manager for handling inline keyboard approve/reject callbacks.
    */
   registerHITLManager(manager: HITLManager): void {
+    this.hitlManager = manager;
     registerHITLCallbackHandler(this.bot, manager);
   }
 
@@ -240,8 +243,9 @@ export class TelegramBridge implements PlatformAdapter {
       ]);
       console.log(`${ts()} ✅ Telegram bot commands registered`);
 
-      // Start bot with long polling
+      // Start bot with long polling (explicit allowed_updates to guarantee callback_query delivery)
       this.bot.start({
+        allowed_updates: ['message', 'callback_query'],
         onStart: () => {
           log.info("Bot started successfully");
         },
@@ -289,15 +293,23 @@ export class TelegramBridge implements PlatformAdapter {
    * Send a message with an optional inline keyboard (e.g., for HITL approvals).
    */
   async sendMessageWithKeyboard(chatId: string, content: string, keyboard?: Record<string, any>): Promise<string | null> {
+    const options: Record<string, any> = { parse_mode: 'HTML' };
+    if (keyboard && keyboard.inline_keyboard) {
+      options.reply_markup = keyboard;
+    }
     try {
-      const options: Record<string, any> = {};
-      if (keyboard && keyboard.inline_keyboard) {
-        options.reply_markup = keyboard;
-      }
       const sent = await this.bot.api.sendMessage(chatId, content, options);
       return String(sent.message_id);
-    } catch {
-      return null;
+    } catch (err) {
+      // If HTML parse fails, retry plain text
+      try {
+        delete options.parse_mode;
+        const sent = await this.bot.api.sendMessage(chatId, content, options);
+        return String(sent.message_id);
+      } catch (err2) {
+        log.error(`[Telegram] sendMessageWithKeyboard to ${chatId} failed: ${err2}`);
+        return null;
+      }
     }
   }
 
@@ -460,13 +472,22 @@ export class TelegramBridge implements PlatformAdapter {
     });
 
     // ── Handle callback queries (inline keyboard) ──
-    this.bot.on('callback_query:data', async (ctx) => {
+    this.bot.on('callback_query:data', async (ctx, next) => {
       try {
         const query = ctx.callbackQuery;
         const data = query.data;
         const chatId = String(query.message?.chat?.id || 'unknown');
 
         log.info(`[CB] callback_query data=${data} chatId=${chatId}`);
+
+        // HITL callbacks (hitl:approve:*, hitl:reject:*)
+        // Dispatched directly to handleHITLCallback (Hermes single callback router pattern)
+        if (data && data.startsWith('hitl:')) {
+          const manager = this.hitlManager || getHITLManager();
+          const handled = await handleHITLCallback(ctx, manager);
+          if (handled) return;
+          return await next();
+        }
 
         // Route to command registry handler
         if (data && (
@@ -518,6 +539,11 @@ export class TelegramBridge implements PlatformAdapter {
         return;
       }
 
+      // Auto-register numeric ID for admin recognized via username or env so notifications reach them
+      if (userManager.isAdmin(userId, username) && !userManager.getUser(userId)) {
+        userManager.registerUser(userId, 'admin', username, message.from?.first_name);
+      }
+
       // Rate limiting
       if (!messageLimiter.tryConsume(1)) {
         try {
@@ -550,155 +576,165 @@ export class TelegramBridge implements PlatformAdapter {
 
       this.processingMessages.add(messageId);
 
-      // Get or create session (TTL-based)
-      const session = await this.sessionManager.getOrCreateSession(userId);
+      // ── NON-BLOCKING BACKGROUND EXECUTION ──
+      // Critical for HITL: Agent execution and HITL approval waiting MUST NOT block
+      // Grammy's long polling loop, otherwise callback_query (Approve/Reject button clicks)
+      // will be trapped in Telegram's queue until the agent times out (deadlock)!
+      (async () => {
+        // Get or create session (TTL-based)
+        const session = await this.sessionManager.getOrCreateSession(userId);
 
-      // Start activity reporter
-      this.reporter.start(chatId, messageId);
+        // Start activity reporter
+        this.reporter.start(chatId, messageId);
 
-      try {
-        // Convert to AdapterMessage
-        const userSession = this.userSessions.get(userId);
-        
-        // Get actual model from registry if not set
-        let selectedModel = userSession?.selectedModel;
-        if (!selectedModel || selectedModel === 'all') {
-          const { ProviderRegistry } = await import('../../core/llm/provider-registry.js');
-          const registry = new ProviderRegistry();
-          registry.loadFromConfig();
-          const models = registry.listModels();
-          selectedModel = models.length > 0 ? models[0] : 'auto/best-free';
-        }
+        try {
+          // Convert to AdapterMessage
+          const userSession = this.userSessions.get(userId);
+          
+          // Get actual model from registry if not set
+          let selectedModel = userSession?.selectedModel;
+          if (!selectedModel || selectedModel === 'all') {
+            const { ProviderRegistry } = await import('../../core/llm/provider-registry.js');
+            const registry = new ProviderRegistry();
+            registry.loadFromConfig();
+            const models = registry.listModels();
+            selectedModel = models.length > 0 ? models[0] : 'auto/best-free';
+          }
 
-        // Track model and title for session management
-        this.sessionManager.setSessionModel(userId, selectedModel);
-        // Set session title from first message (if not set yet)
-        if (text && text.length > 0) {
-          this.sessionManager.setSessionTitle(userId, text.slice(0, 100));
-        }
+          // Track model and title for session management
+          this.sessionManager.setSessionModel(userId, selectedModel);
+          // Set session title from first message (if not set yet)
+          if (text && text.length > 0) {
+            this.sessionManager.setSessionTitle(userId, text.slice(0, 100));
+          }
 
-        const adapterMsg: AdapterMessage = {
-          messageId,
-          userId: asUserId(userId),
-          channelId: asUserId(chatId),
-          text,
-          platform: 'telegram',
-          isMention: true,
-          timestamp: Date.now(),
-          metadata: {
-            model: selectedModel,  // Pass selected model
-            sessionId: session.sessionId, // ponytail: SessionManager UUID, not channelId
-          },
-        };
+          // Determine userRole via UserManager
+          const userRole = userManager.isAdmin(userId, username) ? 'admin' : 'user';
 
-        // Forward to the handler (wired by Gateway.register)
-        if (this.messageHandler) {
-          // Send "processing" indicator
-          let processingMsgId: number | null = null;
-          let lastThinkingTime = 0;
-          let processingMsgText = '⏳ Đang xử lý...';
-          try {
-            const processingMsg = await this.bot.api.sendMessage(chatId, processingMsgText);
-            processingMsgId = processingMsg.message_id;
-          } catch {}
-
-          // No intro — process directly from the first message
-          let response = '';
-
-          // Attach onThinking callback to edit the processing message with updates
-          adapterMsg.metadata = adapterMsg.metadata || {};
-          adapterMsg.metadata.onThinking = async (thinking: string) => {
-            const now = Date.now();
-            if (processingMsgId && now - lastThinkingTime > 2000) {
-              lastThinkingTime = now;
-              try {
-                await this.bot.api.editMessageText(
-                  chatId,
-                  processingMsgId,
-                  `🤔 *Đang xử lý...*\n\n${thinking.slice(0, 200)}`
-                );
-              } catch { /* ignore edit failures */ }
-            }
+          const adapterMsg: AdapterMessage = {
+            messageId,
+            userId: asUserId(userId),
+            channelId: asUserId(chatId),
+            text,
+            platform: 'telegram',
+            userRole,
+            isMention: true,
+            timestamp: Date.now(),
+            metadata: {
+              model: selectedModel,  // Pass selected model
+              sessionId: session.sessionId, // ponytail: SessionManager UUID, not channelId
+              userRole,
+            },
           };
 
-          // Hermes-style: AI nhận mọi tin nhắn, không pre-filter
-          const requestId = `${userId}:${messageId}`;
-          R.state({ event: 'RECEIVED', requestId });
-          R.waitBegin({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 551 });
-          let agentResponse = await this.messageHandler(adapterMsg);
-          R.waitEnd({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 554 });
-
-          // Update activity timestamp
-          this.sessionManager.updateLastActivity(userId);
-
-          // Try to edit the processing message with the actual response
-          if (agentResponse && agentResponse.output) {
-            const fullResponse = response + agentResponse.output;
+          // Forward to the handler (wired by Gateway.register)
+          if (this.messageHandler) {
+            // Send "processing" indicator
+            let processingMsgId: number | null = null;
+            let lastThinkingTime = 0;
+            let processingMsgText = '⏳ Đang xử lý...';
             try {
-              if (processingMsgId) {
-                await this.bot.api.editMessageText(chatId, processingMsgId, fullResponse.slice(0, 4096));
-                // If response is longer than 4096, send remaining chunks
-                if (fullResponse.length > 4096) {
-                  const remaining = this.splitMessage(fullResponse.slice(4096));
-                  for (const chunk of remaining) {
-                    await ctx.reply(chunk);
+              const processingMsg = await this.bot.api.sendMessage(chatId, processingMsgText);
+              processingMsgId = processingMsg.message_id;
+            } catch {}
+
+            // No intro — process directly from the first message
+            let response = '';
+
+            // Attach onThinking callback to edit the processing message with updates
+            adapterMsg.metadata = adapterMsg.metadata || {};
+            adapterMsg.metadata.onThinking = async (thinking: string) => {
+              const now = Date.now();
+              if (processingMsgId && now - lastThinkingTime > 2000) {
+                lastThinkingTime = now;
+                try {
+                  await this.bot.api.editMessageText(
+                    chatId,
+                    processingMsgId,
+                    `🤔 *Đang xử lý...*\n\n${thinking.slice(0, 200)}`
+                  );
+                } catch { /* ignore edit failures */ }
+              }
+            };
+
+            // Hermes-style: AI nhận mọi tin nhắn, không pre-filter
+            const requestId = `${userId}:${messageId}`;
+            R.state({ event: 'RECEIVED', requestId });
+            R.waitBegin({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 551 });
+            let agentResponse = await this.messageHandler(adapterMsg);
+            R.waitEnd({ requestId, label: 'gateway.messageHandler', callerFile: 'modules/telegram/index.ts', callerLine: 554 });
+
+            // Update activity timestamp
+            this.sessionManager.updateLastActivity(userId);
+
+            // Try to edit the processing message with the actual response
+            if (agentResponse && agentResponse.output) {
+              const fullResponse = response + agentResponse.output;
+              try {
+                if (processingMsgId) {
+                  await this.bot.api.editMessageText(chatId, processingMsgId, fullResponse.slice(0, 4096));
+                  // If response is longer than 4096, send remaining chunks
+                  if (fullResponse.length > 4096) {
+                    const remaining = this.splitMessage(fullResponse.slice(4096));
+                    for (const chunk of remaining) {
+                      await ctx.reply(chunk);
+                    }
                   }
+                } else {
+                  const chunks = this.splitMessage(fullResponse);
+                  for (const chunk of chunks) { await ctx.reply(chunk); }
                 }
-              } else {
+              } catch {
+                // Edit failed, send new messages
                 const chunks = this.splitMessage(fullResponse);
                 for (const chunk of chunks) { await ctx.reply(chunk); }
               }
-            } catch {
-              // Edit failed, send new messages
-              const chunks = this.splitMessage(fullResponse);
-              for (const chunk of chunks) { await ctx.reply(chunk); }
-            }
 
-            // Log
-            logTelegramMessage(
-              userId,
-              text,
-              fullResponse,
-              agentResponse.metadata?.inputTokens as number | undefined,
-              agentResponse.metadata?.outputTokens as number | undefined
-            );
-          } else {
-            // Delete "processing" message if no response
-            if (processingMsgId) {
-              try { await this.bot.api.deleteMessage(chatId, processingMsgId); } catch {}
-            }
-            await ctx.reply('❌ Không thể xử lý tin nhắn.');
-          }
-
-          // ── Proactive Engine: check for keyword triggers in user message ──
-          if (this.proactiveEngine) {
-            try {
-              const proactiveActions = this.proactiveEngine.suggestFromMessage(text, userId);
-              for (const action of proactiveActions) {
-                if (action.type === 'suggest' || action.type === 'notify' || action.type === 'remind') {
-                  // Fire & forget — send proactive suggestion to same chat
-                  const proactiveMsg = action.message.replace('{keyword}', text);
-                  log.info(`Proactive suggestion: ${proactiveMsg}`);
-                  this.bot.api.sendMessage(chatId, proactiveMsg).catch(() => {});
-                }
+              // Log
+              logTelegramMessage(
+                userId,
+                text,
+                fullResponse,
+                agentResponse.metadata?.inputTokens as number | undefined,
+                agentResponse.metadata?.outputTokens as number | undefined
+              );
+            } else {
+              // Delete "processing" message if no response
+              if (processingMsgId) {
+                try { await this.bot.api.deleteMessage(chatId, processingMsgId); } catch {}
               }
-            } catch(err) { log.error('Proactive engine error', { error: String(err) }); }
+              await ctx.reply('❌ Không thể xử lý tin nhắn.');
+            }
+
+            // ── Proactive Engine: check for keyword triggers in user message ──
+            if (this.proactiveEngine) {
+              try {
+                const proactiveActions = this.proactiveEngine.suggestFromMessage(text, userId);
+                for (const action of proactiveActions) {
+                  if (action.type === 'suggest' || action.type === 'notify' || action.type === 'remind') {
+                    // Fire & forget — send proactive suggestion to same chat
+                    const proactiveMsg = action.message.replace('{keyword}', text);
+                    log.info(`Proactive suggestion: ${proactiveMsg}`);
+                    this.bot.api.sendMessage(chatId, proactiveMsg).catch(() => {});
+                  }
+                }
+              } catch(err) { log.error('Proactive engine error', { error: String(err) }); }
+            }
           }
+        } catch (err: any) {
+          log.error("Error processing message", { error: String(err) });
+          try {
+            await ctx.reply(`❌ Lỗi: ${err.message}`);
+          } catch {}
+        } finally {
+          this.processingMessages.delete(messageId);
+          this.reporter.stop(chatId, messageId);
         }
-      } catch (err: any) {
-        log.error("Error processing message", { error: String(err) });
-        try {
-          await ctx.reply(`❌ Lỗi: ${err.message}`);
-        } catch {}
-      } finally {
+      })().catch((bgErr) => {
+        log.error("Background message processing fatal error", { error: String(bgErr) });
         this.processingMessages.delete(messageId);
         this.reporter.stop(chatId, messageId);
-        // NOTE: releaseMessageLock intentionally REMOVED here.
-        // File lock persists for its 5-min TTL to prevent Telegram's
-        // duplicate update delivery from re-processing the same message.
-        // Stale locks are cleaned by cleanupOldLocks() on startup and
-        // by the TTL check in tryAcquireMessageLock().
-      }
+      });
     });
 
     // ── Handle channel posts (channels send channel_post, not message) ──
@@ -748,17 +784,21 @@ export class TelegramBridge implements PlatformAdapter {
         const userSession = this.userSessions.get(userId);
         const selectedModel = userSession?.selectedModel || 'all';
         
+        const userRole = userManager.isAdmin(userId) ? 'admin' : 'user';
+
         const adapterMsg: AdapterMessage = {
           messageId,
           userId: asUserId(userId),
           channelId: asUserId(chatId),
           text,
           platform: 'telegram',
+          userRole,
           isMention: true,
           timestamp: Date.now(),
           metadata: {
             model: selectedModel,  // Pass selected model
             sessionId: session.sessionId, // ponytail: SessionManager UUID, not channelId
+            userRole,
           },
         };
 

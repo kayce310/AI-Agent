@@ -137,22 +137,50 @@ export function isCommandSafe(command: string): boolean {
   // Reject empty commands
   if (!command || command.trim().length === 0) return false;
   
-  const trimmed = command.trim().toLowerCase();
+  const trimmed = command.trim();
   
-  // Reject commands with dangerous shell patterns
+  // Reject dangerous command substitution & absolute security invariants
   const DANGEROUS_PATTERNS = [
-    /;/,           // Command separator: "ls; rm -rf"
-    /\|/,          // Pipe: "ls | cat"
-    /&/,           // Background: "ls &"
     /`/,           // Command substitution: `rm -rf`
     /\$\(/,        // Process substitution: $(ls)
     /\$\{/,        // Variable expansion: ${PATH}
+    /\b(mkfs|diskpart|format\s+[a-z]:)\b/i, // Disk destructive
+    /\brmdir\s+[\/\\]s\s+[\/\\]q\s+[a-z]:[\/\\]/i, // Wipe drive root
+    /\brm\s+-rf\s+[\/\\](?:\s|$)/i, // rm -rf /
+    /(?:^|[^&])&(?:[^&]|$)/, // Background execution: single '&'
   ];
   
   for (const pattern of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) return false;
+    if (pattern.test(trimmed)) return false;
   }
   
-  // Check whitelist prefix
-  return COMMAND_WHITELIST_PREFIXES.some(prefix => trimmed.startsWith(prefix));
+  // Split compound commands by chaining/pipe operators: ';', '&&', '||', '|'
+  const subCommands = trimmed
+    .split(/(?:;{1,2}|&&|\|{1,2})/)
+    .map(c => c.trim())
+    .filter(c => c.length > 0);
+
+  if (subCommands.length === 0) return false;
+
+  // Every single sub-command must match a whitelisted prefix
+  for (const sub of subCommands) {
+    // Strip leading environment definitions or redirects (e.g. 2>/dev/null)
+    const normalized = sub
+      .replace(/2>&1|2>\s*\/dev\/null|>\s*\/dev\/null/gi, '')
+      .trim()
+      .toLowerCase();
+
+    if (!normalized) continue;
+
+    const matched = COMMAND_WHITELIST_PREFIXES.some(prefix => {
+      // Check prefix either as exact start with space/boundary or exact match
+      return normalized === prefix || normalized.startsWith(prefix + ' ') || normalized.startsWith(prefix + '\t');
+    });
+
+    if (!matched) {
+      return false;
+    }
+  }
+  
+  return true;
 }
