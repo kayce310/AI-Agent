@@ -801,10 +801,10 @@ export class Agent extends EventEmitter {
             };
           }
 
-          if (stallCount === 1 && planIsActive) {
-            // A plan still has pending work, so a text-only turn cannot finish it.
-            // Context-aware: check if items have evidence (tool was executed) but
-            // LLM forgot to call complete_item — vs no tool executed at all.
+          if (stallCount >= 1 && stallCount < MAX_STALL && planIsActive) {
+            // Context-aware stall handling: escalate based on stallCount.
+            // Check if items have evidence (tool was executed but LLM forgot complete_item)
+            // vs no tool executed at all.
             let stallMsg: string;
             try {
               const stallPlan = this.checkpointStore?.getPlan(request.sessionId);
@@ -812,65 +812,53 @@ export class Agent extends EventEmitter {
                 const stallItem = stallPlan.items[stallPlan.currentItemIndex];
                 const stallEvidence = this.checkpointStore?.getEvidence(stallItem.id) || [];
                 if (stallEvidence.length > 0 && stallEvidence.some((e: any) => e.success)) {
-                  // Case: tool executed but LLM forgot complete_item
                   stallMsg = `[GUARD] Item ${stallItem.index} ("${stallItem.description}") đã có evidence từ tool execution. Bạn PHẢI gọi update_plan(action='complete_item', item_index=${stallItem.index}, result_summary="...") NGAY BÂY GIỜ. Không trả lời bằng text.`;
                 } else {
-                  // Case: no tool executed yet
-                  stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+                  stallMsg = `[GUARD] Plan có item chưa hoàn thành. Bạn PHẢI gọi tool để thực thi item ${stallItem.index} ("${stallItem.description}") NGAY. Không mô tả, không giải thích. Chỉ gọi tool.`;
                 }
               } else {
-                stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+                stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Gọi NGAY tool để thực thi item hiện tại của plan.';
               }
             } catch (_) {
-              stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Không mô tả plan bằng văn bản. Gọi NGAY tool để thực thi item hiện tại của plan.';
+              stallMsg = '[GUARD] Bạn đã tạo plan nhưng chưa thực thi. Gọi NGAY tool để thực thi item hiện tại của plan.';
+            }
+            // Escalate: stallCount >= 2 → force tool_choice
+            if (stallCount >= 2) {
+              stallMsg = `[GUARD] Lần thứ ${stallCount}: bạn KHÔNG được trả lời bằng text. ${stallMsg} Gọi tool ngay lập tức.`;
             }
             messages.push({ role: 'system', content: stallMsg });
-            // Ép tool_choice='required' cho lần gọi kế tiếp (nếu provider hỗ trợ)
             (modelOptions as any).toolChoice = 'required';
-            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=1 — injected context-aware guard message`);
-            toolCallCycles++;
-            continue;
-          }
-
-          if (stallCount === 2 && planIsActive) {
-            // stall lần 2 với plan: ép cứng tool_choice='required'
-            (modelOptions as any).toolChoice = 'required';
-            messages.push({
-              role: 'system',
-              content: '[GUARD] Lần thứ hai: bạn KHÔNG được trả lời bằng text. Gọi tool ngay lập tức. Không mô tả, không giải thích, không xin lỗi. Chỉ gọi tool.'
-            });
-            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=2 — forcing tool_choice=required`);
+            log.warn(`[Stall] Cycle ${toolCallCycles}: stallCount=${stallCount}/${MAX_STALL} — injected context-aware guard message`);
             toolCallCycles++;
             continue;
           }
 
           /* final response — no stall, treat as valid FINAL_ANSWER */
 
-          // ── Trigger C: Pre-exit guard — intercept premature stop when plan items
-          // have evidence but are not yet marked complete. This catches the case
-          // where LLM executed tools, Trigger A fired, but LLM ignored it and
-          // returned text. Unlike stallCount (which resets on tool calls), this
-          // checks the actual plan state before allowing exit. ──
+          // ── Trigger C: Pre-exit guard — intercept premature stop when plan
+          // still has incomplete items. Defense-in-depth: the stall guard above
+          // should prevent reaching here, but if it somehow does (e.g., model
+          // returned tool calls that were all no-ops), catch it before exit. ──
           const preExitPlanState = derivePlanState(this.checkpointStore, request.sessionId);
           if (isGuardActive(preExitPlanState)) {
             try {
               const preExitPlan = this.checkpointStore?.getPlan(request.sessionId);
               if (preExitPlan && (preExitPlan.status === 'running' || preExitPlan.status === 'pending')) {
-                // Find items that have evidence but are not completed
-                const itemsWithEvidenceNotComplete = preExitPlan.items.filter((item: any) => {
-                  if (item.status === 'completed' || item.status === 'skipped' || item.status === 'failed') return false;
-                  const evidence = this.checkpointStore?.getEvidence(item.id) || [];
-                  return evidence.length > 0 && evidence.some((e: any) => e.success);
-                });
-                if (itemsWithEvidenceNotComplete.length > 0 && preExitRetryCount < 2) {
+                // Find ALL items that are not in a terminal state
+                const incompleteItems = preExitPlan.items.filter((item: any) =>
+                  item.status !== 'completed' && item.status !== 'skipped' && item.status !== 'failed'
+                );
+                if (incompleteItems.length > 0 && preExitRetryCount < 2) {
                   preExitRetryCount++;
-                  const itemList = itemsWithEvidenceNotComplete.map((item: any) =>
-                    `- Item ${item.index}: "${item.description}"`
-                  ).join('\n');
-                  const preExitMsg = `[GUARD] DỪNG LẠI. Bạn KHÔNG được kết thúc khi plan còn item chưa complete. Các item sau ĐÃ CÓ evidence từ tool execution nhưng CHƯA được đánh dấu hoàn thành:\n${itemList}\n\nBạn PHẢI gọi update_plan(action='complete_item', item_index=N, result_summary="...") cho từng item trước khi trả lời. Gọi NGAY BÂY GIỜ.`;
+                  const itemList = incompleteItems.map((item: any) => {
+                    const evidence = this.checkpointStore?.getEvidence(item.id) || [];
+                    const hasEvidence = evidence.length > 0 && evidence.some((e: any) => e.success);
+                    return `- Item ${item.index}: "${item.description}" ${hasEvidence ? '(có evidence, cần complete_item)' : '(chưa thực thi, cần gọi tool)'}`;
+                  }).join('\n');
+                  const preExitMsg = `[GUARD] DỪNG LẠI. Bạn KHÔNG được kết thúc khi plan còn ${incompleteItems.length} item chưa hoàn thành:\n${itemList}\n\nThực thi từng item: gọi tool → rồi gọi update_plan(action='complete_item'). Gọi NGAY BÂY GIỜ.`;
                   messages.push({ role: 'system', content: preExitMsg });
                   (modelOptions as any).toolChoice = 'required';
-                  log.warn(`[PreExitGuard] Cycle ${toolCallCycles}: ${itemsWithEvidenceNotComplete.length} items with evidence not complete — retry ${preExitRetryCount}/2`);
+                  log.warn(`[PreExitGuard] Cycle ${toolCallCycles}: ${incompleteItems.length} incomplete items — retry ${preExitRetryCount}/2`);
                   toolCallCycles++;
                   continue;
                 }
