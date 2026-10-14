@@ -1188,6 +1188,35 @@
       tabDelegationBtn?.addEventListener('click', () => switchTab('delegation'));
       tabMemoryBtn?.addEventListener('click', () => switchTab('memory'));
       tabBrainBtn?.addEventListener('click', () => switchTab('brain'));
+      
+      // ponytail: keyboard navigation for tabs (arrow keys cycle through tabs)
+      const tabOrder = ['mission', 'trace', 'focus', 'verification', 'recovery', 'provider', 'runtime', 'delegation', 'memory', 'brain'];
+      const tabList = document.querySelector('[role="tablist"]');
+      if (tabList) {
+        tabList.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const idx = tabOrder.indexOf(currentTab);
+            const next = tabOrder[(idx + 1) % tabOrder.length];
+            switchTab(next);
+            document.getElementById(`tab-${next}`)?.focus();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const idx = tabOrder.indexOf(currentTab);
+            const prev = tabOrder[(idx - 1 + tabOrder.length) % tabOrder.length];
+            switchTab(prev);
+            document.getElementById(`tab-${prev}`)?.focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            switchTab(tabOrder[0]);
+            document.getElementById(`tab-${tabOrder[0]}`)?.focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            switchTab(tabOrder[tabOrder.length - 1]);
+            document.getElementById(`tab-${tabOrder[tabOrder.length - 1]}`)?.focus();
+          }
+        });
+      }
       // Tab graph riêng đã bỏ - graph nằm trong brain tab
 
       // Setup pause button (Priority 5)
@@ -1216,11 +1245,10 @@
     }
 
   function setupBrainViewModes() {
-    const modes = [
-      { btn: 'view-mode-brain', mode: 'brain' },
-      { btn: 'view-mode-combined', mode: 'combined' },
-      { btn: 'view-mode-graph', mode: 'graph' },
-    ];
+      const modes = [
+        { btn: 'view-mode-brain', mode: 'brain' },
+        { btn: 'view-mode-pet', mode: 'pet' },
+      ];
     modes.forEach(function (m) {
       var el = document.getElementById(m.btn);
       if (!el) return;
@@ -1243,16 +1271,27 @@
       if (currentTab === tab) return;
       currentTab = tab;
     
+      // ponytail: sync aria-selected with active class
       tabMissionBtn?.classList.toggle('active', tab === 'mission');
+      tabMissionBtn?.setAttribute('aria-selected', tab === 'mission');
       tabTraceBtn?.classList.toggle('active', tab === 'trace');
+      tabTraceBtn?.setAttribute('aria-selected', tab === 'trace');
       tabFocusBtn?.classList.toggle('active', tab === 'focus');
+      tabFocusBtn?.setAttribute('aria-selected', tab === 'focus');
       tabVerificationBtn?.classList.toggle('active', tab === 'verification');
+      tabVerificationBtn?.setAttribute('aria-selected', tab === 'verification');
       tabRecoveryBtn?.classList.toggle('active', tab === 'recovery');
+      tabRecoveryBtn?.setAttribute('aria-selected', tab === 'recovery');
       tabProviderBtn?.classList.toggle('active', tab === 'provider');
+      tabProviderBtn?.setAttribute('aria-selected', tab === 'provider');
       tabRuntimeBtn?.classList.toggle('active', tab === 'runtime');
+      tabRuntimeBtn?.setAttribute('aria-selected', tab === 'runtime');
       tabDelegationBtn?.classList.toggle('active', tab === 'delegation');
+      tabDelegationBtn?.setAttribute('aria-selected', tab === 'delegation');
       tabMemoryBtn?.classList.toggle('active', tab === 'memory');
+      tabMemoryBtn?.setAttribute('aria-selected', tab === 'memory');
       tabBrainBtn?.classList.toggle('active', tab === 'brain');
+      tabBrainBtn?.setAttribute('aria-selected', tab === 'brain');
       // Tab graph riêng đã bị bỏ - graph nằm trong brain tab
     
       missionView?.classList.toggle('hidden', tab !== 'mission');
@@ -1266,6 +1305,16 @@
       memoryView?.classList.toggle('hidden', tab !== 'memory');
       brainView?.classList.toggle('hidden', tab !== 'brain');
       // Graph view riêng không còn - graph nằm trong brain tab
+      
+      // ponytail: sync pet-status-panel visibility with brain-view visibility
+      // When switching tabs, ensure panel is hidden if brain-view is hidden
+      if (tab !== 'brain') {
+        var petStatusPanel = document.getElementById('pet-status-panel');
+        if (petStatusPanel) {
+          petStatusPanel.classList.add('hidden');
+          petStatusPanel.style.display = 'none';
+        }
+      }
 
       if (tab === 'trace') {
         renderTrace();
@@ -1296,6 +1345,17 @@
           window.CodeGraph.loadGraph().catch(err => {
             console.warn('[Dashboard] Failed to load graph:', err.message);
           });
+        }
+        // Default to brain mode when switching to Brain tab
+        if (window.CodeGraph && typeof window.CodeGraph.setMode === 'function') {
+          window.CodeGraph.setMode('brain');
+        }
+        var viewModeBrain = document.getElementById('view-mode-brain');
+        var viewModePet = document.getElementById('view-mode-pet');
+        if (viewModeBrain) viewModeBrain.classList.add('active');
+        if (viewModePet) viewModePet.classList.remove('active');
+        if (window.CodeGraph && typeof window.CodeGraph.updatePanelVisibility === 'function') {
+          window.CodeGraph.updatePanelVisibility();
         }
       }
     }

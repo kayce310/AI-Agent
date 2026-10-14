@@ -13,17 +13,17 @@
       <span id="ws-indicator" class="ws-disconnected" title="WebSocket disconnected">●</span>
       <span class="app-title">CORAL AGENT</span>
     </div>
-    <div class="status-center">
-          <button id="tab-mission" class="tab-btn active" data-tab="mission" data-i18n="tab.mission">MISSION</button>
-          <button id="tab-trace" class="tab-btn" data-tab="trace" data-i18n="tab.trace">🧠 TRACE</button>
-          <button id="tab-focus" class="tab-btn" data-tab="focus" data-i18n="tab.focus">⚡ FOCUS</button>
-          <button id="tab-verification" class="tab-btn" data-tab="verification" data-i18n="tab.verification">🛡️ VERIFICATION</button>
-          <button id="tab-recovery" class="tab-btn" data-tab="recovery" data-i18n="tab.recovery">🔄 RECOVERY</button>
-          <button id="tab-provider" class="tab-btn" data-tab="provider" data-i18n="tab.provider">🔌 PROVIDER</button>
-          <button id="tab-runtime" class="tab-btn" data-tab="runtime" data-i18n="tab.runtime">📊 RUNTIME</button>
-          <button id="tab-delegation" class="tab-btn" data-tab="delegation" data-i18n="tab.delegation">🤖 DELEGATION</button>
-          <button id="tab-memory" class="tab-btn" data-tab="memory" data-i18n="tab.memory">💾 MEMORY</button>
-          <button id="tab-brain" class="tab-btn tab-btn-hologram" data-tab="brain" data-i18n="tab.hologram">🧠 HOLOGRAM</button>
+    <div class="status-center" role="tablist">
+          <button id="tab-mission" class="tab-btn active" role="tab" aria-selected="true" aria-controls="mission-view" data-tab="mission" data-i18n="tab.mission">MISSION</button>
+          <button id="tab-trace" class="tab-btn" role="tab" aria-selected="false" aria-controls="trace-view" data-tab="trace" data-i18n="tab.trace">🧠 TRACE</button>
+          <button id="tab-focus" class="tab-btn" role="tab" aria-selected="false" aria-controls="focus-view" data-tab="focus" data-i18n="tab.focus">⚡ FOCUS</button>
+          <button id="tab-verification" class="tab-btn" role="tab" aria-selected="false" aria-controls="verification-view" data-tab="verification" data-i18n="tab.verification">🛡️ VERIFICATION</button>
+          <button id="tab-recovery" class="tab-btn" role="tab" aria-selected="false" aria-controls="recovery-view" data-tab="recovery" data-i18n="tab.recovery">🔄 RECOVERY</button>
+          <button id="tab-provider" class="tab-btn" role="tab" aria-selected="false" aria-controls="provider-view" data-tab="provider" data-i18n="tab.provider">🔌 PROVIDER</button>
+          <button id="tab-runtime" class="tab-btn" role="tab" aria-selected="false" aria-controls="runtime-view" data-tab="runtime" data-i18n="tab.runtime">📊 RUNTIME</button>
+          <button id="tab-delegation" class="tab-btn" role="tab" aria-selected="false" aria-controls="delegation-view" data-tab="delegation" data-i18n="tab.delegation">🤖 DELEGATION</button>
+          <button id="tab-memory" class="tab-btn" role="tab" aria-selected="false" aria-controls="memory-view" data-tab="memory" data-i18n="tab.memory">💾 MEMORY</button>
+          <button id="tab-brain" class="tab-btn tab-btn-hologram" role="tab" aria-selected="false" aria-controls="brain-view" data-tab="brain" data-i18n="tab.hologram">🧠 HOLOGRAM</button>
         </div>
     <div class="status-right">
       <span id="event-count">0 events</span>
@@ -33,7 +33,7 @@
 
   <main id="workspace">
     <!-- ═══ F2: MISSION MODE (default) ═══ -->
-    <section id="mission-view" class="main-content-view">
+    <section id="mission-view" class="main-content-view" role="tabpanel" aria-labelledby="tab-mission">
           <!-- Mission Card: Goal + Status -->
       <div class="card mission-card">
         <div class="card-label" data-i18n="mission.current">CURRENT MISSION</div>
@@ -112,7 +112,7 @@
     </section>
 
     <!-- ═══ F3: TRACE MODE ═══ -->
-    <section id="trace-view" class="main-content-view hidden">
+    <section id="trace-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-trace">
       <!-- Trace Header & Controls -->
       <div class="trace-header">
         <div class="trace-dev-info">
@@ -214,7 +214,7 @@
     </section>
 
     <!-- ═══ F4: FOCUS MODE — 4-PART LAYOUT ═══ -->
-    <section id="focus-view" class="main-content-view focus-view hidden">
+    <section id="focus-view" class="main-content-view focus-view hidden" role="tabpanel" aria-labelledby="tab-focus">
       <!-- PART 1: HEADER -->
       <div class="focus-header">
         <span class="focus-title">⚡ FOCUS</span>
@@ -263,7 +263,7 @@
     </section>
 
     <!-- ═══ F5: MEMORY MODE — 3-PANEL LAYOUT ═══ -->
-    <section id="memory-view" class="main-content-view memory-view hidden">
+    <section id="memory-view" class="main-content-view memory-view hidden" role="tabpanel" aria-labelledby="tab-memory">
       <!-- Top: Search + Filter Bar -->
       <div class="memory-search-bar">
         <div class="memory-search-input-wrap">
@@ -392,7 +392,7 @@
     </section>
 
         <!-- ═══ PHASE 4D: VERIFICATION MODE ═══ -->
-        <section id="verification-view" class="main-content-view hidden">
+        <section id="verification-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-verification">
           <div class="card verification-header">
             <div class="card-header">
               <span class="card-label" data-i18n="verification.title">VERIFICATION GATE</span>
@@ -418,7 +418,7 @@
         </section>
 
         <!-- ═══ PHASE 6: RECOVERY MODE ═══ -->
-        <section id="recovery-view" class="main-content-view hidden">
+        <section id="recovery-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-recovery">
           <div class="card recovery-header">
             <div class="card-header">
               <span class="card-label" data-i18n="recovery.title">RECOVERY OBSERVABILITY</span>
@@ -454,7 +454,7 @@
         </section>
 
         <!-- ═══ PHASE 6: PROVIDER / INFRASTRUCTURE MODE ═══ -->
-        <section id="provider-view" class="main-content-view hidden">
+        <section id="provider-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-provider">
           <div class="card provider-header">
             <div class="card-header">
               <span class="card-label" data-i18n="provider.title">PROVIDER / INFRASTRUCTURE</span>
@@ -498,7 +498,7 @@
         </section>
 
         <!-- ═══ PHASE 6: RUNTIME MODE ═══ -->
-        <section id="runtime-view" class="main-content-view hidden">
+        <section id="runtime-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-runtime">
           <div class="card runtime-header">
             <div class="card-header">
               <span class="card-label" data-i18n="runtime.title">RUNTIME OBSERVABILITY</span>
@@ -550,7 +550,7 @@
         </section>
 
         <!-- ═══ PHASE 6: DELEGATION MODE ═══ -->
-        <section id="delegation-view" class="main-content-view hidden">
+        <section id="delegation-view" class="main-content-view hidden" role="tabpanel" aria-labelledby="tab-delegation">
           <div class="card delegation-header">
             <div class="card-header">
               <span class="card-label" data-i18n="delegation.title">DELEGATION TELEMETRY</span>
@@ -578,7 +578,7 @@
         </section>
 
         <!-- ═══ F7: HOLOGRAM BRAIN — JARVIS/Ultron 3D Neural Network ═══ -->
-        <section id="brain-view" class="brain-view hidden">
+        <section id="brain-view" class="brain-view hidden" role="tabpanel" aria-labelledby="tab-brain">
       <!-- Brain Header -->
       <div class="brain-header">
         <div class="brain-header-left">
@@ -586,12 +586,11 @@
           <span id="brain-status" class="brain-status">INITIALIZING</span>
         </div>
         <div class="brain-header-center">
-          <div class="view-mode-toggle">
-            <button class="view-mode-btn active" data-mode="brain" id="view-mode-brain">🧠 Brain</button>
-            <button class="view-mode-btn" data-mode="combined" id="view-mode-combined">⚡ Combined</button>
-            <button class="view-mode-btn" data-mode="graph" id="view-mode-graph">📊 Graph</button>
-          </div>
-        </div>
+                  <div class="view-mode-toggle">
+                    <button class="view-mode-btn active" data-mode="brain" id="view-mode-brain">🧠 Brain</button>
+                    <button class="view-mode-btn" data-mode="pet" id="view-mode-pet">🐾 Pet</button>
+                  </div>
+                </div>
         <div class="brain-header-right">
           <div class="brain-activity-track">
             <span class="brain-activity-label" data-i18n="hologram.activity">ACTIVITY</span>
@@ -600,6 +599,11 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Pet Status Panel (hidden until Pet mode) -->
+      <div id="pet-status-panel" class="pet-status-panel hidden" style="display: none; padding: 12px; background: #1a1a2e; color: #00ff88; font-family: monospace; font-size: 12px; white-space: pre; overflow-y: auto; max-height: 200px; border: 1px solid #00ff88; margin: 8px;">
+        <div id="pet-status-content">Module: NOT INITIALIZED</div>
       </div>
 
       <!-- 3D Canvas -->
@@ -770,5 +774,6 @@
   -->
   <script src="brain-tab.js?v=1782474487"></script>
   <script src="behavior-renderer.js?v=1782474487"></script>
+  <script src="pet-tab.js?v=1782474487"></script>
 </body>
 </html>

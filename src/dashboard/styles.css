@@ -132,6 +132,12 @@ body {
   border-color: var(--accent);
 }
 
+/* ponytail: focus ring for keyboard navigation */
+.tab-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ═══ WORKSPACE — responsive to inspector ═══ */
 #workspace {
   flex: 1;
@@ -167,7 +173,8 @@ body {
 #focus-view.hidden, #graph-view.hidden, #memory-view.hidden,
 #brain-view.hidden, #verification-view.hidden,
 #recovery-view.hidden, #provider-view.hidden,
-#runtime-view.hidden, #delegation-view.hidden {
+#runtime-view.hidden, #delegation-view.hidden,
+#pet-status-panel.hidden {
   display: none;
 }
 
@@ -2846,7 +2853,13 @@ body.light {
   max-height: 120px;
   font-family: var(--font-mono);
   font-size: 11px;
-  line-height: 1.6;
+  line-height: 1.4;
+}
+
+.brain-log-entry {
+  color: rgba(0, 255, 136, 0.7);
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
 }
 
 .brain-log-entry {
